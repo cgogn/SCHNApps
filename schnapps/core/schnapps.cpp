@@ -37,13 +37,17 @@
 #include <QByteArray>
 
 #include <core/schnapps.h>
+#include <core/camera.h>
+#include <core/view.h>
 
 namespace schnapps
 {
 
 SCHNApps::SCHNApps(const QString& app_path) :
 	QMainWindow(),
-	app_path_(app_path)
+	app_path_(app_path),
+	first_view_(NULL),
+	selected_view_(NULL)
 {
 	this->setupUi(this);
 
@@ -81,6 +85,10 @@ SCHNApps::SCHNApps(const QString& app_path) :
 	root_splitter_ = new QSplitter(centralwidget);
 	root_splitter_initialized_ = false;
 	central_layout_->addWidget(root_splitter_);
+
+	first_view_ = add_view();
+	set_selected_view(first_view_);
+	root_splitter_->addWidget(first_view_);
 
 	// connect basic actions
 
@@ -129,6 +137,211 @@ Camera* SCHNApps::get_camera(const QString& name) const
 	else
 		return NULL;
 }
+
+/*********************************************************
+ * MANAGE VIEWS
+ *********************************************************/
+
+
+View* SCHNApps::add_view(const QString& name)
+{
+	if (views_.contains(name))
+		return NULL;
+
+	View* view = new View(name, this);
+	views_.insert(name, view);
+	emit(view_added(view));
+	return view;
+}
+
+View* SCHNApps::add_view()
+{
+	return add_view(QString("view_") + QString::number(View::view_count_));
+}
+
+void SCHNApps::remove_view(const QString& name)
+{
+	if (views_.contains(name))
+	{
+		if(views_.count() > 1)
+		{
+			View* view = views_[name];
+			if(view == first_view_)
+			{
+				QMap<QString, View*>::const_iterator it = views_.constBegin();
+				while (it != views_.constEnd())
+				{
+					if(it.value() != view)
+					{
+						first_view_ = it.value();
+						it = views_.constEnd();
+					}
+					else
+						++it;
+				}
+			}
+			if(view == selected_view_)
+				set_selected_view(first_view_);
+
+			views_.remove(name);
+			emit(view_removed(view));
+			delete view;
+		}
+	}
+}
+
+View* SCHNApps::get_view(const QString& name) const
+{
+	if (views_.contains(name))
+		return views_[name];
+	else
+		return NULL;
+}
+
+void SCHNApps::set_selected_view(View* view)
+{
+//	int current_tab = plugin_dock_tab_widget_->currentIndex();
+
+//	if(selected_view_)
+//	{
+//		foreach(PluginInteraction* p, selected_view_->get_linked_plugins())
+//			disable_plugin_tab_widgets(p);
+//		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
+//		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
+//	}
+
+	View* old_selected = selected_view_;
+	selected_view_ = view;
+	if (old_selected)
+		old_selected->hide_dialogs();
+
+//	foreach(PluginInteraction* p, selected_view_->get_linked_plugins())
+//		enable_plugin_tab_widgets(p);
+//	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
+//	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
+
+//	plugin_dock_tab_widget_->setCurrentIndex(current_tab);
+
+	emit(selected_view_changed(old_selected, selected_view_));
+
+	if(old_selected)
+		old_selected->update();
+	selected_view_->update();
+}
+
+void SCHNApps::set_selected_view(const QString& name)
+{
+	View* v = this->get_view(name);
+	set_selected_view(v);
+}
+
+View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
+{
+	View* new_view = add_view();
+
+	View* view = views_[name];
+	QSplitter* parent = static_cast<QSplitter*>(view->parentWidget());
+
+	if(parent == root_splitter_ && !root_splitter_initialized_)
+	{
+		root_splitter_->setOrientation(orientation);
+		root_splitter_initialized_ = true;
+	}
+
+	if (parent->orientation() == orientation)
+	{
+		parent->insertWidget(parent->indexOf(view) + 1, new_view);
+		QList<int> sz = parent->sizes();
+		int tot = 0;
+		for (int i = 0; i < parent->count(); ++i)
+			tot += sz[i];
+		sz[0] = tot / parent->count() + tot % parent->count();
+		for (int i = 1; i < parent->count(); ++i)
+			sz[i] = tot / parent->count();
+		parent->setSizes(sz);
+	}
+	else
+	{
+		int idx = parent->indexOf(view);
+		view->setParent(NULL);
+		QSplitter* spl = new QSplitter(orientation);
+		spl->addWidget(view);
+		spl->addWidget(new_view);
+		parent->insertWidget(idx, spl);
+
+		QList<int> sz = spl->sizes();
+		int tot = sz[0] + sz[1];
+		sz[0] = tot / 2;
+		sz[1] = tot - sz[0];
+		spl->setSizes(sz);
+	}
+
+	return new_view;
+}
+
+QString SCHNApps::get_split_view_positions()
+{
+	QList<QSplitter*> liste;
+	liste.push_back(root_splitter_);
+
+	QString result;
+	QTextStream qts(&result);
+	while (!liste.empty())
+	{
+		QSplitter* spl = liste.first();
+		for (int i = 0; i < spl->count(); ++i)
+		{
+			QWidget* w = spl->widget(i);
+			QSplitter* qw = dynamic_cast<QSplitter*>(w);
+			if (qw != NULL)
+				liste.push_back(qw);
+		}
+		QByteArray ba = spl->saveState();
+		qts << ba.count() << " ";
+		for (int j = 0; j < ba.count(); ++j)
+			qts << int(ba[j]) << " ";
+		liste.pop_front();
+	}
+	return result;
+}
+
+void SCHNApps::set_split_view_positions(QString positions)
+{
+	QList<QSplitter*> liste;
+	liste.push_back(root_splitter_);
+
+	QTextStream qts(&positions);
+	while (!liste.empty())
+	{
+		QSplitter* spl = liste.first();
+		for (int i = 0; i < spl->count(); ++i)
+		{
+			QWidget *w = spl->widget(i);
+			QSplitter* qw = dynamic_cast<QSplitter*>(w);
+			if (qw != NULL)
+				liste.push_back(qw);
+		}
+		if (qts.atEnd())
+		{
+			std::cerr << "Problem restoring view split configuration" << std::endl;
+			return;
+		}
+
+		int nb;
+		qts >> nb;
+		QByteArray ba(nb + 1, 0);
+		for (int j = 0; j < nb; ++j)
+		{
+			int v;
+			qts >> v;
+			ba[j] = char(v);
+		}
+		spl->restoreState(ba);
+		liste.pop_front();
+	}
+}
+
+
 
 void SCHNApps::about_SCHNApps()
 {

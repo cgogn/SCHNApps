@@ -38,6 +38,8 @@ namespace schnapps
 {
 
 class Camera;
+class View;
+
 // class ControlDock_CameraTab;
 // class ControlDock_MapTab;
 // class ControlDock_PluginTab;
@@ -95,6 +97,74 @@ public slots:
 	// get the set of all cameras
 	const QMap<QString, Camera*>& get_camera_set() const { return cameras_; }
 
+	/*********************************************************
+	 * MANAGE VIEWS
+	 *********************************************************/
+
+public slots:
+
+	/**
+	* @brief add a view with name
+	* @param name name of view
+	*/
+	View* add_view(const QString& name);
+
+	/**
+	* @brief add a view
+	*/
+	View* add_view();
+
+	/**
+	* @brief [PYTHON] remove a view
+	* @param name the name of the view
+	*/
+	void remove_view(const QString& name);
+
+	/**
+	* @brief [PYTHON] get view object
+	* @param name the name of view
+	*/
+	View* get_view(const QString& name) const;
+
+	// get the set of all views
+	const QMap<QString, View*>& get_view_set() const { return views_; }
+
+	/**
+	* @brief [PYTHON] get the selected view
+	*/
+	View* get_selected_view() const { return selected_view_; }
+
+	/**
+	* @brief [PYTHON] set the selected view
+	* @param view the view object
+	*/
+	void set_selected_view(View* view);
+
+	/**
+	* @brief [PYTHON] set the selected view
+	* @param name the view name
+	*/
+	void set_selected_view(const QString& name);
+
+	/**
+	* @brief [PYTHON] split the view in the current orientation
+	* @param orientation of split 0: Vertical Split 1:
+	* @return the new View added by the split
+	*/
+	View* split_view(const QString& name, Qt::Orientation orientation);
+
+	/**
+	* @brief [PYTHON] save all split positions in a string
+	* @return the storage string
+	*/
+	QString get_split_view_positions();
+
+	/**
+	* @brief [PYTHON] restore all split positions from a string storage,
+	* the split's sequence must be the same than when saving
+	*/
+	void set_split_view_positions(QString positions);
+
 public slots:
 
 	void about_SCHNApps();
@@ -122,6 +192,13 @@ protected:
 
 signals:
 
+	void camera_added(Camera*);
+	void camera_removed(Camera*);
+
+	void view_added(View*);
+	void view_removed(View*);
+	void selected_view_changed(View*, View*);
+
 	void schnapps_closing();
 
 protected:
@@ -129,6 +206,10 @@ protected:
 	QString app_path_;
 
 	QMap<QString, Camera*> cameras_;
+	QMap<QString, View*> views_;
+
+	View* first_view_;
+	View* selected_view_;
 
 	QDockWidget* control_dock_;
 	QTabWidget* control_dock_tab_widget_;

@@ -34,7 +34,7 @@ namespace schnapps
 {
 
 class SCHNApps;
-//class View;
+class View;
 
 /**
 * @brief The camera class inherits from [qoglviewer::Camera] (http://libqglviewer.com/refManual/classqglviewer_1_1Camera.html)
@@ -47,7 +47,7 @@ class SCHNAPPS_CORE_API Camera : public qoglviewer::Camera
 {
 	Q_OBJECT
 
-//	friend class View;
+	friend class View;
 
 public:
 
@@ -107,19 +107,19 @@ public slots:
 	// is camera path drawn ?
 	bool get_draw_path() const;
 
-//	/**
-//	 * @brief get the list of views linked with the camera
-//	 * @warning not python callable
-//	 * @return the list
-//	 */
-//	const QList<View*>& get_linked_views() const;
+	/**
+	 * @brief get the list of views linked with the camera
+	 * @warning not python callable
+	 * @return the list
+	 */
+	const QList<View*>& get_linked_views() const;
 
-//	/**
-//	 * @brief is the camera linked to the given view
-//	 * @param view
-//	 * @return
-//	 */
-//	bool is_linked_to_view(View* view) const;
+	/**
+	 * @brief is the camera linked to the given view
+	 * @param view
+	 * @return
+	 */
+	bool is_linked_to_view(View* view) const;
 
 	/**
 	* @brief [PYTHON] set the projection type
@@ -154,10 +154,11 @@ public slots:
 	* @param cam the string containing data
 	*/
 	void from_string(QString camera);
-	
-//private:
-//	void link_view(View* view);
-//	void unlink_view(View* view);
+
+private:
+
+	void link_view(View* view);
+	void unlink_view(View* view);
 
 private slots:
 
@@ -179,7 +180,7 @@ protected:
 	SCHNApps* schnapps_;
 
 	// list of views that are using this camera
-//	QList<View*> views_;
+	QList<View*> views_;
 
 	bool draw_;
 	bool draw_path_;

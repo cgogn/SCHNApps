@@ -22,8 +22,7 @@
 *******************************************************************************/
 
 #include <core/camera.h>
-//#include <core/view.h>
-//#include <core/map_handler.h>
+#include <core/view.h>
 
 namespace schnapps
 {
@@ -46,13 +45,13 @@ Camera::~Camera()
 
 bool Camera::is_used() const
 {
-//	return !views_.empty();
+	return !views_.empty();
 	return true;
 }
 
 bool Camera::is_shared() const
 {
-//	return views_.size() > 1;
+	return views_.size() > 1;
 	return true;
 }
 
@@ -71,38 +70,38 @@ bool Camera::get_draw_path() const
 	return draw_path_;
 }
 
-//const QList<View*>& Camera::get_linked_views() const
-//{
-//	return views_;
-//}
+const QList<View*>& Camera::get_linked_views() const
+{
+	return views_;
+}
 
-//bool Camera::is_linked_to_view(View* view) const
-//{
-//	return views_.contains(view);
-//}
+bool Camera::is_linked_to_view(View* view) const
+{
+	return views_.contains(view);
+}
 
 void Camera::set_projection_type(int t)
 {
 	this->setType(qoglviewer::Camera::Type(t));
 	emit(projection_type_changed(t));
-//	foreach(View* view, m_schnapps->getViewSet().values())
-//		view->updateGL();
+	foreach(View* view, schnapps_->get_view_set().values())
+		view->update();
 }
 
 void Camera::set_draw(bool b)
 {
 	draw_ = b;
 	emit(draw_changed(b));
-//	foreach(View* view, m_schnapps->getViewSet().values())
-//		view->updateGL();
+	foreach(View* view, schnapps_->get_view_set().values())
+		view->update();
 }
 
 void Camera::set_draw_path(bool b)
 {
 	draw_path_ = b;
 	emit(draw_path_changed(b));
-//	foreach(View* view, m_schnapps->getViewSet().values())
-//		view->updateGL();
+	foreach(View* view, schnapps_->get_view_set().values())
+		view->update();
 }
 
 void Camera::enable_views_bounding_box_fitting()
@@ -142,73 +141,73 @@ void Camera::from_string(QString cam)
 	this->setOrientation(ori);
 }
 
-//void Camera::link_view(View* view)
-//{
-//	if(view && !views_.contains(view))
-//	{
-//		views_.push_back(view);
-//		fit_to_views_bounding_box();
-//		connect(view, SIGNAL(bounding_box_changed()), this, SLOT(fit_to_views_bounding_box()));
-//	}
-//}
+void Camera::link_view(View* view)
+{
+	if(view && !views_.contains(view))
+	{
+		views_.push_back(view);
+		fit_to_views_bounding_box();
+		connect(view, SIGNAL(bounding_box_changed()), this, SLOT(fit_to_views_bounding_box()));
+	}
+}
 
-//void Camera::unlinkView(View* view)
-//{
-//	if (views_.removeOne(view))
-//	{
-//		fit_to_views_bounding_box();
-//		disconnect(view, SIGNAL(bounding_box_changed()), this, SLOT(fit_to_views_bounding_box()));
-//	}
-//}
+void Camera::unlink_view(View* view)
+{
+	if (views_.removeOne(view))
+	{
+		fit_to_views_bounding_box();
+		disconnect(view, SIGNAL(bounding_box_changed()), this, SLOT(fit_to_views_bounding_box()));
+	}
+}
 
 void Camera::frame_modified()
 {
-//	if(draw_ || draw_path_)
-//	{
-//		foreach(View* view, m_schnapps->getViewSet().values())
-//			view->updateGL();
-//	}
-//	else
-//	{
-//		foreach(View* view, views_)
-//			view->updateGL();
-//	}
+	if(draw_ || draw_path_)
+	{
+		foreach(View* view, schnapps_->get_view_set().values())
+			view->update();
+	}
+	else
+	{
+		foreach(View* view, views_)
+			view->update();
+	}
 }
 
 void Camera::fit_to_views_bounding_box()
 {
-//	if (fit_to_views_bounding_box_)
-//	{
-//		qoglviewer::Vec bb_min;
-//		qoglviewer::Vec bb_max;
+	if (fit_to_views_bounding_box_)
+	{
+		qoglviewer::Vec bb_min;
+		qoglviewer::Vec bb_max;
 
-//		if (!views_.empty())
-//		{
-//			views_.first()->get_bb(bb_min, bb_max);
+		if (!views_.empty())
+		{
+			views_.first()->get_bb(bb_min, bb_max);
 
-//			foreach(View* v, views_)
-//			{
-//				qoglviewer::Vec minbb;
-//				qoglviewer::Vec maxbb;
-//				v->get_bb(minbb, maxbb);
-//				for(unsigned int dim = 0; dim < 3; ++dim)
-//				{
-//					if(minbb[dim] < bb_min[dim])
-//						bb_min[dim] = minbb[dim];
-//					if(maxbb[dim] > bb_max[dim])
-//						bb_max[dim] = maxbb[dim];
-//				}
-//			}
-//		}
-//		else
-//		{
-//			bb_min.setValue(0, 0, 0);
-//			bb_max.setValue(0, 0, 0);
-//		}
+			foreach(View* v, views_)
+			{
+				qoglviewer::Vec minbb;
+				qoglviewer::Vec maxbb;
+				v->get_bb(minbb, maxbb);
+				for(unsigned int dim = 0; dim < 3; ++dim)
+				{
+					if(minbb[dim] < bb_min[dim])
+						bb_min[dim] = minbb[dim];
+					if(maxbb[dim] > bb_max[dim])
+						bb_max[dim] = maxbb[dim];
+				}
+			}
+		}
+		else
+		{
+			bb_min.setValue(0, 0, 0);
+			bb_max.setValue(0, 0, 0);
+		}
 
-//		this->setSceneBoundingBox(bb_min, bb_max);
-//		this->showEntireScene();
-//	}
+		this->setSceneBoundingBox(bb_min, bb_max);
+		this->showEntireScene();
+	}
 }
 
 } // namespace schnapps

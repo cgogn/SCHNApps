@@ -40,11 +40,10 @@ namespace schnapps
 
 /**
 * @brief View class inherit from QOGLViewer (http://libqglviewer.com/refManual/classQGLViewer.html)
-* It can be linked with several:
-* - plugins
-* - maps
-* It can be linked with one:
-* - camera
+* It can be linked with:
+* - several plugins
+* - several maps
+* - one camera
 * One view of SCHNApps is selected (green framed).
 *
 * Python callable slots are tagged with [PYTHON]
@@ -59,20 +58,11 @@ public:
 
 	static unsigned int view_count_;
 
-	View(const QString& name, SCHNApps* s, const QGLWidget* shareWidget);
+	View(const QString& name, SCHNApps* s);
+
 	~View();
 
 	const QString& get_name() const { return name_; }
-
-	/**
-	 * @brief get the min and max points of the bounding box of the scene
-	 * @param bbMin min to be filled
-	 * @param bbMax max to be filled
-	 */
-	void get_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const { bb_min = bb_min_; bb_max = bb_max_; }
-
-	// hide all dialogs of the view
-	void hide_dialogs();
 
 public slots:
 
@@ -114,14 +104,14 @@ public slots:
 	* @brief [PYTHON] get the current camera of the view
 	* @return the camera object
 	*/
-	Camera* get_current_camera() const { return m_currentCamera; }
+	Camera* get_current_camera() const { return current_camera_; }
 
 	/**
 	 * @brief test if this view use a camera
 	 * @param c camera ptr
 	 * @return
 	 */
-	bool uses_camera(Camera* c) const { return m_currentCamera == c; }
+	bool uses_camera(Camera* c) const { return current_camera_ == c; }
 
 	/**
 	* @brief [PYTHON] test if a camera is the current camera
@@ -220,6 +210,22 @@ private:
 		#endif
 	}
 
+public:
+
+	/**
+	 * @brief get the min and max points of the bounding box of the scene
+	 * @param bbMin min to be filled
+	 * @param bbMax max to be filled
+	 */
+	void get_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
+	{
+		bb_min = bb_min_;
+		bb_max = bb_max_;
+	}
+
+	// hide all dialogs of the view
+	void hide_dialogs();
+
 private slots:
 
 	void close_dialogs();
@@ -258,7 +264,7 @@ signals:
 //	void plugin_linked(PluginInteraction*);
 //	void plugin_unlinked(PluginInteraction*);
 
-//	void bounding_box_changed();
+	void bounding_box_changed();
 
 protected:
 
