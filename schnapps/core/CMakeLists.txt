@@ -4,10 +4,14 @@ project(schnapps_core
 
 set(HEADER_FILES
 	schnapps.h
+	camera.h
+	view.h
 )
 
 set(SOURCE_FILES
 	schnapps.cpp
+	camera.cpp
+	view.cpp
 )
 
 set(CMAKE_AUTOMOC ON)

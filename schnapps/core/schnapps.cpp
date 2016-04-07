@@ -91,6 +91,45 @@ SCHNApps::SCHNApps(const QString& app_path) :
 SCHNApps::~SCHNApps()
 {}
 
+/*********************************************************
+ * MANAGE CAMERAS
+ *********************************************************/
+
+Camera* SCHNApps::add_camera(const QString& name)
+{
+	if (cameras_.contains(name))
+		return NULL;
+
+	Camera* camera = new Camera(name, this);
+	cameras_.insert(name, camera);
+	emit(camera_added(camera));
+	return camera;
+}
+
+Camera* SCHNApps::add_camera()
+{
+	return add_camera(QString("camera_") + QString::number(Camera::camera_count_));
+}
+
+void SCHNApps::remove_camera(const QString& name)
+{
+	Camera* camera = get_camera(name);
+	if (camera && !camera->is_used())
+	{
+		cameras_.remove(name);
+		emit(camera_removed(camera));
+		delete camera;
+	}
+}
+
+Camera* SCHNApps::get_camera(const QString& name) const
+{
+	if (cameras_.contains(name))
+		return cameras_[name];
+	else
+		return NULL;
+}
+
 void SCHNApps::about_SCHNApps()
 {
 	QString str("SCHNApps:\nS... CGoGN Holder for Nice Applications\n"

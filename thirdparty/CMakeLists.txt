@@ -1,2 +1,1 @@
-	add_subdirectory(libQGLViewer/QOGLViewer)
-	
+add_subdirectory(libQGLViewer)

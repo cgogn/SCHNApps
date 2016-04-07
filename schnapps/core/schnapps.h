@@ -25,8 +25,6 @@
 #define CORE_SCHNAPPS_H_
 
 #include <core/dll.h>
-#include <core/types.h>
-// #include <slot_debug.h>
 
 #include <ui_schnapps.h>
 
@@ -39,6 +37,7 @@ class QFile;
 namespace schnapps
 {
 
+class Camera;
 // class ControlDock_CameraTab;
 // class ControlDock_MapTab;
 // class ControlDock_PluginTab;
@@ -51,17 +50,53 @@ class SCHNAPPS_CORE_API SCHNApps : public QMainWindow, Ui::SCHNApps
 	Q_OBJECT
 
 public:
+
 	SCHNApps(const QString& app_path);
 	~SCHNApps();
 
 public slots:
+
 	/**
 	 * @brief get the file path where application has been launched
 	 * @return the path
 	 */
 	const QString& get_app_path() { return app_path_; }
 
+	/*********************************************************
+	 * MANAGE CAMERAS
+	 *********************************************************/
+
 public slots:
+
+	/**
+	* @brief [PYTHON] add a camera with a given name
+	* @param name name of camera
+	*/
+	Camera* add_camera(const QString& name);
+
+	/**
+	 * @brief [PYTHON] add a camera (name automatically)
+	 * @return
+	 */
+	Camera* add_camera();
+
+	/**
+	* @brief [PYTHON] remove a camera
+	* @param name name of camera to remove
+	*/
+	void remove_camera(const QString& name);
+
+	/**
+	* @brief [PYTHON] get camera object
+	* @param name of camera
+	*/
+	Camera* get_camera(const QString& name) const;
+
+	// get the set of all cameras
+	const QMap<QString, Camera*>& get_camera_set() const { return cameras_; }
+
+public slots:
+
 	void about_SCHNApps();
 	void about_CGoGN();
 
@@ -82,13 +117,18 @@ public slots:
 	inline void set_window_size(int w, int h) { this->resize(w, h); }
 
 protected:
+
 	void closeEvent(QCloseEvent *event);
 
 signals:
+
 	void schnapps_closing();
 
 protected:
+
 	QString app_path_;
+
+	QMap<QString, Camera*> cameras_;
 
 	QDockWidget* control_dock_;
 	QTabWidget* control_dock_tab_widget_;

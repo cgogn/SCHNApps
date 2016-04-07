@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 	// splash->show();
 	// splash->showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
 
-	schnapps::SCHNApps schnapps(app.applicationDirPath()); //, pythonContext, *pythonConsole);
+	schnapps::SCHNApps schnapps(app.applicationDirPath());
 
 	schnapps.show();
 
