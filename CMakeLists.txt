@@ -1,0 +1,31 @@
+cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+
+project(SCHNApps
+	LANGUAGES CXX
+)
+
+#### Default build type
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE "Release")
+endif()
+
+#### SCHNAPPS PATH / SCHNAPPS_SOURCE_DIR
+set(SCHNAPPS_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+set(SCHNAPPS_SOURCE_DIR ${SCHNAPPS_PATH}/schnapps)
+
+#### CGOGN_PATH / CGOGN_SOURCE_DIR
+set(CGOGN_PATH "${SCHNAPPS_PATH}/../CGoGN_2")
+set(CGOGN_SOURCE_DIR ${CGOGN_PATH}/cgogn)
+
+#### Build configuration
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+#### ThirdParty options
+set(SCHNAPPS_THIRDPARTY_DIR ${SCHNAPPS_PATH}/thirdparty)
+
+find_package(Qt5Widgets REQUIRED)
+
+add_subdirectory(${SCHNAPPS_THIRDPARTY_DIR})
+add_subdirectory(${SCHNAPPS_SOURCE_DIR})
