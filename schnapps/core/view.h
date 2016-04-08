@@ -24,9 +24,7 @@
 #ifndef CORE_VIEW_H_
 #define CORE_VIEW_H_
 
-#include <core/dll.h>
-#include <core/schnapps.h>
-#include <core/camera.h>
+#include <schnapps/core/dll.h>
 
 //#include "dialogList.h"
 //#include "viewButtonArea.h"
@@ -35,8 +33,13 @@
 #include <QOGLViewer/qoglviewer.h>
 #include <QOGLViewer/manipulatedFrame.h>
 
+namespace cgogn { namespace rendering { class Drawer; } }
+
 namespace schnapps
 {
+
+class SCHNApps;
+class Camera;
 
 /**
 * @brief View class inherit from QOGLViewer (http://libqglviewer.com/refManual/classQGLViewer.html)
@@ -82,7 +85,7 @@ public slots:
 	 * @brief [PYTHON] test if the view is the selected one
 	 * @return
 	 */
-	bool is_selected_view() const { return schnapps_->get_selected_view() == this; }
+	bool is_selected_view() const;
 
 	/*********************************************************
 	 * MANAGE LINKED CAMERA
@@ -197,10 +200,6 @@ private:
 	void mouseMoveEvent(QMouseEvent* event) override;
 	void wheelEvent(QWheelEvent* event) override;
 
-//	glm::mat4 get_current_model_view_matrix() const;
-//	glm::mat4 get_current_projection_matrix() const;
-//	glm::mat4 get_current_model_view_projection_matrix() const;
-
 	inline int pixel_ratio() const
 	{
 		#if (QT_VERSION >> 16) == 5
@@ -214,8 +213,8 @@ public:
 
 	/**
 	 * @brief get the min and max points of the bounding box of the scene
-	 * @param bbMin min to be filled
-	 * @param bbMax max to be filled
+	 * @param bb_min min to be filled
+	 * @param bb_max max to be filled
 	 */
 	void get_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
 	{
@@ -270,6 +269,8 @@ protected:
 
 	QString name_;
 	SCHNApps* schnapps_;
+
+	cgogn::rendering::Drawer* drawer_;
 
 	Camera* current_camera_;
 //	QList<PluginInteraction*> plugins_;

@@ -24,7 +24,7 @@
 #include <QApplication>
 // #include <QSplashScreen>
 
-#include <core/schnapps.h>
+#include <schnapps/core/schnapps.h>
 
 int main(int argc, char* argv[])
 {

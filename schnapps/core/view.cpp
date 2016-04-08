@@ -21,11 +21,15 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <core/view.h>
-#include <core/camera.h>
+#include <schnapps/core/view.h>
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/camera.h>
 
-//#include <core/map_handler.h>
+//#include <schnapps/core/map_handler.h>
 
+#include <cgogn/rendering/drawer.h>
+
+#include <QMatrix4x4>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QWheelEvent>
@@ -35,11 +39,14 @@
 namespace schnapps
 {
 
+using Vec3 = Eigen::Vector3d;
+
 unsigned int View::view_count_ = 0;
 
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
 	schnapps_(s),
+	drawer_(NULL),
 	current_camera_(NULL),
 	bb_min_(0.0, 0.0, 0.0),
 	bb_max_(0.0, 0.0, 0.0),
@@ -115,6 +122,11 @@ View::~View()
 //	delete dialog_maps_;
 //	delete dialog_plugins_;
 //	delete dialog_cameras_;
+}
+
+bool View::is_selected_view() const
+{
+	return schnapps_->get_selected_view() == this;
 }
 
 /*********************************************************
@@ -305,6 +317,10 @@ bool View::uses_camera(const QString& name) const
 
 void View::init()
 {
+	this->makeCurrent();
+
+	drawer_ = new cgogn::rendering::Drawer(this);
+
 	qoglviewer::Camera* c = this->camera();
 	this->setCamera(current_camera_);
 //	delete c;
@@ -313,6 +329,66 @@ void View::init()
 	glClearColor(0.1f, 0.1f, 0.3f, 0.0f);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+
+	drawer_->new_list();
+	drawer_->line_width(2.0);
+	drawer_->begin(GL_LINE_LOOP);
+		drawer_->color3f(1.0,0.0,0.0);
+		drawer_->vertex3f(0,0,0);
+		drawer_->color3f(0.0,1.0,1.0);
+		drawer_->vertex3f(1,0,0);
+		drawer_->color3f(1.0,0.0,1.0);
+		drawer_->vertex3f(1,1,0);
+		drawer_->color3f(1.0,1.0,0.0);
+		drawer_->vertex3f(0,1,0);
+	drawer_->end();
+//	drawer_->point_size(10.0);
+	drawer_->line_width_aa(3.0);
+	drawer_->begin(GL_LINES);
+		drawer_->color3f(1.0,1.0,1.0);
+		drawer_->vertex3fv(Vec3(-1,1,0));
+		drawer_->vertex3fv(Vec3(-1.2,0,0));
+		drawer_->vertex3fv(Vec3(-2,0,0));
+		drawer_->vertex3fv(Vec3(-2.2,3,0));
+	drawer_->end();
+
+	drawer_->begin(GL_TRIANGLES);
+		drawer_->color3f(1.0,0.0,0.0);
+		drawer_->vertex3fv({{2,2,0}});
+		drawer_->color3f(0.0,1.0,0.0);
+		drawer_->vertex3fv({{4,3,0}});
+		drawer_->color3f(0.0,0.0,1.0);
+		drawer_->vertex3fv({{2.5,1,0}});
+	drawer_->end();
+
+	drawer_->point_size_aa(7.0);
+	drawer_->begin(GL_POINTS);
+	for (float a=0.0f; a < 1.0f; a+= 0.1f)
+	{
+		Vec3 P(4.0+std::cos(6.28*a),-2.0+std::sin(6.28*a),0.0);
+		Vec3 C(a,0.5,1.0-a);
+		drawer_->color3fv(C);
+		drawer_->vertex3fv(P);
+	}
+	drawer_->end();
+
+	drawer_->ball_size(0.1f);
+	drawer_->begin(GL_POINTS);
+	for (float a=0.05f; a < 1.0f; a+= 0.1f)
+	{
+		Vec3 P(4.0+std::cos(6.28*a)*1.2,-2.0+ std::sin(6.28*a)*1.2, std::sin(6.28*a)*0.2 );
+		Vec3 C(a,0.5,1.0-a);
+		drawer_->color3fv(C);
+		drawer_->vertex3fv(P);
+	}
+
+	drawer_->end();
+	drawer_->end_list();
+
+	bb_min_.setValue(0, -5, 0);
+	bb_max_.setValue(5, 5, 2);
+
+	emit(bounding_box_changed());
 
 //	button_area_ = new ViewButtonArea(this);
 //	button_area_->set_top_right_position(this->width(), 0);
@@ -371,8 +447,12 @@ void View::draw()
 		}
 	}
 
-//	glm::mat4 mm = get_current_model_view_matrix();
-//	glm::mat4 pm = get_current_projection_matrix();
+	QMatrix4x4 mm;
+	QMatrix4x4 pm;
+	current_camera_->getModelViewMatrix(mm);
+	current_camera_->getProjectionMatrix(pm);
+
+	drawer_->call_list(pm, mm);
 
 //	MapHandlerGen* selected_map = schnapps_->get_selected_map();
 
@@ -521,7 +601,7 @@ void View::mousePressEvent(QMouseEvent* event)
 //			foreach(PluginInteraction* plugin, plugins_)
 //				plugin->mousePress(this, event);
 
-//			QOGLViewer::mousePressEvent(event);
+			QOGLViewer::mousePressEvent(event);
 //		}
 //	}
 }
@@ -549,45 +629,6 @@ void View::wheelEvent(QWheelEvent* event)
 
 	QOGLViewer::wheelEvent(event);
 }
-
-//glm::mat4 View::get_current_model_view_matrix() const
-//{
-//	GLdouble gl_mvm[16];
-//	camera()->getModelViewMatrix(gl_mvm);
-//	glm::mat4 mvm;
-//	for(unsigned int i = 0; i < 4; ++i)
-//	{
-//		for(unsigned int j = 0; j < 4; ++j)
-//			mvm[i][j] = (float)gl_mvm[i*4+j];
-//	}
-//	return mvm;
-//}
-
-//glm::mat4 View::get_current_projection_matrix() const
-//{
-//	GLdouble gl_pm[16];
-//	camera()->getProjectionMatrix(gl_pm);
-//	glm::mat4 pm;
-//	for(unsigned int i = 0; i < 4; ++i)
-//	{
-//		for(unsigned int j = 0; j < 4; ++j)
-//			pm[i][j] = (float)gl_pm[i*4+j];
-//	}
-//	return pm;
-//}
-
-//glm::mat4 View::get_current_model_view_projection_matrix() const
-//{
-//	GLdouble gl_mvpm[16];
-//	camera()->getModelViewProjectionMatrix(gl_mvpm);
-//	glm::mat4 mvpm;
-//	for(unsigned int i = 0; i < 4; ++i)
-//	{
-//		for(unsigned int j = 0; j < 4; ++j)
-//			mvpm[i][j] = (float)gl_mvpm[i*4+j];
-//	}
-//	return mvpm;
-//}
 
 void View::hide_dialogs()
 {

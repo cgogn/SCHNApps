@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <core/camera.h>
-#include <core/view.h>
+#include <schnapps/core/camera.h>
+#include <schnapps/core/view.h>
 
 namespace schnapps
 {

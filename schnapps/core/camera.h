@@ -24,8 +24,8 @@
 #ifndef CORE_CAMERA_H_
 #define CORE_CAMERA_H_
 
-#include <core/dll.h>
-#include <core/schnapps.h>
+#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps.h>
 
 #include <QOGLViewer/camera.h>
 #include <QOGLViewer/manipulatedCameraFrame.h>

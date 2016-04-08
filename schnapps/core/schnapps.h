@@ -24,7 +24,7 @@
 #ifndef CORE_SCHNAPPS_H_
 #define CORE_SCHNAPPS_H_
 
-#include <core/dll.h>
+#include <schnapps/core/dll.h>
 
 #include <ui_schnapps.h>
 
