@@ -21,13 +21,14 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef CORE_VIEW_H_
-#define CORE_VIEW_H_
+#ifndef SCHNAPPS_CORE_VIEW_H_
+#define SCHNAPPS_CORE_VIEW_H_
 
 #include <schnapps/core/dll.h>
 
-//#include "dialogList.h"
-//#include "viewButtonArea.h"
+#include <schnapps/core/view_dialog_list.h>
+#include <schnapps/core/view_button_area.h>
+
 //#include "plugin_interaction.h"
 
 #include <QOGLViewer/qoglviewer.h>
@@ -304,4 +305,4 @@ protected:
 
 } // namespace schnapps
 
-#endif // CORE_VIEW_H_
+#endif // SCHNAPPS_CORE_VIEW_H_

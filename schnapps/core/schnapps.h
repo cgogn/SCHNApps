@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef CORE_SCHNAPPS_H_
-#define CORE_SCHNAPPS_H_
+#ifndef SCHNAPPS_CORE_SCHNAPPS_H_
+#define SCHNAPPS_CORE_SCHNAPPS_H_
 
 #include <schnapps/core/dll.h>
 
@@ -224,4 +224,4 @@ protected:
 
 } // namespace schnapps
 
-#endif // CORE_SCHNAPPS_H_
+#endif // SCHNAPPS_CORE_SCHNAPPS_H_

@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef CORE_CAMERA_H_
-#define CORE_CAMERA_H_
+#ifndef SCHNAPPS_CORE_CAMERA_H_
+#define SCHNAPPS_CORE_CAMERA_H_
 
 #include <schnapps/core/dll.h>
 #include <schnapps/core/schnapps.h>
@@ -191,4 +191,4 @@ protected:
 
 } // namespace schnapps
 
-#endif // CORE_CAMERA_H_
+#endif // SCHNAPPS_CORE_CAMERA_H_
