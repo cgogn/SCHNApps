@@ -21,23 +21,36 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <QApplication>
-#include <QSplashScreen>
-
+#include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
+#include <schnapps/core/view.h>
 
-int main(int argc, char* argv[])
+namespace schnapps
 {
-	QApplication app(argc, argv);
 
-	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
-	splash.show();
-	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
+MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseData* map) :
+	name_(name),
+	schnapps_(schnapps),
+	map_(map)
+{}
 
-	schnapps::SCHNApps schnapps(app.applicationDirPath());
-	schnapps.show();
+MapHandlerGen::~MapHandlerGen()
+{}
 
-	splash.finish(&schnapps);
-
-	return app.exec();;
+bool MapHandlerGen::is_selected_map() const
+{
+	return schnapps_->get_selected_map() == this;
 }
+
+void MapHandlerGen::link_view(View* view)
+{
+	if (view && !views_.contains(view))
+		views_.push_back(view);
+}
+
+void MapHandlerGen::unlink_view(View* view)
+{
+	views_.removeOne(view);
+}
+
+} // namespace schnapps

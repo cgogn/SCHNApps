@@ -21,23 +21,81 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <QApplication>
-#include <QSplashScreen>
+#ifndef SCHNAPPS_CORE_VIEW_BUTTON_AREA_H_
+#define SCHNAPPS_CORE_VIEW_BUTTON_AREA_H_
 
-#include <schnapps/core/schnapps.h>
+#include <iostream>
 
-int main(int argc, char* argv[])
+#include <QPixmap>
+#include <QSize>
+#include <QRect>
+#include <QPainter>
+#include <QList>
+
+//#include "Utils/textures.h"
+//#include "Utils/Shaders/shaderWallPaper.h"
+
+namespace schnapps
 {
-	QApplication app(argc, argv);
 
-	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
-	splash.show();
-	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
+class View;
 
-	schnapps::SCHNApps schnapps(app.applicationDirPath());
-	schnapps.show();
+class ViewButton : public QObject
+{
+	Q_OBJECT
 
-	splash.finish(&schnapps);
+public:
 
-	return app.exec();;
-}
+	static const int SIZE = 24;
+	static const int SPACE = 4;
+
+	ViewButton(const QString& image, View* view);
+	~ViewButton();
+
+	QSize get_size();
+
+	void click(int x, int y, int globalX, int globalY);
+//	void draw_at(int x, int y, Utils::ShaderWallPaper* shader);
+
+protected:
+
+	QString img_;
+	View* view_;
+//	Utils::Texture<2, Geom::Vec3uc>* texture_;
+
+signals:
+
+	void clicked(int x, int y, int globalX, int globalY);
+};
+
+class ViewButtonArea : public QObject
+{
+	Q_OBJECT
+
+public:
+
+	ViewButtonArea(View* view);
+	~ViewButtonArea();
+
+	void add_button(ViewButton* button);
+	void remove_button(ViewButton* button);
+
+	bool is_clicked(int x, int y);
+	void click_button(int x, int y, int globalX, int globalY);
+
+	const QRect& get_form() { return form_; }
+	void set_top_right_position(int x, int y);
+	void set_top_left_position(int x, int y);
+	void draw();
+
+protected:
+
+	View* view_;
+	QRect form_;
+	QList<ViewButton*> buttons_;
+//	Utils::ShaderWallPaper* shader_button_;
+};
+
+} // namespace schnapps
+
+#endif // SCHNAPPS_CORE_VIEW_BUTTON_AREA_H_

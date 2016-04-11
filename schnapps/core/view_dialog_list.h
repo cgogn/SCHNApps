@@ -21,23 +21,47 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <QApplication>
-#include <QSplashScreen>
+#ifndef SCHNAPPS_CORE_VIEW_DIALOG_LIST_H_
+#define SCHNAPPS_CORE_VIEW_DIALOG_LIST_H_
 
-#include <schnapps/core/schnapps.h>
+#include <schnapps/core/dll.h>
 
-int main(int argc, char* argv[])
+#include <QDialog>
+#include <QVBoxLayout>
+#include <QListWidget>
+#include <QListWidgetItem>
+
+namespace schnapps
 {
-	QApplication app(argc, argv);
 
-	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
-	splash.show();
-	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
+class SCHNAPPS_CORE_API ViewDialogList : public QDialog
+{
+	Q_OBJECT
 
-	schnapps::SCHNApps schnapps(app.applicationDirPath());
-	schnapps.show();
+public:
 
-	splash.finish(&schnapps);
+	ViewDialogList(const QString& name, QWidget* parent = NULL);
+	virtual ~ViewDialogList();
 
-	return app.exec();;
-}
+	virtual void show();
+
+	QListWidget* list();
+
+	QListWidgetItem* add_item(const QString& str, Qt::CheckState checked = Qt::Unchecked);
+	QListWidgetItem* get_item(unsigned int row);
+	unsigned int nb_items() const;
+	QListWidgetItem* find_item(const QString& str) const;
+	bool remove_item(const QString& str);
+
+	void check(const QString& str, Qt::CheckState ck);
+	bool is_checked(const QString& str);
+
+protected:
+
+	QVBoxLayout* layout_;
+	QListWidget* list_items_;
+};
+
+} // namespace schnapps
+
+#endif // SCHNAPPS_CORE_VIEW_DIALOG_LIST_H_
