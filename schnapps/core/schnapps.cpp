@@ -41,6 +41,7 @@
 #include <schnapps/core/view.h>
 #include <schnapps/core/plugin.h>
 #include <schnapps/core/plugin_interaction.h>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
@@ -164,7 +165,7 @@ void SCHNApps::register_plugins_directory(const QString& path)
 
 		QStringList plugin_files = directory.entryList(filters, QDir::Files);
 
-		foreach(QString plugin_file, plugin_files)
+		foreach (QString plugin_file, plugin_files)
 		{
 			QFileInfo pfi(plugin_file);
 #ifdef WIN32
@@ -317,7 +318,7 @@ Plugin* SCHNApps::get_plugin(const QString& name) const
 //{
 //	if(m_pluginTabs.contains(plugin))
 //	{
-//		foreach(QWidget* w, m_pluginTabs[plugin])
+//		foreach (QWidget* w, m_pluginTabs[plugin])
 //			m_pluginDockTabWidget->setTabEnabled(m_pluginDockTabWidget->indexOf(w), true);
 //	}
 //}
@@ -326,15 +327,90 @@ Plugin* SCHNApps::get_plugin(const QString& name) const
 //{
 //	if(m_pluginTabs.contains(plugin))
 //	{
-//		foreach(QWidget* w, m_pluginTabs[plugin])
+//		foreach (QWidget* w, m_pluginTabs[plugin])
 //			m_pluginDockTabWidget->setTabEnabled(m_pluginDockTabWidget->indexOf(w), false);
 //	}
 //}
 
 /*********************************************************
- * MANAGE VIEWS
+ * MANAGE MAPS
  *********************************************************/
 
+MapHandlerGen* SCHNApps::add_map(const QString &name, unsigned int dimension)
+{
+	QString final_name = name;
+	if (maps_.contains(name))
+	{
+		int i = 1;
+		do
+		{
+			final_name = name + QString("_") + QString::number(i);
+			++i;
+		} while (maps_.contains(final_name));
+	}
+
+	MapHandlerGen* mh = NULL;
+	switch(dimension)
+	{
+		case 2 : {
+			CMap2* map = new CMap2();
+			mh = new MapHandler<CMap2>(final_name, this, map);
+			break;
+		}
+		case 3 : {
+			CMap3* map = new CMap3();
+			mh = new MapHandler<CMap3>(final_name, this, map);
+			break;
+		}
+	}
+
+	maps_.insert(final_name, mh);
+	emit(map_added(mh));
+
+	return mh;
+}
+
+void SCHNApps::remove_map(const QString &name)
+{
+	if (maps_.contains(name))
+	{
+		MapHandlerGen* map = maps_[name];
+		foreach (View* view, map->get_linked_views())
+			view->unlink_map(map);
+
+		maps_.remove(name);
+		emit(map_removed(map));
+
+		// unselect map if it is removed
+		if (this->get_selected_map() == map)
+			set_selected_map(QString("NONE"));
+
+		delete map;
+	}
+}
+
+MapHandlerGen* SCHNApps::get_map(const QString& name) const
+{
+	if (maps_.contains(name))
+		return maps_[name];
+	else
+		return NULL;
+}
+
+MapHandlerGen* SCHNApps::get_selected_map() const
+{
+//	return control_map_tab_->get_selected_map();
+	return NULL;
+}
+
+void SCHNApps::set_selected_map(const QString& name)
+{
+//	control_map_tab_->set_selected_map(name);
+}
+
+/*********************************************************
+ * MANAGE VIEWS
+ *********************************************************/
 
 View* SCHNApps::add_view(const QString& name)
 {
@@ -397,7 +473,7 @@ void SCHNApps::set_selected_view(View* view)
 
 //	if(selected_view_)
 //	{
-//		foreach(PluginInteraction* p, selected_view_->get_linked_plugins())
+//		foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
 //			disable_plugin_tab_widgets(p);
 //		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
 //		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
@@ -408,7 +484,7 @@ void SCHNApps::set_selected_view(View* view)
 	if (old_selected)
 		old_selected->hide_dialogs();
 
-//	foreach(PluginInteraction* p, selected_view_->get_linked_plugins())
+//	foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
 //		enable_plugin_tab_widgets(p);
 //	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
 //	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));

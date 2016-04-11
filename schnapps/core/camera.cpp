@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/core/camera.h>
+#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 
 namespace schnapps
@@ -43,48 +44,11 @@ Camera::Camera(const QString& name, SCHNApps* schnapps) :
 Camera::~Camera()
 {}
 
-bool Camera::is_used() const
-{
-	return !views_.empty();
-	return true;
-}
-
-bool Camera::is_shared() const
-{
-	return views_.size() > 1;
-	return true;
-}
-
-qoglviewer::Camera::Type Camera::get_projection_type() const
-{
-	return this->type();
-}
-
-bool Camera::get_draw() const
-{
-	return draw_;
-}
-
-bool Camera::get_draw_path() const
-{
-	return draw_path_;
-}
-
-const QList<View*>& Camera::get_linked_views() const
-{
-	return views_;
-}
-
-bool Camera::is_linked_to_view(View* view) const
-{
-	return views_.contains(view);
-}
-
 void Camera::set_projection_type(int t)
 {
 	this->setType(qoglviewer::Camera::Type(t));
 	emit(projection_type_changed(t));
-	foreach(View* view, schnapps_->get_view_set().values())
+	foreach (View* view, schnapps_->get_view_set().values())
 		view->update();
 }
 
@@ -92,7 +56,7 @@ void Camera::set_draw(bool b)
 {
 	draw_ = b;
 	emit(draw_changed(b));
-	foreach(View* view, schnapps_->get_view_set().values())
+	foreach (View* view, schnapps_->get_view_set().values())
 		view->update();
 }
 
@@ -100,18 +64,8 @@ void Camera::set_draw_path(bool b)
 {
 	draw_path_ = b;
 	emit(draw_path_changed(b));
-	foreach(View* view, schnapps_->get_view_set().values())
+	foreach (View* view, schnapps_->get_view_set().values())
 		view->update();
-}
-
-void Camera::enable_views_bounding_box_fitting()
-{
-	fit_to_views_bounding_box_ = true;
-}
-
-void Camera::disable_views_bounding_box_fitting()
-{
-	fit_to_views_bounding_box_ = false;
 }
 
 QString Camera::to_string()
@@ -164,12 +118,12 @@ void Camera::frame_modified()
 {
 	if(draw_ || draw_path_)
 	{
-		foreach(View* view, schnapps_->get_view_set().values())
+		foreach (View* view, schnapps_->get_view_set().values())
 			view->update();
 	}
 	else
 	{
-		foreach(View* view, views_)
+		foreach (View* view, views_)
 			view->update();
 	}
 }
@@ -185,7 +139,7 @@ void Camera::fit_to_views_bounding_box()
 		{
 			views_.first()->get_bb(bb_min, bb_max);
 
-			foreach(View* v, views_)
+			foreach (View* v, views_)
 			{
 				qoglviewer::Vec minbb;
 				qoglviewer::Vec maxbb;

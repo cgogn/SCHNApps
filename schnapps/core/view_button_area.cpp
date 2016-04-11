@@ -79,7 +79,7 @@ ViewButtonArea::~ViewButtonArea()
 
 void ViewButtonArea::add_button(ViewButton* button)
 {
-	if(!buttons_.contains(button))
+	if (!buttons_.contains(button))
 	{
 		form_.setWidth(form_.width() + ViewButton::SIZE + ViewButton::SPACE);
 		form_.moveTopLeft(QPoint(form_.x() - ViewButton::SIZE - ViewButton::SPACE, form_.y()));
@@ -91,7 +91,7 @@ void ViewButtonArea::add_button(ViewButton* button)
 
 void ViewButtonArea::remove_button(ViewButton* button)
 {
-	if(buttons_.removeOne(button))
+	if (buttons_.removeOne(button))
 	{
 		form_.setWidth(form_.width() - ViewButton::SIZE - ViewButton::SPACE);
 		form_.moveTopLeft(QPoint(form_.x() + ViewButton::SIZE + ViewButton::SPACE, form_.y()));
@@ -108,9 +108,9 @@ void ViewButtonArea::click_button(int x, int y, int globalX, int globalY)
 {
 	QPoint p = form_.topLeft();
 	p.setY(p.y() + ViewButton::SPACE);
-	foreach(ViewButton* b, buttons_)
+	foreach (ViewButton* b, buttons_)
 	{
-		if(QRect(p, QSize(ViewButton::SIZE, ViewButton::SIZE)).contains(x, y))
+		if (QRect(p, QSize(ViewButton::SIZE, ViewButton::SIZE)).contains(x, y))
 		{
 			b->click(x, y, globalX, globalY);
 			return;
@@ -134,7 +134,7 @@ void ViewButtonArea::draw()
 	int p_x = form_.x();
 	int p_y = form_.y();
 
-	foreach(ViewButton* b, buttons_)
+	foreach (ViewButton* b, buttons_)
 	{
 //		b->draw_at(p_x, p_y + ViewButton::SPACE, shader_button_);
 		p_x += ViewButton::SIZE + ViewButton::SPACE;

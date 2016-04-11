@@ -25,7 +25,7 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/camera.h>
 #include <schnapps/core/plugin_interaction.h>
-//#include <schnapps/core/map_handler.h>
+#include <schnapps/core/map_handler.h>
 
 #include <cgogn/rendering/drawer.h>
 
@@ -75,27 +75,27 @@ View::View(const QString& name, SCHNApps* s) :
 	dialog_plugins_ = new ViewDialogList("Linked Plugins");
 	dialog_cameras_ = new ViewDialogList("Cameras");
 
-//	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*,MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*,MapHandlerGen*)));
 
-//	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-//	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
-//	connect(dialog_maps_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(map_check_state_changed(QListWidgetItem*)));
+	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
+	connect(dialog_maps_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(map_check_state_changed(QListWidgetItem*)));
 
-//	foreach(MapHandlerGen* map, schnapps_->get_map_set().values())
-//		map_added(map);
+	foreach (MapHandlerGen* map, schnapps_->get_map_set().values())
+		map_added(map);
 
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
 	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
 	connect(dialog_plugins_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(plugin_check_state_changed(QListWidgetItem*)));
 
-	foreach(Plugin* plugin, schnapps_->get_plugin_set().values())
+	foreach (Plugin* plugin, schnapps_->get_plugin_set().values())
 		plugin_enabled(plugin);
 
 	connect(schnapps_, SIGNAL(camera_added(Camera*)), this, SLOT(camera_added(Camera*)));
 	connect(schnapps_, SIGNAL(camera_removed(Camera*)), this, SLOT(camera_removed(Camera*)));
 	connect(dialog_cameras_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(camera_check_state_changed(QListWidgetItem*)));
 
-	foreach(Camera* camera, schnapps_->get_camera_set().values())
+	foreach (Camera* camera, schnapps_->get_camera_set().values())
 		camera_added(camera);
 
 	current_camera_ = schnapps_->add_camera();
@@ -111,11 +111,11 @@ View::~View()
 	this->setCamera(c);
 	current_camera_->unlink_view(this);
 
-	foreach(PluginInteraction* p, plugins_)
+	foreach (PluginInteraction* p, plugins_)
 		unlink_plugin(p);
 
-//	foreach(MapHandlerGen* m, maps_)
-//		unlink_map(m);
+	foreach (MapHandlerGen* m, maps_)
+		unlink_map(m);
 
 	delete button_area_;
 	delete button_area_left_;
@@ -249,70 +249,70 @@ bool View::is_linked_to_plugin(const QString& name) const
  * MANAGE LINKED MAPS
  *********************************************************/
 
-//void View::link_map(MapHandlerGen* map)
-//{
-//	if(map && !maps_.contains(map))
-//	{
-//		maps_.push_back(map);
-//		map->link_view(this);
+void View::link_map(MapHandlerGen* map)
+{
+	if(map && !maps_.contains(map))
+	{
+		maps_.push_back(map);
+		map->link_view(this);
 
-//		emit(map_linked(map));
+		emit(map_linked(map));
 
-//		connect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
-//		connect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
+		connect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
+		connect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
 
 //		if(map->is_selected_map())
-//			this->setManipulatedFrame(map->getFrame());
+//			this->setManipulatedFrame(map->get_frame());
 
-//		update_bounding_box();
+		update_bounding_box();
 
-//		updating_ui_ = true;
-//		dialog_maps_->check(map->get_name(), Qt::Checked);
-//		updating_ui_ = false;
-//	}
-//}
+		updating_ui_ = true;
+		dialog_maps_->check(map->get_name(), Qt::Checked);
+		updating_ui_ = false;
+	}
+}
 
-//void View::link_map(const QString& name)
-//{
-//	MapHandlerGen* m = schnapps_->get_map(name);
-//	if (m)
-//		link_map(m);
-//}
+void View::link_map(const QString& name)
+{
+	MapHandlerGen* m = schnapps_->get_map(name);
+	if (m)
+		link_map(m);
+}
 
-//void View::unlink_map(MapHandlerGen* map)
-//{
-//	if(maps_.removeOne(map))
-//	{
-//		map->unlink_view(this);
+void View::unlink_map(MapHandlerGen* map)
+{
+	if(maps_.removeOne(map))
+	{
+		map->unlink_view(this);
 
-//		emit(map_unlinked(map));
+		emit(map_unlinked(map));
 
-//		disconnect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
-//		disconnect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
+		disconnect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
+		disconnect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
 
 //		if(map->is_selected_map())
 //			this->setManipulatedFrame(NULL);
 
-//		update_bounding_box();
+		update_bounding_box();
 
-//		updating_ui_ = true;
-//		dialog_maps_->check(map->get_name(), Qt::Unchecked);
-//		updating_ui_ = false;
-//	}
-//}
+		updating_ui_ = true;
+		dialog_maps_->check(map->get_name(), Qt::Unchecked);
+		updating_ui_ = false;
+	}
+}
 
-//void View::unlink_map(const QString& name)
-//{
-//	MapHandlerGen* m = schnapps_->get_map(name);
-//	if (m)
-//		unlink_map(m);
-//}
+void View::unlink_map(const QString& name)
+{
+	MapHandlerGen* m = schnapps_->get_map(name);
+	if (m)
+		unlink_map(m);
+}
 
-//bool View::is_linked_to_map(const QString& name) const
-//{
-//	MapHandlerGen* m = schnapps_->get_map(name);
-//	return maps_.contains(m);
-//}
+bool View::is_linked_to_map(const QString& name) const
+{
+	MapHandlerGen* m = schnapps_->get_map(name);
+	return maps_.contains(m);
+}
 
 
 
@@ -470,9 +470,9 @@ void View::draw()
 
 //	MapHandlerGen* selected_map = schnapps_->get_selected_map();
 
-//	foreach(MapHandlerGen* map, maps_)
-//	{
-//		glm::mat4 map_mm = mm * map->get_frame_matrix() * map->get_transfo_matrix();
+	foreach (MapHandlerGen* map, maps_)
+	{
+		QMatrix4x4 map_mm = mm; // * map->get_frame_matrix() * map->get_transfo_matrix();
 
 //		if(map == selected_map)
 //		{
@@ -482,16 +482,20 @@ void View::draw()
 //			map->draw_bb();
 //		}
 
-//		foreach(PluginInteraction* plugin, plugins_)
-//		{
-//			foreach(Utils::GLSLShader* shader, plugin->get_shaders())
-//				shader->update_matrices(pm, map_mm);
-//			plugin->draw_map(this, map);
-//		}
-//	}
+		foreach (PluginInteraction* plugin, plugins_)
+		{
+			foreach (cgogn::rendering::ShaderProgram* shader, plugin->get_shaders())
+				shader->set_matrices(pm, map_mm);
+			plugin->draw_map(this, map);
+		}
+	}
 
-	foreach(PluginInteraction* plugin, plugins_)
+	foreach (PluginInteraction* plugin, plugins_)
+	{
+		foreach (cgogn::rendering::ShaderProgram* shader, plugin->get_shaders())
+			shader->set_matrices(pm, mm);
 		plugin->draw(this);
+	}
 }
 
 void View::postDraw()
@@ -568,7 +572,7 @@ void View::keyPressEvent(QKeyEvent* event)
 
 		default:
 		{
-			foreach(PluginInteraction* plugin, plugins_)
+			foreach (PluginInteraction* plugin, plugins_)
 				plugin->keyPress(this, event);
 
 			if (event->key() == Qt::Key_Escape)
@@ -588,7 +592,7 @@ void View::keyPressEvent(QKeyEvent* event)
 
 void View::keyReleaseEvent(QKeyEvent *event)
 {
-	foreach(PluginInteraction* plugin, plugins_)
+	foreach (PluginInteraction* plugin, plugins_)
 		plugin->keyRelease(this, event);
 
 	QOGLViewer::keyReleaseEvent(event);
@@ -613,7 +617,7 @@ void View::mousePressEvent(QMouseEvent* event)
 			button_area_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
 		else
 		{
-			foreach(PluginInteraction* plugin, plugins_)
+			foreach (PluginInteraction* plugin, plugins_)
 				plugin->mousePress(this, event);
 
 			QOGLViewer::mousePressEvent(event);
@@ -623,7 +627,7 @@ void View::mousePressEvent(QMouseEvent* event)
 
 void View::mouseReleaseEvent(QMouseEvent* event)
 {
-	foreach(PluginInteraction* plugin, plugins_)
+	foreach (PluginInteraction* plugin, plugins_)
 		plugin->mouseRelease(this, event);
 
 	QOGLViewer::mouseReleaseEvent(event);
@@ -631,7 +635,7 @@ void View::mouseReleaseEvent(QMouseEvent* event)
 
 void View::mouseMoveEvent(QMouseEvent* event)
 {
-	foreach(PluginInteraction* plugin, plugins_)
+	foreach (PluginInteraction* plugin, plugins_)
 		plugin->mouseMove(this, event);
 
 	QOGLViewer::mouseMoveEvent(event);
@@ -639,7 +643,7 @@ void View::mouseMoveEvent(QMouseEvent* event)
 
 void View::wheelEvent(QWheelEvent* event)
 {
-	foreach(PluginInteraction* plugin, plugins_)
+	foreach (PluginInteraction* plugin, plugins_)
 		plugin->wheelEvent(this, event);
 
 	QOGLViewer::wheelEvent(event);
@@ -662,35 +666,35 @@ void View::close_dialogs()
 	dialog_cameras_->close();
 }
 
-//void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
-//{
+void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
+{
 //	if(cur && is_linked_to_map(cur))
 //		this->setManipulatedFrame(cur->getFrame());
-//	this->update();
-//}
+	this->update();
+}
 
-//void View::map_added(MapHandlerGen* mh)
-//{
-//	if (mh)
-//		dialog_maps_->add_item(mh->get_name());
-//}
+void View::map_added(MapHandlerGen* mh)
+{
+	if (mh)
+		dialog_maps_->add_item(mh->get_name());
+}
 
-//void View::map_removed(MapHandlerGen* mh)
-//{
-//	if (mh)
-//		m_dialogMaps->remove_item(mh->get_name());
-//}
+void View::map_removed(MapHandlerGen* mh)
+{
+	if (mh)
+		dialog_maps_->remove_item(mh->get_name());
+}
 
-//void View::map_check_state_changed(QListWidgetItem* item)
-//{
-//	if (!updating_ui_)
-//	{
-//		if (item->checkState() == Qt::Checked)
-//			link_map(item->text());
-//		else
-//			unlink_map(item->text());
-//	}
-//}
+void View::map_check_state_changed(QListWidgetItem* item)
+{
+	if (!updating_ui_)
+	{
+		if (item->checkState() == Qt::Checked)
+			link_map(item->text());
+		else
+			unlink_map(item->text());
+	}
+}
 
 void View::plugin_enabled(Plugin *plugin)
 {
@@ -736,14 +740,14 @@ void View::camera_check_state_changed(QListWidgetItem* item)
 	}
 }
 
-//void View::update_bounding_box()
-//{
-//	if (!maps_.empty())
-//	{
-//		bool initialized = false;
+void View::update_bounding_box()
+{
+	if (!maps_.empty())
+	{
+		bool initialized = false;
 
-//		foreach (MapHandlerGen* mhg, maps_)
-//		{
+		foreach (MapHandlerGen* mhg, maps_)
+		{
 //			qoglviewer::Vec minbb;
 //			qoglviewer::Vec maxbb;
 //			if (mhg->transformed_bb(minbb, maxbb))
@@ -768,22 +772,22 @@ void View::camera_check_state_changed(QListWidgetItem* item)
 //					initialized = true;
 //				}
 //			}
-//		}
+		}
 
-//		if (!initialized)
-//		{
-//			bb_min_.setValue(0, 0, 0);
-//			bb_max_.setValue(0, 0, 0);
-//		}
-//	}
-//	else
-//	{
-//		bb_min_.setValue(0, 0, 0);
-//		bb_max_.setValue(0, 0, 0);
-//	}
+		if (!initialized)
+		{
+			bb_min_.setValue(0, 0, 0);
+			bb_max_.setValue(0, 0, 0);
+		}
+	}
+	else
+	{
+		bb_min_.setValue(0, 0, 0);
+		bb_max_.setValue(0, 0, 0);
+	}
 
-//	emit(bounding_box_changed());
-//}
+	emit(bounding_box_changed());
+}
 
 void View::ui_vertical_split_view(int, int, int, int)
 {

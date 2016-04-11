@@ -21,48 +21,36 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/core/plugin_interaction.h>
+#include <schnapps/core/map_handler.h>
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/view.h>
 
 namespace schnapps
 {
 
-void PluginInteraction::link_view(View* view)
+MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseData* map) :
+	name_(name),
+	schnapps_(schnapps),
+	map_(map)
+{}
+
+MapHandlerGen::~MapHandlerGen()
+{}
+
+bool MapHandlerGen::is_selected_map() const
+{
+	return schnapps_->get_selected_map() == this;
+}
+
+void MapHandlerGen::link_view(View* view)
 {
 	if (view && !views_.contains(view))
-	{
 		views_.push_back(view);
-		view_linked(view);
-	}
 }
 
-void PluginInteraction::unlink_view(View* view)
+void MapHandlerGen::unlink_view(View* view)
 {
-	if (views_.removeOne(view))
-		view_unlinked(view);
-}
-
-void PluginInteraction::register_shader(cgogn::rendering::ShaderProgram* shader)
-{
-	if (shader && !shaders_.contains(shader))
-		shaders_.push_back(shader);
-}
-
-void PluginInteraction::register_shaders(const std::vector<cgogn::rendering::ShaderProgram*>& shaders)
-{
-	for (auto shader: shaders)
-		if(shader && !shaders_.contains(shader))
-			shaders_.push_back(shader);
-}
-
-void PluginInteraction::unregister_shader(cgogn::rendering::ShaderProgram* shader)
-{
-	shaders_.removeOne(shader);
-}
-
-void PluginInteraction::unregister_shaders(const std::vector<cgogn::rendering::ShaderProgram*>& shaders)
-{
-	for (auto shader: shaders)
-		shaders_.removeOne(shader);
+	views_.removeOne(view);
 }
 
 } // namespace schnapps

@@ -41,6 +41,7 @@ class SCHNApps;
 class Camera;
 class Plugin;
 class PluginInteraction;
+class MapHandlerGen;
 
 /**
 * @brief View class inherit from QOGLViewer (http://libqglviewer.com/refManual/classQGLViewer.html)
@@ -157,31 +158,31 @@ public slots:
 	 * MANAGE LINKED MAPS
 	 *********************************************************/
 
-//	void link_map(MapHandlerGen* map);
+	void link_map(MapHandlerGen* map);
 
-//	/**
-//	* @brief link a map with the view
-//	* @param name the name of map
-//	*/
-//	void link_map(const QString& name);
+	/**
+	* @brief link a map with the view
+	* @param name the name of map
+	*/
+	void link_map(const QString& name);
 
-//	void unlink_map(MapHandlerGen* map);
+	void unlink_map(MapHandlerGen* map);
 
-//	/**
-//	* @brief unlink a map of the view
-//	* @param name the name of map
-//	*/
-//	void unlink_map(const QString& name);
+	/**
+	* @brief unlink a map of the view
+	* @param name the name of map
+	*/
+	void unlink_map(const QString& name);
 
-//	const QList<MapHandlerGen*>& get_linked_maps() const { return maps_; }
+	const QList<MapHandlerGen*>& get_linked_maps() const { return maps_; }
 
-//	bool is_linked_to_map(MapHandlerGen* map) const { return maps_.contains(map); }
+	bool is_linked_to_map(MapHandlerGen* map) const { return maps_.contains(map); }
 
-//	/**
-//	* @brief test if the view is linked to a lao
-//	* @param name the name of map
-//	*/
-//	bool is_linked_to_map(const QString& name) const;
+	/**
+	* @brief test if the view is linked to a lao
+	* @param name the name of map
+	*/
+	bool is_linked_to_map(const QString& name) const;
 
 private:
 
@@ -230,11 +231,11 @@ private slots:
 
 	void close_dialogs();
 
-//	void selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur);
+	void selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur);
 
-//	void map_added(MapHandlerGen* map);
-//	void map_removed(MapHandlerGen* map);
-//	void map_check_state_changed(QListWidgetItem* item);
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void map_check_state_changed(QListWidgetItem* item);
 
 	void plugin_enabled(Plugin *plugin);
 	void plugin_disabled(Plugin *plugin);
@@ -244,7 +245,7 @@ private slots:
 	void camera_removed(Camera* camera);
 	void camera_check_state_changed(QListWidgetItem* item);
 
-//	void update_bounding_box();
+	void update_bounding_box();
 
 	void ui_vertical_split_view(int x, int y, int globalX, int globalY);
 	void ui_horizontal_split_view(int x, int y, int globalX, int globalY);
@@ -258,8 +259,8 @@ signals:
 
 	void current_camera_changed(Camera*, Camera*);
 
-//	void map_linked(MapHandlerGen*);
-//	void map_unlinked(MapHandlerGen*);
+	void map_linked(MapHandlerGen*);
+	void map_unlinked(MapHandlerGen*);
 
 	void plugin_linked(PluginInteraction*);
 	void plugin_unlinked(PluginInteraction*);
@@ -273,7 +274,7 @@ protected:
 
 	Camera* current_camera_;
 	QList<PluginInteraction*> plugins_;
-//	QList<MapHandlerGen*> maps_;
+	QList<MapHandlerGen*> maps_;
 
 	qoglviewer::Vec bb_min_;
 	qoglviewer::Vec bb_max_;

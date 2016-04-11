@@ -41,6 +41,7 @@ class Camera;
 class View;
 class Plugin;
 class PluginInteraction;
+class MapHandlerGen;
 
 // class ControlDock_CameraTab;
 // class ControlDock_MapTab;
@@ -144,6 +145,76 @@ public slots:
 //	void disable_plugin_tab_widgets(PluginInteraction* plugin);
 
 	/*********************************************************
+	 * MANAGE MAPS
+	 *********************************************************/
+	/**
+	* @brief add a new empty map
+	* @param name name given to the map
+	* @param dimension dimension of the map
+	*/
+	MapHandlerGen* add_map(const QString& name, unsigned int dimension);
+
+	/**
+	* @brief Remove a map
+	* @param name name of map
+	*/
+	void remove_map(const QString& name);
+
+	/**
+	* @brief Duplicate (copy) a map
+	* @param name of map to copy
+	* @param properties copy BB & VBO
+	*/
+//	MapHandlerGen* duplicate_map(const QString& name, bool properties);
+
+	/**
+	* @brief Get a map object from its name
+	* @param name name of map
+	*/
+	MapHandlerGen* get_map(const QString& name) const;
+
+	// get the set of maps
+	const QMap<QString, MapHandlerGen*>& get_map_set() const { return maps_; }
+
+	/**
+	* @brief Get the current selected map
+	* @return the selected map
+	*/
+	MapHandlerGen* get_selected_map() const;
+
+	/**
+	* @brief Set the current selected map
+	* @param name name of the map to be selected
+	*/
+	void set_selected_map(const QString& name);
+
+	// notify that current selected map has changed
+	void notify_selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur) { emit(selected_map_changed(old, cur)); }
+
+//	/**
+//	* @brief Get the current selected tab orbit in control dock map tab interface
+//	* @return 0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume
+//	*/
+//	unsigned int get_current_orbit() const;
+
+//	/**
+//	* @brief Get cell selector
+//	* @param orbit Orbit (0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume)
+//	*/
+//	CellSelectorGen* getSelectedSelector(unsigned int orbit) const;
+
+//	/**
+//	* @brief Set the selector of the current map (warning change the current orbit)
+//	* @param orbit the orbit (0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume)
+//	* @param name name of selector (must exist)
+//	*/
+//	void set_selected_selector_current_map(unsigned int orbit, const QString& name);
+
+//	// notify that current selected cell-selection has changed
+//	void notify_selected_cell_selector_changed(CellSelectorGen* cs) { emit(selected_cell_selector_changed(cs)); }
+
+
+	/*********************************************************
 	 * MANAGE VIEWS
 	 *********************************************************/
 
@@ -239,13 +310,17 @@ signals:
 	void camera_added(Camera*);
 	void camera_removed(Camera*);
 
-	void view_added(View*);
-	void view_removed(View*);
-	void selected_view_changed(View*, View*);
-
 	void plugin_available_added(QString name);
 	void plugin_enabled(Plugin* plugin);
 	void plugin_disabled(Plugin* plugin);
+
+	void map_added(MapHandlerGen*);
+	void map_removed(MapHandlerGen*);
+	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+
+	void view_added(View*);
+	void view_removed(View*);
+	void selected_view_changed(View*, View*);
 
 	void schnapps_closing();
 
@@ -255,12 +330,14 @@ protected:
 
 	QMap<QString, Camera*> cameras_;
 
+	QMap<QString, Plugin*> plugins_;
+	QMap<QString, QString> available_plugins_;
+
+	QMap<QString, MapHandlerGen*> maps_;
+
 	QMap<QString, View*> views_;
 	View* first_view_;
 	View* selected_view_;
-
-	QMap<QString, Plugin*> plugins_;
-	QMap<QString, QString> available_plugins_;
 
 	QDockWidget* control_dock_;
 	QTabWidget* control_dock_tab_widget_;
