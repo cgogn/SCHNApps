@@ -21,23 +21,58 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <QApplication>
-#include <QSplashScreen>
+#include <schnapps/core/plugin_interaction.h>
 
-#include <schnapps/core/schnapps.h>
-
-int main(int argc, char* argv[])
+namespace schnapps
 {
-	QApplication app(argc, argv);
 
-	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
-	splash.show();
-	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
-
-	schnapps::SCHNApps schnapps(app.applicationDirPath());
-	schnapps.show();
-
-	splash.finish(&schnapps);
-
-	return app.exec();;
+const QList<View*>& PluginInteraction::get_linked_views() const
+{
+	return views_;
 }
+
+bool PluginInteraction::is_linked_to_view(View* view) const
+{
+	return views_.contains(view);
+}
+
+void PluginInteraction::link_view(View* view)
+{
+	if(view && !views_.contains(view))
+	{
+		views_.push_back(view);
+		view_linked(view);
+	}
+}
+
+void PluginInteraction::unlink_view(View* view)
+{
+	if(views_.removeOne(view))
+		view_unlinked(view);
+}
+
+void PluginInteraction::register_shader(cgogn::rendering::ShaderProgram* shader)
+{
+	if(shader && !shaders_.contains(shader))
+		shaders_.push_back(shader);
+}
+
+void PluginInteraction::register_shaders(const std::vector<cgogn::rendering::ShaderProgram*>& shaders)
+{
+	for (auto shader: shaders)
+		if(shader && !shaders_.contains(shader))
+			shaders_.push_back(shader);
+}
+
+void PluginInteraction::unregister_shader(cgogn::rendering::ShaderProgram* shader)
+{
+	shaders_.removeOne(shader);
+}
+
+void PluginInteraction::unregister_shaders(const std::vector<cgogn::rendering::ShaderProgram*>& shaders)
+{
+	for (auto shader: shaders)
+		shaders_.removeOne(shader);
+}
+
+} // namespace schnapps

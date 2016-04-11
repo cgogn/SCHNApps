@@ -24,7 +24,7 @@
 #include <schnapps/core/view.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/camera.h>
-
+#include <schnapps/core/plugin_interaction.h>
 //#include <schnapps/core/map_handler.h>
 
 #include <cgogn/rendering/drawer.h>
@@ -46,21 +46,22 @@ unsigned int View::view_count_ = 0;
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
 	schnapps_(s),
-	drawer_(NULL),
 	current_camera_(NULL),
 	bb_min_(0.0, 0.0, 0.0),
 	bb_max_(0.0, 0.0, 0.0),
-//	button_area_(NULL),
-//	close_button_(NULL),
-//	Vsplit_button_(NULL),
-//	Hsplit_button_(NULL),
-//	button_area_left_(NULL),
-//	maps_button_(NULL),
-//	plugins_button_(NULL),
-//	cameras_button_(NULL),
-//	dialog_maps_(NULL),
-//	dialog_plugins_(NULL),
-//	dialog_cameras_(NULL),
+	button_area_(NULL),
+	close_button_(NULL),
+	Vsplit_button_(NULL),
+	Hsplit_button_(NULL),
+	button_area_left_(NULL),
+	maps_button_(NULL),
+	plugins_button_(NULL),
+	cameras_button_(NULL),
+	dialog_maps_(NULL),
+	dialog_plugins_(NULL),
+	dialog_cameras_(NULL),
+	drawer_(NULL),
+	frame_drawer_(NULL),
 	save_snapshots_(false),
 	updating_ui_(false)
 {
@@ -70,9 +71,9 @@ View::View(const QString& name, SCHNApps* s) :
 	this->setSnapshotFileName(name_);
 	this->setSnapshotQuality(100);
 
-//	dialog_maps_ = new ListPopUp("Linked Maps");
-//	dialog_plugins_ = new ListPopUp("Linked Plugins");
-//	dialog_cameras_ = new ListPopUp("Cameras");
+	dialog_maps_ = new ViewDialogList("Linked Maps");
+	dialog_plugins_ = new ViewDialogList("Linked Plugins");
+	dialog_cameras_ = new ViewDialogList("Cameras");
 
 //	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*,MapHandlerGen*)));
 
@@ -83,23 +84,23 @@ View::View(const QString& name, SCHNApps* s) :
 //	foreach(MapHandlerGen* map, schnapps_->get_map_set().values())
 //		map_added(map);
 
-//	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
-//	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
-//	connect(dialog_plugins_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(plugin_check_state_changed(QListWidgetItem*)));
+	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
+	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
+	connect(dialog_plugins_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(plugin_check_state_changed(QListWidgetItem*)));
 
-//	foreach(Plugin* plugin, schnapps_->get_plugin_set().values())
-//		plugin_enabled(plugin);
+	foreach(Plugin* plugin, schnapps_->get_plugin_set().values())
+		plugin_enabled(plugin);
 
-//	connect(schnapps_, SIGNAL(camera_added(Camera*)), this, SLOT(camera_added(Camera*)));
-//	connect(schnapps_, SIGNAL(camera_removed(Camera*)), this, SLOT(camera_removed(Camera*)));
-//	connect(dialog_cameras_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(camera_check_state_changed(QListWidgetItem*)));
+	connect(schnapps_, SIGNAL(camera_added(Camera*)), this, SLOT(camera_added(Camera*)));
+	connect(schnapps_, SIGNAL(camera_removed(Camera*)), this, SLOT(camera_removed(Camera*)));
+	connect(dialog_cameras_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(camera_check_state_changed(QListWidgetItem*)));
 
-//	foreach(Camera* camera, schnapps_->get_camera_set().values())
-//		cameraAdded(camera);
+	foreach(Camera* camera, schnapps_->get_camera_set().values())
+		camera_added(camera);
 
 	current_camera_ = schnapps_->add_camera();
 	current_camera_->link_view(this);
-//	dialog_cameras_->check(current_camera_->get_name(), Qt::Checked);
+	dialog_cameras_->check(current_camera_->get_name(), Qt::Checked);
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(close_dialogs()));
 }
@@ -110,18 +111,18 @@ View::~View()
 	this->setCamera(c);
 	current_camera_->unlink_view(this);
 
-//	foreach(PluginInteraction* p, plugins_)
-//		unlink_plugin(p);
+	foreach(PluginInteraction* p, plugins_)
+		unlink_plugin(p);
 
 //	foreach(MapHandlerGen* m, maps_)
 //		unlink_map(m);
 
-//	delete button_area_;
-//	delete button_area_left_;
+	delete button_area_;
+	delete button_area_left_;
 
-//	delete dialog_maps_;
-//	delete dialog_plugins_;
-//	delete dialog_cameras_;
+	delete dialog_maps_;
+	delete dialog_plugins_;
+	delete dialog_cameras_;
 }
 
 bool View::is_selected_view() const
@@ -147,27 +148,27 @@ void View::set_current_camera(Camera* c)
 
 		emit(current_camera_changed(prev, c));
 
-//		if (prev)
-//		{
-//			QListWidgetItem* prev_item = dialog_cameras_->findItem(prev->get_name());
-//			if(prev_item)
-//			{
-//				updating_ui_ = true;
-//				prev_item->setCheckState(Qt::Unchecked);
-//				updating_ui_ = false;
-//			}
-//		}
+		if (prev)
+		{
+			QListWidgetItem* prev_item = dialog_cameras_->find_item(prev->get_name());
+			if(prev_item)
+			{
+				updating_ui_ = true;
+				prev_item->setCheckState(Qt::Unchecked);
+				updating_ui_ = false;
+			}
+		}
 
-//		if (current_camera_)
-//		{
-//			QListWidgetItem* cur_item = dialog_cameras_->findItem(current_camera_->get_name());
-//			if(curItem)
-//			{
-//				updating_ui_ = true;
-//				cur_item->setCheckState(Qt::Checked);
-//				updating_ui_ = false;
-//			}
-//		}
+		if (current_camera_)
+		{
+			QListWidgetItem* cur_item = dialog_cameras_->find_item(current_camera_->get_name());
+			if(cur_item)
+			{
+				updating_ui_ = true;
+				cur_item->setCheckState(Qt::Checked);
+				updating_ui_ = false;
+			}
+		}
 
 		current_camera_->fit_to_views_bounding_box();
 		this->update();
@@ -191,58 +192,58 @@ bool View::uses_camera(const QString& name) const
  * MANAGE LINKED PLUGINS
  *********************************************************/
 
-//void View::link_plugin(PluginInteraction* plugin)
-//{
-//	if(plugin && !plugins_.contains(plugin))
-//	{
-//		plugins_.push_back(plugin);
-//		plugin->link_view(this);
+void View::link_plugin(PluginInteraction* plugin)
+{
+	if(plugin && !plugins_.contains(plugin))
+	{
+		plugins_.push_back(plugin);
+		plugin->link_view(this);
 
-//		emit(plugin_linked(plugin));
+		emit(plugin_linked(plugin));
 
-//		updating_ui_ = true;
-//		dialog_plugins_->check(plugin->get_name(), Qt::Checked);
-//		updating_ui_ = false;
+		updating_ui_ = true;
+		dialog_plugins_->check(plugin->get_name(), Qt::Checked);
+		updating_ui_ = false;
 
-//		this->update();
-//	}
-//}
+		this->update();
+	}
+}
 
-//void View::link_plugin(const QString& name)
-//{
-//	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
-//	if (p)
-//		link_plugin(p);
-//}
+void View::link_plugin(const QString& name)
+{
+	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
+	if (p)
+		link_plugin(p);
+}
 
-//void View::unlink_plugin(PluginInteraction* plugin)
-//{
-//	if(plugins_.removeOne(plugin))
-//	{
-//		plugin->unlink_view(this);
+void View::unlink_plugin(PluginInteraction* plugin)
+{
+	if(plugins_.removeOne(plugin))
+	{
+		plugin->unlink_view(this);
 
-//		emit(plugin_unlinked(plugin));
+		emit(plugin_unlinked(plugin));
 
-//		updating_ui_ = true;
-//		dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
-//		updating_ui_ = false;
+		updating_ui_ = true;
+		dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
+		updating_ui_ = false;
 
-//		this->update();
-//	}
-//}
+		this->update();
+	}
+}
 
-//void View::unlink_plugin(const QString& name)
-//{
-//	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
-//	if (p)
-//		unlink_plugin(p);
-//}
+void View::unlink_plugin(const QString& name)
+{
+	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
+	if (p)
+		unlink_plugin(p);
+}
 
-//bool View::is_linked_to_plugin(const QString& name) const
-//{
-//	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
-//	return plugins_.contains(p);
-//}
+bool View::is_linked_to_plugin(const QString& name) const
+{
+	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
+	return plugins_.contains(p);
+}
 
 /*********************************************************
  * MANAGE LINKED MAPS
@@ -319,11 +320,11 @@ void View::init()
 {
 	this->makeCurrent();
 
-	drawer_ = new cgogn::rendering::Drawer(this);
-
 	qoglviewer::Camera* c = this->camera();
 	this->setCamera(current_camera_);
 //	delete c;
+
+	drawer_ = new cgogn::rendering::Drawer(this);
 
 //	this->setBackgroundColor(QColor(0, 0, 0));
 	glClearColor(0.1f, 0.1f, 0.3f, 0.0f);
@@ -387,38 +388,51 @@ void View::init()
 
 	bb_min_.setValue(0, -5, 0);
 	bb_max_.setValue(5, 5, 2);
-
 	emit(bounding_box_changed());
 
-//	button_area_ = new ViewButtonArea(this);
-//	button_area_->set_top_right_position(this->width(), 0);
 
-//	Vsplit_button_ = new ViewButton(":icons/icons/Vsplit.png", this);
-//	button_area_->addButton(Vsplit_button_);
-//	connect(Vsplit_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_vertical_split_view(int, int, int, int)));
+	frame_drawer_ = new cgogn::rendering::Drawer(this);
 
-//	Hsplit_button_ = new ViewButton(":icons/icons/Hsplit.png", this);
-//	button_area_->addButton(Hsplit_button_);
-//	connect(Hsplit_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_horizontal_split_view(int, int, int, int)));
+	frame_drawer_->new_list();
+	frame_drawer_->color3f(0.0f,1.0f,0.0f);
+	frame_drawer_->line_width(4.0f);
+	frame_drawer_->begin(GL_LINE_LOOP);
+	frame_drawer_->vertex3f(-1.0f,-1.0f, 0.0f);
+	frame_drawer_->vertex3f( 1.0f,-1.0f, 0.0f);
+	frame_drawer_->vertex3f( 1.0f, 1.0f, 0.0f);
+	frame_drawer_->vertex3f(-1.0f, 1.0f, 0.0f);
+	frame_drawer_->end();
+	frame_drawer_->end_list();
 
-//	close_button_ = new ViewButton(":icons/icons/close.png", this);
-//	button_area_->addButton(close_button_);
-//	connect(close_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_close_view(int, int, int, int)));
+	button_area_ = new ViewButtonArea(this);
+	button_area_->set_top_right_position(this->width(), 0);
 
-//	button_area_left_ = new ViewButtonArea(this);
-//	button_area_left_->set_top_left_position(0, 0);
+	Vsplit_button_ = new ViewButton(":icons/icons/Vsplit.png", this);
+	button_area_->add_button(Vsplit_button_);
+	connect(Vsplit_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_vertical_split_view(int, int, int, int)));
 
-//	maps_button_ = new ViewButton(":icons/icons/maps.png", this);
-//	button_area_left_->addButton(maps_button_);
-//	connect(maps_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_maps_list_view(int, int, int, int)));
+	Hsplit_button_ = new ViewButton(":icons/icons/Hsplit.png", this);
+	button_area_->add_button(Hsplit_button_);
+	connect(Hsplit_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_horizontal_split_view(int, int, int, int)));
 
-//	plugins_button_ = new ViewButton(":icons/icons/plugins.png", this);
-//	button_area_left_->addButton(plugins_button_);
-//	connect(plugins_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_plugins_list_view(int, int, int, int)));
+	close_button_ = new ViewButton(":icons/icons/close.png", this);
+	button_area_->add_button(close_button_);
+	connect(close_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_close_view(int, int, int, int)));
 
-//	cameras_button_ = new ViewButton(":icons/icons/cameras.png", this);
-//	button_area_left_->addButton(cameras_button_);
-//	connect(cameras_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_cameras_list_view(int, int, int, int)));
+	button_area_left_ = new ViewButtonArea(this);
+	button_area_left_->set_top_left_position(0, 0);
+
+	maps_button_ = new ViewButton(":icons/icons/maps.png", this);
+	button_area_left_->add_button(maps_button_);
+	connect(maps_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_maps_list_view(int, int, int, int)));
+
+	plugins_button_ = new ViewButton(":icons/icons/plugins.png", this);
+	button_area_left_->add_button(plugins_button_);
+	connect(plugins_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_plugins_list_view(int, int, int, int)));
+
+	cameras_button_ = new ViewButton(":icons/icons/cameras.png", this);
+	button_area_left_->add_button(cameras_button_);
+	connect(cameras_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_cameras_list_view(int, int, int, int)));
 }
 
 void View::preDraw()
@@ -476,15 +490,15 @@ void View::draw()
 //		}
 //	}
 
-//	foreach(PluginInteraction* plugin, plugins_)
-//		plugin->draw(this);
+	foreach(PluginInteraction* plugin, plugins_)
+		plugin->draw(this);
 }
 
 void View::postDraw()
 {
+	draw_buttons();
 	if (is_selected_view())
 		draw_frame();
-	draw_buttons();
 
 	QOGLViewer::postDraw();
 }
@@ -493,24 +507,25 @@ void View::resizeGL(int width, int height)
 {
 	QOGLViewer::resizeGL(width, height);
 
-//	if(button_area_)
-//		button_area_->set_top_right_position(width / this->pixelRatio(), 0);
+	if(button_area_)
+		button_area_->set_top_right_position(width / this->pixel_ratio(), 0);
 
-//	if(button_area_left_)
-//		button_area_left_->set_top_left_position(0, 0);
+	if(button_area_left_)
+		button_area_left_->set_top_left_position(0, 0);
 }
 
 void View::draw_buttons()
 {
-//	button_area_->draw();
-//	button_area_left_->draw();
+	button_area_->draw();
+	button_area_left_->draw();
 }
 
 void View::draw_frame()
 {
-//	glDisable(GL_DEPTH_TEST);
-//	frame_drawer->callList();
-//	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_DEPTH_TEST);
+	QMatrix4x4 pm, mm;
+	frame_drawer_->call_list(pm, mm);
+	glEnable(GL_DEPTH_TEST);
 }
 
 void View::keyPressEvent(QKeyEvent* event)
@@ -553,8 +568,8 @@ void View::keyPressEvent(QKeyEvent* event)
 
 		default:
 		{
-//			foreach(PluginInteraction* plugin, plugins_)
-//				plugin->keyPress(this, event);
+			foreach(PluginInteraction* plugin, plugins_)
+				plugin->keyPress(this, event);
 
 			if (event->key() == Qt::Key_Escape)
 			{
@@ -573,8 +588,8 @@ void View::keyPressEvent(QKeyEvent* event)
 
 void View::keyReleaseEvent(QKeyEvent *event)
 {
-//	foreach(PluginInteraction* plugin, plugins_)
-//		plugin->keyRelease(this, event);
+	foreach(PluginInteraction* plugin, plugins_)
+		plugin->keyRelease(this, event);
 
 	QOGLViewer::keyReleaseEvent(event);
 }
@@ -589,62 +604,62 @@ void View::mousePressEvent(QMouseEvent* event)
 	else if (event->y() < 20)
 		schnapps_->status_bar_message(this->get_name(), 2000);
 
-//	if (button_area_left_->is_clicked(event->x(), event->y()))
-//		button_area_left_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
-//	else
-//	{
-//		hide_dialogs();
-//		if (button_area_->is_clicked(event->x(), event->y()))
-//			button_area_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
-//		else
-//		{
-//			foreach(PluginInteraction* plugin, plugins_)
-//				plugin->mousePress(this, event);
+	if (button_area_left_->is_clicked(event->x(), event->y()))
+		button_area_left_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
+	else
+	{
+		hide_dialogs();
+		if (button_area_->is_clicked(event->x(), event->y()))
+			button_area_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
+		else
+		{
+			foreach(PluginInteraction* plugin, plugins_)
+				plugin->mousePress(this, event);
 
 			QOGLViewer::mousePressEvent(event);
-//		}
-//	}
+		}
+	}
 }
 
 void View::mouseReleaseEvent(QMouseEvent* event)
 {
-//	foreach(PluginInteraction* plugin, plugins_)
-//		plugin->mouseRelease(this, event);
+	foreach(PluginInteraction* plugin, plugins_)
+		plugin->mouseRelease(this, event);
 
 	QOGLViewer::mouseReleaseEvent(event);
 }
 
 void View::mouseMoveEvent(QMouseEvent* event)
 {
-//	foreach(PluginInteraction* plugin, plugins_)
-//		plugin->mouseMove(this, event);
+	foreach(PluginInteraction* plugin, plugins_)
+		plugin->mouseMove(this, event);
 
 	QOGLViewer::mouseMoveEvent(event);
 }
 
 void View::wheelEvent(QWheelEvent* event)
 {
-//	foreach(PluginInteraction* plugin, plugins_)
-//		plugin->wheelEvent(this, event);
+	foreach(PluginInteraction* plugin, plugins_)
+		plugin->wheelEvent(this, event);
 
 	QOGLViewer::wheelEvent(event);
 }
 
 void View::hide_dialogs()
 {
-//	if (dialog_maps_->isVisible())
-//		dialog_maps_->hide();
-//	if (dialog_plugins_->isVisible())
-//		dialog_plugins_->hide();
-//	if (dialog_cameras_->isVisible())
-//		dialog_cameras_->hide();
+	if (dialog_maps_->isVisible())
+		dialog_maps_->hide();
+	if (dialog_plugins_->isVisible())
+		dialog_plugins_->hide();
+	if (dialog_cameras_->isVisible())
+		dialog_cameras_->hide();
 }
 
 void View::close_dialogs()
 {
-//	dialog_maps_->close();
-//	dialog_plugins_->close();
-//	dialog_cameras_->close();
+	dialog_maps_->close();
+	dialog_plugins_->close();
+	dialog_cameras_->close();
 }
 
 //void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
@@ -677,49 +692,49 @@ void View::close_dialogs()
 //	}
 //}
 
-//void View::plugin_enabled(Plugin *plugin)
-//{
-//	if (dynamic_cast<PluginInteraction*>(plugin))
-//		dialog_plugins_->add_item(plugin->get_name());
-//}
+void View::plugin_enabled(Plugin *plugin)
+{
+	if (dynamic_cast<PluginInteraction*>(plugin))
+		dialog_plugins_->add_item(plugin->get_name());
+}
 
-//void View::plugin_disabled(Plugin *plugin)
-//{
-//	if (dynamic_cast<PluginInteraction*>(plugin))
-//		dialog_plugins_->remove_item(plugin->get_name());
-//}
+void View::plugin_disabled(Plugin *plugin)
+{
+	if (dynamic_cast<PluginInteraction*>(plugin))
+		dialog_plugins_->remove_item(plugin->get_name());
+}
 
-//void View::plugin_check_state_changed(QListWidgetItem* item)
-//{
-//	if (!updating_ui_)
-//	{
-//		if (item->checkState() == Qt::Checked)
-//			link_plugin(item->text());
-//		else
-//			unlink_plugin(item->text());
-//	}
-//}
+void View::plugin_check_state_changed(QListWidgetItem* item)
+{
+	if (!updating_ui_)
+	{
+		if (item->checkState() == Qt::Checked)
+			link_plugin(item->text());
+		else
+			unlink_plugin(item->text());
+	}
+}
 
-//void View::camera_added(Camera* camera)
-//{
-//	if (camera)
-//		dialog_cameras_->add_item(camera->get_name());
-//}
+void View::camera_added(Camera* camera)
+{
+	if (camera)
+		dialog_cameras_->add_item(camera->get_name());
+}
 
-//void View::camera_removed(Camera* camera)
-//{
-//	if (camera)
-//		dialog_cameras_->remove_item(camera->get_name());
-//}
+void View::camera_removed(Camera* camera)
+{
+	if (camera)
+		dialog_cameras_->remove_item(camera->get_name());
+}
 
-//void View::camera_check_state_changed(QListWidgetItem* item)
-//{
-//	if (!updating_ui_)
-//	{
-//		if (item->checkState() == Qt::Checked)
-//			set_current_camera(item->text());
-//	}
-//}
+void View::camera_check_state_changed(QListWidgetItem* item)
+{
+	if (!updating_ui_)
+	{
+		if (item->checkState() == Qt::Checked)
+			set_current_camera(item->text());
+	}
+}
 
 //void View::update_bounding_box()
 //{
@@ -770,58 +785,58 @@ void View::close_dialogs()
 //	emit(bounding_box_changed());
 //}
 
-//void View::ui_vertical_split_view(int x, int y, int /*globalX*/, int /*globalY*/)
-//{
-//	schnapps_->split_view(m_name, Qt::Horizontal);
-//}
+void View::ui_vertical_split_view(int, int, int, int)
+{
+	schnapps_->split_view(name_, Qt::Horizontal);
+}
 
-//void View::ui_horizontal_split_view(int x, int y, int /*globalX*/, int /*globalY*/)
-//{
-//	schnapps_->split_view(m_name, Qt::Vertical);
-//}
+void View::ui_horizontal_split_view(int, int, int, int)
+{
+	schnapps_->split_view(name_, Qt::Vertical);
+}
 
-//void View::ui_close_view(int x, int y, int /*globalX*/, int /*globalY*/)
-//{
-//	schnapps_->remove_view(m_name);
-//}
+void View::ui_close_view(int, int, int, int)
+{
+	schnapps_->remove_view(name_);
+}
 
-//void View::ui_maps_list_view(int x, int y, int globalX, int globalY)
-//{
-//	if (dialog_maps_->isHidden())
-//	{
-//		dialog_maps_->show();
-//		dialog_maps_->move(QPoint(globalX, globalY + 8));
-//		dialog_cameras_->hide();
-//		dialog_plugins_->hide();
-//	}
-//	else
-//		dialog_maps_->hide();
-//}
+void View::ui_maps_list_view(int, int, int globalX, int globalY)
+{
+	if (dialog_maps_->isHidden())
+	{
+		dialog_maps_->show();
+		dialog_maps_->move(QPoint(globalX, globalY + 8));
+		dialog_cameras_->hide();
+		dialog_plugins_->hide();
+	}
+	else
+		dialog_maps_->hide();
+}
 
-//void View::ui_pluginsListView(int x, int y, int globalX, int globalY)
-//{
-//	if (m_dialogPlugins->isHidden())
-//	{
-//		dialog_plugins_->show();
-//		dialog_plugins_->move(QPoint(globalX, globalY + 8));
-//		dialog_maps_->hide();
-//		dialog_cameras_->hide();
-//	}
-//	else
-//		dialog_plugins_->hide();
-//}
+void View::ui_plugins_list_view(int, int, int globalX, int globalY)
+{
+	if (dialog_plugins_->isHidden())
+	{
+		dialog_plugins_->show();
+		dialog_plugins_->move(QPoint(globalX, globalY + 8));
+		dialog_maps_->hide();
+		dialog_cameras_->hide();
+	}
+	else
+		dialog_plugins_->hide();
+}
 
-//void View::ui_camerasListView(int x, int y, int globalX, int globalY)
-//{
-//	if (m_dialogCameras->isHidden())
-//	{
-//		dialog_cameras_->show();
-//		dialog_cameras_->move(QPoint(globalX, globalY + 8));
-//		dialog_plugins_->hide();
-//		dialog_maps_->hide();
-//	}
-//	else
-//		dialog_cameras_->hide();
-//}
+void View::ui_cameras_list_view(int, int, int globalX, int globalY)
+{
+	if (dialog_cameras_->isHidden())
+	{
+		dialog_cameras_->show();
+		dialog_cameras_->move(QPoint(globalX, globalY + 8));
+		dialog_plugins_->hide();
+		dialog_maps_->hide();
+	}
+	else
+		dialog_cameras_->hide();
+}
 
 } // namespace schnapps

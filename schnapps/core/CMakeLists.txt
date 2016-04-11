@@ -8,6 +8,9 @@ set(HEADER_FILES
 	view.h
 	view_dialog_list.h
 	view_button_area.h
+	plugin.h
+	plugin_processing.h
+	plugin_interaction.h
 )
 
 set(SOURCE_FILES
@@ -16,12 +19,17 @@ set(SOURCE_FILES
 	view.cpp
 	view_dialog_list.cpp
 	view_button_area.cpp
+	plugin_interaction.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
+qt5_add_resources(RCC_FILES
+	${SCHNAPPS_PATH}/schnapps/resources/resources.qrc
+)
+
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${RCC_FILES})
 
 # use of target_compile_options to have a transitive c++11 flag
 if(NOT MSVC)
@@ -43,8 +51,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.dylib
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.so
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.so
 	QOGLViewer
 	Qt5::Widgets
 )

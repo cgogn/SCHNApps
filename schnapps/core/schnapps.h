@@ -39,6 +39,8 @@ namespace schnapps
 
 class Camera;
 class View;
+class Plugin;
+class PluginInteraction;
 
 // class ControlDock_CameraTab;
 // class ControlDock_MapTab;
@@ -71,25 +73,25 @@ public slots:
 public slots:
 
 	/**
-	* @brief [PYTHON] add a camera with a given name
+	* @brief add a camera with a given name
 	* @param name name of camera
 	*/
 	Camera* add_camera(const QString& name);
 
 	/**
-	 * @brief [PYTHON] add a camera (name automatically)
+	 * @brief add a camera (name automatically)
 	 * @return
 	 */
 	Camera* add_camera();
 
 	/**
-	* @brief [PYTHON] remove a camera
+	* @brief remove a camera
 	* @param name name of camera to remove
 	*/
 	void remove_camera(const QString& name);
 
 	/**
-	* @brief [PYTHON] get camera object
+	* @brief get camera object
 	* @param name of camera
 	*/
 	Camera* get_camera(const QString& name) const;
@@ -98,10 +100,52 @@ public slots:
 	const QMap<QString, Camera*>& get_camera_set() const { return cameras_; }
 
 	/*********************************************************
-	 * MANAGE VIEWS
+	 * MANAGE PLUGINS
 	 *********************************************************/
 
-public slots:
+	/**
+	* @brief Add a directory for searching available plugins
+	* @param path path to directory
+	*/
+	void register_plugins_directory(const QString& path);
+
+	/**
+	* @brief Load and enable a plugin
+	* @param plugin_name plugin name
+	*/
+	Plugin* enable_plugin(const QString& plugin_name);
+
+	/**
+	* @brief Disable and unload a plugin
+	* @param plugin_name plugin name
+	*/
+	void disable_plugin(const QString& plugin_name);
+
+	/**
+	* @brief Get plugin object from name
+	* @param name name of plugin
+	*/
+	Plugin* get_plugin(const QString& name) const;
+
+	// get set of loaded plugins
+	const QMap<QString, Plugin*>& get_plugin_set() const { return plugins_; }
+
+	// get a set of available plugins
+	const QMap<QString, QString>& get_available_plugins() const { return available_plugins_; }
+
+//public:
+
+//	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
+//	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
+
+//private slots:
+
+//	void enable_plugin_tab_widgets(PluginInteraction* plugin);
+//	void disable_plugin_tab_widgets(PluginInteraction* plugin);
+
+	/*********************************************************
+	 * MANAGE VIEWS
+	 *********************************************************/
 
 	/**
 	* @brief add a view with name
@@ -115,13 +159,13 @@ public slots:
 	View* add_view();
 
 	/**
-	* @brief [PYTHON] remove a view
+	* @brief remove a view
 	* @param name the name of the view
 	*/
 	void remove_view(const QString& name);
 
 	/**
-	* @brief [PYTHON] get view object
+	* @brief get view object
 	* @param name the name of view
 	*/
 	View* get_view(const QString& name) const;
@@ -130,37 +174,37 @@ public slots:
 	const QMap<QString, View*>& get_view_set() const { return views_; }
 
 	/**
-	* @brief [PYTHON] get the selected view
+	* @brief get the selected view
 	*/
 	View* get_selected_view() const { return selected_view_; }
 
 	/**
-	* @brief [PYTHON] set the selected view
+	* @brief set the selected view
 	* @param view the view object
 	*/
 	void set_selected_view(View* view);
 
 	/**
-	* @brief [PYTHON] set the selected view
+	* @brief set the selected view
 	* @param name the view name
 	*/
 	void set_selected_view(const QString& name);
 
 	/**
-	* @brief [PYTHON] split the view in the current orientation
+	* @brief split the view in the current orientation
 	* @param orientation of split 0: Vertical Split 1:
 	* @return the new View added by the split
 	*/
 	View* split_view(const QString& name, Qt::Orientation orientation);
 
 	/**
-	* @brief [PYTHON] save all split positions in a string
+	* @brief save all split positions in a string
 	* @return the storage string
 	*/
 	QString get_split_view_positions();
 
 	/**
-	* @brief [PYTHON] restore all split positions from a string storage,
+	* @brief restore all split positions from a string storage,
 	* the split's sequence must be the same than when saving
 	*/
 	void set_split_view_positions(QString positions);
@@ -199,6 +243,10 @@ signals:
 	void view_removed(View*);
 	void selected_view_changed(View*, View*);
 
+	void plugin_available_added(QString name);
+	void plugin_enabled(Plugin* plugin);
+	void plugin_disabled(Plugin* plugin);
+
 	void schnapps_closing();
 
 protected:
@@ -206,10 +254,13 @@ protected:
 	QString app_path_;
 
 	QMap<QString, Camera*> cameras_;
-	QMap<QString, View*> views_;
 
+	QMap<QString, View*> views_;
 	View* first_view_;
 	View* selected_view_;
+
+	QMap<QString, Plugin*> plugins_;
+	QMap<QString, QString> available_plugins_;
 
 	QDockWidget* control_dock_;
 	QTabWidget* control_dock_tab_widget_;

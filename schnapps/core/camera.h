@@ -51,7 +51,7 @@ class SCHNAPPS_CORE_API Camera : public qoglviewer::Camera
 
 public:
 
-	/// camera counter for easy camera unique naming
+	// camera counter for easy camera unique naming
 	static unsigned int camera_count_;
 
 	/**
@@ -72,7 +72,7 @@ public:
 public slots:
 
 	/**
-	 * @brief [PYTHON] get the name of Camera object
+	 * @brief get the name of Camera object
 	 * @return name
 	 */
 	QString get_name() { return name_; }
@@ -84,13 +84,13 @@ public slots:
 	SCHNApps* get_schnapps() const { return schnapps_; }
 
 	/**
-	 * @brief [PYTHON] test if camera is used by one view
+	 * @brief test if camera is used by one view
 	 * @return used / not used
 	 */
 	bool is_used() const;
 
 	/**
-	 * @brief [PYTHON] test is camera is used by several view
+	 * @brief test is camera is used by several view
 	 * @return shared / not shared (by view)
 	 */
 	bool is_shared() const;
@@ -109,7 +109,6 @@ public slots:
 
 	/**
 	 * @brief get the list of views linked with the camera
-	 * @warning not python callable
 	 * @return the list
 	 */
 	const QList<View*>& get_linked_views() const;
@@ -122,35 +121,35 @@ public slots:
 	bool is_linked_to_view(View* view) const;
 
 	/**
-	* @brief [PYTHON] set the projection type
+	* @brief set the projection type
 	* @param t 0:perspective / 1::orthogonal
 	*/
 	void set_projection_type(int t);
 
-	// [PYTHON] draw (or not) the camera
+	// draw (or not) the camera
 	void set_draw(bool b);
 
-	// [PYTHON] draw (or not) the camera path
+	// draw (or not) the camera path
 	void set_draw_path(bool b);
 
 	/**
-	* @brief [PYTHON] Enable the camera to update automatically with view bounding box
+	* @brief Enable the camera to update automatically with view bounding box
 	*/
 	void enable_views_bounding_box_fitting();
 
 	/**
-	* @brief [PYTHON] Disable the camera to update automatically with view bounding box
+	* @brief Disable the camera to update automatically with view bounding box
 	*/
 	void disable_views_bounding_box_fitting();
 
 	/**
-	* @brief [PYTHON] store position and rotationof camera into a string
+	* @brief store position and rotationof camera into a string
 	* @return the storage string
 	*/
 	QString to_string();
 
 	/**
-	* @brief [PYTHON] restore a camera from string storage
+	* @brief restore a camera from string storage
 	* @param cam the string containing data
 	*/
 	void from_string(QString camera);

@@ -29,8 +29,6 @@
 #include <schnapps/core/view_dialog_list.h>
 #include <schnapps/core/view_button_area.h>
 
-//#include "plugin_interaction.h"
-
 #include <QOGLViewer/qoglviewer.h>
 #include <QOGLViewer/manipulatedFrame.h>
 
@@ -41,6 +39,8 @@ namespace schnapps
 
 class SCHNApps;
 class Camera;
+class Plugin;
+class PluginInteraction;
 
 /**
 * @brief View class inherit from QOGLViewer (http://libqglviewer.com/refManual/classQGLViewer.html)
@@ -71,19 +71,19 @@ public:
 public slots:
 
 	/**
-	 * @brief [PYTHON] get the name of view
+	 * @brief get the name of view
 	 * @return name
 	 */
 	QString get_name() { return name_; }
 
 	/**
-	 * @brief [PYTHON] get the schnapps objet ptr
+	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
 	SCHNApps* get_schnapps() const { return schnapps_; }
 
 	/**
-	 * @brief [PYTHON] test if the view is the selected one
+	 * @brief test if the view is the selected one
 	 * @return
 	 */
 	bool is_selected_view() const;
@@ -99,13 +99,13 @@ public slots:
 	void set_current_camera(Camera* c);
 
 	/**
-	* @brief [PYTHON] set the current camera of the view
+	* @brief set the current camera of the view
 	* @param name the name of camera
 	*/
 	void set_current_camera(const QString& name);
 
 	/**
-	* @brief [PYTHON] get the current camera of the view
+	* @brief get the current camera of the view
 	* @return the camera object
 	*/
 	Camera* get_current_camera() const { return current_camera_; }
@@ -118,7 +118,7 @@ public slots:
 	bool uses_camera(Camera* c) const { return current_camera_ == c; }
 
 	/**
-	* @brief [PYTHON] test if a camera is the current camera
+	* @brief test if a camera is the current camera
 	* @param name the name of camera
 	*/
 	bool uses_camera(const QString& name) const;
@@ -127,31 +127,31 @@ public slots:
 	 * MANAGE LINKED PLUGINS
 	 *********************************************************/
 
-//	void link_plugin(PluginInteraction* plugin);
+	void link_plugin(PluginInteraction* plugin);
 
-//	/**
-//	* @brief [PYTHON] link a plugin with the view
-//	* @param name the name of plugin
-//	*/
-//	void link_plugin(const QString& name);
+	/**
+	* @brief link a plugin with the view
+	* @param name the name of plugin
+	*/
+	void link_plugin(const QString& name);
 
-//	void unlink_plugin(PluginInteraction* plugin);
+	void unlink_plugin(PluginInteraction* plugin);
 
-//	/**
-//	* @brief [PYTHON] unlink a plugin of the view
-//	* @param name the name of plugin
-//	*/
-//	void unlink_plugin(const QString& name);
+	/**
+	* @brief unlink a plugin of the view
+	* @param name the name of plugin
+	*/
+	void unlink_plugin(const QString& name);
 
-//	const QList<PluginInteraction*>& get_linked_plugins() const { return plugins_; }
+	const QList<PluginInteraction*>& get_linked_plugins() const { return plugins_; }
 
-//	bool is_linked_to_plugin(PluginInteraction* plugin) const { return plugins.contains(plugin); }
+	bool is_linked_to_plugin(PluginInteraction* plugin) const { return plugins_.contains(plugin); }
 
-//	/**
-//	* @brief [PYTHON] test if the view is linked to a plugin
-//	* @param name the name of plugin
-//	*/
-//	bool is_linked_to_plugin(const QString& name) const;
+	/**
+	* @brief test if the view is linked to a plugin
+	* @param name the name of plugin
+	*/
+	bool is_linked_to_plugin(const QString& name) const;
 
 	/*********************************************************
 	 * MANAGE LINKED MAPS
@@ -160,7 +160,7 @@ public slots:
 //	void link_map(MapHandlerGen* map);
 
 //	/**
-//	* @brief [PYTHON] link a map with the view
+//	* @brief link a map with the view
 //	* @param name the name of map
 //	*/
 //	void link_map(const QString& name);
@@ -168,7 +168,7 @@ public slots:
 //	void unlink_map(MapHandlerGen* map);
 
 //	/**
-//	* @brief [PYTHON] unlink a map of the view
+//	* @brief unlink a map of the view
 //	* @param name the name of map
 //	*/
 //	void unlink_map(const QString& name);
@@ -178,7 +178,7 @@ public slots:
 //	bool is_linked_to_map(MapHandlerGen* map) const { return maps_.contains(map); }
 
 //	/**
-//	* @brief [PYTHON] test if the view is linked to a lao
+//	* @brief test if the view is linked to a lao
 //	* @param name the name of map
 //	*/
 //	bool is_linked_to_map(const QString& name) const;
@@ -236,23 +236,23 @@ private slots:
 //	void map_removed(MapHandlerGen* map);
 //	void map_check_state_changed(QListWidgetItem* item);
 
-//	void plugin_enabled(Plugin *plugin);
-//	void plugin_disabled(Plugin *plugin);
-//	void plugin_check_state_changed(QListWidgetItem* item);
+	void plugin_enabled(Plugin *plugin);
+	void plugin_disabled(Plugin *plugin);
+	void plugin_check_state_changed(QListWidgetItem* item);
 
-//	void camera_added(Camera* camera);
-//	void camera_removed(Camera* camera);
-//	void camera_check_state_changed(QListWidgetItem* item);
+	void camera_added(Camera* camera);
+	void camera_removed(Camera* camera);
+	void camera_check_state_changed(QListWidgetItem* item);
 
 //	void update_bounding_box();
 
-//	void ui_vertical_split_view(int x, int y, int globalX, int globalY);
-//	void ui_horizontal_split_view(int x, int y, int globalX, int globalY);
-//	void ui_close_view(int x, int y, int globalX, int globalY);
+	void ui_vertical_split_view(int x, int y, int globalX, int globalY);
+	void ui_horizontal_split_view(int x, int y, int globalX, int globalY);
+	void ui_close_view(int x, int y, int globalX, int globalY);
 
-//	void ui_maps_list_view(int x, int y, int globalX, int globalY);
-//	void ui_plugins_list_view(int x, int y, int globalX, int globalY);
-//	void ui_cameras_list_view(int x, int y, int globalX, int globalY);
+	void ui_maps_list_view(int x, int y, int globalX, int globalY);
+	void ui_plugins_list_view(int x, int y, int globalX, int globalY);
+	void ui_cameras_list_view(int x, int y, int globalX, int globalY);
 
 signals:
 
@@ -261,8 +261,8 @@ signals:
 //	void map_linked(MapHandlerGen*);
 //	void map_unlinked(MapHandlerGen*);
 
-//	void plugin_linked(PluginInteraction*);
-//	void plugin_unlinked(PluginInteraction*);
+	void plugin_linked(PluginInteraction*);
+	void plugin_unlinked(PluginInteraction*);
 
 	void bounding_box_changed();
 
@@ -271,32 +271,33 @@ protected:
 	QString name_;
 	SCHNApps* schnapps_;
 
-	cgogn::rendering::Drawer* drawer_;
-
 	Camera* current_camera_;
-//	QList<PluginInteraction*> plugins_;
+	QList<PluginInteraction*> plugins_;
 //	QList<MapHandlerGen*> maps_;
 
 	qoglviewer::Vec bb_min_;
 	qoglviewer::Vec bb_max_;
 
-//	ViewButtonArea* button_area_;
+	ViewButtonArea* button_area_;
 
-//	ViewButton* close_button_;
-//	ViewButton* Vsplit_button_;
-//	ViewButton* Hsplit_button_;
+	ViewButton* close_button_;
+	ViewButton* Vsplit_button_;
+	ViewButton* Hsplit_button_;
 
-//	ViewButtonArea* button_area_left_;
+	ViewButtonArea* button_area_left_;
 
-//	ViewButton* maps_button_;
-//	ViewButton* plugins_button_;
-//	ViewButton* cameras_button_;
+	ViewButton* maps_button_;
+	ViewButton* plugins_button_;
+	ViewButton* cameras_button_;
 
 	QString text_info_;
 
-//	ListPopUp* dialog_maps_;
-//	ListPopUp* dialog_plugins_;
-//	ListPopUp* dialog_cameras_;
+	ViewDialogList* dialog_maps_;
+	ViewDialogList* dialog_plugins_;
+	ViewDialogList* dialog_cameras_;
+
+	cgogn::rendering::Drawer* drawer_;
+	cgogn::rendering::Drawer* frame_drawer_;
 
 	bool save_snapshots_;
 
