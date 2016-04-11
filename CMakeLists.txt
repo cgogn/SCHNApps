@@ -11,11 +11,13 @@ endif()
 
 #### SCHNAPPS PATH / SCHNAPPS_SOURCE_DIR
 set(SCHNAPPS_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
-set(SCHNAPPS_SOURCE_DIR ${SCHNAPPS_PATH}/schnapps)
+set(SCHNAPPS_SOURCE_DIR ${SCHNAPPS_PATH})
 
 #### CGOGN_PATH / CGOGN_SOURCE_DIR
 set(CGOGN_PATH "${SCHNAPPS_PATH}/../CGoGN_2")
-set(CGOGN_SOURCE_DIR ${CGOGN_PATH}/cgogn)
+set(CGOGN_SOURCE_DIR ${CGOGN_PATH})
+
+set(CGOGN_THIRDPARTY_EIGEN3_INCLUDE_DIR "${CGOGN_PATH}/thirdparty/eigen-3.2.8" CACHE PATH "Include directory for find_package(Eigen3)")
 
 #### Build configuration
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
@@ -28,4 +30,4 @@ set(SCHNAPPS_THIRDPARTY_DIR ${SCHNAPPS_PATH}/thirdparty)
 find_package(Qt5Widgets REQUIRED)
 
 add_subdirectory(${SCHNAPPS_THIRDPARTY_DIR})
-add_subdirectory(${SCHNAPPS_SOURCE_DIR})
+add_subdirectory(${SCHNAPPS_SOURCE_DIR}/schnapps)

@@ -21,23 +21,77 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <QApplication>
-#include <QSplashScreen>
+#ifndef SCHNAPPS_CORE_PLUGIN_H_
+#define SCHNAPPS_CORE_PLUGIN_H_
 
-#include <schnapps/core/schnapps.h>
+#include <schnapps/core/dll.h>
 
-int main(int argc, char* argv[])
+#include <QtPlugin>
+
+namespace schnapps
 {
-	QApplication app(argc, argv);
 
-	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
-	splash.show();
-	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
+class SCHNApps;
 
-	schnapps::SCHNApps schnapps(app.applicationDirPath());
-	schnapps.show();
+class SCHNAPPS_CORE_API Plugin : public QObject
+{
+	Q_OBJECT
 
-	splash.finish(&schnapps);
+	friend class SCHNApps;
 
-	return app.exec();;
-}
+public:
+
+	Plugin()
+	{}
+
+	virtual ~Plugin()
+	{}
+
+	inline const QString& get_name() const { return name_; }
+
+public slots:
+
+	/**
+	 * @brief get the name of Plugin object
+	 * @return name
+	 */
+	QString get_name() { return name_; }
+
+	/**
+	 * @brief get the file path to the plugin library file
+	 * @return file path
+	 */
+	QString get_file_path() { return file_path_; }
+
+	/**
+	 * @brief get the schnapps objet ptr
+	 * @return the ptr
+	 */
+	SCHNApps* get_schnapps() const { return schnapps_; }
+
+private:
+
+	void set_name(const QString& name) { name_ = name; }
+
+	void set_file_path(const QString& f) { file_path_ = f; }
+
+	void set_schnapps(SCHNApps* s) { schnapps_ = s; }
+
+	virtual bool enable() = 0;
+	virtual void disable() = 0;
+
+protected:
+
+	// plugin name
+	QString name_;
+
+	// file path to the plugin library file
+	QString file_path_;
+
+	// pointer to schnapps object
+	SCHNApps* schnapps_;
+};
+
+} // namespace schnapps
+
+#endif // SCHNAPPS_CORE_PLUGIN_H_

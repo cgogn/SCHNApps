@@ -21,23 +21,28 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <QApplication>
-#include <QSplashScreen>
+#ifndef SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
+#define SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
 
-#include <schnapps/core/schnapps.h>
+#include <schnapps/core/dll.h>
+#include <schnapps/core/plugin.h>
 
-int main(int argc, char* argv[])
+namespace schnapps
 {
-	QApplication app(argc, argv);
 
-	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
-	splash.show();
-	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
+class SCHNAPPS_CORE_API PluginProcessing : public Plugin
+{
+	Q_OBJECT
 
-	schnapps::SCHNApps schnapps(app.applicationDirPath());
-	schnapps.show();
+public:
 
-	splash.finish(&schnapps);
+	PluginProcessing()
+	{}
 
-	return app.exec();;
-}
+	~PluginProcessing() override
+	{}
+};
+
+} // namespace schnapps
+
+#endif // SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
