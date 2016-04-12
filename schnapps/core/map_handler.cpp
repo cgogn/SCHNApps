@@ -42,6 +42,22 @@ bool MapHandlerGen::is_selected_map() const
 	return schnapps_->get_selected_map() == this;
 }
 
+QMatrix4x4 MapHandlerGen::get_frame_matrix() const
+{
+	QMatrix4x4 m;
+	GLdouble tmp[16];
+	frame_->getMatrix(tmp);
+	for(unsigned int i=0; i<4; ++i)
+		for(unsigned int j=0; j<4; ++j)
+			m(j,i) = tmp[i*4+j];
+	return m;
+}
+
+void MapHandlerGen::frame_modified()
+{
+	emit(bounding_box_modified());
+}
+
 void MapHandlerGen::link_view(View* view)
 {
 	if (view && !views_.contains(view))

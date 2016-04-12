@@ -30,6 +30,8 @@
 #include <cgogn/core/cmap/cmap2.h>
 #include <cgogn/core/cmap/cmap3.h>
 
+#include <QOGLViewer/manipulatedFrame.h>
+
 #include <QObject>
 #include <QString>
 
@@ -74,8 +76,24 @@ public slots:
 	bool is_selected_map() const;
 
 	/*********************************************************
+	 * MANAGE FRAME
+	 *********************************************************/
+
+	// get the frame associated to the map
+	qoglviewer::ManipulatedFrame* get_frame() const { return frame_; }
+
+	// get the matrix of the frame associated to the map
+	QMatrix4x4 get_frame_matrix() const;
+
+private slots:
+
+	void frame_modified();
+
+	/*********************************************************
 	 * MANAGE LINKED VIEWS
 	 *********************************************************/
+
+public slots:
 
 	// get the list of views linked to the map
 	const QList<View*>& get_linked_views() const { return views_; }
@@ -89,6 +107,10 @@ private:
 
 	void unlink_view(View* view);
 
+signals:
+
+	void bounding_box_modified();
+
 protected:
 
 	// MapHandler name
@@ -99,6 +121,9 @@ protected:
 
 	// MapBaseData generic pointer
 	MapBaseData* map_;
+
+	// frame that allow user object manipulation (ctrl + mouse)
+	qoglviewer::ManipulatedFrame* frame_;
 
 	// list of views that are linked to this map
 	QList<View*> views_;
