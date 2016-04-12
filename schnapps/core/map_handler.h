@@ -29,11 +29,15 @@
 #include <cgogn/core/cmap/map_base.h>
 #include <cgogn/core/cmap/cmap2.h>
 #include <cgogn/core/cmap/cmap3.h>
+#include <cgogn/geometry/types/bounding_box.h>
 
 #include <Eigen/Dense>
+#include <QOGLViewer/manipulatedFrame.h>
 
 #include <QObject>
 #include <QString>
+
+namespace cgogn { namespace rendering { class Drawer; } }
 
 namespace schnapps
 {
@@ -78,6 +82,70 @@ public slots:
 	bool is_selected_map() const;
 
 	/*********************************************************
+	 * MANAGE FRAME
+	 *********************************************************/
+
+	// get the frame associated to the map
+	qoglviewer::ManipulatedFrame* get_frame() const { return frame_; }
+
+	// get the matrix of the frame associated to the map
+	QMatrix4x4 get_frame_matrix() const;
+
+private slots:
+
+	void frame_changed();
+
+	/*********************************************************
+	 * MANAGE BOUNDING BOX
+	 *********************************************************/
+
+public slots:
+
+	/**
+	* @brief set if bounding box has to be drawn
+	* @param b yes or no
+	*/
+	void show_bb(bool b);
+
+	/**
+	* @brief is the bounding box of the map drawn
+	* @return is bounding box of the map drawn
+	*/
+	bool is_bb_shown() const { return show_bb_; }
+
+	/**
+	* @brief set color for drawing BB the bounding box
+	* @param color color name (red,green,...) or color format #rrggbb
+	*/
+	void set_bb_color(const QString& color);
+
+	/**
+	* @brief choose the vertex attribute used to compute the bounding box
+	* @param name name of attribute
+	*/
+	void set_bb_vertex_attribute(const QString& name);
+
+//	// get the vertex attribute used to compute the bounding box
+//	AttributeMultiVectorGen* get_bb_vertex_attribute() const;
+
+//	/**
+//	* @brief get the vertex attribute used to compute the bounding box
+//	* @return name of attribute
+//	*/
+//	QString get_bb_vertex_attribute_name() const;
+
+	/**
+	* @brief get the length of diagonal of bounding box of the map
+	* @return length of the diagonal of the bounding box
+	*/
+	float get_bb_diagonal_size() const { return bb_diagonal_size_; }
+
+	// get the drawer used to draw the bounding box of the map
+	cgogn::rendering::Drawer* get_bb_drawer() const { return bb_drawer_; }
+
+	bool get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max);
+
+	/*********************************************************
 	 * MANAGE LINKED VIEWS
 	 *********************************************************/
 
@@ -89,9 +157,15 @@ public slots:
 
 private:
 
-	void link_view(View* view);
+	virtual void compute_bb() = 0;
 
+	void link_view(View* view);
 	void unlink_view(View* view);
+
+signals:
+
+	void bb_changed();
+	void bb_vertex_attribute_changed(const QString&);
 
 protected:
 
@@ -104,8 +178,22 @@ protected:
 	// MapBaseData generic pointer
 	MapBaseData* map_;
 
+	// frame that allow user object manipulation (ctrl + mouse)
+	qoglviewer::ManipulatedFrame* frame_;
+
+	// transformation matrix
+	QMatrix4x4 transformation_matrix_;
+
 	// list of views that are linked to this map
 	QList<View*> views_;
+
+	// map bounding box
+	cgogn::geometry::BoundingBox<VEC3> bb_;
+	// show the bounding box in the linked views (if currently selected)
+	bool show_bb_;
+	cgogn::rendering::Drawer* bb_drawer_;
+	QColor bb_color_;
+	float bb_diagonal_size_;
 };
 
 template <typename MAP_TYPE>
@@ -118,11 +206,20 @@ public:
 	{}
 
 	~MapHandler()
-	{
-		delete map_;
-	}
+	{}
 
 	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(map_); }
+
+private:
+
+	void compute_bb() override
+	{
+
+	}
+
+protected:
+
+
 };
 
 } // namespace schnapps

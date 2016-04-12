@@ -170,7 +170,6 @@ void View::set_current_camera(Camera* c)
 			}
 		}
 
-		current_camera_->fit_to_views_bounding_box();
 		this->update();
 	}
 }
@@ -259,12 +258,12 @@ void View::link_map(MapHandlerGen* map)
 		emit(map_linked(map));
 
 		connect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
-		connect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
+		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-//		if(map->is_selected_map())
-//			this->setManipulatedFrame(map->get_frame());
+		if(map->is_selected_map())
+			this->setManipulatedFrame(map->get_frame());
 
-		update_bounding_box();
+		update_bb();
 
 		updating_ui_ = true;
 		dialog_maps_->check(map->get_name(), Qt::Checked);
@@ -288,12 +287,12 @@ void View::unlink_map(MapHandlerGen* map)
 		emit(map_unlinked(map));
 
 		disconnect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
-		disconnect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
+		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-//		if(map->is_selected_map())
-//			this->setManipulatedFrame(NULL);
+		if(map->is_selected_map())
+			this->setManipulatedFrame(NULL);
 
-		update_bounding_box();
+		update_bb();
 
 		updating_ui_ = true;
 		dialog_maps_->check(map->get_name(), Qt::Unchecked);
@@ -313,6 +312,8 @@ bool View::is_linked_to_map(const QString& name) const
 	MapHandlerGen* m = schnapps_->get_map(name);
 	return maps_.contains(m);
 }
+
+
 
 
 
@@ -388,7 +389,8 @@ void View::init()
 
 	bb_min_.setValue(0, -5, 0);
 	bb_max_.setValue(5, 5, 2);
-	emit(bounding_box_changed());
+
+	emit(bb_changed());
 
 
 	frame_drawer_ = new cgogn::rendering::Drawer(this);
@@ -668,8 +670,8 @@ void View::close_dialogs()
 
 void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
 {
-//	if(cur && is_linked_to_map(cur))
-//		this->setManipulatedFrame(cur->getFrame());
+	if(cur && is_linked_to_map(cur))
+		this->setManipulatedFrame(cur->get_frame());
 	this->update();
 }
 
@@ -740,7 +742,7 @@ void View::camera_check_state_changed(QListWidgetItem* item)
 	}
 }
 
-void View::update_bounding_box()
+void View::update_bb()
 {
 	if (!maps_.empty())
 	{
@@ -748,30 +750,30 @@ void View::update_bounding_box()
 
 		foreach (MapHandlerGen* mhg, maps_)
 		{
-//			qoglviewer::Vec minbb;
-//			qoglviewer::Vec maxbb;
-//			if (mhg->transformed_bb(minbb, maxbb))
-//			{
-//				if (initialized)
-//				{
-//					for (unsigned int dim = 0; dim < 3; ++dim)
-//					{
-//						if (minbb[dim] < bb_min_[dim])
-//							bb_min_[dim] = minbb[dim];
-//						if (maxbb[dim] > bb_max_[dim])
-//							bb_max_[dim] = maxbb[dim];
-//					}
-//				}
-//				else
-//				{
-//					for (unsigned int dim = 0; dim < 3; ++dim)
-//					{
-//						bb_min_[dim] = minbb[dim];
-//						bb_max_[dim] = maxbb[dim];
-//					}
-//					initialized = true;
-//				}
-//			}
+			qoglviewer::Vec minbb;
+			qoglviewer::Vec maxbb;
+			if (mhg->get_transformed_bb(minbb, maxbb))
+			{
+				if (initialized)
+				{
+					for (unsigned int dim = 0; dim < 3; ++dim)
+					{
+						if (minbb[dim] < bb_min_[dim])
+							bb_min_[dim] = minbb[dim];
+						if (maxbb[dim] > bb_max_[dim])
+							bb_max_[dim] = maxbb[dim];
+					}
+				}
+				else
+				{
+					for (unsigned int dim = 0; dim < 3; ++dim)
+					{
+						bb_min_[dim] = minbb[dim];
+						bb_max_[dim] = maxbb[dim];
+					}
+					initialized = true;
+				}
+			}
 		}
 
 		if (!initialized)
@@ -786,7 +788,7 @@ void View::update_bounding_box()
 		bb_max_.setValue(0, 0, 0);
 	}
 
-	emit(bounding_box_changed());
+	emit(bb_changed());
 }
 
 void View::ui_vertical_split_view(int, int, int, int)

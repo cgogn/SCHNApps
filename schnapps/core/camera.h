@@ -134,12 +134,12 @@ public slots:
 	/**
 	* @brief Enable the camera to update automatically with view bounding box
 	*/
-	void enable_views_bounding_box_fitting() { fit_to_views_bounding_box_ = true; }
+	void enable_views_bb_fitting() { fit_to_views_bb_ = true; }
 
 	/**
 	* @brief Disable the camera to update automatically with view bounding box
 	*/
-	void disable_views_bounding_box_fitting() { fit_to_views_bounding_box_ = false; }
+	void disable_views_bb_fitting() { fit_to_views_bb_ = false; }
 
 	/**
 	* @brief store position and rotationof camera into a string
@@ -161,7 +161,7 @@ private:
 private slots:
 
 	void frame_modified();
-	void fit_to_views_bounding_box();
+	void fit_to_views_bb();
 
 signals:
 
@@ -184,7 +184,7 @@ protected:
 	bool draw_path_;
 
 	// fit the camera to the bounding box of view
-	bool fit_to_views_bounding_box_;
+	bool fit_to_views_bb_;
 };
 
 } // namespace schnapps

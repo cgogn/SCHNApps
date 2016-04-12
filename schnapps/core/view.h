@@ -245,7 +245,7 @@ private slots:
 	void camera_removed(Camera* camera);
 	void camera_check_state_changed(QListWidgetItem* item);
 
-	void update_bounding_box();
+	void update_bb();
 
 	void ui_vertical_split_view(int x, int y, int globalX, int globalY);
 	void ui_horizontal_split_view(int x, int y, int globalX, int globalY);
@@ -265,7 +265,7 @@ signals:
 	void plugin_linked(PluginInteraction*);
 	void plugin_unlinked(PluginInteraction*);
 
-	void bounding_box_changed();
+	void bb_changed();
 
 protected:
 

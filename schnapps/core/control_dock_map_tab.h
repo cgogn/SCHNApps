@@ -57,8 +57,8 @@ private slots:
 	// slots called from UI actions
 	void selected_map_changed();
 
-//	void duplicate_current_map_clicked();
-//	void remove_current_map_clicked();
+	void duplicate_current_map_clicked();
+	void remove_current_map_clicked();
 
 	void show_bb_changed(bool b);
 	void bb_vertex_attribute_changed(int index);
@@ -75,6 +75,7 @@ private slots:
 
 	// slots called from selected MapHandler signals
 	void selected_map_attribute_added(unsigned int orbit, const QString& name);
+	void selected_map_bb_vertex_attribute_changed(const QString& name);
 //	void selected_map_VBO_added(Utils::VBO* vbo);
 //	void selected_map_VBO_removed(Utils::VBO* vbo);
 //	void selected_map_cell_selector_added(unsigned int orbit, const QString& name);

@@ -128,6 +128,7 @@ void ControlDock_MapTab::selected_map_changed()
 			disconnect(old, SIGNAL(attribute_added(unsigned int, const QString&)), this, SLOT(selected_map_attribute_added(unsigned int, const QString&)));
 			disconnect(old, SIGNAL(VBO_added(Utils::VBO*)), this, SLOT(selected_map_VBO_added(Utils::VBO*)));
 			disconnect(old, SIGNAL(VBO_removed(Utils::VBO*)), this, SLOT(selected_map_VBO_removed(Utils::VBO*)));
+			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 //			disconnect(old, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			disconnect(old, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
 		}
@@ -141,6 +142,7 @@ void ControlDock_MapTab::selected_map_changed()
 			connect(selected_map_, SIGNAL(attribute_added(unsigned int, const QString&)), this, SLOT(selected_map_attribute_added(unsigned int, const QString&)));
 			connect(selected_map_, SIGNAL(VBO_added(Utils::VBO*)), this, SLOT(selected_map_VBO_added(Utils::VBO*)));
 			connect(selected_map_, SIGNAL(VBO_removed(Utils::VBO*)), this, SLOT(selected_map_VBO_removed(Utils::VBO*)));
+			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 //			connect(selected_map_, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			connect(selected_map_, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
 
@@ -155,23 +157,23 @@ void ControlDock_MapTab::selected_map_changed()
 	}
 }
 
-//void ControlDock_MapTab::duplicate_current_map_clicked()
-//{
-//	if (!updating_ui_)
-//	{
+void ControlDock_MapTab::duplicate_current_map_clicked()
+{
+	if (!updating_ui_)
+	{
 //		if (selected_map_)
 //			schnapps_->duplicate_map(selected_map_->get_name(), true);
-//	}
-//}
+	}
+}
 
-//void ControlDock_MapTab::remove_current_map_clicked()
-//{
-//	if (!updating_ui_)
-//	{
+void ControlDock_MapTab::remove_current_map_clicked()
+{
+	if (!updating_ui_)
+	{
 //		if (selected_map_)
 //			schnapps_->remove_map(selected_map_->get_name());
-//	}
-//}
+	}
+}
 
 void ControlDock_MapTab::show_bb_changed(bool b)
 {
@@ -188,7 +190,7 @@ void ControlDock_MapTab::bb_vertex_attribute_changed(int index)
 		selected_map_->set_bb_vertex_attribute(combo_bbVertexAttribute->currentText());
 }
 
-void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem *item)
+void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem* item)
 {
 //	if (!updating_ui_)
 //	{
@@ -255,35 +257,35 @@ void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem *i
 //	}
 //}
 
-void ControlDock_MapTab::remove_selector()
-{
-	if (!updating_ui_)
-	{
-		if (selected_map_)
-		{
-			QList<QListWidgetItem*> items;
-			unsigned int orbit = get_current_orbit();
-			switch (orbit)
-			{
-				case DART: items = list_dartSelectors->selectedItems(); break;
-				case VERTEX: items = list_vertexSelectors->selectedItems(); break;
-				case EDGE: items = list_edgeSelectors->selectedItems(); break;
-				case FACE: items = list_faceSelectors->selectedItems(); break;
-				case VOLUME: items = list_volumeSelectors->selectedItems(); break;
-			}
+//void ControlDock_MapTab::remove_selector()
+//{
+//	if (!updating_ui_)
+//	{
+//		if (selected_map_)
+//		{
+//			QList<QListWidgetItem*> items;
+//			unsigned int orbit = get_current_orbit();
+//			switch (orbit)
+//			{
+//				case DART: items = list_dartSelectors->selectedItems(); break;
+//				case VERTEX: items = list_vertexSelectors->selectedItems(); break;
+//				case EDGE: items = list_edgeSelectors->selectedItems(); break;
+//				case FACE: items = list_faceSelectors->selectedItems(); break;
+//				case VOLUME: items = list_volumeSelectors->selectedItems(); break;
+//			}
 
-			if (!items.empty())
-			{
-				if (selected_selector_[orbit]->get_name() == items[0]->text())
-					selected_selector_[orbit] = NULL;
+//			if (!items.empty())
+//			{
+//				if (selected_selector_[orbit]->get_name() == items[0]->text())
+//					selected_selector_[orbit] = NULL;
 
-				selected_map_->remove_cell_selector(orbit, items[0]->text());
+//				selected_map_->remove_cell_selector(orbit, items[0]->text());
 
-				schnapps_->notify_selected_cell_selector_changed(selected_selector_[orbit]);
-			}
-		}
-	}
-}
+//				schnapps_->notify_selected_cell_selector_changed(selected_selector_[orbit]);
+//			}
+//		}
+//	}
+//}
 
 
 
@@ -306,43 +308,47 @@ void ControlDock_MapTab::map_removed(MapHandlerGen* m)
 		delete items[0];
 		if (schnapps_->get_selected_map() == m)
 		{
-			selected_selector_[DART] = NULL;
-			foreach(QListWidgetItem* item, list_dartSelectors->selectedItems())
-				item->setSelected(false);
-			selected_selector_[VERTEX] = NULL;
-			foreach(QListWidgetItem* item, list_vertexSelectors->selectedItems())
-				item->setSelected(false);
-			selected_selector_[EDGE] = NULL;
-			foreach(QListWidgetItem* item, list_edgeSelectors->selectedItems())
-				item->setSelected(false);
-			selected_selector_[FACE] = NULL;
-			foreach(QListWidgetItem* item, list_faceSelectors->selectedItems())
-				item->setSelected(false);
-			selected_selector_[VOLUME] = NULL;
-			foreach(QListWidgetItem* item, list_volumeSelectors->selectedItems())
-				item->setSelected(false);
+//			selected_selector_[DART] = NULL;
+//			foreach(QListWidgetItem* item, list_dartSelectors->selectedItems())
+//				item->setSelected(false);
+//			selected_selector_[VERTEX] = NULL;
+//			foreach(QListWidgetItem* item, list_vertexSelectors->selectedItems())
+//				item->setSelected(false);
+//			selected_selector_[EDGE] = NULL;
+//			foreach(QListWidgetItem* item, list_edgeSelectors->selectedItems())
+//				item->setSelected(false);
+//			selected_selector_[FACE] = NULL;
+//			foreach(QListWidgetItem* item, list_faceSelectors->selectedItems())
+//				item->setSelected(false);
+//			selected_selector_[VOLUME] = NULL;
+//			foreach(QListWidgetItem* item, list_volumeSelectors->selectedItems())
+//				item->setSelected(false);
 		}
 
 		updating_ui_ = false;
 	}
-
 }
 
 
 
 
 
-void ControlDock_MapTab::selected_map_attribute_added(unsigned int orbit, const QString &name)
+void ControlDock_MapTab::selected_map_attribute_added(unsigned int orbit, const QString& name)
 {
 	update_selected_map_info();
 }
 
-//void ControlDock_MapTab::selected_map_VBO_added(Utils::VBO *vbo)
+void ControlDock_MapTab::selected_map_bb_vertex_attribute_changed(const QString& name)
+{
+	update_selected_map_info();
+}
+
+//void ControlDock_MapTab::selected_map_VBO_added(Utils::VBO* vbo)
 //{
 //	update_selected_map_info();
 //}
 
-//void ControlDock_MapTab::selected_map_VBO_removed(Utils::VBO *vbo)
+//void ControlDock_MapTab::selected_map_VBO_removed(Utils::VBO* vbo)
 //{
 //	update_selected_map_info();
 //}
