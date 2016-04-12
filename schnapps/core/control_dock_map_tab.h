@@ -21,110 +21,77 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_MAPHANDLER_H_
-#define SCHNAPPS_CORE_MAPHANDLER_H_
+#ifndef SCHNAPPS_CORE_CONTROL_DOCK_MAP_TAB_H_
+#define SCHNAPPS_CORE_CONTROL_DOCK_MAP_TAB_H_
 
 #include <schnapps/core/dll.h>
 
-#include <cgogn/core/cmap/map_base.h>
-#include <cgogn/core/cmap/cmap2.h>
-#include <cgogn/core/cmap/cmap3.h>
+#include <ui_control_dock_map_tab_widget.h>
 
-#include <Eigen/Dense>
-
-#include <QObject>
+#include <QWidget>
 #include <QString>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class View;
+class MapHandlerGen;
 
-using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
-using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
-using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
-
-using VEC3 = Eigen::Vector3d;
-
-class SCHNAPPS_CORE_API MapHandlerGen : public QObject
+class SCHNAPPS_CORE_API ControlDock_MapTab : public QWidget, public Ui::ControlDock_MapTabWidget
 {
 	Q_OBJECT
 
-	friend class View;
-
 public:
 
-	MapHandlerGen(const QString& name, SCHNApps* s, MapBaseData* map);
+	ControlDock_MapTab(SCHNApps* s);
+	QString title() { return QString("Maps"); }
 
-	~MapHandlerGen();
+	MapHandlerGen* get_selected_map() { return selected_map_; }
+//	unsigned int get_current_orbit();
+//	CellSelectorGen* getSelectedSelector(unsigned int orbit) { return m_selectedSelector[orbit]; }
 
-public slots:
+	void set_selected_map(const QString& map_name);
 
-	/**
-	 * @brief get the name of Camera object
-	 * @return name
-	 */
-	QString get_name() { return name_; }
+private slots:
 
-	/**
-	 * @brief get the schnapps objet ptr
-	 * @return the ptr
-	 */
-	SCHNApps* get_schnapps() const { return schnapps_; }
+	// slots called from UI actions
+	void selected_map_changed();
 
-	const MapBaseData* get_map() const { return map_; }
+//	void duplicate_current_map_clicked();
+//	void remove_current_map_clicked();
 
-	bool is_selected_map() const;
+	void show_bb_changed(bool b);
+	void bb_vertex_attribute_changed(int index);
+	void vertex_attribute_check_state_changed(QListWidgetItem* item);
 
-	/*********************************************************
-	 * MANAGE LINKED VIEWS
-	 *********************************************************/
+//	void selected_selector_changed();
+//	void selector_check_state_changed(QListWidgetItem* item);
+//	void add_selector();
+//	void remove_selector();
 
-	// get the list of views linked to the map
-	const QList<View*>& get_linked_views() const { return views_; }
+	// slots called from SCHNApps signals
+	void map_added(MapHandlerGen* m);
+	void map_removed(MapHandlerGen* m);
 
-	// test if a view is linked to this map
-	bool is_linked_to_view(View* view) const { return views_.contains(view); }
+	// slots called from selected MapHandler signals
+	void selected_map_attribute_added(unsigned int orbit, const QString& name);
+//	void selected_map_VBO_added(Utils::VBO* vbo);
+//	void selected_map_VBO_removed(Utils::VBO* vbo);
+//	void selected_map_cell_selector_added(unsigned int orbit, const QString& name);
+//	void selected_map_cell_selector_removed(unsigned int orbit, const QString& name);
 
 private:
 
-	void link_view(View* view);
-
-	void unlink_view(View* view);
+	void update_selected_map_info();
 
 protected:
 
-	// MapHandler name
-	QString name_;
-
-	// pointer to schnapps object
 	SCHNApps* schnapps_;
-
-	// MapBaseData generic pointer
-	MapBaseData* map_;
-
-	// list of views that are linked to this map
-	QList<View*> views_;
-};
-
-template <typename MAP_TYPE>
-class MapHandler : public MapHandlerGen
-{
-public:
-
-	MapHandler(const QString& name, SCHNApps* s, MAP_TYPE* map) :
-		MapHandlerGen(name, s, map)
-	{}
-
-	~MapHandler()
-	{
-		delete map_;
-	}
-
-	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(map_); }
+	MapHandlerGen* selected_map_;
+//	CellSelectorGen* selected_selector_[NB_ORBITS];
+	bool updating_ui_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_CORE_MAPHANDLER_H_
+#endif // SCHNAPPS_CORE_CONTROL_DOCK_MAP_TAB_H_

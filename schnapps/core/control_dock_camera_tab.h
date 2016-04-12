@@ -21,110 +21,61 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_MAPHANDLER_H_
-#define SCHNAPPS_CORE_MAPHANDLER_H_
+#ifndef SCHNAPPS_CORE_CONTROL_DOCK_CAMERA_TAB_H_
+#define SCHNAPPS_CORE_CONTROL_DOCK_CAMERA_TAB_H_
 
 #include <schnapps/core/dll.h>
 
-#include <cgogn/core/cmap/map_base.h>
-#include <cgogn/core/cmap/cmap2.h>
-#include <cgogn/core/cmap/cmap3.h>
+#include <ui_control_dock_camera_tab_widget.h>
 
-#include <Eigen/Dense>
-
-#include <QObject>
+#include <QWidget>
 #include <QString>
 
 namespace schnapps
 {
 
 class SCHNApps;
+class Camera;
 class View;
 
-using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
-using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
-using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
-
-using VEC3 = Eigen::Vector3d;
-
-class SCHNAPPS_CORE_API MapHandlerGen : public QObject
+class SCHNAPPS_CORE_API ControlDock_CameraTab : public QWidget, public Ui::ControlDock_CameraTabWidget
 {
 	Q_OBJECT
 
-	friend class View;
-
 public:
 
-	MapHandlerGen(const QString& name, SCHNApps* s, MapBaseData* map);
+	ControlDock_CameraTab(SCHNApps* s);
+	QString title() { return QString("Cameras"); }
 
-	~MapHandlerGen();
+private slots:
 
-public slots:
+	// slots called from UI actions
+	void add_camera_button_clicked();
+	void selected_camera_changed();
+	void camera_projection_changed(QAbstractButton* b);
+	void camera_draw_clicked(bool b);
+	void camera_draw_path_clicked(bool b);
 
-	/**
-	 * @brief get the name of Camera object
-	 * @return name
-	 */
-	QString get_name() { return name_; }
+	// slots called from SCHNApps signals
+	void camera_added(Camera* c);
+	void camera_removed(Camera* c);
 
-	/**
-	 * @brief get the schnapps objet ptr
-	 * @return the ptr
-	 */
-	SCHNApps* get_schnapps() const { return schnapps_; }
-
-	const MapBaseData* get_map() const { return map_; }
-
-	bool is_selected_map() const;
-
-	/*********************************************************
-	 * MANAGE LINKED VIEWS
-	 *********************************************************/
-
-	// get the list of views linked to the map
-	const QList<View*>& get_linked_views() const { return views_; }
-
-	// test if a view is linked to this map
-	bool is_linked_to_view(View* view) const { return views_.contains(view); }
+	// slots called from selected Camera signals
+	void selected_camera_projection_type_changed(int t);
+	void selected_camera_draw_changed(bool b);
+	void selected_camera_draw_path_changed(bool b);
 
 private:
 
-	void link_view(View* view);
-
-	void unlink_view(View* view);
+	void update_selected_camera_info();
 
 protected:
 
-	// MapHandler name
-	QString name_;
-
-	// pointer to schnapps object
 	SCHNApps* schnapps_;
-
-	// MapBaseData generic pointer
-	MapBaseData* map_;
-
-	// list of views that are linked to this map
-	QList<View*> views_;
-};
-
-template <typename MAP_TYPE>
-class MapHandler : public MapHandlerGen
-{
-public:
-
-	MapHandler(const QString& name, SCHNApps* s, MAP_TYPE* map) :
-		MapHandlerGen(name, s, map)
-	{}
-
-	~MapHandler()
-	{
-		delete map_;
-	}
-
-	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(map_); }
+	Camera* selected_camera_;
+	bool updating_ui_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_CORE_MAPHANDLER_H_
+#endif // SCHNAPPS_CORE_CONTROL_DOCK_CAMERA_TAB_H_

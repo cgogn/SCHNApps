@@ -12,6 +12,9 @@ set(HEADER_FILES
 	plugin_processing.h
 	plugin_interaction.h
 	map_handler.h
+	control_dock_camera_tab.h
+	control_dock_plugin_tab.h
+	control_dock_map_tab.h
 )
 
 set(SOURCE_FILES
@@ -22,6 +25,9 @@ set(SOURCE_FILES
 	view_button_area.cpp
 	plugin_interaction.cpp
 	map_handler.cpp
+	control_dock_camera_tab.cpp
+	control_dock_plugin_tab.cpp
+	control_dock_map_tab.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -53,8 +59,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.dylib
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.so
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.so
 	QOGLViewer
 	Qt5::Widgets
 )

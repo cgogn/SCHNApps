@@ -28,8 +28,6 @@
 
 #include <ui_schnapps.h>
 
-#include <QTextStream>
-
 class QVBoxLayout;
 class QSplitter;
 class QFile;
@@ -43,9 +41,9 @@ class Plugin;
 class PluginInteraction;
 class MapHandlerGen;
 
-// class ControlDock_CameraTab;
-// class ControlDock_MapTab;
-// class ControlDock_PluginTab;
+class ControlDock_CameraTab;
+class ControlDock_MapTab;
+class ControlDock_PluginTab;
 
 /**
  * @brief The SCHNApps central object application
@@ -201,7 +199,7 @@ public slots:
 //	* @brief Get cell selector
 //	* @param orbit Orbit (0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume)
 //	*/
-//	CellSelectorGen* getSelectedSelector(unsigned int orbit) const;
+//	CellSelectorGen* get_selected_selector(unsigned int orbit) const;
 
 //	/**
 //	* @brief Set the selector of the current map (warning change the current orbit)
@@ -341,9 +339,9 @@ protected:
 
 	QDockWidget* control_dock_;
 	QTabWidget* control_dock_tab_widget_;
-	// ControlDock_CameraTab* control_camera_tab_;
-	// ControlDock_MapTab* control_map_tab_;
-	// ControlDock_PluginTab* control_plugin_tab_;
+	ControlDock_CameraTab* control_camera_tab_;
+	ControlDock_PluginTab* control_plugin_tab_;
+	ControlDock_MapTab* control_map_tab_;
 
 	QVBoxLayout* central_layout_;
 	QSplitter* root_splitter_;

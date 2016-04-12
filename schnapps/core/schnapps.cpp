@@ -43,6 +43,10 @@
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/map_handler.h>
 
+#include <schnapps/core/control_dock_camera_tab.h>
+#include <schnapps/core/control_dock_plugin_tab.h>
+#include <schnapps/core/control_dock_map_tab.h>
+
 namespace schnapps
 {
 
@@ -71,12 +75,12 @@ SCHNApps::SCHNApps(const QString& app_path) :
 	control_dock_->setVisible(true);
 	control_dock_->setWidget(control_dock_tab_widget_);
 
-	// control_camera_tab_ = new ControlDock_CameraTab(this);
-	// control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
-	// control_map_tab_ = new ControlDock_MapTab(this);
-	// control_dock_tab_widget_->addTab(control_map_tab_, control_map_tab_->title());
-	// control_plugin_tab_ = new ControlDock_PluginTab(this);
-	// control_dock_tab_widget_->addTab(control_plugin_tab_, control_plugin_tab_->title());
+	control_camera_tab_ = new ControlDock_CameraTab(this);
+	control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
+	control_plugin_tab_ = new ControlDock_PluginTab(this);
+	control_dock_tab_widget_->addTab(control_plugin_tab_, control_plugin_tab_->title());
+	control_map_tab_ = new ControlDock_MapTab(this);
+	control_dock_tab_widget_->addTab(control_map_tab_, control_map_tab_->title());
 
 	connect(action_ToggleControlDock, SIGNAL(triggered()), this, SLOT(toggle_control_dock()));
 
@@ -211,10 +215,9 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				// if it succeeded we reference this plugin
 				plugins_.insert(plugin_name, plugin);
 
-				statusbar->showMessage(plugin_name + QString(" successfully loaded."), 2000);
+				status_bar_message(plugin_name + QString(" successfully loaded."), 2000);
 				emit(plugin_enabled(plugin));
 //				menubar->repaint();
-				// method success
 				return plugin;
 			}
 			else
@@ -264,7 +267,7 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		QPluginLoader loader(plugin->get_file_path());
 		loader.unload();
 
-		statusbar->showMessage(plugin_name + QString(" successfully unloaded."), 2000);
+		status_bar_message(plugin_name + QString(" successfully unloaded."), 2000);
 		emit(plugin_disabled(plugin));
 
 		delete plugin;
@@ -399,13 +402,12 @@ MapHandlerGen* SCHNApps::get_map(const QString& name) const
 
 MapHandlerGen* SCHNApps::get_selected_map() const
 {
-//	return control_map_tab_->get_selected_map();
-	return NULL;
+	return control_map_tab_->get_selected_map();
 }
 
 void SCHNApps::set_selected_map(const QString& name)
 {
-//	control_map_tab_->set_selected_map(name);
+	control_map_tab_->set_selected_map(name);
 }
 
 /*********************************************************
@@ -609,8 +611,6 @@ void SCHNApps::set_split_view_positions(QString positions)
 		liste.pop_front();
 	}
 }
-
-
 
 void SCHNApps::about_SCHNApps()
 {
