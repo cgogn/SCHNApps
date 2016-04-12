@@ -60,7 +60,6 @@ View::View(const QString& name, SCHNApps* s) :
 	dialog_maps_(NULL),
 	dialog_plugins_(NULL),
 	dialog_cameras_(NULL),
-	drawer_(NULL),
 	frame_drawer_(NULL),
 	save_snapshots_(false),
 	updating_ui_(false)
@@ -325,74 +324,6 @@ void View::init()
 	this->setCamera(current_camera_);
 //	delete c;
 
-	drawer_ = new cgogn::rendering::Drawer(this);
-
-//	this->setBackgroundColor(QColor(0, 0, 0));
-	glClearColor(0.1f, 0.1f, 0.3f, 0.0f);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
-	drawer_->new_list();
-	drawer_->line_width(2.0);
-	drawer_->begin(GL_LINE_LOOP);
-		drawer_->color3f(1.0,0.0,0.0);
-		drawer_->vertex3f(0,0,0);
-		drawer_->color3f(0.0,1.0,1.0);
-		drawer_->vertex3f(1,0,0);
-		drawer_->color3f(1.0,0.0,1.0);
-		drawer_->vertex3f(1,1,0);
-		drawer_->color3f(1.0,1.0,0.0);
-		drawer_->vertex3f(0,1,0);
-	drawer_->end();
-//	drawer_->point_size(10.0);
-	drawer_->line_width_aa(3.0);
-	drawer_->begin(GL_LINES);
-		drawer_->color3f(1.0,1.0,1.0);
-		drawer_->vertex3fv(Vec3(-1,1,0));
-		drawer_->vertex3fv(Vec3(-1.2,0,0));
-		drawer_->vertex3fv(Vec3(-2,0,0));
-		drawer_->vertex3fv(Vec3(-2.2,3,0));
-	drawer_->end();
-
-	drawer_->begin(GL_TRIANGLES);
-		drawer_->color3f(1.0,0.0,0.0);
-		drawer_->vertex3fv({{2,2,0}});
-		drawer_->color3f(0.0,1.0,0.0);
-		drawer_->vertex3fv({{4,3,0}});
-		drawer_->color3f(0.0,0.0,1.0);
-		drawer_->vertex3fv({{2.5,1,0}});
-	drawer_->end();
-
-	drawer_->point_size_aa(7.0);
-	drawer_->begin(GL_POINTS);
-	for (float a=0.0f; a < 1.0f; a+= 0.1f)
-	{
-		Vec3 P(4.0+std::cos(6.28*a),-2.0+std::sin(6.28*a),0.0);
-		Vec3 C(a,0.5,1.0-a);
-		drawer_->color3fv(C);
-		drawer_->vertex3fv(P);
-	}
-	drawer_->end();
-
-	drawer_->ball_size(0.1f);
-	drawer_->begin(GL_POINTS);
-	for (float a=0.05f; a < 1.0f; a+= 0.1f)
-	{
-		Vec3 P(4.0+std::cos(6.28*a)*1.2,-2.0+ std::sin(6.28*a)*1.2, std::sin(6.28*a)*0.2 );
-		Vec3 C(a,0.5,1.0-a);
-		drawer_->color3fv(C);
-		drawer_->vertex3fv(P);
-	}
-
-	drawer_->end();
-	drawer_->end_list();
-
-	bb_min_.setValue(0, -5, 0);
-	bb_max_.setValue(5, 5, 2);
-
-	emit(bb_changed());
-
-
 	frame_drawer_ = new cgogn::rendering::Drawer(this);
 
 	frame_drawer_->new_list();
@@ -468,21 +399,14 @@ void View::draw()
 	current_camera_->getModelViewMatrix(mm);
 	current_camera_->getProjectionMatrix(pm);
 
-	drawer_->call_list(pm, mm);
-
-//	MapHandlerGen* selected_map = schnapps_->get_selected_map();
+	MapHandlerGen* selected_map = schnapps_->get_selected_map();
 
 	foreach (MapHandlerGen* map, maps_)
 	{
-		QMatrix4x4 map_mm = mm; // * map->get_frame_matrix() * map->get_transfo_matrix();
+		QMatrix4x4 map_mm = mm * map->get_frame_matrix() * map->get_transformation_matrix();
 
-//		if(map == selected_map)
-//		{
-//			Utils::Drawer* bb_drawer = map->get_bb_drawer();
-//			if (bb_drawer)
-//				bb_drawer->update_matrices(pm, map_mm);
-//			map->draw_bb();
-//		}
+		if(map == selected_map && map->get_show_bb())
+			map->draw_bb(pm, map_mm);
 
 		foreach (PluginInteraction* plugin, plugins_)
 		{

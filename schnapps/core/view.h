@@ -297,7 +297,6 @@ protected:
 	ViewDialogList* dialog_plugins_;
 	ViewDialogList* dialog_cameras_;
 
-	cgogn::rendering::Drawer* drawer_;
 	cgogn::rendering::Drawer* frame_drawer_;
 
 	bool save_snapshots_;

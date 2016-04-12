@@ -29,10 +29,11 @@
 #include <cgogn/core/cmap/map_base.h>
 #include <cgogn/core/cmap/cmap2.h>
 #include <cgogn/core/cmap/cmap3.h>
-#include <cgogn/geometry/types/bounding_box.h>
 
 #include <Eigen/Dense>
 #include <QOGLViewer/manipulatedFrame.h>
+
+#include <cgogn/geometry/algos/bounding_box.h>
 
 #include <QObject>
 #include <QString>
@@ -96,22 +97,29 @@ private slots:
 	void frame_changed();
 
 	/*********************************************************
-	 * MANAGE BOUNDING BOX
+	 * MANAGE TRANSFORMATION MATRIX
 	 *********************************************************/
 
 public slots:
+
+	// get the frame associated to the map
+	const QMatrix4x4& get_transformation_matrix() const { return transformation_matrix_; }
+
+	/*********************************************************
+	 * MANAGE BOUNDING BOX
+	 *********************************************************/
 
 	/**
 	* @brief set if bounding box has to be drawn
 	* @param b yes or no
 	*/
-	void show_bb(bool b);
+	void set_show_bb(bool b);
 
 	/**
 	* @brief is the bounding box of the map drawn
 	* @return is bounding box of the map drawn
 	*/
-	bool is_bb_shown() const { return show_bb_; }
+	bool get_show_bb() const { return show_bb_; }
 
 	/**
 	* @brief set color for drawing BB the bounding box
@@ -140,14 +148,31 @@ public slots:
 	*/
 	float get_bb_diagonal_size() const { return bb_diagonal_size_; }
 
-	// get the drawer used to draw the bounding box of the map
-	cgogn::rendering::Drawer* get_bb_drawer() const { return bb_drawer_; }
-
+	/**
+	 * @brief get the bounding box of the map after transformation by frame & transformation matrix
+	 * @param bb_min minimum point
+	 * @param bb_max maximum point
+	 * @return
+	 */
 	bool get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max);
+
+	/**
+	 * @brief draw the bounding box
+	 * @param pm projection matrix
+	 * @param mm modelview matrix
+	 */
+	void draw_bb(const QMatrix4x4& pm, const QMatrix4x4& mm);
+
+private:
+
+	void update_bb_drawer();
+	virtual void compute_bb() = 0;
 
 	/*********************************************************
 	 * MANAGE LINKED VIEWS
 	 *********************************************************/
+
+public slots:
 
 	// get the list of views linked to the map
 	const QList<View*>& get_linked_views() const { return views_; }
@@ -156,8 +181,6 @@ public slots:
 	bool is_linked_to_view(View* view) const { return views_.contains(view); }
 
 private:
-
-	virtual void compute_bb() = 0;
 
 	void link_view(View* view);
 	void unlink_view(View* view);
@@ -189,9 +212,9 @@ protected:
 
 	// map bounding box
 	cgogn::geometry::BoundingBox<VEC3> bb_;
-	// show the bounding box in the linked views (if currently selected)
-	bool show_bb_;
 	cgogn::rendering::Drawer* bb_drawer_;
+	View* bb_drawer_view_context_;
+	bool show_bb_;
 	QColor bb_color_;
 	float bb_diagonal_size_;
 };
@@ -200,6 +223,9 @@ template <typename MAP_TYPE>
 class MapHandler : public MapHandlerGen
 {
 public:
+
+	template <typename T>
+	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
 
 	MapHandler(const QString& name, SCHNApps* s, MAP_TYPE* map) :
 		MapHandlerGen(name, s, map)
@@ -214,12 +240,20 @@ private:
 
 	void compute_bb() override
 	{
+		this->bb_.reset();
 
+		if (bb_vertex_attribute_.is_valid())
+			cgogn::geometry::compute_bounding_box(bb_vertex_attribute_, this->bb_);
+
+		if (this->bb_.is_initialized())
+			this->bb_diagonal_size_ = this->bb_.diag_size();
+		else
+			this->bb_diagonal_size_ = .0f;
 	}
 
 protected:
 
-
+	VertexAttribute<VEC3> bb_vertex_attribute_;
 };
 
 } // namespace schnapps

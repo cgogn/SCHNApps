@@ -180,7 +180,7 @@ void ControlDock_MapTab::show_bb_changed(bool b)
 	if (!updating_ui_)
 	{
 		if (selected_map_)
-			selected_map_->show_bb(b);
+			selected_map_->set_show_bb(b);
 	}
 }
 
