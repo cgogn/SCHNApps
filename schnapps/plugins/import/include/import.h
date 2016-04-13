@@ -21,27 +21,71 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/core/schnapps_window.h>
+#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
+#define SCHNAPPS_PLUGIN_IMPORT_H_
 
-#include <QOGLViewer/qoglviewer.h>
+#include <schnapps/core/plugin_processing.h>
 
-#include <QApplication>
-#include <QSplashScreen>
+#include <QAction>
 
-int main(int argc, char* argv[])
+namespace schnapps
 {
-	QApplication app(argc, argv);
 
-	qoglviewer::init_ogl_context();
+class MapHandlerGen;
 
-	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
-	splash.show();
-	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
+/**
+* @brief Plugin for CGoGN mesh import
+*/
+class Plugin_Import : public PluginProcessing
+{
+	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
 
-	schnapps::SCHNAppsWindow w(app.applicationDirPath());
-	w.show();
+public:
+	Plugin_Import()
+	{}
 
-	splash.finish(&w);
+	~Plugin_Import()
+	{}
 
-	return app.exec();
-}
+private:
+
+	virtual bool enable();
+	virtual void disable() {}
+
+public slots:
+
+	/**
+	 * @brief import a surface mesh from a file
+	 * @param filename file name of mesh file
+	 * @return a new MapHandlerGen that handles the mesh
+	 */
+	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
+
+	/**
+	 * @brief import a surface mesh by opening a FileDialog
+	 */
+	void import_surface_mesh_from_file_dialog();
+
+//	/**
+//	 * @brief import a 2D image into a surface mesh from a file
+//	 * @param filename file name of mesh file
+//	 * @return a new MapHandlerGen that handles the mesh
+//	 */
+//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
+
+//	/**
+//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
+//	 */
+//	void import_2D_image_from_file_dialog();
+
+private:
+
+	QAction* import_surface_mesh_action;
+//	QAction* import_2D_image_action;
+};
+
+} // namespace schnapps
+
+#endif // SCHNAPPS_PLUGIN_IMPORT_H_

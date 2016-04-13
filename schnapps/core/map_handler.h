@@ -67,18 +67,18 @@ public:
 public slots:
 
 	/**
-	 * @brief get the name of Camera object
+	 * @brief get the name of MapHandlerGen object
 	 * @return name
 	 */
-	QString get_name() { return name_; }
+	inline QString get_name() { return name_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	SCHNApps* get_schnapps() const { return schnapps_; }
+	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
-	const MapBaseData* get_map() const { return map_; }
+	inline const MapBaseData* get_map() const { return map_; }
 
 	bool is_selected_map() const;
 
@@ -87,7 +87,7 @@ public slots:
 	 *********************************************************/
 
 	// get the frame associated to the map
-	qoglviewer::ManipulatedFrame* get_frame() const { return frame_; }
+	inline qoglviewer::ManipulatedFrame* get_frame() const { return frame_; }
 
 	// get the matrix of the frame associated to the map
 	QMatrix4x4 get_frame_matrix() const;
@@ -103,7 +103,7 @@ private slots:
 public slots:
 
 	// get the frame associated to the map
-	const QMatrix4x4& get_transformation_matrix() const { return transformation_matrix_; }
+	inline const QMatrix4x4& get_transformation_matrix() const { return transformation_matrix_; }
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
@@ -119,7 +119,7 @@ public slots:
 	* @brief is the bounding box of the map drawn
 	* @return is bounding box of the map drawn
 	*/
-	bool get_show_bb() const { return show_bb_; }
+	inline bool get_show_bb() const { return show_bb_; }
 
 	/**
 	* @brief set color for drawing BB the bounding box
@@ -146,7 +146,7 @@ public slots:
 	* @brief get the length of diagonal of bounding box of the map
 	* @return length of the diagonal of the bounding box
 	*/
-	float get_bb_diagonal_size() const { return bb_diagonal_size_; }
+	inline float get_bb_diagonal_size() const { return bb_diagonal_size_; }
 
 	/**
 	 * @brief get the bounding box of the map after transformation by frame & transformation matrix
@@ -175,10 +175,10 @@ private:
 public slots:
 
 	// get the list of views linked to the map
-	const QList<View*>& get_linked_views() const { return views_; }
+	inline const QList<View*>& get_linked_views() const { return views_; }
 
 	// test if a view is linked to this map
-	bool is_linked_to_view(View* view) const { return views_.contains(view); }
+	inline bool is_linked_to_view(View* view) const { return views_.contains(view); }
 
 private:
 
@@ -238,7 +238,7 @@ public:
 
 private:
 
-	void compute_bb() override
+	inline void compute_bb() override
 	{
 		this->bb_.reset();
 

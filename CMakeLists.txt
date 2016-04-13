@@ -18,6 +18,9 @@ set(CGOGN_PATH "${SCHNAPPS_PATH}/../CGoGN_2")
 set(CGOGN_SOURCE_DIR ${CGOGN_PATH})
 
 set(CGOGN_THIRDPARTY_EIGEN3_INCLUDE_DIR "${CGOGN_PATH}/thirdparty/eigen-3.2.8" CACHE PATH "Include directory for find_package(Eigen3)")
+set(CGOGN_THIRDPARTY_TINYXML2_INCLUDE_DIR "${CGOGN_PATH}/thirdparty/TinyXml2" CACHE PATH "TinyXml2 include directory")
+set(CGOGN_THIRDPARTY_LM6_INCLUDE_DIR "${CGOGN_PATH}/thirdparty/lm6" CACHE PATH "LM6 include directory")
+set(CGOGN_THIRDPARTY_PLY_INCLUDE_DIR "${CGOGN_PATH}/thirdparty/ply" CACHE PATH "Ply include directory")
 
 #### Build configuration
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)

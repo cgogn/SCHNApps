@@ -3,6 +3,7 @@ project(schnapps_core
 )
 
 set(HEADER_FILES
+	schnapps_window.h
 	schnapps.h
 	camera.h
 	view.h
@@ -18,6 +19,7 @@ set(HEADER_FILES
 )
 
 set(SOURCE_FILES
+	schnapps_window.cpp
 	schnapps.cpp
 	camera.cpp
 	view.cpp

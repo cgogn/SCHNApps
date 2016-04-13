@@ -160,7 +160,7 @@ void Camera::fit_to_views_bb()
 		}
 
 		this->setSceneBoundingBox(bb_min, bb_max);
-		this->showEntireScene();
+//		this->showEntireScene();
 	}
 }
 

@@ -67,7 +67,7 @@ public:
 
 	~View();
 
-	const QString& get_name() const { return name_; }
+	inline const QString& get_name() const { return name_; }
 
 public slots:
 
@@ -75,13 +75,13 @@ public slots:
 	 * @brief get the name of view
 	 * @return name
 	 */
-	QString get_name() { return name_; }
+	inline QString get_name() { return name_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	SCHNApps* get_schnapps() const { return schnapps_; }
+	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
 	/**
 	 * @brief test if the view is the selected one
@@ -109,14 +109,14 @@ public slots:
 	* @brief get the current camera of the view
 	* @return the camera object
 	*/
-	Camera* get_current_camera() const { return current_camera_; }
+	inline Camera* get_current_camera() const { return current_camera_; }
 
 	/**
 	 * @brief test if this view use a camera
 	 * @param c camera ptr
 	 * @return
 	 */
-	bool uses_camera(Camera* c) const { return current_camera_ == c; }
+	inline bool uses_camera(Camera* c) const { return current_camera_ == c; }
 
 	/**
 	* @brief test if a camera is the current camera
@@ -144,9 +144,9 @@ public slots:
 	*/
 	void unlink_plugin(const QString& name);
 
-	const QList<PluginInteraction*>& get_linked_plugins() const { return plugins_; }
+	inline const QList<PluginInteraction*>& get_linked_plugins() const { return plugins_; }
 
-	bool is_linked_to_plugin(PluginInteraction* plugin) const { return plugins_.contains(plugin); }
+	inline bool is_linked_to_plugin(PluginInteraction* plugin) const { return plugins_.contains(plugin); }
 
 	/**
 	* @brief test if the view is linked to a plugin
@@ -174,9 +174,9 @@ public slots:
 	*/
 	void unlink_map(const QString& name);
 
-	const QList<MapHandlerGen*>& get_linked_maps() const { return maps_; }
+	inline const QList<MapHandlerGen*>& get_linked_maps() const { return maps_; }
 
-	bool is_linked_to_map(MapHandlerGen* map) const { return maps_.contains(map); }
+	inline bool is_linked_to_map(MapHandlerGen* map) const { return maps_.contains(map); }
 
 	/**
 	* @brief test if the view is linked to a lao
@@ -218,7 +218,7 @@ public:
 	 * @param bb_min min to be filled
 	 * @param bb_max max to be filled
 	 */
-	void get_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
+	inline void get_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
 	{
 		bb_min = bb_min_;
 		bb_max = bb_max_;

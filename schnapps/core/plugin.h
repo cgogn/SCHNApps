@@ -55,27 +55,27 @@ public slots:
 	 * @brief get the name of Plugin object
 	 * @return name
 	 */
-	QString get_name() { return name_; }
+	inline QString get_name() { return name_; }
 
 	/**
 	 * @brief get the file path to the plugin library file
 	 * @return file path
 	 */
-	QString get_file_path() { return file_path_; }
+	inline QString get_file_path() { return file_path_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	SCHNApps* get_schnapps() const { return schnapps_; }
+	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
 private:
 
-	void set_name(const QString& name) { name_ = name; }
+	inline void set_name(const QString& name) { name_ = name; }
 
-	void set_file_path(const QString& f) { file_path_ = f; }
+	inline void set_file_path(const QString& f) { file_path_ = f; }
 
-	void set_schnapps(SCHNApps* s) { schnapps_ = s; }
+	inline void set_schnapps(SCHNApps* s) { schnapps_ = s; }
 
 	virtual bool enable() = 0;
 	virtual void disable() = 0;
@@ -93,5 +93,7 @@ protected:
 };
 
 } // namespace schnapps
+
+Q_DECLARE_INTERFACE(schnapps::Plugin, "SCHNApps.Plugin")
 
 #endif // SCHNAPPS_CORE_PLUGIN_H_

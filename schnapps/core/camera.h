@@ -74,50 +74,50 @@ public slots:
 	 * @brief get the name of Camera object
 	 * @return name
 	 */
-	QString get_name() { return name_; }
+	inline QString get_name() { return name_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	SCHNApps* get_schnapps() const { return schnapps_; }
+	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
 	/**
 	 * @brief test if camera is used by one view
 	 * @return used / not used
 	 */
-	bool is_used() const { return !views_.empty(); }
+	inline bool is_used() const { return !views_.empty(); }
 
 	/**
 	 * @brief test is camera is used by several view
 	 * @return shared / not shared (by view)
 	 */
-	bool is_shared() const { return views_.size() > 1; }
+	inline bool is_shared() const { return views_.size() > 1; }
 
 	/**
 	 * @brief get the projection type
 	 * @return PERSPECTIVE or ORTHOGRAPHIC
 	 */
-	qoglviewer::Camera::Type get_projection_type() const { return this->type(); }
+	inline qoglviewer::Camera::Type get_projection_type() const { return this->type(); }
 
 	// is camera drawn ?
-	bool get_draw() const { return draw_; }
+	inline bool get_draw() const { return draw_; }
 
 	// is camera path drawn ?
-	bool get_draw_path() const { return draw_path_; }
+	inline bool get_draw_path() const { return draw_path_; }
 
 	/**
 	 * @brief get the list of views linked with the camera
 	 * @return the list
 	 */
-	const QList<View*>& get_linked_views() const { return views_; }
+	inline const QList<View*>& get_linked_views() const { return views_; }
 
 	/**
 	 * @brief is the camera linked to the given view
 	 * @param view
 	 * @return
 	 */
-	bool is_linked_to_view(View* view) const { return views_.contains(view); }
+	inline bool is_linked_to_view(View* view) const { return views_.contains(view); }
 
 	/**
 	* @brief set the projection type
@@ -134,12 +134,12 @@ public slots:
 	/**
 	* @brief Enable the camera to update automatically with view bounding box
 	*/
-	void enable_views_bb_fitting() { fit_to_views_bb_ = true; }
+	inline void enable_views_bb_fitting() { fit_to_views_bb_ = true; }
 
 	/**
 	* @brief Disable the camera to update automatically with view bounding box
 	*/
-	void disable_views_bb_fitting() { fit_to_views_bb_ = false; }
+	inline void disable_views_bb_fitting() { fit_to_views_bb_ = false; }
 
 	/**
 	* @brief store position and rotationof camera into a string
