@@ -21,14 +21,18 @@
 *                                                                              *
 *******************************************************************************/
 
+#include <schnapps/core/schnapps.h>
+
+#include <QOGLViewer/qoglviewer.h>
+
 #include <QApplication>
 #include <QSplashScreen>
-
-#include <schnapps/core/schnapps.h>
 
 int main(int argc, char* argv[])
 {
 	QApplication app(argc, argv);
+
+	qoglviewer::init_ogl_context();
 
 	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
 	splash.show();
@@ -39,5 +43,5 @@ int main(int argc, char* argv[])
 
 	splash.finish(&schnapps);
 
-	return app.exec();;
+	return app.exec();
 }
