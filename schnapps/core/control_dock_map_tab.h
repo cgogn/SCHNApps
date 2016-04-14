@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_CONTROL_DOCK_MAP_TAB_H_
 
 #include <schnapps/core/dll.h>
+#include <schnapps/core/map_handler.h>
 
 #include <ui_control_dock_map_tab_widget.h>
 
@@ -74,7 +75,7 @@ private slots:
 	void map_removed(MapHandlerGen* m);
 
 	// slots called from selected MapHandler signals
-	void selected_map_attribute_added(unsigned int orbit, const QString& name);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void selected_map_bb_vertex_attribute_changed(const QString& name);
 //	void selected_map_VBO_added(Utils::VBO* vbo);
 //	void selected_map_VBO_removed(Utils::VBO* vbo);

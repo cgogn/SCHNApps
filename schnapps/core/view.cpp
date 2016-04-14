@@ -61,6 +61,7 @@ View::View(const QString& name, SCHNApps* s) :
 	dialog_plugins_(NULL),
 	dialog_cameras_(NULL),
 	frame_drawer_(NULL),
+	drawer_(NULL),
 	save_snapshots_(false),
 	updating_ui_(false)
 {
@@ -267,6 +268,8 @@ void View::link_map(MapHandlerGen* map)
 		updating_ui_ = true;
 		dialog_maps_->check(map->get_name(), Qt::Checked);
 		updating_ui_ = false;
+
+		this->update();
 	}
 }
 
@@ -296,6 +299,8 @@ void View::unlink_map(MapHandlerGen* map)
 		updating_ui_ = true;
 		dialog_maps_->check(map->get_name(), Qt::Unchecked);
 		updating_ui_ = false;
+
+		this->update();
 	}
 }
 
@@ -324,18 +329,59 @@ void View::init()
 	this->setCamera(current_camera_);
 //	delete c;
 
+	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
+
 	frame_drawer_ = new cgogn::rendering::Drawer(this);
 
 	frame_drawer_->new_list();
 	frame_drawer_->color3f(0.0f,1.0f,0.0f);
 	frame_drawer_->line_width(4.0f);
 	frame_drawer_->begin(GL_LINE_LOOP);
-	frame_drawer_->vertex3f(-1.0f,-1.0f, 0.0f);
-	frame_drawer_->vertex3f( 1.0f,-1.0f, 0.0f);
-	frame_drawer_->vertex3f( 1.0f, 1.0f, 0.0f);
-	frame_drawer_->vertex3f(-1.0f, 1.0f, 0.0f);
+		frame_drawer_->vertex3f(-1.0f,-1.0f, -1.0f);
+		frame_drawer_->vertex3f( 1.0f,-1.0f, 0.0f);
+		frame_drawer_->vertex3f( 1.0f, 1.0f, 0.0f);
+		frame_drawer_->vertex3f(-1.0f, 1.0f, 0.0f);
 	frame_drawer_->end();
 	frame_drawer_->end_list();
+
+	drawer_ = new cgogn::rendering::Drawer(this);
+
+	drawer_->new_list();
+	drawer_->line_width(2.0);
+	drawer_->begin(GL_LINE_LOOP);
+		drawer_->color3f(1.0,0.0,0.0);
+		drawer_->vertex3f(0,0,0.3);
+		drawer_->color3f(0.0,1.0,1.0);
+		drawer_->vertex3f(1,0,0);
+		drawer_->color3f(1.0,0.0,1.0);
+		drawer_->vertex3f(1,1,-0.3);
+		drawer_->color3f(1.0,1.0,0.0);
+		drawer_->vertex3f(0,1,0);
+	drawer_->end();
+//	drawer_->line_width_aa(2.0);
+	drawer_->begin(GL_LINES);
+		drawer_->color3f(1.0,1.0,1.0);
+		drawer_->vertex3fv(Vec3(-1,1,0));
+		drawer_->vertex3fv(Vec3(-1.2,0,0));
+		drawer_->vertex3fv(Vec3(-2,0,0));
+		drawer_->vertex3fv(Vec3(-2.2,3,0));
+	drawer_->end();
+	drawer_->begin(GL_TRIANGLES);
+		drawer_->color3f(1.0,0.0,0.0);
+		drawer_->vertex3f(-1,0,0);
+//		drawer_->vertex3fv({{2,2,0}});
+		drawer_->color3f(0.0,1.0,0.0);
+		drawer_->vertex3f(-1,1,0);
+//		drawer_->vertex3fv({{4,3,0}});
+		drawer_->color3f(0.0,0.0,1.0);
+		drawer_->vertex3f(-1,-1,0);
+//		drawer_->vertex3fv({{2.5,1,0}});
+	drawer_->end();
+	drawer_->end_list();
+
+	bb_min_.setValue(0, -5, 0);
+	bb_max_.setValue(5, 5, 2);
+	emit(bb_changed());
 
 	button_area_ = new ViewButtonArea(this);
 	button_area_->set_top_right_position(this->width(), 0);
@@ -394,10 +440,12 @@ void View::draw()
 		}
 	}
 
-	QMatrix4x4 mm;
 	QMatrix4x4 pm;
-	current_camera_->getModelViewMatrix(mm);
 	current_camera_->getProjectionMatrix(pm);
+	QMatrix4x4 mm;
+	current_camera_->getModelViewMatrix(mm);
+
+	drawer_->call_list(pm, mm);
 
 	MapHandlerGen* selected_map = schnapps_->get_selected_map();
 

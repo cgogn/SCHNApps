@@ -131,16 +131,7 @@ public slots:
 	* @brief choose the vertex attribute used to compute the bounding box
 	* @param name name of attribute
 	*/
-	void set_bb_vertex_attribute(const QString& name);
-
-//	// get the vertex attribute used to compute the bounding box
-//	AttributeMultiVectorGen* get_bb_vertex_attribute() const;
-
-//	/**
-//	* @brief get the vertex attribute used to compute the bounding box
-//	* @return name of attribute
-//	*/
-//	QString get_bb_vertex_attribute_name() const;
+	virtual void set_bb_vertex_attribute(const QString& name) = 0;
 
 	/**
 	* @brief get the length of diagonal of bounding box of the map
@@ -163,7 +154,7 @@ public slots:
 	 */
 	void draw_bb(const QMatrix4x4& pm, const QMatrix4x4& mm);
 
-private:
+protected:
 
 	void update_bb_drawer();
 	virtual void compute_bb() = 0;
@@ -189,6 +180,8 @@ signals:
 
 	void bb_changed();
 	void bb_vertex_attribute_changed(const QString&);
+
+	void attribute_added(cgogn::Orbit, const QString&);
 
 protected:
 
@@ -226,6 +219,7 @@ public:
 
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
+	using Vertex = typename MAP_TYPE::Vertex;
 
 	MapHandler(const QString& name, SCHNApps* s, MAP_TYPE* map) :
 		MapHandlerGen(name, s, map)
@@ -235,6 +229,28 @@ public:
 	{}
 
 	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(map_); }
+
+//	const VertexAttribute<VEC3>& get_bb_vertex_attribute() const
+//	{
+//		return bb_vertex_attribute_;
+//	}
+
+	QString get_bb_vertex_attribute_name() const
+	{
+		if (bb_vertex_attribute_.is_valid())
+			return QString::fromStdString(bb_vertex_attribute_.get_name());
+		else
+			return QString();
+	}
+
+	void set_bb_vertex_attribute(const QString& name) override
+	{
+		bb_vertex_attribute_ = get_map()->template get_attribute<VEC3, Vertex::ORBIT>(name.toStdString());
+		compute_bb();
+		this->update_bb_drawer();
+		emit(bb_vertex_attribute_changed(name));
+		emit(bb_changed());
+	}
 
 private:
 
@@ -249,6 +265,8 @@ private:
 			this->bb_diagonal_size_ = this->bb_.diag_size();
 		else
 			this->bb_diagonal_size_ = .0f;
+
+		std::cout << "compute_bb / diag size = " << this->bb_diagonal_size_ << std::endl;
 	}
 
 protected:

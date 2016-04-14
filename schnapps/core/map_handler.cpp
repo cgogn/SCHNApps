@@ -42,6 +42,7 @@ MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseDat
 	bb_color_(Qt::green)
 {
 	frame_ = new qoglviewer::ManipulatedFrame();
+	transformation_matrix_.setToIdentity();
 	connect(frame_, SIGNAL(manipulated()), this, SLOT(frame_changed()));
 }
 
@@ -93,28 +94,6 @@ void  MapHandlerGen::set_bb_color(const QString& color)
 	bb_color_ = QColor(color);
 	update_bb_drawer();
 }
-
-void MapHandlerGen::set_bb_vertex_attribute(const QString& name)
-{
-//	bb_vertex_attribute_ = map_->getAttributeVectorGen(VERTEX, name.toStdString());
-	compute_bb();
-	update_bb_drawer();
-	emit(bb_vertex_attribute_changed(name));
-	emit(bb_changed());
-}
-
-//AttributeMultiVectorGen* MapHandlerGen::get_bb_vertex_attribute() const
-//{
-//	return bb_vertex_attribute_;
-//}
-
-//QString MapHandlerGen::get_bb_vertex_attribute_name() const
-//{
-//	if (bb_vertex_attribute_)
-//		return QString::fromStdString(bb_vertex_attribute_->get_name());
-//	else
-//		return QString();
-//}
 
 bool MapHandlerGen::get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max)
 {
@@ -184,38 +163,41 @@ void MapHandlerGen::update_bb_drawer()
 	{
 		VEC3 bbmin = bb_.min();
 		VEC3 bbmax = bb_.max();
-		float shift = 0.005f * (bbmax - bbmin).norm();
+
+		float shift = 0.005f * bb_diagonal_size_;
 		bbmin -= VEC3(shift, shift, shift);
 		bbmax += VEC3(shift, shift, shift);
 
 		bb_drawer_->new_list();
 		bb_drawer_->color3f(bb_color_.redF(), bb_color_.greenF(), bb_color_.blueF());
-		bb_drawer_->line_width(2.0f);
+		bb_drawer_->line_width(2.0);
 		bb_drawer_->begin(GL_LINE_LOOP);
-		bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmin[2]);
 		bb_drawer_->end();
 		bb_drawer_->begin(GL_LINE_LOOP);
-		bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmax[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmax[2]);
-		bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmax[2]);
-		bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmax[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmax[2]);
 		bb_drawer_->end();
 		bb_drawer_->begin(GL_LINES);
-		bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmax[2]);
-		bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmax[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmax[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmin[2]);
-		bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmax[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmin[2]);
+			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmax[2]);
 		bb_drawer_->end();
 		bb_drawer_->end_list();
+
+		std::cout << "map bb drawer updated" << std::endl;
+		std::cout << "bb -> " << bbmin << "," << bbmax << std::endl;
+		std::cout << "diag -> " << bb_diagonal_size_ << std::endl;
 	}
 }
 
@@ -232,6 +214,7 @@ void MapHandlerGen::link_view(View* view)
 		{
 			bb_drawer_ = new cgogn::rendering::Drawer(view);
 			bb_drawer_view_context_ = view;
+			update_bb_drawer();
 		}
 	}
 }
@@ -247,6 +230,7 @@ void MapHandlerGen::unlink_view(View* view)
 			View* fv = views_.first();
 			bb_drawer_ = new cgogn::rendering::Drawer(fv);
 			bb_drawer_view_context_ = fv;
+			update_bb_drawer();
 		}
 		else
 		{
