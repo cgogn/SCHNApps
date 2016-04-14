@@ -658,7 +658,7 @@ void SCHNApps::add_menu_action(Plugin* plugin, const QString& menu_path, QAction
 
 		// just to update the menu in buggy Qt5 on macOS
 //		#if (defined CGOGN_APPLE) && ((QT_VERSION>>16) == 5)
-//		QMenu* fakemenu = menuBar()->addMenu("X");
+//		QMenu* fakemenu = window_->menubar->addMenu("X");
 //		delete fakemenu;
 //		#endif
 

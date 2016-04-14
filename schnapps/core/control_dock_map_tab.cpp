@@ -387,9 +387,31 @@ void ControlDock_MapTab::update_selected_map_info()
 	list_faceSelectors->clear();
 	list_volumeSelectors->clear();
 
-//	if (selected_map_)
-//	{
-//		MapBaseData* m = selected_map_->get_map();
+	if (selected_map_)
+	{
+		check_drawBB->setChecked(selected_map_->get_show_bb());
+
+		const MapBaseData* map = selected_map_->get_map();
+		const CMap2* map2 = dynamic_cast<const CMap2*>(map);
+		const CMap3* map3 = dynamic_cast<const CMap3*>(map);
+
+		if (map2)
+		{
+			unsigned int nb_d = map2->nb_darts();
+			label_dartNbCells->setText(QString::number(nb_d));
+
+			unsigned int nb_v = map2->nb_cells<CMap2::Vertex::ORBIT>();
+			label_vertexNbCells->setText(QString::number(nb_v));
+
+			unsigned int nb_e = map2->nb_cells<CMap2::Edge::ORBIT>();
+			label_edgeNbCells->setText(QString::number(nb_e));
+
+			unsigned int nb_f = map2->nb_cells<CMap2::Face::ORBIT>();
+			label_faceNbCells->setText(QString::number(nb_f));
+
+			unsigned int nb_vol = map2->nb_cells<CMap2::Volume::ORBIT>();
+			label_volumeNbCells->setText(QString::number(nb_vol));
+		}
 
 //		for (unsigned int orbit = DART; orbit <= VOLUME; ++orbit)
 //		{
@@ -402,36 +424,26 @@ void ControlDock_MapTab::update_selected_map_info()
 //			switch (orbit)
 //			{
 //				case DART : {
-//					unsigned int nb = selected_map_->getNbDarts();
-//					label_dartNbOrbits->setText(QString::number(nb));
 //					label_dartNbCells->setText(QString::number(nbc));
 //					selectorList = list_dartSelectors;
 //					break;
 //				}
 //				case VERTEX : {
-//					unsigned int nb = selected_map_->getNbOrbits(VERTEX);
-//					label_vertexNbOrbits->setText(QString::number(nb));
 //					label_vertexNbCells->setText(QString::number(nbc));
 //					selectorList = list_vertexSelectors;
 //					break;
 //				}
 //				case EDGE : {
-//					unsigned int nb = selected_map_->getNbOrbits(EDGE);
-//					label_edgeNbOrbits->setText(QString::number(nb));
 //					label_edgeNbCells->setText(QString::number(nbc));
 //					selectorList = list_edgeSelectors;
 //					break;
 //				}
 //				case FACE : {
-//					unsigned int nb = selected_map_->getNbOrbits(FACE);
-//					label_faceNbOrbits->setText(QString::number(nb));
 //					label_faceNbCells->setText(QString::number(nbc));
 //					selectorList = list_faceSelectors;
 //					break;
 //				}
 //				case VOLUME : {
-//					unsigned int nb = selected_map_->getNbOrbits(VOLUME);
-//					label_volumeNbOrbits->setText(QString::number(nb));
 //					label_volumeNbCells->setText(QString::number(nbc));
 //					selectorList = list_volumeSelectors;
 //					break;
@@ -495,36 +507,15 @@ void ControlDock_MapTab::update_selected_map_info()
 //				}
 //			}
 //		}
-//	}
-//	else
-//	{
-//		for (unsigned int orbit = DART; orbit <= VOLUME; ++orbit)
-//		{
-//			switch (orbit)
-//			{
-//				case DART :
-//					label_dartNbOrbits->setText(QString::number(0));
-//					label_dartNbCells->setText(QString::number(0));
-//					break;
-//				case VERTEX :
-//					label_vertexNbOrbits->setText(QString::number(0));
-//					label_vertexNbCells->setText(QString::number(0));
-//					break;
-//				case EDGE :
-//					label_edgeNbOrbits->setText(QString::number(0));
-//					label_edgeNbCells->setText(QString::number(0));
-//					break;
-//				case FACE :
-//					label_faceNbOrbits->setText(QString::number(0));
-//					label_faceNbCells->setText(QString::number(0));
-//					break;
-//				case VOLUME :
-//					label_volumeNbOrbits->setText(QString::number(0));
-//					label_volumeNbCells->setText(QString::number(0));
-//					break;
-//			}
-//		}
-//	}
+	}
+	else
+	{
+		label_dartNbCells->setText(QString::number(0));
+		label_vertexNbCells->setText(QString::number(0));
+		label_edgeNbCells->setText(QString::number(0));
+		label_faceNbCells->setText(QString::number(0));
+		label_volumeNbCells->setText(QString::number(0));
+	}
 
 	updating_ui_ = false;
 }

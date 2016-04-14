@@ -70,7 +70,7 @@ public slots:
 	 * @brief get the name of MapHandlerGen object
 	 * @return name
 	 */
-	inline QString get_name() { return name_; }
+	inline const QString& get_name() { return name_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
