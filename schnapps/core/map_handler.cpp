@@ -194,10 +194,6 @@ void MapHandlerGen::update_bb_drawer()
 			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmax[2]);
 		bb_drawer_->end();
 		bb_drawer_->end_list();
-
-		std::cout << "map bb drawer updated" << std::endl;
-		std::cout << "bb -> " << bbmin << "," << bbmax << std::endl;
-		std::cout << "diag -> " << bb_diagonal_size_ << std::endl;
 	}
 }
 
