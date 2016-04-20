@@ -212,6 +212,7 @@ void MapHandlerGen::link_view(View* view)
 		views_.push_back(view);
 		if (!bb_drawer_)
 		{
+			view->makeCurrent();
 			bb_drawer_ = new cgogn::rendering::Drawer(view);
 			bb_drawer_view_context_ = view;
 			update_bb_drawer();
