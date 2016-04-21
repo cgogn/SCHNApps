@@ -46,21 +46,21 @@ unsigned int View::view_count_ = 0;
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
 	schnapps_(s),
-	current_camera_(NULL),
+	current_camera_(nullptr),
 	bb_min_(0.0, 0.0, 0.0),
 	bb_max_(0.0, 0.0, 0.0),
-	button_area_(NULL),
-	close_button_(NULL),
-	Vsplit_button_(NULL),
-	Hsplit_button_(NULL),
-	button_area_left_(NULL),
-	maps_button_(NULL),
-	plugins_button_(NULL),
-	cameras_button_(NULL),
-	dialog_maps_(NULL),
-	dialog_plugins_(NULL),
-	dialog_cameras_(NULL),
-	frame_drawer_(NULL),
+	button_area_(nullptr),
+	close_button_(nullptr),
+	Vsplit_button_(nullptr),
+	Hsplit_button_(nullptr),
+	button_area_left_(nullptr),
+	maps_button_(nullptr),
+	plugins_button_(nullptr),
+	cameras_button_(nullptr),
+	dialog_maps_(nullptr),
+	dialog_plugins_(nullptr),
+	dialog_cameras_(nullptr),
+	frame_drawer_(nullptr),
 	save_snapshots_(false),
 	updating_ui_(false)
 {
@@ -260,7 +260,7 @@ void View::link_map(MapHandlerGen* map)
 		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if(map->is_selected_map())
-			this->setManipulatedFrame(map->get_frame());
+			this->setManipulatedFrame(&map->get_frame());
 
 		update_bb();
 
@@ -291,7 +291,7 @@ void View::unlink_map(MapHandlerGen* map)
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if(map->is_selected_map())
-			this->setManipulatedFrame(NULL);
+			this->setManipulatedFrame(nullptr);
 
 		update_bb();
 
@@ -601,7 +601,7 @@ void View::close_dialogs()
 void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
 {
 	if(cur && is_linked_to_map(cur))
-		this->setManipulatedFrame(cur->get_frame());
+		this->setManipulatedFrame(&cur->get_frame());
 	this->update();
 }
 

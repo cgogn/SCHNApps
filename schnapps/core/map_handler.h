@@ -30,10 +30,13 @@
 #include <cgogn/core/cmap/cmap2.h>
 #include <cgogn/core/cmap/cmap3.h>
 
-#include <Eigen/Dense>
-#include <QOGLViewer/manipulatedFrame.h>
+#include <cgogn/rendering/shaders/vbo.h>
+#include <cgogn/rendering/map_render.h>
 
 #include <cgogn/geometry/algos/bounding_box.h>
+
+#include <Eigen/Dense>
+#include <QOGLViewer/manipulatedFrame.h>
 
 #include <QObject>
 #include <QString>
@@ -87,7 +90,7 @@ public slots:
 	 *********************************************************/
 
 	// get the frame associated to the map
-	inline qoglviewer::ManipulatedFrame* get_frame() const { return frame_; }
+	inline qoglviewer::ManipulatedFrame& get_frame() { return frame_; }
 
 	// get the matrix of the frame associated to the map
 	QMatrix4x4 get_frame_matrix() const;
@@ -160,10 +163,39 @@ protected:
 	virtual void compute_bb() = 0;
 
 	/*********************************************************
-	 * MANAGE LINKED VIEWS
+	 * MANAGE DRAWING
+	 *********************************************************/
+
+public:
+
+	virtual void draw(cgogn::rendering::DrawingType primitive) = 0;
+
+	/*********************************************************
+	 * MANAGE ATTRIBUTES
+	 *********************************************************/
+
+protected:
+
+	virtual const MapBaseData::ChunkArrayContainer<uint32>& get_vertex_attribute_container() = 0;
+
+	/*********************************************************
+	 * MANAGE VBOs
 	 *********************************************************/
 
 public slots:
+
+	/**
+	* @brief create a VBO from vertex attribute (with same name)
+	* @param name name of attribute
+	* @return pointer on created VBO
+	*/
+	cgogn::rendering::VBO* create_VBO(const QString& name);
+
+	cgogn::rendering::VBO* get_VBO(const QString& name) const;
+
+	/*********************************************************
+	 * MANAGE LINKED VIEWS
+	 *********************************************************/
 
 	// get the list of views linked to the map
 	inline const QList<View*>& get_linked_views() const { return views_; }
@@ -195,7 +227,7 @@ protected:
 	MapBaseData* map_;
 
 	// frame that allow user object manipulation (ctrl + mouse)
-	qoglviewer::ManipulatedFrame* frame_;
+	qoglviewer::ManipulatedFrame frame_;
 
 	// transformation matrix
 	QMatrix4x4 transformation_matrix_;
@@ -210,6 +242,12 @@ protected:
 	bool show_bb_;
 	QColor bb_color_;
 	float bb_diagonal_size_;
+
+	// MapRender object of the map
+	cgogn::rendering::MapRender render_;
+
+	// VBO managed for the map attributes
+	QMap<QString, cgogn::rendering::VBO*> vbos_;
 };
 
 template <typename MAP_TYPE>
@@ -230,10 +268,9 @@ public:
 
 	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(map_); }
 
-//	const VertexAttribute<VEC3>& get_bb_vertex_attribute() const
-//	{
-//		return bb_vertex_attribute_;
-//	}
+	/*********************************************************
+	 * MANAGE BOUNDING BOX
+	 *********************************************************/
 
 	QString get_bb_vertex_attribute_name() const
 	{
@@ -265,11 +302,31 @@ private:
 			this->bb_diagonal_size_ = this->bb_.diag_size();
 		else
 			this->bb_diagonal_size_ = .0f;
-
-		std::cout << "compute_bb / diag size = " << this->bb_diagonal_size_ << std::endl;
 	}
 
+	/*********************************************************
+	 * MANAGE DRAWING
+	 *********************************************************/
+
+	void draw(cgogn::rendering::DrawingType primitive) override
+	{
+		if (!render_.is_primitive_uptodate(primitive))
+			render_.init_primitives<VEC3>(*get_map(), primitive, bb_vertex_attribute_);
+		render_.draw(primitive);
+	}
+
+	/*********************************************************
+	 * MANAGE ATTRIBUTES
+	 *********************************************************/
+
 protected:
+
+	const MapBaseData::ChunkArrayContainer<uint32>& get_vertex_attribute_container() override
+	{
+		return map_->get_attribute_container<Vertex::ORBIT>();
+	}
+
+private:
 
 	VertexAttribute<VEC3> bb_vertex_attribute_;
 };

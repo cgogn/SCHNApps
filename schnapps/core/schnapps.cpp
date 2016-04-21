@@ -56,8 +56,8 @@ namespace schnapps
 
 SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	app_path_(app_path),
-	first_view_(NULL),
-	selected_view_(NULL),
+	first_view_(nullptr),
+	selected_view_(nullptr),
 	window_(window)
 {
 	// create & setup control dock
@@ -92,7 +92,7 @@ SCHNApps::~SCHNApps()
 Camera* SCHNApps::add_camera(const QString& name)
 {
 	if (cameras_.contains(name))
-		return NULL;
+		return nullptr;
 
 	Camera* camera = new Camera(name, this);
 	cameras_.insert(name, camera);
@@ -121,7 +121,7 @@ Camera* SCHNApps::get_camera(const QString& name) const
 	if (cameras_.contains(name))
 		return cameras_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
 /*********************************************************
@@ -203,19 +203,19 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 			else
 			{
 				delete plugin;
-				return NULL;
+				return nullptr;
 			}
 		}
 		// if loading fails
 		else
 		{
 			std::cout << "loader.instance() failed.." << std::endl;
-			return NULL;
+			return nullptr;
 		}
 	}
 	else
 	{
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -259,7 +259,7 @@ Plugin* SCHNApps::get_plugin(const QString& name) const
 	if (plugins_.contains(name))
 		return plugins_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
 //void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tabWidget, const QString& tabText)
@@ -332,7 +332,7 @@ MapHandlerGen* SCHNApps::add_map(const QString &name, unsigned int dimension)
 		} while (maps_.contains(final_name));
 	}
 
-	MapHandlerGen* mh = NULL;
+	MapHandlerGen* mh = nullptr;
 	switch(dimension)
 	{
 		case 2 : {
@@ -377,7 +377,7 @@ MapHandlerGen* SCHNApps::get_map(const QString& name) const
 	if (maps_.contains(name))
 		return maps_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
 MapHandlerGen* SCHNApps::get_selected_map() const
@@ -397,7 +397,7 @@ void SCHNApps::set_selected_map(const QString& name)
 View* SCHNApps::add_view(const QString& name)
 {
 	if (views_.contains(name))
-		return NULL;
+		return nullptr;
 
 	View* view = new View(name, this);
 	views_.insert(name, view);
@@ -446,7 +446,7 @@ View* SCHNApps::get_view(const QString& name) const
 	if (views_.contains(name))
 		return views_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
 void SCHNApps::set_selected_view(View* view)
@@ -514,7 +514,7 @@ View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 	else
 	{
 		int idx = parent->indexOf(view);
-		view->setParent(NULL);
+		view->setParent(nullptr);
 		QSplitter* spl = new QSplitter(orientation);
 		spl->addWidget(view);
 		spl->addWidget(new_view);
@@ -544,7 +544,7 @@ QString SCHNApps::get_split_view_positions()
 		{
 			QWidget* w = spl->widget(i);
 			QSplitter* qw = dynamic_cast<QSplitter*>(w);
-			if (qw != NULL)
+			if (qw != nullptr)
 				liste.push_back(qw);
 		}
 		QByteArray ba = spl->saveState();
@@ -569,7 +569,7 @@ void SCHNApps::set_split_view_positions(QString positions)
 		{
 			QWidget *w = spl->widget(i);
 			QSplitter* qw = dynamic_cast<QSplitter*>(w);
-			if (qw != NULL)
+			if (qw != nullptr)
 				liste.push_back(qw);
 		}
 		if (qts.atEnd())
@@ -610,7 +610,7 @@ void SCHNApps::add_menu_action(Plugin* plugin, const QString& menu_path, QAction
 		if (nb_steps >= 1)
 		{
 			unsigned int i = 0;
-			QMenu* last_menu = NULL;
+			QMenu* last_menu = nullptr;
 			foreach(QString step, step_names)
 			{
 				++i;
@@ -680,7 +680,7 @@ void SCHNApps::remove_menu_action(Plugin* plugin, QAction* action)
 		QObject* parent = action->parent();
 		delete action;
 
-		while(parent != NULL)
+		while(parent != nullptr)
 		{
 			QMenu* parent_menu = dynamic_cast<QMenu*>(parent);
 			if(parent_menu && parent_menu->actions().empty())
@@ -689,7 +689,7 @@ void SCHNApps::remove_menu_action(Plugin* plugin, QAction* action)
 				delete parent_menu;
 			}
 			else
-				parent = NULL;
+				parent = nullptr;
 		}
 	}
 }

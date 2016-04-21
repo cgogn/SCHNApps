@@ -97,7 +97,7 @@ QListWidgetItem* ViewDialogList::find_item(const QString& str) const
 	QList<QListWidgetItem*> items = list_items_->findItems(str, Qt::MatchExactly);
 	if (!items.empty())
 		return items[0];
-	return NULL;
+	return nullptr;
 }
 
 bool ViewDialogList::remove_item(const QString& str)

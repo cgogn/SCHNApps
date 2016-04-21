@@ -34,7 +34,7 @@ namespace schnapps
 
 ControlDock_CameraTab::ControlDock_CameraTab(SCHNApps* s) :
 	schnapps_(s),
-	selected_camera_(NULL),
+	selected_camera_(nullptr),
 	updating_ui_(false)
 {
 	setupUi(this);
@@ -81,7 +81,7 @@ void ControlDock_CameraTab::selected_camera_changed()
 			connect(selected_camera_, SIGNAL(draw_path_changed(bool)), this, SLOT(selected_camera_draw_path_changed(bool)));
 		}
 		else
-			selected_camera_ = NULL;
+			selected_camera_ = nullptr;
 
 		update_selected_camera_info();
 	}

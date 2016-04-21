@@ -31,11 +31,11 @@ namespace schnapps
 
 ControlDock_MapTab::ControlDock_MapTab(SCHNApps* s) :
 	schnapps_(s),
-	selected_map_(NULL),
+	selected_map_(nullptr),
 	updating_ui_(false)
 {
 //	for(unsigned int i = 0; i < NB_ORBITS; ++i)
-//		selected_selector_[i] = NULL;
+//		selected_selector_[i] = nullptr;
 
 	setupUi(this);
 
@@ -102,7 +102,7 @@ void ControlDock_MapTab::set_selected_map(const QString& map_name)
 		QList<QListWidgetItem*> items = list_maps->selectedItems();
 		if (!items.empty())
 			items[0]->setSelected(false);
-		selected_map_ = NULL;
+		selected_map_ = nullptr;
 		update_selected_map_info();
 		return;
 	}
@@ -146,10 +146,10 @@ void ControlDock_MapTab::selected_map_changed()
 //			connect(selected_map_, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
 
 //			for(unsigned int i = 0; i < NB_ORBITS; ++i)
-//				selected_selector_[i] = NULL;
+//				selected_selector_[i] = nullptr;
 		}
 		else
-			selected_map_ = NULL;
+			selected_map_ = nullptr;
 
 		update_selected_map_info();
 		schnapps_->notify_selected_map_changed(old, selected_map_);
@@ -276,7 +276,7 @@ void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem* i
 //			if (!items.empty())
 //			{
 //				if (selected_selector_[orbit]->get_name() == items[0]->text())
-//					selected_selector_[orbit] = NULL;
+//					selected_selector_[orbit] = nullptr;
 
 //				selected_map_->remove_cell_selector(orbit, items[0]->text());
 
@@ -307,19 +307,19 @@ void ControlDock_MapTab::map_removed(MapHandlerGen* m)
 		delete items[0];
 		if (schnapps_->get_selected_map() == m)
 		{
-//			selected_selector_[DART] = NULL;
+//			selected_selector_[DART] = nullptr;
 //			foreach(QListWidgetItem* item, list_dartSelectors->selectedItems())
 //				item->setSelected(false);
-//			selected_selector_[VERTEX] = NULL;
+//			selected_selector_[VERTEX] = nullptr;
 //			foreach(QListWidgetItem* item, list_vertexSelectors->selectedItems())
 //				item->setSelected(false);
-//			selected_selector_[EDGE] = NULL;
+//			selected_selector_[EDGE] = nullptr;
 //			foreach(QListWidgetItem* item, list_edgeSelectors->selectedItems())
 //				item->setSelected(false);
-//			selected_selector_[FACE] = NULL;
+//			selected_selector_[FACE] = nullptr;
 //			foreach(QListWidgetItem* item, list_faceSelectors->selectedItems())
 //				item->setSelected(false);
-//			selected_selector_[VOLUME] = NULL;
+//			selected_selector_[VOLUME] = nullptr;
 //			foreach(QListWidgetItem* item, list_volumeSelectors->selectedItems())
 //				item->setSelected(false);
 		}

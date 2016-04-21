@@ -77,7 +77,7 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 		return mhg;
 	}
 	else
-		return NULL;
+		return nullptr;
 }
 
 void Plugin_Import::import_surface_mesh_from_file_dialog()

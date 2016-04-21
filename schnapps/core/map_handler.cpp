@@ -34,23 +34,22 @@ MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseDat
 	name_(name),
 	schnapps_(schnapps),
 	map_(map),
-	frame_(NULL),
-	bb_drawer_(NULL),
-	bb_drawer_view_context_(NULL),
+	bb_drawer_(nullptr),
+	bb_drawer_view_context_(nullptr),
 	show_bb_(true),
 	bb_diagonal_size_(.0f),
 	bb_color_(Qt::green)
 {
-	frame_ = new qoglviewer::ManipulatedFrame();
+	connect(&frame_, SIGNAL(manipulated()), this, SLOT(frame_changed()));
+
 	transformation_matrix_.setToIdentity();
-	connect(frame_, SIGNAL(manipulated()), this, SLOT(frame_changed()));
 }
 
 MapHandlerGen::~MapHandlerGen()
 {
 	delete map_;
-	delete frame_;
-	delete bb_drawer_;
+	if (bb_drawer_)
+		delete bb_drawer_;
 }
 
 bool MapHandlerGen::is_selected_map() const
@@ -66,7 +65,7 @@ QMatrix4x4 MapHandlerGen::get_frame_matrix() const
 {
 	QMatrix4x4 m;
 	GLdouble tmp[16];
-	frame_->getMatrix(tmp);
+	frame_.getMatrix(tmp);
 	for (unsigned int i=0; i<4; ++i)
 		for (unsigned int j=0; j<4; ++j)
 			m(j,i) = tmp[i*4+j];
@@ -107,42 +106,42 @@ bool MapHandlerGen::get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec&
 
 	QVector4D v4 = transformation_matrix_ * QVector4D(min[0], min[1], min[2], 1.0f);
 	qoglviewer::Vec v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	qoglviewer::Vec vt = frame_->inverseCoordinatesOf(v);
+	qoglviewer::Vec vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	v4 = transformation_matrix_ * QVector4D(max[0], min[1], min[2], 1.0f);
 	v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	vt = frame_->inverseCoordinatesOf(v);
+	vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	v4 = transformation_matrix_ * QVector4D(min[0], max[1], min[2], 1.0f);
 	v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	vt = frame_->inverseCoordinatesOf(v);
+	vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	v4 = transformation_matrix_ * QVector4D(min[0], min[1], max[2], 1.0f);
 	v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	vt = frame_->inverseCoordinatesOf(v);
+	vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	v4 = transformation_matrix_ * QVector4D(max[0], max[1], min[2], 1.0f);
 	v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	vt = frame_->inverseCoordinatesOf(v);
+	vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	v4 = transformation_matrix_ * QVector4D(max[0], min[1], max[2], 1.0f);
 	v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	vt = frame_->inverseCoordinatesOf(v);
+	vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	v4 = transformation_matrix_ * QVector4D(min[0], max[1], max[2], 1.0f);
 	v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	vt = frame_->inverseCoordinatesOf(v);
+	vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	v4 = transformation_matrix_ * QVector4D(max[0], max[1], max[2], 1.0f);
 	v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
-	vt = frame_->inverseCoordinatesOf(v);
+	vt = frame_.inverseCoordinatesOf(v);
 	bb.add_point(VEC3(vt[0], vt[1], vt[2]));
 
 	bb_min = qoglviewer::Vec(bb.min()[0], bb.min()[1], bb.min()[2]);
@@ -198,6 +197,29 @@ void MapHandlerGen::update_bb_drawer()
 }
 
 /*********************************************************
+ * MANAGE VBOs
+ *********************************************************/
+
+cgogn::rendering::VBO* MapHandlerGen::create_VBO(const QString& name)
+{
+	const MapBaseData::ChunkArrayContainer<uint32>& vertex_container = get_vertex_attribute_container();
+
+	cgogn::rendering::VBO* vbo = get_VBO(name);
+	if (!vbo)
+	{
+		vbo = new cgogn::rendering::VBO(3);
+	}
+}
+
+cgogn::rendering::VBO* MapHandlerGen::get_VBO(const QString& name) const
+{
+	if (vbos_.contains(name))
+		return vbos_[name];
+	else
+		return nullptr;
+}
+
+/*********************************************************
  * MANAGE LINKED VIEWS
  *********************************************************/
 
@@ -231,8 +253,8 @@ void MapHandlerGen::unlink_view(View* view)
 		}
 		else
 		{
-			bb_drawer_ = NULL;
-			bb_drawer_view_context_ = NULL;
+			bb_drawer_ = nullptr;
+			bb_drawer_view_context_ = nullptr;
 		}
 	}
 }
