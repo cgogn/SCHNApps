@@ -34,7 +34,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.so
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.so
+	schnapps_core
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.dylib
+	QOGLViewer
 	Qt5::Widgets
 )

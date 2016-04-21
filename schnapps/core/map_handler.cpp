@@ -34,8 +34,6 @@ MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseDat
 	name_(name),
 	schnapps_(schnapps),
 	map_(map),
-	bb_drawer_(nullptr),
-	bb_drawer_view_context_(nullptr),
 	show_bb_(true),
 	bb_diagonal_size_(.0f),
 	bb_color_(Qt::green)
@@ -48,8 +46,6 @@ MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseDat
 MapHandlerGen::~MapHandlerGen()
 {
 	delete map_;
-	if (bb_drawer_)
-		delete bb_drawer_;
 }
 
 bool MapHandlerGen::is_selected_map() const
@@ -150,15 +146,14 @@ bool MapHandlerGen::get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec&
 	return true;
 }
 
-void MapHandlerGen::draw_bb(const QMatrix4x4 &pm, const QMatrix4x4 &mm)
+void MapHandlerGen::draw_bb(View* view, const QMatrix4x4 &pm, const QMatrix4x4 &mm)
 {
-	if (bb_drawer_)
-		bb_drawer_->call_list(pm, mm);
+	bb_drawer_.call_list(pm, mm, view);
 }
 
 void MapHandlerGen::update_bb_drawer()
 {
-	if (bb_drawer_ && bb_.is_initialized())
+	if (bb_.is_initialized())
 	{
 		VEC3 bbmin = bb_.min();
 		VEC3 bbmax = bb_.max();
@@ -167,32 +162,32 @@ void MapHandlerGen::update_bb_drawer()
 		bbmin -= VEC3(shift, shift, shift);
 		bbmax += VEC3(shift, shift, shift);
 
-		bb_drawer_->new_list();
-		bb_drawer_->color3f(bb_color_.redF(), bb_color_.greenF(), bb_color_.blueF());
-		bb_drawer_->line_width(2.0);
-		bb_drawer_->begin(GL_LINE_LOOP);
-			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmin[2]);
-			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmin[2]);
-			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmin[2]);
-			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmin[2]);
-		bb_drawer_->end();
-		bb_drawer_->begin(GL_LINE_LOOP);
-			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmax[2]);
-			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmax[2]);
-			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmax[2]);
-			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmax[2]);
-		bb_drawer_->end();
-		bb_drawer_->begin(GL_LINES);
-			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmin[2]);
-			bb_drawer_->vertex3f(bbmin[0], bbmin[1], bbmax[2]);
-			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmin[2]);
-			bb_drawer_->vertex3f(bbmin[0], bbmax[1], bbmax[2]);
-			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmin[2]);
-			bb_drawer_->vertex3f(bbmax[0], bbmax[1], bbmax[2]);
-			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmin[2]);
-			bb_drawer_->vertex3f(bbmax[0], bbmin[1], bbmax[2]);
-		bb_drawer_->end();
-		bb_drawer_->end_list();
+		bb_drawer_.new_list();
+		bb_drawer_.color3f(bb_color_.redF(), bb_color_.greenF(), bb_color_.blueF());
+		bb_drawer_.line_width(2.0);
+		bb_drawer_.begin(GL_LINE_LOOP);
+			bb_drawer_.vertex3f(bbmin[0], bbmin[1], bbmin[2]);
+			bb_drawer_.vertex3f(bbmin[0], bbmax[1], bbmin[2]);
+			bb_drawer_.vertex3f(bbmax[0], bbmax[1], bbmin[2]);
+			bb_drawer_.vertex3f(bbmax[0], bbmin[1], bbmin[2]);
+		bb_drawer_.end();
+		bb_drawer_.begin(GL_LINE_LOOP);
+			bb_drawer_.vertex3f(bbmax[0], bbmax[1], bbmax[2]);
+			bb_drawer_.vertex3f(bbmax[0], bbmin[1], bbmax[2]);
+			bb_drawer_.vertex3f(bbmin[0], bbmin[1], bbmax[2]);
+			bb_drawer_.vertex3f(bbmin[0], bbmax[1], bbmax[2]);
+		bb_drawer_.end();
+		bb_drawer_.begin(GL_LINES);
+			bb_drawer_.vertex3f(bbmin[0], bbmin[1], bbmin[2]);
+			bb_drawer_.vertex3f(bbmin[0], bbmin[1], bbmax[2]);
+			bb_drawer_.vertex3f(bbmin[0], bbmax[1], bbmin[2]);
+			bb_drawer_.vertex3f(bbmin[0], bbmax[1], bbmax[2]);
+			bb_drawer_.vertex3f(bbmax[0], bbmax[1], bbmin[2]);
+			bb_drawer_.vertex3f(bbmax[0], bbmax[1], bbmax[2]);
+			bb_drawer_.vertex3f(bbmax[0], bbmin[1], bbmin[2]);
+			bb_drawer_.vertex3f(bbmax[0], bbmin[1], bbmax[2]);
+		bb_drawer_.end();
+		bb_drawer_.end_list();
 	}
 }
 
@@ -202,12 +197,10 @@ void MapHandlerGen::update_bb_drawer()
 
 cgogn::rendering::VBO* MapHandlerGen::create_VBO(const QString& name)
 {
-	const MapBaseData::ChunkArrayContainer<uint32>& vertex_container = get_vertex_attribute_container();
-
 	cgogn::rendering::VBO* vbo = get_VBO(name);
 	if (!vbo)
 	{
-		vbo = new cgogn::rendering::VBO(3);
+		vbo = new cgogn::rendering::VBO();
 	}
 }
 
@@ -226,37 +219,12 @@ cgogn::rendering::VBO* MapHandlerGen::get_VBO(const QString& name) const
 void MapHandlerGen::link_view(View* view)
 {
 	if (view && !views_.contains(view))
-	{
 		views_.push_back(view);
-		if (!bb_drawer_)
-		{
-			view->makeCurrent();
-			bb_drawer_ = new cgogn::rendering::Drawer(view);
-			bb_drawer_view_context_ = view;
-			update_bb_drawer();
-		}
-	}
 }
 
 void MapHandlerGen::unlink_view(View* view)
 {
 	views_.removeOne(view);
-	if (view == bb_drawer_view_context_)
-	{
-		delete bb_drawer_;
-		if (!views_.empty())
-		{
-			View* fv = views_.first();
-			bb_drawer_ = new cgogn::rendering::Drawer(fv);
-			bb_drawer_view_context_ = fv;
-			update_bb_drawer();
-		}
-		else
-		{
-			bb_drawer_ = nullptr;
-			bb_drawer_view_context_ = nullptr;
-		}
-	}
 }
 
 } // namespace schnapps

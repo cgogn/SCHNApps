@@ -45,29 +45,28 @@ class Plugin_SurfaceRender : public PluginInteraction
 	Q_INTERFACES(schnapps::Plugin)
 
 public:
-	Plugin_SurfaceRender()
-	{}
 
-	~Plugin_SurfaceRender()
-	{}
+	inline Plugin_SurfaceRender() {}
+
+	~Plugin_SurfaceRender() {}
 
 private:
 
-	virtual bool enable();
-	virtual void disable() {}
+	bool enable() override;
+	inline void disable() override {}
 
-	virtual void draw(View*) {}
-	virtual void draw_map(View* view, MapHandlerGen* map);
+	inline void draw(View*) override {}
+	void draw_map(View* view, MapHandlerGen* map) override;
 
-	virtual void keyPress(View* , QKeyEvent* ) {}
-	virtual void keyRelease(View* , QKeyEvent* ) {}
-	virtual void mousePress(View* , QMouseEvent* ) {}
-	virtual void mouseRelease(View* , QMouseEvent* ) {}
-	virtual void mouseMove(View* , QMouseEvent* ) {}
-	virtual void wheelEvent(View* , QWheelEvent* ) {}
+	inline void keyPress(View* , QKeyEvent*) override {}
+	inline void keyRelease(View* , QKeyEvent*) override {}
+	inline void mousePress(View* , QMouseEvent*) override {}
+	inline void mouseRelease(View* , QMouseEvent*) override {}
+	inline void mouseMove(View* , QMouseEvent*) override {}
+	inline void wheelEvent(View* , QWheelEvent*) override {}
 
-	virtual void view_linked(View*) {}
-	virtual void view_unlinked(View*) {}
+	inline void view_linked(View*) override {}
+	inline void view_unlinked(View*) override {}
 
 public slots:
 

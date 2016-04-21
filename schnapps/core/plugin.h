@@ -41,11 +41,8 @@ class SCHNAPPS_CORE_API Plugin : public QObject
 
 public:
 
-	Plugin()
-	{}
-
-	virtual ~Plugin()
-	{}
+	inline Plugin()	{}
+	virtual inline ~Plugin() {}
 
 	inline const QString& get_name() const { return name_; }
 

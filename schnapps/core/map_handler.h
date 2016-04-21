@@ -35,6 +35,8 @@
 
 #include <cgogn/geometry/algos/bounding_box.h>
 
+#include <cgogn/core/utils/numerics.h>
+
 #include <Eigen/Dense>
 #include <QOGLViewer/manipulatedFrame.h>
 
@@ -155,7 +157,7 @@ public slots:
 	 * @param pm projection matrix
 	 * @param mm modelview matrix
 	 */
-	void draw_bb(const QMatrix4x4& pm, const QMatrix4x4& mm);
+	void draw_bb(View* view, const QMatrix4x4& pm, const QMatrix4x4& mm);
 
 protected:
 
@@ -176,7 +178,7 @@ public:
 
 protected:
 
-	virtual const MapBaseData::ChunkArrayContainer<uint32>& get_vertex_attribute_container() = 0;
+//	virtual const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container() = 0;
 
 	/*********************************************************
 	 * MANAGE VBOs
@@ -237,8 +239,7 @@ protected:
 
 	// map bounding box
 	cgogn::geometry::BoundingBox<VEC3> bb_;
-	cgogn::rendering::Drawer* bb_drawer_;
-	View* bb_drawer_view_context_;
+	cgogn::rendering::Drawer bb_drawer_;
 	bool show_bb_;
 	QColor bb_color_;
 	float bb_diagonal_size_;
@@ -311,7 +312,7 @@ private:
 	void draw(cgogn::rendering::DrawingType primitive) override
 	{
 		if (!render_.is_primitive_uptodate(primitive))
-			render_.init_primitives<VEC3>(*get_map(), primitive, bb_vertex_attribute_);
+			render_.init_primitives<VEC3>(*get_map(), primitive);
 		render_.draw(primitive);
 	}
 
@@ -319,12 +320,13 @@ private:
 	 * MANAGE ATTRIBUTES
 	 *********************************************************/
 
-protected:
+//protected:
 
-	const MapBaseData::ChunkArrayContainer<uint32>& get_vertex_attribute_container() override
-	{
-		return map_->get_attribute_container<Vertex::ORBIT>();
-	}
+//	const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container() override
+//	{
+//		const MapBaseData* cm = map_;
+//		return cm->get_attribute_container<Vertex::ORBIT>();
+//	}
 
 private:
 

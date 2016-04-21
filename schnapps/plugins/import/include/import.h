@@ -43,16 +43,15 @@ class Plugin_Import : public PluginProcessing
 	Q_INTERFACES(schnapps::Plugin)
 
 public:
-	Plugin_Import()
-	{}
 
-	~Plugin_Import()
-	{}
+	inline Plugin_Import() {}
+
+	~Plugin_Import() {}
 
 private:
 
-	virtual bool enable();
-	virtual void disable() {}
+	bool enable() override;
+	inline void disable() override {}
 
 public slots:
 

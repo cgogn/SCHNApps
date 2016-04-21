@@ -330,7 +330,7 @@ void View::init()
 
 	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
 
-	frame_drawer_ = new cgogn::rendering::Drawer(this);
+	frame_drawer_ = new cgogn::rendering::Drawer();
 
 	frame_drawer_->new_list();
 	frame_drawer_->color3f(0.0f,1.0f,0.0f);
@@ -412,7 +412,7 @@ void View::draw()
 		QMatrix4x4 map_mm = mm * map->get_frame_matrix() * map->get_transformation_matrix();
 
 		if(map == selected_map && map->get_show_bb())
-			map->draw_bb(pm, map_mm);
+			map->draw_bb(this, pm, map_mm);
 
 		foreach (PluginInteraction* plugin, plugins_)
 		{
@@ -460,7 +460,7 @@ void View::draw_frame()
 {
 	glDisable(GL_DEPTH_TEST);
 	QMatrix4x4 pm, mm;
-	frame_drawer_->call_list(pm, mm);
+	frame_drawer_->call_list(pm, mm, this);
 	glEnable(GL_DEPTH_TEST);
 }
 
