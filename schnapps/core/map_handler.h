@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_MAPHANDLER_H_
 
 #include <schnapps/core/dll.h>
+#include <schnapps/core/types.h>
 
 #include <cgogn/core/cmap/map_base.h>
 #include <cgogn/core/cmap/cmap2.h>
@@ -35,9 +36,6 @@
 
 #include <cgogn/geometry/algos/bounding_box.h>
 
-#include <cgogn/core/utils/numerics.h>
-
-#include <Eigen/Dense>
 #include <QOGLViewer/manipulatedFrame.h>
 
 #include <QObject>
@@ -54,8 +52,6 @@ class View;
 using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
 using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
 using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
-
-using VEC3 = Eigen::Vector3d;
 
 class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 {
@@ -86,6 +82,10 @@ public slots:
 	inline const MapBaseData* get_map() const { return map_; }
 
 	bool is_selected_map() const;
+
+	virtual uint32 nb_vertices() = 0;
+	virtual uint32 nb_edges() = 0;
+	virtual uint32 nb_faces() = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -173,27 +173,23 @@ public:
 	virtual void draw(cgogn::rendering::DrawingType primitive) = 0;
 
 	/*********************************************************
-	 * MANAGE ATTRIBUTES
-	 *********************************************************/
-
-protected:
-
-//	virtual const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container() = 0;
-
-	/*********************************************************
 	 * MANAGE VBOs
 	 *********************************************************/
-
-public slots:
 
 	/**
 	* @brief create a VBO from vertex attribute (with same name)
 	* @param name name of attribute
 	* @return pointer on created VBO
 	*/
-	cgogn::rendering::VBO* create_VBO(const QString& name);
+	virtual cgogn::rendering::VBO* create_vbo(const QString& name) = 0;
 
-	cgogn::rendering::VBO* get_VBO(const QString& name) const;
+public slots:
+
+	cgogn::rendering::VBO* get_vbo(const QString& name) const;
+
+	void delete_vbo(const QString& name);
+
+	inline const QMap<QString, cgogn::rendering::VBO*>& get_vbo_set() const { return vbos_; }
 
 	/*********************************************************
 	 * MANAGE LINKED VIEWS
@@ -214,6 +210,9 @@ signals:
 
 	void bb_changed();
 	void bb_vertex_attribute_changed(const QString&);
+
+	void vbo_added(cgogn::rendering::VBO*);
+	void vbo_removed(cgogn::rendering::VBO*);
 
 	void attribute_added(cgogn::Orbit, const QString&);
 
@@ -251,6 +250,7 @@ protected:
 	QMap<QString, cgogn::rendering::VBO*> vbos_;
 };
 
+
 template <typename MAP_TYPE>
 class MapHandler : public MapHandlerGen
 {
@@ -259,6 +259,8 @@ public:
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
 	using Vertex = typename MAP_TYPE::Vertex;
+	using Edge = typename MAP_TYPE::Edge;
+	using Face = typename MAP_TYPE::Face;
 
 	MapHandler(const QString& name, SCHNApps* s, MAP_TYPE* map) :
 		MapHandlerGen(name, s, map)
@@ -268,6 +270,10 @@ public:
 	{}
 
 	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(map_); }
+
+	uint32 nb_vertices() override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
+	uint32 nb_edges() override { return get_map()->template nb_cells<Edge::ORBIT>(); }
+	uint32 nb_faces() override { return get_map()->template nb_cells<Face::ORBIT>(); }
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
@@ -322,11 +328,75 @@ private:
 
 //protected:
 
-//	const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container() override
+//	const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container()
 //	{
-//		const MapBaseData* cm = map_;
+//		const MapBaseData* cm = this->map_;
 //		return cm->get_attribute_container<Vertex::ORBIT>();
 //	}
+
+	/*********************************************************
+	 * MANAGE VBOs
+	 *********************************************************/
+
+	cgogn::rendering::VBO* create_vbo(const QString& name) override
+	{
+		cgogn::rendering::VBO* vbo = get_vbo(name);
+
+		if (!vbo)
+		{
+			MAP_TYPE* map = get_map();
+
+			const MAP_TYPE* cmap = map;
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_attribute_container<Vertex::ORBIT>();
+			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
+
+			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
+			if (ca4)
+			{
+				vbo = new cgogn::rendering::VBO();
+				VertexAttribute<VEC4> va(map, ca4);
+				cgogn::rendering::update_vbo(va, vbo);
+				this->vbos_.insert(name, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
+
+			MapBaseData::ChunkArray<VEC3>* ca3 = dynamic_cast<MapBaseData::ChunkArray<VEC3>*>(cag);
+			if (ca3)
+			{
+				vbo = new cgogn::rendering::VBO();
+				VertexAttribute<VEC3> va(map, ca3);
+				cgogn::rendering::update_vbo(va, vbo);
+				this->vbos_.insert(name, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
+
+			MapBaseData::ChunkArray<VEC2>* ca2 = dynamic_cast<MapBaseData::ChunkArray<VEC2>*>(cag);
+			if (ca2)
+			{
+				vbo = new cgogn::rendering::VBO();
+				VertexAttribute<VEC2> va(map, ca2);
+				cgogn::rendering::update_vbo(va, vbo);
+				this->vbos_.insert(name, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
+
+			MapBaseData::ChunkArray<SCALAR>* ca1 = dynamic_cast<MapBaseData::ChunkArray<SCALAR>*>(cag);
+			if (ca1)
+			{
+				vbo = new cgogn::rendering::VBO();
+				VertexAttribute<SCALAR> va(map, ca1);
+				cgogn::rendering::update_vbo(va, vbo);
+				this->vbos_.insert(name, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
+		}
+
+		return vbo;
+	}
 
 private:
 

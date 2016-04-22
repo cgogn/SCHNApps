@@ -25,6 +25,9 @@
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 
 #include <schnapps/core/plugin_interaction.h>
+#include <schnapps/core/types.h>
+
+#include <surface_render_dock_tab.h>
 
 #include <cgogn/rendering/shaders/shader_flat.h>
 
@@ -35,6 +38,48 @@ namespace schnapps
 
 class MapHandlerGen;
 
+struct MapParameters
+{
+	enum FaceShadingStyle
+	{
+		FLAT = 0,
+		PHONG
+	};
+
+	MapParameters() :
+		positionVBO(NULL),
+		normalVBO(NULL),
+		colorVBO(NULL),
+		verticesScaleFactor(1.0f),
+		renderVertices(false),
+		renderEdges(false),
+		renderFaces(true),
+		faceStyle(FLAT),
+		diffuseColor(0.85f,0.25f,0.19f,0.0f),
+		simpleColor(0.0f,0.0f,0.0f,0.0f),
+		vertexColor(0.0f,0.0f,1.0f,0.0f),
+		backColor(0.85f, 0.25f, 0.19f, 0.0f)
+	{}
+
+	cgogn::rendering::VBO* positionVBO;
+	cgogn::rendering::VBO* normalVBO;
+	cgogn::rendering::VBO* colorVBO;
+
+	float verticesScaleFactor;
+	float basePSradius;
+	bool renderVertices;
+	bool renderEdges;
+	bool renderFaces;
+	bool renderBoundary;
+	bool renderBackfaces;
+	FaceShadingStyle faceStyle;
+
+	VEC4 diffuseColor;
+	VEC4 simpleColor;
+	VEC4 vertexColor;
+	VEC4 backColor;
+};
+
 /**
 * @brief Plugin for surface rendering
 */
@@ -43,6 +88,8 @@ class Plugin_SurfaceRender : public PluginInteraction
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
+
+	friend class SurfaceRender_DockTab;
 
 public:
 
@@ -53,7 +100,7 @@ public:
 private:
 
 	bool enable() override;
-	inline void disable() override {}
+	void disable() override;
 
 	inline void draw(View*) override {}
 	void draw_map(View* view, MapHandlerGen* map) override;
@@ -73,6 +120,9 @@ public slots:
 
 
 private:
+
+	SurfaceRender_DockTab* dock_tab_;
+	QHash<View*, QHash<MapHandlerGen*, MapParameters> > parameter_set_;
 
 	cgogn::rendering::ShaderFlat* shader_flat_;
 };

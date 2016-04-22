@@ -3,11 +3,11 @@ project(schnapps_plugin_import
 )
 
 set(HEADER_FILES
-	include/import.h
+	import.h
 )
 
 set(SOURCE_FILES
-	src/import.cpp
+	import.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -25,7 +25,6 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	include
 	$<BUILD_INTERFACE:${SCHNAPPS_THIRDPARTY_QOGLVIEWER_INCLUDE_DIR}>
 	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_EIGEN3_INCLUDE_DIR}>
 	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_TINYXML2_INCLUDE_DIR}>
@@ -33,12 +32,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_PLY_INCLUDE_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_io.dylib
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.so
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_io.so
 	Qt5::Widgets
 )

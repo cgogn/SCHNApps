@@ -34,9 +34,17 @@ bool Plugin_SurfaceRender::enable()
 //	magic line that init static variables of GenericMap in the plugins
 //	GenericMap::copyAllStatics(m_schnapps->getStaticPointers());
 
+	dock_tab_ = new SurfaceRender_DockTab(this->schnapps_, this);
+
 	shader_flat_ = new cgogn::rendering::ShaderFlat();
 
 	return true;
+}
+
+void Plugin_SurfaceRender::disable()
+{
+	delete shader_flat_;
+	delete dock_tab_;
 }
 
 void Plugin_SurfaceRender::draw_map(View *view, MapHandlerGen *map)

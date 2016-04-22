@@ -16,6 +16,7 @@ set(HEADER_FILES
 	control_dock_camera_tab.h
 	control_dock_plugin_tab.h
 	control_dock_map_tab.h
+	types.h
 )
 
 set(SOURCE_FILES
@@ -61,8 +62,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.dylib
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.so
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.so
 	QOGLViewer
 	Qt5::Widgets
 )

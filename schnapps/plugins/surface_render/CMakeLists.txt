@@ -3,14 +3,17 @@ project(schnapps_plugin_surface_render
 )
 
 set(HEADER_FILES
-	include/surface_render.h
+	surface_render.h
+	surface_render_dock_tab.h
 )
 
 set(SOURCE_FILES
-	src/surface_render.cpp
+	surface_render.cpp
+	surface_render_dock_tab.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
@@ -25,18 +28,18 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	include
 	$<BUILD_INTERFACE:${SCHNAPPS_THIRDPARTY_QOGLVIEWER_INCLUDE_DIR}>
 	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_EIGEN3_INCLUDE_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.dylib
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.so
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_rendering.so
 	QOGLViewer
 	Qt5::Widgets
 )

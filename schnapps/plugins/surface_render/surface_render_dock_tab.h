@@ -21,23 +21,77 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_TYPES_H_
-#define SCHNAPPS_CORE_TYPES_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 
-#include <cgogn/core/utils/numerics.h>
+#include "ui_surface_render.h"
 
-#include <Eigen/Dense>
+#include <QColorDialog>
 
 namespace schnapps
 {
 
-using namespace cgogn::numerics;
+class SCHNApps;
+class Plugin_SurfaceRender;
 
-using VEC4 = Eigen::Vector4d;
-using VEC3 = Eigen::Vector3d;
-using VEC2 = Eigen::Vector2d;
-using SCALAR = float64;
+//struct MapParameters;
+
+class SurfaceRender_DockTab : public QWidget, public Ui::Surface_Render_TabWidget
+{
+	Q_OBJECT
+
+	friend class Plugin_SurfaceRender;
+
+public:
+	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
+
+private:
+
+	SCHNApps* m_schnapps;
+	Plugin_SurfaceRender* m_plugin;
+
+	QColorDialog* m_colorDial;
+	QColor m_diffuseColor;
+	QColor m_simpleColor;
+	QColor m_vertexColor;
+	QColor m_backColor;
+	int m_currentColorDial;
+
+	bool b_updatingUI;
+
+private slots:
+
+	void positionVBOChanged(int index);
+	void normalVBOChanged(int index);
+	void colorVBOChanged(int index);
+	void renderVerticesChanged(bool b);
+	void verticesScaleFactorChanged(int i);
+	void verticesScaleFactorPressed();
+	void renderEdgesChanged(bool b);
+	void renderFacesChanged(bool b);
+	void faceStyleChanged(QAbstractButton* b);
+	void renderBoundaryChanged(bool b);
+	void renderBackfaceChanged(bool b);
+
+	void diffuseColorClicked();
+	void simpleColorClicked();
+	void vertexColorClicked();
+	void backColorClicked();
+	void bothColorClicked();
+	void colorSelected();
+
+private:
+
+	void addPositionVBO(QString name);
+	void removePositionVBO(QString name);
+	void addNormalVBO(QString name);
+	void removeNormalVBO(QString name);
+	void addColorVBO(QString name);
+	void removeColorVBO(QString name);
+
+	void updateMapParameters();
+};
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_CORE_TYPES_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_

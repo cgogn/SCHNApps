@@ -125,8 +125,8 @@ void ControlDock_MapTab::selected_map_changed()
 		if (old)
 		{
 			disconnect(old, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-			disconnect(old, SIGNAL(VBO_added(Utils::VBO*)), this, SLOT(selected_map_VBO_added(Utils::VBO*)));
-			disconnect(old, SIGNAL(VBO_removed(Utils::VBO*)), this, SLOT(selected_map_VBO_removed(Utils::VBO*)));
+			disconnect(old, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+			disconnect(old, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 //			disconnect(old, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			disconnect(old, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
@@ -139,8 +139,8 @@ void ControlDock_MapTab::selected_map_changed()
 			selected_map_ = schnapps_->get_map(selected_map_name);
 
 			connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-			connect(selected_map_, SIGNAL(VBO_added(Utils::VBO*)), this, SLOT(selected_map_VBO_added(Utils::VBO*)));
-			connect(selected_map_, SIGNAL(VBO_removed(Utils::VBO*)), this, SLOT(selected_map_VBO_removed(Utils::VBO*)));
+			connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+			connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 //			connect(selected_map_, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			connect(selected_map_, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
@@ -191,21 +191,21 @@ void ControlDock_MapTab::bb_vertex_attribute_changed(int index)
 
 void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem* item)
 {
-//	if (!updating_ui_)
-//	{
-//		if (item->checkState() == Qt::Checked)
-//		{
-//			Utils::VBO* vbo = selected_map_->create_VBO(item->text());
-//			if (!vbo)
-//			{
-//				updating_ui_ = true;
-//				item->setCheckState(Qt::Unchecked);
-//				updating_ui_ = false;
-//			}
-//		}
-//		else
-//			selected_map_->delete_VBO(item->text());
-//	}
+	if (!updating_ui_)
+	{
+		if (item->checkState() == Qt::Checked)
+		{
+			cgogn::rendering::VBO* vbo = selected_map_->create_vbo(item->text());
+			if (!vbo)
+			{
+				updating_ui_ = true;
+				item->setCheckState(Qt::Unchecked);
+				updating_ui_ = false;
+			}
+		}
+		else
+			selected_map_->delete_vbo(item->text());
+	}
 }
 
 //void ControlDock_MapTab::selected_selector_changed()
@@ -342,15 +342,15 @@ void ControlDock_MapTab::selected_map_bb_vertex_attribute_changed(const QString&
 	update_selected_map_info();
 }
 
-//void ControlDock_MapTab::selected_map_VBO_added(Utils::VBO* vbo)
-//{
-//	update_selected_map_info();
-//}
+void ControlDock_MapTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
+{
+	update_selected_map_info();
+}
 
-//void ControlDock_MapTab::selected_map_VBO_removed(Utils::VBO* vbo)
-//{
-//	update_selected_map_info();
-//}
+void ControlDock_MapTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
+{
+	update_selected_map_info();
+}
 
 //void ControlDock_MapTab::selected_map_cell_selector_added(unsigned int orbit, const QString& name)
 //{
@@ -447,7 +447,7 @@ void ControlDock_MapTab::update_selected_map_info()
 				{
 					QString name = QString::fromStdString(names[i]);
 					QString type = QString::fromStdString(type_names[i]);
-					QListWidgetItem* item = new QListWidgetItem(name + " (" + type + ")", list_vertexAttributes);
+					QListWidgetItem* item = new QListWidgetItem(name /*+ " (" + type + ")"*/, list_vertexAttributes);
 					if (type == vec3_type_name)
 					{
 						combo_bbVertexAttribute->addItem(name);
@@ -455,9 +455,9 @@ void ControlDock_MapTab::update_selected_map_info()
 							combo_bbVertexAttribute->setCurrentIndex(bb_index);
 						++bb_index;
 					}
-//					if (selected_map_->get_VBO(name))
-//						item->setCheckState(Qt::Checked);
-//					else
+					if (selected_map_->get_vbo(name))
+						item->setCheckState(Qt::Checked);
+					else
 						item->setCheckState(Qt::Unchecked);
 				}
 			}

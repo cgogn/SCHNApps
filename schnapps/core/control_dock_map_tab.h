@@ -49,7 +49,7 @@ public:
 
 	MapHandlerGen* get_selected_map() { return selected_map_; }
 //	unsigned int get_current_orbit();
-//	CellSelectorGen* getSelectedSelector(unsigned int orbit) { return m_selectedSelector[orbit]; }
+//	CellSelectorGen* get_selected_selector(unsigned int orbit) { return selected_selector_[orbit]; }
 
 	void set_selected_map(const QString& map_name);
 
@@ -77,8 +77,8 @@ private slots:
 	// slots called from selected MapHandler signals
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void selected_map_bb_vertex_attribute_changed(const QString& name);
-//	void selected_map_VBO_added(Utils::VBO* vbo);
-//	void selected_map_VBO_removed(Utils::VBO* vbo);
+	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
+	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
 //	void selected_map_cell_selector_added(unsigned int orbit, const QString& name);
 //	void selected_map_cell_selector_removed(unsigned int orbit, const QString& name);
 

@@ -195,21 +195,23 @@ void MapHandlerGen::update_bb_drawer()
  * MANAGE VBOs
  *********************************************************/
 
-cgogn::rendering::VBO* MapHandlerGen::create_VBO(const QString& name)
-{
-	cgogn::rendering::VBO* vbo = get_VBO(name);
-	if (!vbo)
-	{
-		vbo = new cgogn::rendering::VBO();
-	}
-}
-
-cgogn::rendering::VBO* MapHandlerGen::get_VBO(const QString& name) const
+cgogn::rendering::VBO* MapHandlerGen::get_vbo(const QString& name) const
 {
 	if (vbos_.contains(name))
 		return vbos_[name];
 	else
 		return nullptr;
+}
+
+void MapHandlerGen::delete_vbo(const QString &name)
+{
+	if (vbos_.contains(name))
+	{
+		cgogn::rendering::VBO* vbo = vbos_[name];
+		vbos_.remove(name);
+		emit(vbo_removed(vbo));
+		delete vbo;
+	}
 }
 
 /*********************************************************
