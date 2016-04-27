@@ -72,8 +72,6 @@ public slots:
 	 * MANAGE CAMERAS
 	 *********************************************************/
 
-public slots:
-
 	/**
 	* @brief add a camera with a given name
 	* @param name name of camera
@@ -135,19 +133,26 @@ public slots:
 	// get a set of available plugins
 	inline const QMap<QString, QString>& get_available_plugins() const { return available_plugins_; }
 
-//public:
+public:
 
-//	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
-//	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
+	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
 
-//private slots:
+private:
 
-//	void enable_plugin_tab_widgets(PluginInteraction* plugin);
-//	void disable_plugin_tab_widgets(PluginInteraction* plugin);
+	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
+
+private slots:
+
+	void enable_plugin_tab_widgets(PluginInteraction* plugin);
+
+	void disable_plugin_tab_widgets(PluginInteraction* plugin);
 
 	/*********************************************************
 	 * MANAGE MAPS
 	 *********************************************************/
+
+public slots:
+
 	/**
 	* @brief add a new empty map
 	* @param name name given to the map
@@ -350,6 +355,7 @@ protected:
 	QMap<QString, Plugin*> plugins_;
 	QMap<QString, QString> available_plugins_;
 	QMap<Plugin*, QList<QAction*>> plugin_menu_actions_;
+	QMap<Plugin*, QList<QWidget*>> plugin_dock_tabs_;
 
 	QMap<QString, MapHandlerGen*> maps_;
 

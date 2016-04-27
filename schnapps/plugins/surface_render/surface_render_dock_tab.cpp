@@ -74,7 +74,7 @@ void SurfaceRender_DockTab::positionVBOChanged(int index)
 		if (view && map)
 		{
 			m_plugin->parameter_set_[view][map].basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
-			m_plugin->parameter_set_[view][map].positionVBO = map->get_vbo(combo_positionVBO->currentText());
+			m_plugin->parameter_set_[view][map].set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
 			view->update();
 		}
 	}
@@ -88,7 +88,7 @@ void SurfaceRender_DockTab::normalVBOChanged(int index)
 		MapHandlerGen* map = m_schnapps->get_selected_map();
 		if (view && map)
 		{
-			m_plugin->parameter_set_[view][map].normalVBO = map->get_vbo(combo_normalVBO->currentText());
+			m_plugin->parameter_set_[view][map].set_normal_vbo(map->get_vbo(combo_normalVBO->currentText()));
 			view->update();
 		}
 	}
@@ -102,7 +102,7 @@ void SurfaceRender_DockTab::colorVBOChanged(int index)
 		MapHandlerGen* map = m_schnapps->get_selected_map();
 		if (view && map)
 		{
-			m_plugin->parameter_set_[view][map].colorVBO = map->get_vbo(combo_colorVBO->currentText());
+			m_plugin->parameter_set_[view][map].set_color_vbo(map->get_vbo(combo_colorVBO->currentText()));
 			view->update();
 		}
 	}
@@ -258,7 +258,6 @@ void SurfaceRender_DockTab::bothColorClicked()
 	m_currentColorDial = 5;
 	m_colorDial->show();
 	m_colorDial->setCurrentColor(m_diffuseColor);
-
 }
 
 
@@ -271,13 +270,11 @@ void SurfaceRender_DockTab::colorSelected()
 		dcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		bothcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 
-		VEC4 rgbCol(1.0/255.0*m_diffuseColor.red(), 1.0/255.0*m_diffuseColor.green(),1.0/255.0*m_diffuseColor.blue(),0.0f);
-
 		View* view = m_schnapps->get_selected_view();
 		MapHandlerGen* map = m_schnapps->get_selected_map();
 		if (view && map)
 		{
-			m_plugin->parameter_set_[view][map].diffuseColor = rgbCol;
+			m_plugin->parameter_set_[view][map].set_diffuse_color(m_diffuseColor);
 			view->update();
 		}
 	}
@@ -287,13 +284,11 @@ void SurfaceRender_DockTab::colorSelected()
 		m_simpleColor = col;
 		scolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 
-		VEC4 rgbCol(1.0/255.0*m_simpleColor.red(), 1.0/255.0*m_simpleColor.green(),1.0/255.0*m_simpleColor.blue(),0.0f);
-
 		View* view = m_schnapps->get_selected_view();
 		MapHandlerGen* map = m_schnapps->get_selected_map();
 		if (view && map)
 		{
-			m_plugin->parameter_set_[view][map].simpleColor = rgbCol;
+			m_plugin->parameter_set_[view][map].set_simple_color(m_simpleColor);
 			view->update();
 		}
 	}
@@ -303,13 +298,11 @@ void SurfaceRender_DockTab::colorSelected()
 		m_vertexColor = col;
 		vcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 
-		VEC4 rgbCol(1.0/255.0*m_vertexColor.red(), 1.0/255.0*m_vertexColor.green(),1.0/255.0*m_vertexColor.blue(),0.0f);
-
 		View* view = m_schnapps->get_selected_view();
 		MapHandlerGen* map = m_schnapps->get_selected_map();
 		if (view && map)
 		{
-			m_plugin->parameter_set_[view][map].vertexColor = rgbCol;
+			m_plugin->parameter_set_[view][map].set_vertex_color(m_vertexColor);
 			view->update();
 		}
 	}
@@ -319,13 +312,11 @@ void SurfaceRender_DockTab::colorSelected()
 		m_backColor = col;
 		bfcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 
-		VEC4 rgbCol(1.0 / 255.0*m_backColor.red(), 1.0 / 255.0*m_backColor.green(), 1.0 / 255.0*m_backColor.blue(), 0.0f);
-
 		View* view = m_schnapps->get_selected_view();
 		MapHandlerGen* map = m_schnapps->get_selected_map();
 		if (view && map)
 		{
-			m_plugin->parameter_set_[view][map].backColor = rgbCol;
+			m_plugin->parameter_set_[view][map].set_back_color(m_backColor);
 			view->update();
 		}
 	}
@@ -337,17 +328,14 @@ void SurfaceRender_DockTab::colorSelected()
 
 		m_diffuseColor = col;
 		dcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
 		bothcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
-		VEC4 rgbCol(1.0 / 255.0*m_backColor.red(), 1.0 / 255.0*m_backColor.green(), 1.0 / 255.0*m_backColor.blue(), 0.0f);
 
 		View* view = m_schnapps->get_selected_view();
 		MapHandlerGen* map = m_schnapps->get_selected_map();
 		if (view && map)
 		{
-			m_plugin->parameter_set_[view][map].backColor = rgbCol;
-			m_plugin->parameter_set_[view][map].diffuseColor = rgbCol;
+			m_plugin->parameter_set_[view][map].set_back_color(m_backColor);
+			m_plugin->parameter_set_[view][map].set_diffuse_color(m_diffuseColor);
 			view->update();
 		}
 	}
@@ -437,15 +425,15 @@ void SurfaceRender_DockTab::updateMapParameters()
 			if (vbo->vector_dimension() == 3)
 			{
 				combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
-				if (vbo == p.positionVBO)
+				if (vbo == p.get_position_vbo())
 					combo_positionVBO->setCurrentIndex(i);
 
 				combo_normalVBO->addItem(QString::fromStdString(vbo->get_name()));
-				if (vbo == p.normalVBO)
+				if (vbo == p.get_normal_vbo())
 					combo_normalVBO->setCurrentIndex(i);
 
 				combo_colorVBO->addItem(QString::fromStdString(vbo->get_name()));
-				if (vbo == p.colorVBO)
+				if (vbo == p.get_color_vbo())
 					combo_colorVBO->setCurrentIndex(i);
 
 				++i;
@@ -459,17 +447,17 @@ void SurfaceRender_DockTab::updateMapParameters()
 		radio_flatShading->setChecked(p.faceStyle == MapParameters::FLAT);
 		radio_phongShading->setChecked(p.faceStyle == MapParameters::PHONG);
 
-		m_diffuseColor = QColor(255 * p.diffuseColor[0], 255 * p.diffuseColor[1], 255 * p.diffuseColor[2]);
+		m_diffuseColor = p.get_diffuse_color();
 		dcolorButton->setStyleSheet("QPushButton { background-color:" + m_diffuseColor.name() + " }");
 		bothcolorButton->setStyleSheet("QPushButton { background-color:" + m_diffuseColor.name() + "}");
 
-		m_simpleColor = QColor(255 * p.simpleColor[0], 255 * p.simpleColor[1], 255 * p.simpleColor[2]);
+		m_simpleColor = p.get_simple_color();
 		scolorButton->setStyleSheet("QPushButton { background-color:" + m_simpleColor.name() + " }");
 
-		m_vertexColor = QColor(255 * p.vertexColor[0], 255 * p.vertexColor[1], 255 * p.vertexColor[2]);
+		m_vertexColor = p.get_vertex_color();
 		vcolorButton->setStyleSheet("QPushButton { background-color:" + m_vertexColor.name() + " }");
 
-		m_backColor = QColor(255 * p.backColor[0], 255 * p.backColor[1], 255 * p.backColor[2]);
+		m_backColor = p.get_back_color();
 		bfcolorButton->setStyleSheet("QPushButton { background-color:" + m_backColor.name() + " }");
 	}
 

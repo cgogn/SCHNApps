@@ -27,8 +27,6 @@
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/map_handler.h>
 
-#include <cgogn/rendering/drawer.h>
-
 #include <QMatrix4x4>
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -61,6 +59,7 @@ View::View(const QString& name, SCHNApps* s) :
 	dialog_plugins_(nullptr),
 	dialog_cameras_(nullptr),
 	frame_drawer_(nullptr),
+	frame_drawer_renderer_(nullptr),
 	save_snapshots_(false),
 	updating_ui_(false)
 {
@@ -330,7 +329,8 @@ void View::init()
 
 	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
 
-	frame_drawer_ = new cgogn::rendering::Drawer();
+	frame_drawer_ = new cgogn::rendering::DisplayListDrawer();
+	frame_drawer_renderer_ = frame_drawer_->generate_renderer();
 
 	frame_drawer_->new_list();
 	frame_drawer_->color3f(0.0f,1.0f,0.0f);
@@ -460,7 +460,7 @@ void View::draw_frame()
 {
 	glDisable(GL_DEPTH_TEST);
 	QMatrix4x4 pm, mm;
-	frame_drawer_->call_list(pm, mm, this);
+	frame_drawer_renderer_->draw(pm, mm, this);
 	glEnable(GL_DEPTH_TEST);
 }
 

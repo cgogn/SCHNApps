@@ -29,10 +29,10 @@
 #include <schnapps/core/view_dialog_list.h>
 #include <schnapps/core/view_button_area.h>
 
+#include <cgogn/rendering/drawer.h>
+
 #include <QOGLViewer/qoglviewer.h>
 #include <QOGLViewer/manipulatedFrame.h>
-
-namespace cgogn { namespace rendering { class Drawer; } }
 
 namespace schnapps
 {
@@ -297,7 +297,8 @@ protected:
 	ViewDialogList* dialog_plugins_;
 	ViewDialogList* dialog_cameras_;
 
-	cgogn::rendering::Drawer* frame_drawer_;
+	cgogn::rendering::DisplayListDrawer* frame_drawer_;
+	cgogn::rendering::DisplayListDrawer::Renderer* frame_drawer_renderer_;
 
 	bool save_snapshots_;
 

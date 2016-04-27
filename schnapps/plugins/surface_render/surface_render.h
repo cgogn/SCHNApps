@@ -47,23 +47,77 @@ struct MapParameters
 	};
 
 	MapParameters() :
-		positionVBO(NULL),
-		normalVBO(NULL),
-		colorVBO(NULL),
+		shader_flat_param_(nullptr),
+		position_vbo_(nullptr),
+		normal_vbo_(nullptr),
+		color_vbo_(nullptr),
 		verticesScaleFactor(1.0f),
 		renderVertices(false),
 		renderEdges(false),
 		renderFaces(true),
-		faceStyle(FLAT),
-		diffuseColor(0.85f,0.25f,0.19f,0.0f),
-		simpleColor(0.0f,0.0f,0.0f,0.0f),
-		vertexColor(0.0f,0.0f,1.0f,0.0f),
-		backColor(0.85f, 0.25f, 0.19f, 0.0f)
-	{}
+		faceStyle(FLAT)
+	{
+		shader_flat_param_ = cgogn::rendering::ShaderFlat::generate_param();
+	}
 
-	cgogn::rendering::VBO* positionVBO;
-	cgogn::rendering::VBO* normalVBO;
-	cgogn::rendering::VBO* colorVBO;
+	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
+	void set_position_vbo(cgogn::rendering::VBO* v)
+	{
+		position_vbo_ = v;
+		shader_flat_param_->set_vbo(v);
+	}
+
+	cgogn::rendering::VBO* get_normal_vbo() const { return normal_vbo_; }
+	void set_normal_vbo(cgogn::rendering::VBO* v)
+	{
+		normal_vbo_ = v;
+	}
+
+	cgogn::rendering::VBO* get_color_vbo() const { return color_vbo_; }
+	void set_color_vbo(cgogn::rendering::VBO* v)
+	{
+		color_vbo_ = v;
+	}
+
+	const QColor& get_diffuse_color() const { return diffuse_color_; }
+	void set_diffuse_color(const QColor& c)
+	{
+		diffuse_color_ = c;
+		shader_flat_param_->ambiant_color_ = diffuse_color_;
+	}
+
+	const QColor& get_simple_color() const { return simple_color_; }
+	void set_simple_color(const QColor& c)
+	{
+		simple_color_ = c;
+	}
+
+	const QColor& get_vertex_color() const { return vertex_color_; }
+	void set_vertex_color(const QColor& c)
+	{
+		vertex_color_ = c;
+	}
+
+	const QColor& get_back_color() const { return back_color_; }
+	void set_back_color(const QColor& c)
+	{
+		back_color_ = c;
+	}
+
+private:
+
+	cgogn::rendering::ShaderFlat::Param* shader_flat_param_;
+
+	cgogn::rendering::VBO* position_vbo_;
+	cgogn::rendering::VBO* normal_vbo_;
+	cgogn::rendering::VBO* color_vbo_;
+
+	QColor diffuse_color_;
+	QColor simple_color_;
+	QColor vertex_color_;
+	QColor back_color_;
+
+public:
 
 	float verticesScaleFactor;
 	float basePSradius;
@@ -73,11 +127,6 @@ struct MapParameters
 	bool renderBoundary;
 	bool renderBackfaces;
 	FaceShadingStyle faceStyle;
-
-	VEC4 diffuseColor;
-	VEC4 simpleColor;
-	VEC4 vertexColor;
-	VEC4 backColor;
 };
 
 /**
@@ -114,6 +163,20 @@ private:
 
 	inline void view_linked(View*) override {}
 	inline void view_unlinked(View*) override {}
+
+private slots:
+
+	// slots called from SCHNApps signals
+	void selected_view_changed(View*, View*);
+	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void schnapps_closing();
+
+	// slots called from MapHandler signals
+	void vbo_added(cgogn::rendering::VBO* vbo);
+	void vbo_removed(cgogn::rendering::VBO* vbo);
+	void bb_changed();
 
 public slots:
 

@@ -237,11 +237,12 @@ protected:
 	QList<View*> views_;
 
 	// map bounding box
+	cgogn::rendering::DisplayListDrawer bb_drawer_;
+	QMap<View*, cgogn::rendering::DisplayListDrawer::Renderer*> bb_drawer_renderer_;
 	cgogn::geometry::BoundingBox<VEC3> bb_;
-	cgogn::rendering::Drawer bb_drawer_;
+	float bb_diagonal_size_;
 	bool show_bb_;
 	QColor bb_color_;
-	float bb_diagonal_size_;
 
 	// MapRender object of the map
 	cgogn::rendering::MapRender render_;
@@ -353,7 +354,7 @@ private:
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
 			if (ca4)
 			{
-				vbo = new cgogn::rendering::VBO();
+				vbo = new cgogn::rendering::VBO(4);
 				VertexAttribute<VEC4> va(map, ca4);
 				cgogn::rendering::update_vbo(va, vbo);
 				this->vbos_.insert(name, vbo);
@@ -364,7 +365,7 @@ private:
 			MapBaseData::ChunkArray<VEC3>* ca3 = dynamic_cast<MapBaseData::ChunkArray<VEC3>*>(cag);
 			if (ca3)
 			{
-				vbo = new cgogn::rendering::VBO();
+				vbo = new cgogn::rendering::VBO(3);
 				VertexAttribute<VEC3> va(map, ca3);
 				cgogn::rendering::update_vbo(va, vbo);
 				this->vbos_.insert(name, vbo);
@@ -375,7 +376,7 @@ private:
 			MapBaseData::ChunkArray<VEC2>* ca2 = dynamic_cast<MapBaseData::ChunkArray<VEC2>*>(cag);
 			if (ca2)
 			{
-				vbo = new cgogn::rendering::VBO();
+				vbo = new cgogn::rendering::VBO(2);
 				VertexAttribute<VEC2> va(map, ca2);
 				cgogn::rendering::update_vbo(va, vbo);
 				this->vbos_.insert(name, vbo);
@@ -386,7 +387,7 @@ private:
 			MapBaseData::ChunkArray<SCALAR>* ca1 = dynamic_cast<MapBaseData::ChunkArray<SCALAR>*>(cag);
 			if (ca1)
 			{
-				vbo = new cgogn::rendering::VBO();
+				vbo = new cgogn::rendering::VBO(1);
 				VertexAttribute<SCALAR> va(map, ca1);
 				cgogn::rendering::update_vbo(va, vbo);
 				this->vbos_.insert(name, vbo);

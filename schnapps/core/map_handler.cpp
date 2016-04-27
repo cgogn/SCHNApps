@@ -148,7 +148,7 @@ bool MapHandlerGen::get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec&
 
 void MapHandlerGen::draw_bb(View* view, const QMatrix4x4 &pm, const QMatrix4x4 &mm)
 {
-	bb_drawer_.call_list(pm, mm, view);
+	bb_drawer_renderer_[view]->draw(pm, mm, view);
 }
 
 void MapHandlerGen::update_bb_drawer()
@@ -221,11 +221,16 @@ void MapHandlerGen::delete_vbo(const QString &name)
 void MapHandlerGen::link_view(View* view)
 {
 	if (view && !views_.contains(view))
+	{
 		views_.push_back(view);
+		view->makeCurrent();
+		bb_drawer_renderer_[view] = bb_drawer_.generate_renderer();
+	}
 }
 
 void MapHandlerGen::unlink_view(View* view)
 {
+	delete bb_drawer_renderer_[view];
 	views_.removeOne(view);
 }
 

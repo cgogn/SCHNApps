@@ -237,9 +237,9 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		plugin->disable();
 		plugins_.remove(plugin_name);
 
-//		// remove plugin dock tabs
-//		foreach (QWidget* tab, plugin_tabs_[plugin])
-//			remove_plugin_dock_tab(plugin, tab);
+		// remove plugin dock tabs
+		foreach (QWidget* tab, plugin_dock_tabs_[plugin])
+			remove_plugin_dock_tab(plugin, tab);
 		// remove plugin menu actions
 		foreach (QAction* action, plugin_menu_actions_[plugin])
 			remove_menu_action(plugin, action);
@@ -262,58 +262,57 @@ Plugin* SCHNApps::get_plugin(const QString& name) const
 		return nullptr;
 }
 
-//void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tabWidget, const QString& tabText)
-//{
-//	if(tabWidget && !m_pluginTabs[plugin].contains(tabWidget))
-//	{
-//		int currentTab = m_pluginDockTabWidget->currentIndex();
+void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text)
+{
+	if(plugin && tab_widget && !plugin_dock_tabs_[plugin].contains(tab_widget))
+	{
+		int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
 
-//		int idx = m_pluginDockTabWidget->addTab(tabWidget, tabText);
-//		m_pluginDock->setVisible(true);
+		int idx = window_->plugin_dock_tab_widget_->addTab(tab_widget, tab_text);
+		window_->plugin_dock_->setVisible(true);
 
-//		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin);
-//		if(pi)
-//		{
-//			if(pi->isLinkedToView(m_selectedView))
-//				m_pluginDockTabWidget->setTabEnabled(idx, true);
-//			else
-//				m_pluginDockTabWidget->setTabEnabled(idx, false);
-//		}
+		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin);
+		if (pi)
+		{
+			if(pi->is_linked_to_view(selected_view_))
+				window_->plugin_dock_tab_widget_->setTabEnabled(idx, true);
+			else
+				window_->plugin_dock_tab_widget_->setTabEnabled(idx, false);
+		}
 
-//		if(currentTab != -1)
-//			m_pluginDockTabWidget->setCurrentIndex(currentTab);
+		if (current_tab != -1)
+			window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
 
-//		m_pluginTabs[plugin].append(tabWidget);
-//	}
-//}
+		plugin_dock_tabs_[plugin].append(tab_widget);
+	}
+}
 
-//void SCHNApps::remove_plugin_dock_tab(Plugin* plugin, QWidget *tabWidget)
-//{
-//	if(tabWidget && m_pluginTabs[plugin].contains(tabWidget))
-//	{
-//		m_pluginDockTabWidget->removeTab(m_pluginDockTabWidget->indexOf(tabWidget));
+void SCHNApps::remove_plugin_dock_tab(Plugin* plugin, QWidget *tab_widget)
+{
+	if(plugin && tab_widget && plugin_dock_tabs_[plugin].contains(tab_widget))
+	{
+		window_->plugin_dock_tab_widget_->removeTab(window_->plugin_dock_tab_widget_->indexOf(tab_widget));
+		plugin_dock_tabs_[plugin].removeOne(tab_widget);
+	}
+}
 
-//		m_pluginTabs[plugin].removeOne(tabWidget);
-//	}
-//}
+void SCHNApps::enable_plugin_tab_widgets(PluginInteraction* plugin)
+{
+	if(plugin_dock_tabs_.contains(plugin))
+	{
+		foreach (QWidget* w, plugin_dock_tabs_[plugin])
+			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(w), true);
+	}
+}
 
-//void SCHNApps::enable_plugin_tab_widgets(PluginInteraction* plugin)
-//{
-//	if(m_pluginTabs.contains(plugin))
-//	{
-//		foreach (QWidget* w, m_pluginTabs[plugin])
-//			m_pluginDockTabWidget->setTabEnabled(m_pluginDockTabWidget->indexOf(w), true);
-//	}
-//}
-
-//void SCHNApps::disable_plugin_tab_widgets(PluginInteraction* plugin)
-//{
-//	if(m_pluginTabs.contains(plugin))
-//	{
-//		foreach (QWidget* w, m_pluginTabs[plugin])
-//			m_pluginDockTabWidget->setTabEnabled(m_pluginDockTabWidget->indexOf(w), false);
-//	}
-//}
+void SCHNApps::disable_plugin_tab_widgets(PluginInteraction* plugin)
+{
+	if(plugin_dock_tabs_.contains(plugin))
+	{
+		foreach (QWidget* w, plugin_dock_tabs_[plugin])
+			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(w), false);
+	}
+}
 
 /*********************************************************
  * MANAGE MAPS
@@ -455,8 +454,8 @@ void SCHNApps::set_selected_view(View* view)
 
 	if(selected_view_)
 	{
-//		foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
-//			disable_plugin_tab_widgets(p);
+		foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
+			disable_plugin_tab_widgets(p);
 		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
 		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
 	}
@@ -466,8 +465,8 @@ void SCHNApps::set_selected_view(View* view)
 	if (old_selected)
 		old_selected->hide_dialogs();
 
-//	foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
-//		enable_plugin_tab_widgets(p);
+	foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
+		enable_plugin_tab_widgets(p);
 	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
 	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
 
