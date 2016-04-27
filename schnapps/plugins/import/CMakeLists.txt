@@ -38,7 +38,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.so
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_io.so
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
+	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_io.dylib
 	Qt5::Widgets
 )

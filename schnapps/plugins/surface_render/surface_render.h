@@ -64,7 +64,8 @@ struct MapParameters
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
-		shader_flat_param_->set_vbo(v);
+		if (v)
+			shader_flat_param_->set_position_vbo(position_vbo_);
 	}
 
 	cgogn::rendering::VBO* get_normal_vbo() const { return normal_vbo_; }

@@ -24,6 +24,7 @@
 #include <surface_render.h>
 
 #include <schnapps/core/schnapps.h>
+#include <schnapps/core/view.h>
 #include <schnapps/core/map_handler.h>
 
 namespace schnapps
@@ -87,6 +88,11 @@ void Plugin_SurfaceRender::map_removed(MapHandlerGen *map)
 		dock_tab_->updateMapParameters();
 }
 
+void Plugin_SurfaceRender::schnapps_closing()
+{
+
+}
+
 void Plugin_SurfaceRender::vbo_added(cgogn::rendering::VBO* vbo)
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
@@ -116,44 +122,43 @@ void Plugin_SurfaceRender::vbo_removed(cgogn::rendering::VBO* vbo)
 		}
 	}
 
-	QSet<View*> viewsToUpdate;
+	QSet<View*> views_to_update;
 
-	QHash<View*, QHash<MapHandlerGen*, MapParameters> >::iterator i;
-	for (i = parameter_set_.begin(); i != parameter_set_.end(); ++i)
+	for (auto i = parameter_set_.begin(); i != parameter_set_.end(); ++i)
 	{
 		View* view = i.key();
-		QHash<MapHandlerGen*, MapParameters>& viewParamSet = i.value();
-		MapParameters& mapParam = viewParamSet[map];
-		if(mapParam.positionVBO == vbo)
+		QHash<MapHandlerGen*, MapParameters>& view_param_set = i.value();
+		MapParameters& map_param = view_param_set[map];
+		if(map_param.get_position_vbo() == vbo)
 		{
-			mapParam.positionVBO = NULL;
-			if(view->isLinkedToMap(map)) viewsToUpdate.insert(view);
+			map_param.set_position_vbo(nullptr);
+			if(view->is_linked_to_map(map)) views_to_update.insert(view);
 		}
-		if(mapParam.normalVBO == vbo)
+		if(map_param.get_normal_vbo() == vbo)
 		{
-			mapParam.normalVBO = NULL;
-			if(view->isLinkedToMap(map)) viewsToUpdate.insert(view);
+			map_param.set_normal_vbo(nullptr);
+			if(view->is_linked_to_map(map)) views_to_update.insert(view);
 		}
-		if(mapParam.colorVBO == vbo)
+		if(map_param.get_color_vbo() == vbo)
 		{
-			mapParam.colorVBO = NULL;
-			if(view->isLinkedToMap(map)) viewsToUpdate.insert(view);
+			map_param.set_color_vbo(nullptr);
+			if(view->is_linked_to_map(map)) views_to_update.insert(view);
 		}
 	}
 
-	foreach(View* v, viewsToUpdate)
-		v->updateGL();
+	foreach(View* v, views_to_update)
+		v->update();
 }
 
 void Plugin_SurfaceRender::bb_changed()
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
-	QList<View*> views = map->getLinkedViews();
+	QList<View*> views = map->get_linked_views();
 	foreach(View* v, views)
 	{
 		if (parameter_set_.contains(v))
-			parameter_set_[v][map].basePSradius = map->getBBdiagSize() / (2 * std::sqrt(map->getNbOrbits(EDGE)));
+			parameter_set_[v][map].basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
 	}
 }
 
