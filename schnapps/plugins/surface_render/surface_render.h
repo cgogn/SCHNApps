@@ -55,7 +55,11 @@ struct MapParameters
 		renderVertices(false),
 		renderEdges(false),
 		renderFaces(true),
-		faceStyle(FLAT)
+		faceStyle(FLAT),
+		diffuse_color_(85, 168, 190),
+		simple_color_(85, 168, 190),
+		vertex_color_(85, 168, 190),
+		back_color_(85, 168, 190)
 	{
 		shader_flat_param_ = cgogn::rendering::ShaderFlat::generate_param();
 	}
@@ -107,8 +111,6 @@ struct MapParameters
 
 private:
 
-	cgogn::rendering::ShaderFlat::Param* shader_flat_param_;
-
 	cgogn::rendering::VBO* position_vbo_;
 	cgogn::rendering::VBO* normal_vbo_;
 	cgogn::rendering::VBO* color_vbo_;
@@ -119,6 +121,8 @@ private:
 	QColor back_color_;
 
 public:
+
+	cgogn::rendering::ShaderFlat::Param* shader_flat_param_;
 
 	float verticesScaleFactor;
 	float basePSradius;
@@ -152,8 +156,8 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	inline void draw(View*) override {}
-	void draw_map(View* view, MapHandlerGen* map) override;
+	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
+	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
 	inline void keyPress(View* , QKeyEvent*) override {}
 	inline void keyRelease(View* , QKeyEvent*) override {}

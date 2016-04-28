@@ -25,6 +25,7 @@
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
+#include <schnapps/core/camera.h>
 #include <schnapps/core/map_handler.h>
 
 namespace schnapps
@@ -47,7 +48,7 @@ bool Plugin_SurfaceRender::enable()
 	foreach(MapHandlerGen* map, schnapps_->get_map_set().values())
 		map_added(map);
 
-	dock_tab_->updateMapParameters();
+	dock_tab_->update_map_parameters();
 
 	return true;
 }
@@ -57,18 +58,22 @@ void Plugin_SurfaceRender::disable()
 	delete dock_tab_;
 }
 
-void Plugin_SurfaceRender::draw_map(View *view, MapHandlerGen *map)
+void Plugin_SurfaceRender::draw_map(View *view, MapHandlerGen *map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
+	const MapParameters& p = parameter_set_[view][map];
+	p.shader_flat_param_->bind(proj, mv);
+	map->draw(cgogn::rendering::TRIANGLES);
+	p.shader_flat_param_->release();
 }
 
 void Plugin_SurfaceRender::selected_view_changed(View*, View*)
 {
-	dock_tab_->updateMapParameters();
+	dock_tab_->update_map_parameters();
 }
 
 void Plugin_SurfaceRender::selected_map_changed(MapHandlerGen*, MapHandlerGen*)
 {
-	dock_tab_->updateMapParameters();
+	dock_tab_->update_map_parameters();
 }
 
 void Plugin_SurfaceRender::map_added(MapHandlerGen *map)
@@ -85,7 +90,7 @@ void Plugin_SurfaceRender::map_removed(MapHandlerGen *map)
 	disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
 
 	if(map == schnapps_->get_selected_map())
-		dock_tab_->updateMapParameters();
+		dock_tab_->update_map_parameters();
 }
 
 void Plugin_SurfaceRender::schnapps_closing()
@@ -101,9 +106,9 @@ void Plugin_SurfaceRender::vbo_added(cgogn::rendering::VBO* vbo)
 	{
 		if(vbo->vector_dimension() == 3)
 		{
-			dock_tab_->addPositionVBO(QString::fromStdString(vbo->get_name()));
-			dock_tab_->addNormalVBO(QString::fromStdString(vbo->get_name()));
-			dock_tab_->addColorVBO(QString::fromStdString(vbo->get_name()));
+			dock_tab_->add_position_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->add_normal_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->add_color_vbo(QString::fromStdString(vbo->get_name()));
 		}
 	}
 }
@@ -116,9 +121,9 @@ void Plugin_SurfaceRender::vbo_removed(cgogn::rendering::VBO* vbo)
 	{
 		if(vbo->vector_dimension() == 3)
 		{
-			dock_tab_->removePositionVBO(QString::fromStdString(vbo->get_name()));
-			dock_tab_->removeNormalVBO(QString::fromStdString(vbo->get_name()));
-			dock_tab_->removeColorVBO(QString::fromStdString(vbo->get_name()));
+			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->remove_normal_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->remove_color_vbo(QString::fromStdString(vbo->get_name()));
 		}
 	}
 

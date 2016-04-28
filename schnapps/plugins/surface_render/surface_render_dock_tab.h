@@ -43,53 +43,54 @@ class SurfaceRender_DockTab : public QWidget, public Ui::Surface_Render_TabWidge
 	friend class Plugin_SurfaceRender;
 
 public:
+
 	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
 
 private:
 
-	SCHNApps* m_schnapps;
-	Plugin_SurfaceRender* m_plugin;
+	SCHNApps* schnapps_;
+	Plugin_SurfaceRender* plugin_;
 
-	QColorDialog* m_colorDial;
-	QColor m_diffuseColor;
-	QColor m_simpleColor;
-	QColor m_vertexColor;
-	QColor m_backColor;
-	int m_currentColorDial;
+	QColorDialog* color_dial_;
+	QColor diffuse_color_;
+	QColor simple_color_;
+	QColor vertex_color_;
+	QColor back_color_;
+	int current_color_dial_;
 
-	bool b_updatingUI;
+	bool updating_ui_;
 
 private slots:
 
-	void positionVBOChanged(int index);
-	void normalVBOChanged(int index);
-	void colorVBOChanged(int index);
-	void renderVerticesChanged(bool b);
-	void verticesScaleFactorChanged(int i);
-	void verticesScaleFactorPressed();
-	void renderEdgesChanged(bool b);
-	void renderFacesChanged(bool b);
-	void faceStyleChanged(QAbstractButton* b);
-	void renderBoundaryChanged(bool b);
-	void renderBackfaceChanged(bool b);
+	void position_vbo_changed(int index);
+	void normal_vbo_changed(int index);
+	void color_vbo_changed(int index);
+	void render_vertices_changed(bool b);
+	void vertices_scale_factor_changed(int i);
+	void vertices_scale_factor_pressed();
+	void render_edges_changed(bool b);
+	void render_faces_changed(bool b);
+	void face_style_changed(QAbstractButton* b);
+	void render_boundary_changed(bool b);
+	void render_backface_changed(bool b);
 
-	void diffuseColorClicked();
-	void simpleColorClicked();
-	void vertexColorClicked();
-	void backColorClicked();
-	void bothColorClicked();
-	void colorSelected();
+	void diffuse_color_clicked();
+	void simple_color_clicked();
+	void vertex_color_clicked();
+	void back_color_clicked();
+	void both_color_clicked();
+	void color_selected();
 
 private:
 
-	void addPositionVBO(QString name);
-	void removePositionVBO(QString name);
-	void addNormalVBO(QString name);
-	void removeNormalVBO(QString name);
-	void addColorVBO(QString name);
-	void removeColorVBO(QString name);
+	void add_position_vbo(QString name);
+	void remove_position_vbo(QString name);
+	void add_normal_vbo(QString name);
+	void remove_normal_vbo(QString name);
+	void add_color_vbo(QString name);
+	void remove_color_vbo(QString name);
 
-	void updateMapParameters();
+	void update_map_parameters();
 };
 
 } // namespace schnapps

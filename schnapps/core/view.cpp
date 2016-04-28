@@ -415,18 +415,12 @@ void View::draw()
 			map->draw_bb(this, pm, map_mm);
 
 		foreach (PluginInteraction* plugin, plugins_)
-		{
-			foreach (cgogn::rendering::ShaderProgram* shader, plugin->get_shaders())
-				shader->set_matrices(pm, map_mm);
-			plugin->draw_map(this, map);
-		}
+			plugin->draw_map(this, map, pm, map_mm);
 	}
 
 	foreach (PluginInteraction* plugin, plugins_)
 	{
-		foreach (cgogn::rendering::ShaderProgram* shader, plugin->get_shaders())
-			shader->set_matrices(pm, mm);
-		plugin->draw(this);
+		plugin->draw(this, pm, mm);
 	}
 }
 

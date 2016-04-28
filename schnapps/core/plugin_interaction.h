@@ -75,8 +75,8 @@ public slots:
 
 private:
 
-	virtual void draw(View* view) = 0;
-	virtual void draw_map(View* view, MapHandlerGen* map) = 0;
+	virtual void draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
+	virtual void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
 
 	virtual void keyPress(View* view, QKeyEvent* event) = 0;
 	virtual void keyRelease(View* view, QKeyEvent* event) = 0;
