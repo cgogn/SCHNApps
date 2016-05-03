@@ -2,6 +2,10 @@ project(schnapps_plugin_import
 	LANGUAGES CXX
 )
 
+find_package(cgogn_core REQUIRED)
+find_package(cgogn_io REQUIRED)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
 set(HEADER_FILES
 	import.h
 )
@@ -38,7 +42,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_core.dylib
-	${CGOGN_PATH}/../CGoGN_2-build/lib/libcgogn_io.dylib
-	Qt5::Widgets
+	${cgogn_core_LIBRARIES}
+	${cgogn_io_LIBRARIES}
+	${Qt5Widgets_LIBRARIES}
 )
