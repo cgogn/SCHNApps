@@ -32,9 +32,10 @@ namespace schnapps
 {
 
 class SCHNApps;
+class MapHandlerGen;
 class Plugin_SurfaceRender;
 
-//struct MapParameters;
+struct MapParameters;
 
 class SurfaceRender_DockTab : public QWidget, public Ui::Surface_Render_TabWidget
 {
@@ -52,11 +53,12 @@ private:
 	Plugin_SurfaceRender* plugin_;
 
 	QColorDialog* color_dial_;
-	QColor diffuse_color_;
-	QColor simple_color_;
-	QColor vertex_color_;
-	QColor back_color_;
 	int current_color_dial_;
+
+	QColor vertex_color_;
+	QColor edge_color_;
+	QColor front_color_;
+	QColor back_color_;
 
 	bool updating_ui_;
 
@@ -74,9 +76,9 @@ private slots:
 	void render_boundary_changed(bool b);
 	void render_backface_changed(bool b);
 
-	void diffuse_color_clicked();
-	void simple_color_clicked();
 	void vertex_color_clicked();
+	void edge_color_clicked();
+	void front_color_clicked();
 	void back_color_clicked();
 	void both_color_clicked();
 	void color_selected();
@@ -90,7 +92,7 @@ private:
 	void add_color_vbo(QString name);
 	void remove_color_vbo(QString name);
 
-	void update_map_parameters();
+	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace schnapps

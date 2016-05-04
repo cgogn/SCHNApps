@@ -363,10 +363,6 @@ void SCHNApps::remove_map(const QString &name)
 		maps_.remove(name);
 		emit(map_removed(map));
 
-		// unselect map if it is removed
-		if (this->get_selected_map() == map)
-			set_selected_map(QString("NONE"));
-
 		delete map;
 	}
 }

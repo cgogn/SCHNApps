@@ -30,6 +30,8 @@
 #include <surface_render_dock_tab.h>
 
 #include <cgogn/rendering/shaders/shader_flat.h>
+#include <cgogn/rendering/shaders/shader_simple_color.h>
+#include <cgogn/rendering/shaders/shader_phong.h>
 
 #include <QAction>
 
@@ -48,53 +50,75 @@ struct MapParameters
 
 	MapParameters() :
 		shader_flat_param_(nullptr),
+		shader_simple_color_param_(nullptr),
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
 		color_vbo_(nullptr),
 		verticesScaleFactor(1.0f),
-		renderVertices(false),
-		renderEdges(false),
-		renderFaces(true),
-		faceStyle(FLAT),
-		diffuse_color_(85, 168, 190),
-		simple_color_(85, 168, 190),
-		vertex_color_(85, 168, 190),
+		basePSradius(1.0f),
+		render_vertices_(false),
+		render_edges_(false),
+		render_faces_(true),
+		render_back_faces_(true),
+		render_boundary_(false),
+		face_style_(FLAT),
+		vertex_color_(190, 85, 168),
+		edge_color_(0, 0, 0),
+		front_color_(85, 168, 190),
 		back_color_(85, 168, 190)
 	{
 		shader_flat_param_ = cgogn::rendering::ShaderFlat::generate_param();
+		shader_flat_param_->front_color_ = front_color_;
+		shader_flat_param_->back_color_ = back_color_;
+
+		shader_flat_color_param_ = cgogn::rendering::ShaderFlatColor::generate_param();
+
+		shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+		shader_simple_color_param_->color_ = edge_color_;
+
+		shader_phong_param_ = cgogn::rendering::ShaderPhong::generate_param();
+		shader_phong_param_->front_color_ = front_color_;
+		shader_phong_param_->back_color_ = back_color_;
+		shader_phong_param_->double_side_ = render_back_faces_;
+
+		shader_phong_color_param_ = cgogn::rendering::ShaderPhongColor::generate_param();
+		shader_phong_color_param_->double_side_ = render_back_faces_;
 	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
-		if (v)
+		if (position_vbo_)
+		{
 			shader_flat_param_->set_position_vbo(position_vbo_);
+			shader_flat_color_param_->set_position_vbo(position_vbo_);
+			shader_simple_color_param_->set_position_vbo(position_vbo_);
+			shader_phong_param_->set_position_vbo(position_vbo_);
+			shader_phong_color_param_->set_position_vbo(position_vbo_);
+		}
 	}
 
 	cgogn::rendering::VBO* get_normal_vbo() const { return normal_vbo_; }
 	void set_normal_vbo(cgogn::rendering::VBO* v)
 	{
 		normal_vbo_ = v;
+		if (normal_vbo_)
+		{
+			shader_phong_param_->set_normal_vbo(normal_vbo_);
+			shader_phong_color_param_->set_normal_vbo(normal_vbo_);
+		}
 	}
 
 	cgogn::rendering::VBO* get_color_vbo() const { return color_vbo_; }
 	void set_color_vbo(cgogn::rendering::VBO* v)
 	{
 		color_vbo_ = v;
-	}
-
-	const QColor& get_diffuse_color() const { return diffuse_color_; }
-	void set_diffuse_color(const QColor& c)
-	{
-		diffuse_color_ = c;
-		shader_flat_param_->ambiant_color_ = diffuse_color_;
-	}
-
-	const QColor& get_simple_color() const { return simple_color_; }
-	void set_simple_color(const QColor& c)
-	{
-		simple_color_ = c;
+		if (color_vbo_)
+		{
+			shader_flat_color_param_->set_color_vbo(color_vbo_);
+			shader_phong_color_param_->set_color_vbo(color_vbo_);
+		}
 	}
 
 	const QColor& get_vertex_color() const { return vertex_color_; }
@@ -103,10 +127,32 @@ struct MapParameters
 		vertex_color_ = c;
 	}
 
+	const QColor& get_edge_color() const { return edge_color_; }
+	void set_edge_color(const QColor& c)
+	{
+		edge_color_ = c;
+		shader_simple_color_param_->color_ = edge_color_;
+	}
+
+	const QColor& get_front_color() const { return front_color_; }
+	void set_front_color(const QColor& c)
+	{
+		front_color_ = c;
+		shader_flat_param_->front_color_ = front_color_;
+	}
+
 	const QColor& get_back_color() const { return back_color_; }
 	void set_back_color(const QColor& c)
 	{
 		back_color_ = c;
+		shader_flat_param_->back_color_ = back_color_;
+	}
+
+	void set_render_back_face(bool b)
+	{
+		render_back_faces_ = b;
+		shader_phong_param_->double_side_ = b;
+		shader_phong_color_param_->double_side_ = b;
 	}
 
 private:
@@ -115,23 +161,30 @@ private:
 	cgogn::rendering::VBO* normal_vbo_;
 	cgogn::rendering::VBO* color_vbo_;
 
-	QColor diffuse_color_;
-	QColor simple_color_;
 	QColor vertex_color_;
+	QColor edge_color_;
+	QColor front_color_;
 	QColor back_color_;
 
 public:
 
 	cgogn::rendering::ShaderFlat::Param* shader_flat_param_;
+	cgogn::rendering::ShaderFlatColor::Param* shader_flat_color_param_;
+	cgogn::rendering::ShaderSimpleColor::Param* shader_simple_color_param_;
+	cgogn::rendering::ShaderPhong::Param* shader_phong_param_;
+	cgogn::rendering::ShaderPhongColor::Param* shader_phong_color_param_;
 
 	float verticesScaleFactor;
 	float basePSradius;
-	bool renderVertices;
-	bool renderEdges;
-	bool renderFaces;
-	bool renderBoundary;
-	bool renderBackfaces;
-	FaceShadingStyle faceStyle;
+
+	bool render_vertices_;
+	bool render_edges_;
+	bool render_faces_;
+
+	bool render_back_faces_;
+	bool render_boundary_;
+
+	FaceShadingStyle face_style_;
 };
 
 /**
@@ -152,6 +205,8 @@ public:
 	~Plugin_SurfaceRender() {}
 
 private:
+
+	MapParameters& get_parameters(View* view, MapHandlerGen* map);
 
 	bool enable() override;
 	void disable() override;
@@ -190,7 +245,7 @@ public slots:
 private:
 
 	SurfaceRender_DockTab* dock_tab_;
-	QHash<View*, QHash<MapHandlerGen*, MapParameters> > parameter_set_;
+	QHash<View*, QHash<MapHandlerGen*, MapParameters>> parameter_set_;
 
 	cgogn::rendering::ShaderFlat* shader_flat_;
 };

@@ -97,19 +97,12 @@ ControlDock_MapTab::ControlDock_MapTab(SCHNApps* s) :
 
 void ControlDock_MapTab::set_selected_map(const QString& map_name)
 {
-	if (map_name == QString("NONE"))
-	{
-		QList<QListWidgetItem*> items = list_maps->selectedItems();
-		if (!items.empty())
-			items[0]->setSelected(false);
-		selected_map_ = nullptr;
-		update_selected_map_info();
-		return;
-	}
-
-	QList<QListWidgetItem *> items = list_maps->findItems(map_name, Qt::MatchExactly);
+	QList<QListWidgetItem*> items = list_maps->findItems(map_name, Qt::MatchExactly);
 	if (!items.empty())
+	{
 		items[0]->setSelected(true);
+		update_selected_map_info();
+	}
 }
 
 
@@ -128,6 +121,7 @@ void ControlDock_MapTab::selected_map_changed()
 			disconnect(old, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
+//			disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 //			disconnect(old, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			disconnect(old, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
 		}
@@ -142,6 +136,7 @@ void ControlDock_MapTab::selected_map_changed()
 			connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
+//			connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 //			connect(selected_map_, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			connect(selected_map_, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
 
@@ -299,31 +294,32 @@ void ControlDock_MapTab::map_added(MapHandlerGen* m)
 
 void ControlDock_MapTab::map_removed(MapHandlerGen* m)
 {
+	if (selected_map_ == m)
+	{
+//		selected_selector_[DART] = nullptr;
+//		foreach(QListWidgetItem* item, list_dartSelectors->selectedItems())
+//			item->setSelected(false);
+//		selected_selector_[VERTEX] = nullptr;
+//		foreach(QListWidgetItem* item, list_vertexSelectors->selectedItems())
+//			item->setSelected(false);
+//		selected_selector_[EDGE] = nullptr;
+//		foreach(QListWidgetItem* item, list_edgeSelectors->selectedItems())
+//			item->setSelected(false);
+//		selected_selector_[FACE] = nullptr;
+//		foreach(QListWidgetItem* item, list_faceSelectors->selectedItems())
+//			item->setSelected(false);
+//		selected_selector_[VOLUME] = nullptr;
+//		foreach(QListWidgetItem* item, list_volumeSelectors->selectedItems())
+//			item->setSelected(false);
+
+		selected_map_ = nullptr;
+	}
+
 	QList<QListWidgetItem*> items = list_maps->findItems(m->get_name(), Qt::MatchExactly);
 	if(!items.empty())
 	{
 		updating_ui_ = true;
-
 		delete items[0];
-		if (schnapps_->get_selected_map() == m)
-		{
-//			selected_selector_[DART] = nullptr;
-//			foreach(QListWidgetItem* item, list_dartSelectors->selectedItems())
-//				item->setSelected(false);
-//			selected_selector_[VERTEX] = nullptr;
-//			foreach(QListWidgetItem* item, list_vertexSelectors->selectedItems())
-//				item->setSelected(false);
-//			selected_selector_[EDGE] = nullptr;
-//			foreach(QListWidgetItem* item, list_edgeSelectors->selectedItems())
-//				item->setSelected(false);
-//			selected_selector_[FACE] = nullptr;
-//			foreach(QListWidgetItem* item, list_faceSelectors->selectedItems())
-//				item->setSelected(false);
-//			selected_selector_[VOLUME] = nullptr;
-//			foreach(QListWidgetItem* item, list_volumeSelectors->selectedItems())
-//				item->setSelected(false);
-		}
-
 		updating_ui_ = false;
 	}
 }
@@ -351,6 +347,11 @@ void ControlDock_MapTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	update_selected_map_info();
 }
+
+//void ControlDock_MapTab::selected_map_connectivity_changed()
+//{
+//	update_selected_map_info();
+//}
 
 //void ControlDock_MapTab::selected_map_cell_selector_added(unsigned int orbit, const QString& name)
 //{

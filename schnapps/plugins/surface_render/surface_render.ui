@@ -116,7 +116,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="scolorButton">
+      <widget class="QPushButton" name="edgeColorButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
@@ -159,7 +159,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="vcolorButton">
+      <widget class="QPushButton" name="vertexColorButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
          <horstretch>0</horstretch>
@@ -215,7 +215,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="dcolorButton">
+      <widget class="QPushButton" name="frontColorButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
@@ -392,7 +392,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="bfcolorButton">
+      <widget class="QPushButton" name="backColorButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>
@@ -438,7 +438,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="bothcolorButton">
+      <widget class="QPushButton" name="bothColorButton">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
          <horstretch>0</horstretch>

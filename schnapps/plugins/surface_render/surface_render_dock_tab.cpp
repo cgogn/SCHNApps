@@ -51,12 +51,12 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 	connect(check_renderBoundary, SIGNAL(toggled(bool)), this, SLOT(render_boundary_changed(bool)));
 	connect(check_doubleSided, SIGNAL(toggled(bool)), this, SLOT(render_backface_changed(bool)));
 
-	color_dial_ = new QColorDialog(diffuse_color_, nullptr);
-	connect(dcolorButton, SIGNAL(clicked()), this, SLOT(diffuse_color_clicked()));
-	connect(scolorButton, SIGNAL(clicked()), this, SLOT(simple_color_clicked()));
-	connect(vcolorButton, SIGNAL(clicked()), this, SLOT(vertex_color_clicked()));
-	connect(bfcolorButton, SIGNAL(clicked()), this, SLOT(back_color_clicked()));
-	connect(bothcolorButton, SIGNAL(clicked()), this, SLOT(both_color_clicked()));
+	color_dial_ = new QColorDialog(front_color_, nullptr);
+	connect(vertexColorButton, SIGNAL(clicked()), this, SLOT(vertex_color_clicked()));
+	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
+	connect(frontColorButton, SIGNAL(clicked()), this, SLOT(front_color_clicked()));
+	connect(backColorButton, SIGNAL(clicked()), this, SLOT(back_color_clicked()));
+	connect(bothColorButton, SIGNAL(clicked()), this, SLOT(both_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
 }
 
@@ -72,8 +72,9 @@ void SurfaceRender_DockTab::position_vbo_changed(int index)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
-			plugin_->parameter_set_[view][map].set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
 			view->update();
 		}
 	}
@@ -87,7 +88,8 @@ void SurfaceRender_DockTab::normal_vbo_changed(int index)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].set_normal_vbo(map->get_vbo(combo_normalVBO->currentText()));
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_normal_vbo(map->get_vbo(combo_normalVBO->currentText()));
 			view->update();
 		}
 	}
@@ -101,7 +103,8 @@ void SurfaceRender_DockTab::color_vbo_changed(int index)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].set_color_vbo(map->get_vbo(combo_colorVBO->currentText()));
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_color_vbo(map->get_vbo(combo_colorVBO->currentText()));
 			view->update();
 		}
 	}
@@ -115,10 +118,12 @@ void SurfaceRender_DockTab::render_vertices_changed(bool b)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			if (b)
-				plugin_->parameter_set_[view][map].basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+			MapParameters& p = plugin_->get_parameters(view, map);
 
-			plugin_->parameter_set_[view][map].renderVertices = b;
+			if (b)
+				p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+
+			p.render_vertices_ = b;
 			view->update();
 		}
 	}
@@ -132,7 +137,9 @@ void SurfaceRender_DockTab::vertices_scale_factor_pressed()
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+			view->update();
 		}
 	}
 }
@@ -145,7 +152,8 @@ void SurfaceRender_DockTab::vertices_scale_factor_changed(int i)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].verticesScaleFactor = i / 50.0;
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.verticesScaleFactor = i / 50.0;
 			view->update();
 		}
 	}
@@ -159,7 +167,8 @@ void SurfaceRender_DockTab::render_edges_changed(bool b)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].renderEdges = b;
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.render_edges_ = b;
 			view->update();
 		}
 	}
@@ -173,7 +182,8 @@ void SurfaceRender_DockTab::render_faces_changed(bool b)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].renderFaces = b;
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.render_faces_ = b;
 			view->update();
 		}
 	}
@@ -187,10 +197,11 @@ void SurfaceRender_DockTab::face_style_changed(QAbstractButton* b)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
+			MapParameters& p = plugin_->get_parameters(view, map);
 			if (radio_flatShading->isChecked())
-				plugin_->parameter_set_[view][map].faceStyle = MapParameters::FLAT;
+				p.face_style_ = MapParameters::FLAT;
 			else if (radio_phongShading->isChecked())
-				plugin_->parameter_set_[view][map].faceStyle = MapParameters::PHONG;
+				p.face_style_ = MapParameters::PHONG;
 			view->update();
 		}
 	}
@@ -204,7 +215,8 @@ void SurfaceRender_DockTab::render_boundary_changed(bool b)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].renderBoundary = b;
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.render_boundary_ = b;
 			view->update();
 		}
 	}
@@ -218,31 +230,32 @@ void SurfaceRender_DockTab::render_backface_changed(bool b)
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].renderBackfaces = b;
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_render_back_face(b);
 			view->update();
 		}
 	}
 }
 
-void SurfaceRender_DockTab::diffuse_color_clicked()
+void SurfaceRender_DockTab::vertex_color_clicked()
 {
 	current_color_dial_ = 1;
 	color_dial_->show();
-	color_dial_->setCurrentColor(diffuse_color_);
+	color_dial_->setCurrentColor(vertex_color_);
 }
 
-void SurfaceRender_DockTab::simple_color_clicked()
+void SurfaceRender_DockTab::edge_color_clicked()
 {
 	current_color_dial_ = 2;
 	color_dial_->show();
-	color_dial_->setCurrentColor(simple_color_);
+	color_dial_->setCurrentColor(edge_color_);
 }
 
-void SurfaceRender_DockTab::vertex_color_clicked()
+void SurfaceRender_DockTab::front_color_clicked()
 {
 	current_color_dial_ = 3;
 	color_dial_->show();
-	color_dial_->setCurrentColor(vertex_color_);
+	color_dial_->setCurrentColor(front_color_);
 }
 
 void SurfaceRender_DockTab::back_color_clicked()
@@ -256,51 +269,48 @@ void SurfaceRender_DockTab::both_color_clicked()
 {
 	current_color_dial_ = 5;
 	color_dial_->show();
-	color_dial_->setCurrentColor(diffuse_color_);
+	color_dial_->setCurrentColor(front_color_);
 }
 
 void SurfaceRender_DockTab::color_selected()
 {
 	QColor col = color_dial_->currentColor();
+
+	View* view = schnapps_->get_selected_view();
+	MapHandlerGen* map = schnapps_->get_selected_map();
+
 	if (current_color_dial_ == 1)
 	{
-		diffuse_color_ = col;
-		dcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-		bothcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
+		vertex_color_ = col;
+		vertexColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].set_diffuse_color(diffuse_color_);
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_vertex_color(vertex_color_);
 			view->update();
 		}
 	}
 
 	if (current_color_dial_ == 2)
 	{
-		simple_color_ = col;
-		scolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
+		edge_color_ = col;
+		edgeColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].set_simple_color(simple_color_);
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_edge_color(edge_color_);
 			view->update();
 		}
 	}
 
 	if (current_color_dial_ == 3)
 	{
-		vertex_color_ = col;
-		vcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
+		front_color_ = col;
+		frontColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].set_vertex_color(vertex_color_);
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_front_color(front_color_);
 			view->update();
 		}
 	}
@@ -308,32 +318,27 @@ void SurfaceRender_DockTab::color_selected()
 	if (current_color_dial_ == 4)
 	{
 		back_color_ = col;
-		bfcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
+		backColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].set_back_color(back_color_);
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_back_color(back_color_);
 			view->update();
 		}
 	}
 
 	if (current_color_dial_ == 5)
 	{
+		front_color_ = col;
 		back_color_ = col;
-		bfcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
-		diffuse_color_ = col;
-		dcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-		bothcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
+		bothColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
+		frontColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
+		backColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		if (view && map)
 		{
-			plugin_->parameter_set_[view][map].set_back_color(back_color_);
-			plugin_->parameter_set_[view][map].set_diffuse_color(diffuse_color_);
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_front_color(front_color_);
+			p.set_back_color(back_color_);
 			view->update();
 		}
 	}
@@ -397,7 +402,7 @@ void SurfaceRender_DockTab::remove_color_vbo(QString name)
 	updating_ui_ = false;
 }
 
-void SurfaceRender_DockTab::update_map_parameters()
+void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
 	updating_ui_ = true;
 
@@ -410,54 +415,48 @@ void SurfaceRender_DockTab::update_map_parameters()
 	combo_colorVBO->clear();
 	combo_colorVBO->addItem("- select VBO -");
 
-	View* view = schnapps_->get_selected_view();
-	MapHandlerGen* map = schnapps_->get_selected_map();
-
-	if (view && map)
+	unsigned int i = 1;
+	foreach(cgogn::rendering::VBO* vbo, map->get_vbo_set().values())
 	{
-		const MapParameters& p = plugin_->parameter_set_[view][map];
-
-		unsigned int i = 1;
-		foreach(cgogn::rendering::VBO* vbo, map->get_vbo_set().values())
+		if (vbo->vector_dimension() == 3)
 		{
-			if (vbo->vector_dimension() == 3)
-			{
-				combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
-				if (vbo == p.get_position_vbo())
-					combo_positionVBO->setCurrentIndex(i);
+			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
+			if (vbo == p.get_position_vbo())
+				combo_positionVBO->setCurrentIndex(i);
 
-				combo_normalVBO->addItem(QString::fromStdString(vbo->get_name()));
-				if (vbo == p.get_normal_vbo())
-					combo_normalVBO->setCurrentIndex(i);
+			combo_normalVBO->addItem(QString::fromStdString(vbo->get_name()));
+			if (vbo == p.get_normal_vbo())
+				combo_normalVBO->setCurrentIndex(i);
 
-				combo_colorVBO->addItem(QString::fromStdString(vbo->get_name()));
-				if (vbo == p.get_color_vbo())
-					combo_colorVBO->setCurrentIndex(i);
+			combo_colorVBO->addItem(QString::fromStdString(vbo->get_name()));
+			if (vbo == p.get_color_vbo())
+				combo_colorVBO->setCurrentIndex(i);
 
-				++i;
-			}
+			++i;
 		}
-
-		check_renderVertices->setChecked(p.renderVertices);
-		slider_verticesScaleFactor->setSliderPosition(p.verticesScaleFactor * 50.0);
-		check_renderEdges->setChecked(p.renderEdges);
-		check_renderFaces->setChecked(p.renderFaces);
-		radio_flatShading->setChecked(p.faceStyle == MapParameters::FLAT);
-		radio_phongShading->setChecked(p.faceStyle == MapParameters::PHONG);
-
-		diffuse_color_ = p.get_diffuse_color();
-		dcolorButton->setStyleSheet("QPushButton { background-color:" + diffuse_color_.name() + " }");
-		bothcolorButton->setStyleSheet("QPushButton { background-color:" + diffuse_color_.name() + "}");
-
-		simple_color_ = p.get_simple_color();
-		scolorButton->setStyleSheet("QPushButton { background-color:" + simple_color_.name() + " }");
-
-		vertex_color_ = p.get_vertex_color();
-		vcolorButton->setStyleSheet("QPushButton { background-color:" + vertex_color_.name() + " }");
-
-		back_color_ = p.get_back_color();
-		bfcolorButton->setStyleSheet("QPushButton { background-color:" + back_color_.name() + " }");
 	}
+
+	check_renderVertices->setChecked(p.render_vertices_);
+	slider_verticesScaleFactor->setSliderPosition(p.verticesScaleFactor * 50.0);
+	check_renderEdges->setChecked(p.render_edges_);
+	check_renderFaces->setChecked(p.render_faces_);
+	check_doubleSided->setChecked(p.render_back_faces_);
+	radio_flatShading->setChecked(p.face_style_ == MapParameters::FLAT);
+	radio_phongShading->setChecked(p.face_style_ == MapParameters::PHONG);
+	check_renderBoundary->setChecked(p.render_boundary_);
+
+	vertex_color_ = p.get_vertex_color();
+	vertexColorButton->setStyleSheet("QPushButton { background-color:" + vertex_color_.name() + " }");
+
+	edge_color_ = p.get_edge_color();
+	edgeColorButton->setStyleSheet("QPushButton { background-color:" + edge_color_.name() + " }");
+
+	front_color_ = p.get_front_color();
+	frontColorButton->setStyleSheet("QPushButton { background-color:" + front_color_.name() + " }");
+	bothColorButton->setStyleSheet("QPushButton { background-color:" + front_color_.name() + "}");
+
+	back_color_ = p.get_back_color();
+	backColorButton->setStyleSheet("QPushButton { background-color:" + back_color_.name() + " }");
 
 	updating_ui_ = false;
 }

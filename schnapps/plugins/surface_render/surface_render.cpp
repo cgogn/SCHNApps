@@ -31,6 +31,12 @@
 namespace schnapps
 {
 
+MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* map)
+{
+	view->makeCurrent();
+	return parameter_set_[view][map];
+}
+
 bool Plugin_SurfaceRender::enable()
 {
 //	magic line that init static variables of GenericMap in the plugins
@@ -48,7 +54,13 @@ bool Plugin_SurfaceRender::enable()
 	foreach(MapHandlerGen* map, schnapps_->get_map_set().values())
 		map_added(map);
 
-	dock_tab_->update_map_parameters();
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	if (map)
+	{
+		View* view = schnapps_->get_selected_view();
+		const MapParameters& p = get_parameters(view, map);
+		dock_tab_->update_map_parameters(map, p);
+	}
 
 	return true;
 }
@@ -58,22 +70,81 @@ void Plugin_SurfaceRender::disable()
 	delete dock_tab_;
 }
 
-void Plugin_SurfaceRender::draw_map(View *view, MapHandlerGen *map, const QMatrix4x4& proj, const QMatrix4x4& mv)
+void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	const MapParameters& p = parameter_set_[view][map];
-	p.shader_flat_param_->bind(proj, mv);
-	map->draw(cgogn::rendering::TRIANGLES);
-	p.shader_flat_param_->release();
+	const MapParameters& p = get_parameters(view, map);
+
+	if (p.render_faces_)
+	{
+		glEnable(GL_POLYGON_OFFSET_FILL);
+		glPolygonOffset(1.0f, 1.0f);
+		if (p.get_position_vbo())
+		{
+			if (p.get_color_vbo())
+			{
+				switch (p.face_style_)
+				{
+					case MapParameters::FaceShadingStyle::FLAT:
+						p.shader_flat_color_param_->bind(proj, mv);
+						map->draw(cgogn::rendering::TRIANGLES);
+						p.shader_flat_color_param_->release();
+						break;
+					case MapParameters::FaceShadingStyle::PHONG:
+						if (p.get_normal_vbo())
+						{
+							p.shader_phong_color_param_->bind(proj, mv);
+							map->draw(cgogn::rendering::TRIANGLES);
+							p.shader_phong_color_param_->release();
+						}
+						break;
+				}
+			}
+			else
+			{
+				switch (p.face_style_)
+				{
+					case MapParameters::FaceShadingStyle::FLAT:
+						p.shader_flat_param_->bind(proj, mv);
+						map->draw(cgogn::rendering::TRIANGLES);
+						p.shader_flat_param_->release();
+						break;
+					case MapParameters::FaceShadingStyle::PHONG:
+						if (p.get_normal_vbo())
+						{
+							p.shader_phong_param_->bind(proj, mv);
+							map->draw(cgogn::rendering::TRIANGLES);
+							p.shader_phong_param_->release();
+						}
+						break;
+				}
+			}
+		}
+		glDisable(GL_POLYGON_OFFSET_FILL);
+	}
+
+	if (p.render_edges_)
+	{
+		if (p.get_position_vbo())
+		{
+			p.shader_simple_color_param_->bind(proj, mv);
+			map->draw(cgogn::rendering::LINES);
+			p.shader_simple_color_param_->release();
+		}
+	}
 }
 
-void Plugin_SurfaceRender::selected_view_changed(View*, View*)
+void Plugin_SurfaceRender::selected_view_changed(View* old, View* cur)
 {
-	dock_tab_->update_map_parameters();
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	const MapParameters& p = get_parameters(cur, map);
+	dock_tab_->update_map_parameters(map, p);
 }
 
-void Plugin_SurfaceRender::selected_map_changed(MapHandlerGen*, MapHandlerGen*)
+void Plugin_SurfaceRender::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
-	dock_tab_->update_map_parameters();
+	View* view = schnapps_->get_selected_view();
+	const MapParameters& p = get_parameters(view, cur);
+	dock_tab_->update_map_parameters(cur, p);
 }
 
 void Plugin_SurfaceRender::map_added(MapHandlerGen *map)
@@ -88,9 +159,6 @@ void Plugin_SurfaceRender::map_removed(MapHandlerGen *map)
 	disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
 	disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
 	disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
-
-	if(map == schnapps_->get_selected_map())
-		dock_tab_->update_map_parameters();
 }
 
 void Plugin_SurfaceRender::schnapps_closing()
@@ -159,11 +227,14 @@ void Plugin_SurfaceRender::bb_changed()
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
-	QList<View*> views = map->get_linked_views();
-	foreach(View* v, views)
+	const QList<View*>& views = map->get_linked_views();
+	foreach(View* view, views)
 	{
-		if (parameter_set_.contains(v))
-			parameter_set_[v][map].basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+		if (parameter_set_.contains(view))
+		{
+			MapParameters& p = get_parameters(view, map);
+			p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+		}
 	}
 }
 
