@@ -32,8 +32,7 @@
 #include <QPainter>
 #include <QList>
 
-//#include "Utils/textures.h"
-//#include "Utils/Shaders/shaderWallPaper.h"
+#include <cgogn/rendering/wall_paper.h>
 
 namespace schnapps
 {
@@ -55,13 +54,14 @@ public:
 	QSize get_size();
 
 	void click(int x, int y, int globalX, int globalY);
-//	void draw_at(int x, int y, Utils::ShaderWallPaper* shader);
+	void draw_at(int x, int y);
 
 protected:
 
 	QString img_;
 	View* view_;
-//	Utils::Texture<2, Geom::Vec3uc>* texture_;
+	cgogn::rendering::WallPaper* wall_paper_;
+	cgogn::rendering::WallPaper::Renderer* wall_paper_renderer_;
 
 signals:
 
@@ -93,7 +93,6 @@ protected:
 	View* view_;
 	QRect form_;
 	QList<ViewButton*> buttons_;
-//	Utils::ShaderWallPaper* shader_button_;
 };
 
 } // namespace schnapps

@@ -21,6 +21,20 @@
 *                                                                              *
 *******************************************************************************/
 
+#include <schnapps/core/schnapps.h>
+
+#include <schnapps/core/camera.h>
+#include <schnapps/core/view.h>
+#include <schnapps/core/plugin.h>
+#include <schnapps/core/plugin_interaction.h>
+#include <schnapps/core/map_handler.h>
+
+#include <schnapps/core/control_dock_camera_tab.h>
+#include <schnapps/core/control_dock_plugin_tab.h>
+#include <schnapps/core/control_dock_map_tab.h>
+
+#include <schnapps/core/schnapps_window.h>
+
 #include <QVBoxLayout>
 #include <QSplitter>
 #include <QMessageBox>
@@ -35,68 +49,37 @@
 #include <QWheelEvent>
 #include <QFile>
 #include <QByteArray>
-
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/camera.h>
-#include <schnapps/core/view.h>
-#include <schnapps/core/plugin.h>
-#include <schnapps/core/plugin_interaction.h>
-#include <schnapps/core/map_handler.h>
+#include <QAction>
 
 namespace schnapps
 {
 
-SCHNApps::SCHNApps(const QString& app_path) :
-	QMainWindow(),
+SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	app_path_(app_path),
-	first_view_(NULL),
-	selected_view_(NULL)
+	first_view_(nullptr),
+	selected_view_(nullptr),
+	window_(window)
 {
-	this->setupUi(this);
-
 	// create & setup control dock
 
-	control_dock_ = new QDockWidget("Control Dock", this);
-	control_dock_->setAllowedAreas(Qt::LeftDockWidgetArea);
-	control_dock_->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-	control_dock_->setMaximumWidth(250);
-
-	control_dock_tab_widget_ = new QTabWidget(control_dock_);
-	control_dock_tab_widget_->setObjectName("ControlDockTabWidget");
-	control_dock_tab_widget_->setLayoutDirection(Qt::LeftToRight);
-	control_dock_tab_widget_->setTabPosition(QTabWidget::North);
-	control_dock_tab_widget_->setMovable(true);
-
-	addDockWidget(Qt::LeftDockWidgetArea, control_dock_);
-	control_dock_->setVisible(true);
-	control_dock_->setWidget(control_dock_tab_widget_);
-
-	// control_camera_tab_ = new ControlDock_CameraTab(this);
-	// control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
-	// control_map_tab_ = new ControlDock_MapTab(this);
-	// control_dock_tab_widget_->addTab(control_map_tab_, control_map_tab_->title());
-	// control_plugin_tab_ = new ControlDock_PluginTab(this);
-	// control_dock_tab_widget_->addTab(control_plugin_tab_, control_plugin_tab_->title());
-
-	connect(action_ToggleControlDock, SIGNAL(triggered()), this, SLOT(toggle_control_dock()));
+	control_camera_tab_ = new ControlDock_CameraTab(this);
+	window_->control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
+	control_plugin_tab_ = new ControlDock_PluginTab(this);
+	window_->control_dock_tab_widget_->addTab(control_plugin_tab_, control_plugin_tab_->title());
+	control_map_tab_ = new ControlDock_MapTab(this);
+	window_->control_dock_tab_widget_->addTab(control_map_tab_, control_map_tab_->title());
 
 	// create & setup central widget (views)
-	
-	central_layout_ = new QVBoxLayout(centralwidget);
-	central_layout_->setMargin(2);
 
-	root_splitter_ = new QSplitter(centralwidget);
+	root_splitter_ = new QSplitter(window_->centralwidget);
 	root_splitter_initialized_ = false;
-	central_layout_->addWidget(root_splitter_);
+	window_->central_layout_->addWidget(root_splitter_);
 
 	first_view_ = add_view();
 	set_selected_view(first_view_);
 	root_splitter_->addWidget(first_view_);
 
-	// connect basic actions
-
-	connect(action_AboutSCHNApps, SIGNAL(triggered()), this, SLOT(about_SCHNApps()));
-	connect(action_AboutCGoGN, SIGNAL(triggered()), this, SLOT(about_CGoGN()));
+	register_plugins_directory(app_path + QString("/../lib"));
 }
 
 SCHNApps::~SCHNApps()
@@ -109,7 +92,7 @@ SCHNApps::~SCHNApps()
 Camera* SCHNApps::add_camera(const QString& name)
 {
 	if (cameras_.contains(name))
-		return NULL;
+		return nullptr;
 
 	Camera* camera = new Camera(name, this);
 	cameras_.insert(name, camera);
@@ -138,7 +121,7 @@ Camera* SCHNApps::get_camera(const QString& name) const
 	if (cameras_.contains(name))
 		return cameras_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
 /*********************************************************
@@ -159,9 +142,9 @@ void SCHNApps::register_plugins_directory(const QString& path)
 	if (directory.exists())
 	{
 		QStringList filters;
-		filters << "lib*.so";
-		filters << "lib*.dylib";
-		filters << "*.dll";
+		filters << "lib*plugin*.so";
+		filters << "lib*plugin*.dylib";
+		filters << "*plugin*.dll";
 
 		QStringList plugin_files = directory.entryList(filters, QDir::Files);
 
@@ -193,6 +176,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 	{
 		QString plugin_file_path = available_plugins_[plugin_name];
 
+		std::cout << plugin_file_path.toStdString() << std::endl;
 		QPluginLoader loader(plugin_file_path);
 
 		// if the loader loads a plugin instance
@@ -211,28 +195,27 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				// if it succeeded we reference this plugin
 				plugins_.insert(plugin_name, plugin);
 
-				statusbar->showMessage(plugin_name + QString(" successfully loaded."), 2000);
+				status_bar_message(plugin_name + QString(" successfully loaded."), 2000);
 				emit(plugin_enabled(plugin));
 //				menubar->repaint();
-				// method success
 				return plugin;
 			}
 			else
 			{
 				delete plugin;
-				return NULL;
+				return nullptr;
 			}
 		}
 		// if loading fails
 		else
 		{
 			std::cout << "loader.instance() failed.." << std::endl;
-			return NULL;
+			return nullptr;
 		}
 	}
 	else
 	{
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -254,17 +237,17 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		plugin->disable();
 		plugins_.remove(plugin_name);
 
-//		// remove plugin dock tabs
-//		foreach (QWidget* tab, plugin_tabs_[plugin])
-//			remove_plugin_dock_tab(plugin, tab);
-//		// remove plugin menu actions
-//		foreach (QAction* action, plugin_menu_actions_[plugin])
-//			remove_menu_action(plugin, action);
+		// remove plugin dock tabs
+		foreach (QWidget* tab, plugin_dock_tabs_[plugin])
+			remove_plugin_dock_tab(plugin, tab);
+		// remove plugin menu actions
+		foreach (QAction* action, plugin_menu_actions_[plugin])
+			remove_menu_action(plugin, action);
 
 		QPluginLoader loader(plugin->get_file_path());
 		loader.unload();
 
-		statusbar->showMessage(plugin_name + QString(" successfully unloaded."), 2000);
+		status_bar_message(plugin_name + QString(" successfully unloaded."), 2000);
 		emit(plugin_disabled(plugin));
 
 		delete plugin;
@@ -276,61 +259,60 @@ Plugin* SCHNApps::get_plugin(const QString& name) const
 	if (plugins_.contains(name))
 		return plugins_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
-//void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tabWidget, const QString& tabText)
-//{
-//	if(tabWidget && !m_pluginTabs[plugin].contains(tabWidget))
-//	{
-//		int currentTab = m_pluginDockTabWidget->currentIndex();
+void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text)
+{
+	if(plugin && tab_widget && !plugin_dock_tabs_[plugin].contains(tab_widget))
+	{
+		int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
 
-//		int idx = m_pluginDockTabWidget->addTab(tabWidget, tabText);
-//		m_pluginDock->setVisible(true);
+		int idx = window_->plugin_dock_tab_widget_->addTab(tab_widget, tab_text);
+		window_->plugin_dock_->setVisible(true);
 
-//		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin);
-//		if(pi)
-//		{
-//			if(pi->isLinkedToView(m_selectedView))
-//				m_pluginDockTabWidget->setTabEnabled(idx, true);
-//			else
-//				m_pluginDockTabWidget->setTabEnabled(idx, false);
-//		}
+		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin);
+		if (pi)
+		{
+			if(pi->is_linked_to_view(selected_view_))
+				window_->plugin_dock_tab_widget_->setTabEnabled(idx, true);
+			else
+				window_->plugin_dock_tab_widget_->setTabEnabled(idx, false);
+		}
 
-//		if(currentTab != -1)
-//			m_pluginDockTabWidget->setCurrentIndex(currentTab);
+		if (current_tab != -1)
+			window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
 
-//		m_pluginTabs[plugin].append(tabWidget);
-//	}
-//}
+		plugin_dock_tabs_[plugin].append(tab_widget);
+	}
+}
 
-//void SCHNApps::remove_plugin_dock_tab(Plugin* plugin, QWidget *tabWidget)
-//{
-//	if(tabWidget && m_pluginTabs[plugin].contains(tabWidget))
-//	{
-//		m_pluginDockTabWidget->removeTab(m_pluginDockTabWidget->indexOf(tabWidget));
+void SCHNApps::remove_plugin_dock_tab(Plugin* plugin, QWidget *tab_widget)
+{
+	if(plugin && tab_widget && plugin_dock_tabs_[plugin].contains(tab_widget))
+	{
+		window_->plugin_dock_tab_widget_->removeTab(window_->plugin_dock_tab_widget_->indexOf(tab_widget));
+		plugin_dock_tabs_[plugin].removeOne(tab_widget);
+	}
+}
 
-//		m_pluginTabs[plugin].removeOne(tabWidget);
-//	}
-//}
+void SCHNApps::enable_plugin_tab_widgets(PluginInteraction* plugin)
+{
+	if(plugin_dock_tabs_.contains(plugin))
+	{
+		foreach (QWidget* w, plugin_dock_tabs_[plugin])
+			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(w), true);
+	}
+}
 
-//void SCHNApps::enable_plugin_tab_widgets(PluginInteraction* plugin)
-//{
-//	if(m_pluginTabs.contains(plugin))
-//	{
-//		foreach (QWidget* w, m_pluginTabs[plugin])
-//			m_pluginDockTabWidget->setTabEnabled(m_pluginDockTabWidget->indexOf(w), true);
-//	}
-//}
-
-//void SCHNApps::disable_plugin_tab_widgets(PluginInteraction* plugin)
-//{
-//	if(m_pluginTabs.contains(plugin))
-//	{
-//		foreach (QWidget* w, m_pluginTabs[plugin])
-//			m_pluginDockTabWidget->setTabEnabled(m_pluginDockTabWidget->indexOf(w), false);
-//	}
-//}
+void SCHNApps::disable_plugin_tab_widgets(PluginInteraction* plugin)
+{
+	if(plugin_dock_tabs_.contains(plugin))
+	{
+		foreach (QWidget* w, plugin_dock_tabs_[plugin])
+			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(w), false);
+	}
+}
 
 /*********************************************************
  * MANAGE MAPS
@@ -349,7 +331,7 @@ MapHandlerGen* SCHNApps::add_map(const QString &name, unsigned int dimension)
 		} while (maps_.contains(final_name));
 	}
 
-	MapHandlerGen* mh = NULL;
+	MapHandlerGen* mh = nullptr;
 	switch(dimension)
 	{
 		case 2 : {
@@ -381,10 +363,6 @@ void SCHNApps::remove_map(const QString &name)
 		maps_.remove(name);
 		emit(map_removed(map));
 
-		// unselect map if it is removed
-		if (this->get_selected_map() == map)
-			set_selected_map(QString("NONE"));
-
 		delete map;
 	}
 }
@@ -394,18 +372,17 @@ MapHandlerGen* SCHNApps::get_map(const QString& name) const
 	if (maps_.contains(name))
 		return maps_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
 MapHandlerGen* SCHNApps::get_selected_map() const
 {
-//	return control_map_tab_->get_selected_map();
-	return NULL;
+	return control_map_tab_->get_selected_map();
 }
 
 void SCHNApps::set_selected_map(const QString& name)
 {
-//	control_map_tab_->set_selected_map(name);
+	control_map_tab_->set_selected_map(name);
 }
 
 /*********************************************************
@@ -415,7 +392,7 @@ void SCHNApps::set_selected_map(const QString& name)
 View* SCHNApps::add_view(const QString& name)
 {
 	if (views_.contains(name))
-		return NULL;
+		return nullptr;
 
 	View* view = new View(name, this);
 	views_.insert(name, view);
@@ -464,32 +441,32 @@ View* SCHNApps::get_view(const QString& name) const
 	if (views_.contains(name))
 		return views_[name];
 	else
-		return NULL;
+		return nullptr;
 }
 
 void SCHNApps::set_selected_view(View* view)
 {
-//	int current_tab = plugin_dock_tab_widget_->currentIndex();
+	int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
 
-//	if(selected_view_)
-//	{
-//		foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
-//			disable_plugin_tab_widgets(p);
-//		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-//		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
-//	}
+	if(selected_view_)
+	{
+		foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
+			disable_plugin_tab_widgets(p);
+		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
+		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
+	}
 
 	View* old_selected = selected_view_;
 	selected_view_ = view;
 	if (old_selected)
 		old_selected->hide_dialogs();
 
-//	foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
-//		enable_plugin_tab_widgets(p);
-//	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-//	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
+	foreach (PluginInteraction* p, selected_view_->get_linked_plugins())
+		enable_plugin_tab_widgets(p);
+	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
+	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
 
-//	plugin_dock_tab_widget_->setCurrentIndex(current_tab);
+	window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
 
 	emit(selected_view_changed(old_selected, selected_view_));
 
@@ -532,7 +509,7 @@ View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 	else
 	{
 		int idx = parent->indexOf(view);
-		view->setParent(NULL);
+		view->setParent(nullptr);
 		QSplitter* spl = new QSplitter(orientation);
 		spl->addWidget(view);
 		spl->addWidget(new_view);
@@ -562,7 +539,7 @@ QString SCHNApps::get_split_view_positions()
 		{
 			QWidget* w = spl->widget(i);
 			QSplitter* qw = dynamic_cast<QSplitter*>(w);
-			if (qw != NULL)
+			if (qw != nullptr)
 				liste.push_back(qw);
 		}
 		QByteArray ba = spl->saveState();
@@ -587,7 +564,7 @@ void SCHNApps::set_split_view_positions(QString positions)
 		{
 			QWidget *w = spl->widget(i);
 			QSplitter* qw = dynamic_cast<QSplitter*>(w);
-			if (qw != NULL)
+			if (qw != nullptr)
 				liste.push_back(qw);
 		}
 		if (qts.atEnd())
@@ -610,39 +587,130 @@ void SCHNApps::set_split_view_positions(QString positions)
 	}
 }
 
+/*********************************************************
+ * MANAGE MENU ACTIONS
+ *********************************************************/
 
-
-void SCHNApps::about_SCHNApps()
+void SCHNApps::add_menu_action(Plugin* plugin, const QString& menu_path, QAction* action)
 {
-	QString str("SCHNApps:\nS... CGoGN Holder for Nice Applications\n"
-	            "Web site: http://cgogn.unistra.fr \n"
-	            "Contact information: cgogn@unistra.fr");
-	QMessageBox::about(this, "About SCHNApps", str);
+	if(action && !menu_path.isEmpty() && !plugin_menu_actions_[plugin].contains(action))
+	{
+		// extracting all the substring separated by ';'
+		QStringList step_names = menu_path.split(";");
+		step_names.removeAll("");
+		unsigned int nb_steps = step_names.count();
+
+		// if only one substring: error + failure
+		// No action directly in the menu bar
+		if (nb_steps >= 1)
+		{
+			unsigned int i = 0;
+			QMenu* last_menu = nullptr;
+			foreach(QString step, step_names)
+			{
+				++i;
+				if (i < nb_steps) // if not last substring (= menu)
+				{
+					// try to find an existing sub_menu with step name
+					bool found = false;
+					QList<QAction*> actions;
+					if(i == 1) actions = window_->menubar->actions();
+					else actions = last_menu->actions();
+					foreach(QAction* action, actions)
+					{
+						QMenu* sub_menu = action->menu();
+						if (sub_menu && sub_menu->title() == step)
+						{
+							last_menu = sub_menu;
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+					{
+						QMenu* new_menu;
+						if(i == 1)
+						{
+							new_menu = window_->menubar->addMenu(step);
+							new_menu->setParent(window_->menubar);
+						}
+						else
+						{
+							new_menu = last_menu->addMenu(step);
+							new_menu->setParent(last_menu);
+						}
+						last_menu = new_menu;
+					}
+				}
+				else // if last substring (= action name)
+				{
+					last_menu->addAction(action);
+					action->setText(step);
+					action->setParent(last_menu);
+				}
+			}
+		}
+
+		// just to update the menu in buggy Qt5 on macOS
+//		#if (defined CGOGN_APPLE) && ((QT_VERSION>>16) == 5)
+//		QMenu* fakemenu = window_->menubar->addMenu("X");
+//		delete fakemenu;
+//		#endif
+
+		plugin_menu_actions_[plugin].append(action);
+	}
 }
 
-void SCHNApps::about_CGoGN()
+void SCHNApps::remove_menu_action(Plugin* plugin, QAction* action)
 {
-	QString str("CGoGN:\nCombinatorial and Geometric modeling\n"
-	            "with Generic N-dimensional Maps\n"
-	            "Web site: http://cgogn.unistra.fr \n"
-	            "Contact information: cgogn@unistra.fr");
-	QMessageBox::about(this, "About CGoGN", str);
+	if(action)
+	{
+		action->setEnabled(false);
+
+		plugin_menu_actions_[plugin].removeOne(action);
+
+		// parent of the action
+		// which is an instance of QMenu if the action was created
+		// using the add_menu_action() method
+		QObject* parent = action->parent();
+		delete action;
+
+		while(parent != nullptr)
+		{
+			QMenu* parent_menu = dynamic_cast<QMenu*>(parent);
+			if(parent_menu && parent_menu->actions().empty())
+			{
+				parent = parent->parent();
+				delete parent_menu;
+			}
+			else
+				parent = nullptr;
+		}
+	}
 }
 
-void SCHNApps::toggle_control_dock()
+/*********************************************************
+ * MANAGE WINDOW
+ *********************************************************/
+
+void SCHNApps::close_window()
 {
-	control_dock_->setVisible(control_dock_->isHidden());
+	window_->close();
 }
 
-void SCHNApps::closeEvent(QCloseEvent *event)
+void SCHNApps::schnapps_window_closing()
 {
 	emit(schnapps_closing());
-	QMainWindow::closeEvent(event);
 }
 
 void SCHNApps::status_bar_message(const QString& msg, int msec)
 {
-	statusbar->showMessage(msg, msec);
+	window_->statusbar->showMessage(msg, msec);
+}
+
+void SCHNApps::set_window_size(int w, int h)
+{
+	window_->resize(w, h);
 }
 
 } // namespace schnapps

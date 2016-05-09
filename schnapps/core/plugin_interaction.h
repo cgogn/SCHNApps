@@ -45,11 +45,9 @@ class SCHNAPPS_CORE_API PluginInteraction : public Plugin
 
 public:
 
-	PluginInteraction()
-	{}
+	inline PluginInteraction() {}
 
-	~PluginInteraction() override
-	{}
+	~PluginInteraction() {}
 
 public slots:
 
@@ -57,7 +55,7 @@ public slots:
 	 * @brief get the list of views linked to the plugin
 	 * @return the list
 	 */
-	const QList<View*>& get_linked_views() const
+	inline const QList<View*>& get_linked_views() const
 	{ return views_; }
 
 	/**
@@ -65,7 +63,7 @@ public slots:
 	 * @param view
 	 * @return
 	 */
-	bool is_linked_to_view(View* view) const
+	inline bool is_linked_to_view(View* view) const
 	{ return views_.contains(view); }
 
 	/**
@@ -77,8 +75,8 @@ public slots:
 
 private:
 
-	virtual void draw(View* view) = 0;
-	virtual void draw_map(View* view, MapHandlerGen* map) = 0;
+	virtual void draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
+	virtual void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
 
 	virtual void keyPress(View* view, QKeyEvent* event) = 0;
 	virtual void keyRelease(View* view, QKeyEvent* event) = 0;

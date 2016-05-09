@@ -40,7 +40,7 @@ class SCHNAPPS_CORE_API ViewDialogList : public QDialog
 
 public:
 
-	ViewDialogList(const QString& name, QWidget* parent = NULL);
+	ViewDialogList(const QString& name, QWidget* parent = nullptr);
 	virtual ~ViewDialogList();
 
 	virtual void show();

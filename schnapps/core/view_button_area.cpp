@@ -35,20 +35,18 @@ namespace schnapps
 
 ViewButton::ViewButton(const QString& image, View* view) :
 	img_(image),
-	view_(view)
+	view_(view),
+	wall_paper_(nullptr),
+	wall_paper_renderer_(nullptr)
 {
-//	texture_ = new Utils::Texture<2, Geom::Vec3uc>(GL_UNSIGNED_BYTE);
-
-//	if (!texture_->load(img_.toStdString()))
-//		std::cerr << "Problem loading icon "<< img_.toStdString() << std::endl;
-
-//	texture_->update();
-//	texture_->setWrapping(GL_CLAMP_TO_EDGE);
+	wall_paper_ = new cgogn::rendering::WallPaper(QImage(image));
+	wall_paper_renderer_ = wall_paper_->generate_renderer();
 }
 
 ViewButton::~ViewButton()
 {
-//	view_->get_schnapps()->release_texture(img_);
+	delete wall_paper_renderer_;
+	delete wall_paper_;
 }
 
 void ViewButton::click(int x, int y, int globalX, int globalY)
@@ -56,26 +54,22 @@ void ViewButton::click(int x, int y, int globalX, int globalY)
 	emit(clicked(x, y, globalX, globalY));
 }
 
-//void ViewButton::draw_at(int x, int y, Utils::ShaderWallPaper* shader)
-//{
-//	QSize szw = view_->size();
-//	shader->drawFront(szw.width(), szw.height(), x, y, ViewButton::SIZE, ViewButton::SIZE, texture_);
-//}
+void ViewButton::draw_at(int x, int y)
+{
+	QSize szw = view_->size();
+	wall_paper_->set_local_position(float(x) / szw.width(), float(y) / szw.height(), float(ViewButton::SIZE)  / szw.width(), float(ViewButton::SIZE) / szw.height());
+	wall_paper_renderer_->draw(view_);
+}
 
 
 
 ViewButtonArea::ViewButtonArea(View* view) :
 	view_(view),
 	form_(0,0,0,0)
-{
-//	shader_button_ = new CGoGN::Utils::ShaderWallPaper();
-//	shader_button_->set_texture_unit(GL_TEXTURE0);
-}
+{}
 
 ViewButtonArea::~ViewButtonArea()
-{
-//	delete shader_button_;
-}
+{}
 
 void ViewButtonArea::add_button(ViewButton* button)
 {
@@ -136,7 +130,7 @@ void ViewButtonArea::draw()
 
 	foreach (ViewButton* b, buttons_)
 	{
-//		b->draw_at(p_x, p_y + ViewButton::SPACE, shader_button_);
+		b->draw_at(p_x, p_y + ViewButton::SPACE);
 		p_x += ViewButton::SIZE + ViewButton::SPACE;
 	}
 }
