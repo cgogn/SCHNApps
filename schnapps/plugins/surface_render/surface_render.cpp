@@ -43,7 +43,7 @@ bool Plugin_SurfaceRender::enable()
 //	GenericMap::copyAllStatics(m_schnapps->getStaticPointers());
 
 	dock_tab_ = new SurfaceRender_DockTab(this->schnapps_, this);
-	schnapps_->add_plugin_dock_tab(this, dock_tab_, "SurfaceRender");
+	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render");
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
@@ -129,6 +129,16 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 			p.shader_simple_color_param_->bind(proj, mv);
 			map->draw(cgogn::rendering::LINES);
 			p.shader_simple_color_param_->release();
+		}
+	}
+
+	if (p.render_vertices_)
+	{
+		if (p.get_position_vbo())
+		{
+			p.shader_point_sprite_param_->bind(proj, mv);
+			map->draw(cgogn::rendering::POINTS);
+			p.shader_point_sprite_param_->release();
 		}
 	}
 }
@@ -233,7 +243,7 @@ void Plugin_SurfaceRender::bb_changed()
 		if (parameter_set_.contains(view))
 		{
 			MapParameters& p = get_parameters(view, map);
-			p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
 		}
 	}
 }

@@ -32,6 +32,7 @@
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_phong.h>
+#include <cgogn/rendering/shaders/shader_point_sprite.h>
 
 #include <QAction>
 
@@ -54,8 +55,8 @@ struct MapParameters
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
 		color_vbo_(nullptr),
-		verticesScaleFactor(1.0f),
-		basePSradius(1.0f),
+		vertex_scale_factor_(1.0f),
+		vertex_base_size_(1.0f),
 		render_vertices_(false),
 		render_edges_(false),
 		render_faces_(true),
@@ -83,6 +84,10 @@ struct MapParameters
 
 		shader_phong_color_param_ = cgogn::rendering::ShaderPhongColor::generate_param();
 		shader_phong_color_param_->double_side_ = render_back_faces_;
+
+		shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
+		shader_point_sprite_param_->color_ = vertex_color_;
+		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
@@ -96,6 +101,7 @@ struct MapParameters
 			shader_simple_color_param_->set_position_vbo(position_vbo_);
 			shader_phong_param_->set_position_vbo(position_vbo_);
 			shader_phong_color_param_->set_position_vbo(position_vbo_);
+			shader_point_sprite_param_->set_position_vbo(position_vbo_);
 		}
 	}
 
@@ -125,6 +131,7 @@ struct MapParameters
 	void set_vertex_color(const QColor& c)
 	{
 		vertex_color_ = c;
+		shader_point_sprite_param_->color_ = vertex_color_;
 	}
 
 	const QColor& get_edge_color() const { return edge_color_; }
@@ -139,6 +146,7 @@ struct MapParameters
 	{
 		front_color_ = c;
 		shader_flat_param_->front_color_ = front_color_;
+		shader_phong_param_->front_color_ = front_color_;
 	}
 
 	const QColor& get_back_color() const { return back_color_; }
@@ -146,13 +154,29 @@ struct MapParameters
 	{
 		back_color_ = c;
 		shader_flat_param_->back_color_ = back_color_;
+		shader_phong_param_->back_color_ = back_color_;
 	}
 
+	bool get_render_back_face() const { return render_back_faces_; }
 	void set_render_back_face(bool b)
 	{
 		render_back_faces_ = b;
 		shader_phong_param_->double_side_ = b;
 		shader_phong_color_param_->double_side_ = b;
+	}
+
+	float32 get_vertex_base_size() const { return vertex_base_size_; }
+	void set_vertex_base_size(float32 bs)
+	{
+		vertex_base_size_ = bs;
+		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+	}
+
+	float32 get_vertex_scale_factor() const { return vertex_scale_factor_; }
+	void set_vertex_scale_factor(float32 sf)
+	{
+		vertex_scale_factor_ = sf;
+		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
 private:
@@ -166,6 +190,11 @@ private:
 	QColor front_color_;
 	QColor back_color_;
 
+	bool render_back_faces_;
+
+	float32 vertex_scale_factor_;
+	float32 vertex_base_size_;
+
 public:
 
 	cgogn::rendering::ShaderFlat::Param* shader_flat_param_;
@@ -173,15 +202,11 @@ public:
 	cgogn::rendering::ShaderSimpleColor::Param* shader_simple_color_param_;
 	cgogn::rendering::ShaderPhong::Param* shader_phong_param_;
 	cgogn::rendering::ShaderPhongColor::Param* shader_phong_color_param_;
-
-	float verticesScaleFactor;
-	float basePSradius;
+	cgogn::rendering::ShaderPointSprite::Param* shader_point_sprite_param_;
 
 	bool render_vertices_;
 	bool render_edges_;
 	bool render_faces_;
-
-	bool render_back_faces_;
 	bool render_boundary_;
 
 	FaceShadingStyle face_style_;
@@ -246,8 +271,6 @@ private:
 
 	SurfaceRender_DockTab* dock_tab_;
 	QHash<View*, QHash<MapHandlerGen*, MapParameters>> parameter_set_;
-
-	cgogn::rendering::ShaderFlat* shader_flat_;
 };
 
 } // namespace schnapps

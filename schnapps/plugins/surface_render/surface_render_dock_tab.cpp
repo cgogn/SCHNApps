@@ -73,7 +73,7 @@ void SurfaceRender_DockTab::position_vbo_changed(int index)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
 			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
 			view->update();
 		}
@@ -121,7 +121,7 @@ void SurfaceRender_DockTab::render_vertices_changed(bool b)
 			MapParameters& p = plugin_->get_parameters(view, map);
 
 			if (b)
-				p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+				p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
 
 			p.render_vertices_ = b;
 			view->update();
@@ -138,7 +138,7 @@ void SurfaceRender_DockTab::vertices_scale_factor_pressed()
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.basePSradius = map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges()));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
 			view->update();
 		}
 	}
@@ -153,7 +153,7 @@ void SurfaceRender_DockTab::vertices_scale_factor_changed(int i)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.verticesScaleFactor = i / 50.0;
+			p.set_vertex_scale_factor(i / 50.0);
 			view->update();
 		}
 	}
@@ -437,10 +437,10 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 	}
 
 	check_renderVertices->setChecked(p.render_vertices_);
-	slider_verticesScaleFactor->setSliderPosition(p.verticesScaleFactor * 50.0);
+	slider_verticesScaleFactor->setSliderPosition(p.get_vertex_scale_factor() * 50.0);
 	check_renderEdges->setChecked(p.render_edges_);
 	check_renderFaces->setChecked(p.render_faces_);
-	check_doubleSided->setChecked(p.render_back_faces_);
+	check_doubleSided->setChecked(p.get_render_back_face());
 	radio_flatShading->setChecked(p.face_style_ == MapParameters::FLAT);
 	radio_phongShading->setChecked(p.face_style_ == MapParameters::PHONG);
 	check_renderBoundary->setChecked(p.render_boundary_);
