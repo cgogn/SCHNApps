@@ -27,8 +27,6 @@
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/map_handler.h>
 
-#include <cgogn/rendering/drawer.h>
-
 #include <QMatrix4x4>
 #include <QKeyEvent>
 #include <QMouseEvent>
@@ -46,22 +44,22 @@ unsigned int View::view_count_ = 0;
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
 	schnapps_(s),
-	current_camera_(NULL),
+	current_camera_(nullptr),
 	bb_min_(0.0, 0.0, 0.0),
 	bb_max_(0.0, 0.0, 0.0),
-	button_area_(NULL),
-	close_button_(NULL),
-	Vsplit_button_(NULL),
-	Hsplit_button_(NULL),
-	button_area_left_(NULL),
-	maps_button_(NULL),
-	plugins_button_(NULL),
-	cameras_button_(NULL),
-	dialog_maps_(NULL),
-	dialog_plugins_(NULL),
-	dialog_cameras_(NULL),
-	drawer_(NULL),
-	frame_drawer_(NULL),
+	button_area_(nullptr),
+	close_button_(nullptr),
+	Vsplit_button_(nullptr),
+	Hsplit_button_(nullptr),
+	button_area_left_(nullptr),
+	maps_button_(nullptr),
+	plugins_button_(nullptr),
+	cameras_button_(nullptr),
+	dialog_maps_(nullptr),
+	dialog_plugins_(nullptr),
+	dialog_cameras_(nullptr),
+	frame_drawer_(nullptr),
+	frame_drawer_renderer_(nullptr),
 	save_snapshots_(false),
 	updating_ui_(false)
 {
@@ -170,7 +168,6 @@ void View::set_current_camera(Camera* c)
 			}
 		}
 
-		current_camera_->fit_to_views_bounding_box();
 		this->update();
 	}
 }
@@ -259,16 +256,18 @@ void View::link_map(MapHandlerGen* map)
 		emit(map_linked(map));
 
 		connect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
-		connect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
+		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-//		if(map->is_selected_map())
-//			this->setManipulatedFrame(map->get_frame());
+		if(map->is_selected_map())
+			this->setManipulatedFrame(&map->get_frame());
 
-		update_bounding_box();
+		update_bb();
 
 		updating_ui_ = true;
 		dialog_maps_->check(map->get_name(), Qt::Checked);
 		updating_ui_ = false;
+
+		this->update();
 	}
 }
 
@@ -288,16 +287,18 @@ void View::unlink_map(MapHandlerGen* map)
 		emit(map_unlinked(map));
 
 		disconnect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
-		disconnect(map, SIGNAL(bounding_box_modified()), this, SLOT(update_bounding_box()));
+		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-//		if(map->is_selected_map())
-//			this->setManipulatedFrame(NULL);
+		if(map->is_selected_map())
+			this->setManipulatedFrame(nullptr);
 
-		update_bounding_box();
+		update_bb();
 
 		updating_ui_ = true;
 		dialog_maps_->check(map->get_name(), Qt::Unchecked);
 		updating_ui_ = false;
+
+		this->update();
 	}
 }
 
@@ -316,6 +317,8 @@ bool View::is_linked_to_map(const QString& name) const
 
 
 
+
+
 void View::init()
 {
 	this->makeCurrent();
@@ -324,83 +327,19 @@ void View::init()
 	this->setCamera(current_camera_);
 //	delete c;
 
-	drawer_ = new cgogn::rendering::Drawer(this);
+	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
 
-//	this->setBackgroundColor(QColor(0, 0, 0));
-	glClearColor(0.1f, 0.1f, 0.3f, 0.0f);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-
-	drawer_->new_list();
-	drawer_->line_width(2.0);
-	drawer_->begin(GL_LINE_LOOP);
-		drawer_->color3f(1.0,0.0,0.0);
-		drawer_->vertex3f(0,0,0);
-		drawer_->color3f(0.0,1.0,1.0);
-		drawer_->vertex3f(1,0,0);
-		drawer_->color3f(1.0,0.0,1.0);
-		drawer_->vertex3f(1,1,0);
-		drawer_->color3f(1.0,1.0,0.0);
-		drawer_->vertex3f(0,1,0);
-	drawer_->end();
-//	drawer_->point_size(10.0);
-	drawer_->line_width_aa(3.0);
-	drawer_->begin(GL_LINES);
-		drawer_->color3f(1.0,1.0,1.0);
-		drawer_->vertex3fv(Vec3(-1,1,0));
-		drawer_->vertex3fv(Vec3(-1.2,0,0));
-		drawer_->vertex3fv(Vec3(-2,0,0));
-		drawer_->vertex3fv(Vec3(-2.2,3,0));
-	drawer_->end();
-
-	drawer_->begin(GL_TRIANGLES);
-		drawer_->color3f(1.0,0.0,0.0);
-		drawer_->vertex3fv({{2,2,0}});
-		drawer_->color3f(0.0,1.0,0.0);
-		drawer_->vertex3fv({{4,3,0}});
-		drawer_->color3f(0.0,0.0,1.0);
-		drawer_->vertex3fv({{2.5,1,0}});
-	drawer_->end();
-
-	drawer_->point_size_aa(7.0);
-	drawer_->begin(GL_POINTS);
-	for (float a=0.0f; a < 1.0f; a+= 0.1f)
-	{
-		Vec3 P(4.0+std::cos(6.28*a),-2.0+std::sin(6.28*a),0.0);
-		Vec3 C(a,0.5,1.0-a);
-		drawer_->color3fv(C);
-		drawer_->vertex3fv(P);
-	}
-	drawer_->end();
-
-	drawer_->ball_size(0.1f);
-	drawer_->begin(GL_POINTS);
-	for (float a=0.05f; a < 1.0f; a+= 0.1f)
-	{
-		Vec3 P(4.0+std::cos(6.28*a)*1.2,-2.0+ std::sin(6.28*a)*1.2, std::sin(6.28*a)*0.2 );
-		Vec3 C(a,0.5,1.0-a);
-		drawer_->color3fv(C);
-		drawer_->vertex3fv(P);
-	}
-
-	drawer_->end();
-	drawer_->end_list();
-
-	bb_min_.setValue(0, -5, 0);
-	bb_max_.setValue(5, 5, 2);
-	emit(bounding_box_changed());
-
-
-	frame_drawer_ = new cgogn::rendering::Drawer(this);
+	frame_drawer_ = new cgogn::rendering::DisplayListDrawer();
+	frame_drawer_renderer_ = frame_drawer_->generate_renderer();
 
 	frame_drawer_->new_list();
 	frame_drawer_->color3f(0.0f,1.0f,0.0f);
 	frame_drawer_->line_width(4.0f);
 	frame_drawer_->begin(GL_LINE_LOOP);
-	frame_drawer_->vertex3f(-1.0f,-1.0f, 0.0f);
-	frame_drawer_->vertex3f( 1.0f,-1.0f, 0.0f);
-	frame_drawer_->vertex3f( 1.0f, 1.0f, 0.0f);
-	frame_drawer_->vertex3f(-1.0f, 1.0f, 0.0f);
+		frame_drawer_->vertex3f(-1.0f,-1.0f, -1.0f);
+		frame_drawer_->vertex3f( 1.0f,-1.0f, 0.0f);
+		frame_drawer_->vertex3f( 1.0f, 1.0f, 0.0f);
+		frame_drawer_->vertex3f(-1.0f, 1.0f, 0.0f);
 	frame_drawer_->end();
 	frame_drawer_->end_list();
 
@@ -461,40 +400,27 @@ void View::draw()
 		}
 	}
 
-	QMatrix4x4 mm;
 	QMatrix4x4 pm;
-	current_camera_->getModelViewMatrix(mm);
 	current_camera_->getProjectionMatrix(pm);
+	QMatrix4x4 mm;
+	current_camera_->getModelViewMatrix(mm);
 
-	drawer_->call_list(pm, mm);
-
-//	MapHandlerGen* selected_map = schnapps_->get_selected_map();
+	MapHandlerGen* selected_map = schnapps_->get_selected_map();
 
 	foreach (MapHandlerGen* map, maps_)
 	{
-		QMatrix4x4 map_mm = mm; // * map->get_frame_matrix() * map->get_transfo_matrix();
+		QMatrix4x4 map_mm = mm * map->get_frame_matrix() * map->get_transformation_matrix();
 
-//		if(map == selected_map)
-//		{
-//			Utils::Drawer* bb_drawer = map->get_bb_drawer();
-//			if (bb_drawer)
-//				bb_drawer->update_matrices(pm, map_mm);
-//			map->draw_bb();
-//		}
+		if(map == selected_map && map->get_show_bb())
+			map->draw_bb(this, pm, map_mm);
 
 		foreach (PluginInteraction* plugin, plugins_)
-		{
-			foreach (cgogn::rendering::ShaderProgram* shader, plugin->get_shaders())
-				shader->set_matrices(pm, map_mm);
-			plugin->draw_map(this, map);
-		}
+			plugin->draw_map(this, map, pm, map_mm);
 	}
 
 	foreach (PluginInteraction* plugin, plugins_)
 	{
-		foreach (cgogn::rendering::ShaderProgram* shader, plugin->get_shaders())
-			shader->set_matrices(pm, mm);
-		plugin->draw(this);
+		plugin->draw(this, pm, mm);
 	}
 }
 
@@ -528,7 +454,7 @@ void View::draw_frame()
 {
 	glDisable(GL_DEPTH_TEST);
 	QMatrix4x4 pm, mm;
-	frame_drawer_->call_list(pm, mm);
+	frame_drawer_renderer_->draw(pm, mm, this);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -582,7 +508,7 @@ void View::keyPressEvent(QKeyEvent* event)
 				msg_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
 				msg_box.setDefaultButton(QMessageBox::Ok);
 				if (msg_box.exec() == QMessageBox::Ok)
-					schnapps_->close();
+					schnapps_->close_window();
 			}
 			else
 				QOGLViewer::keyPressEvent(event);
@@ -668,8 +594,8 @@ void View::close_dialogs()
 
 void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
 {
-//	if(cur && is_linked_to_map(cur))
-//		this->setManipulatedFrame(cur->getFrame());
+	if(cur && is_linked_to_map(cur))
+		this->setManipulatedFrame(&cur->get_frame());
 	this->update();
 }
 
@@ -740,7 +666,7 @@ void View::camera_check_state_changed(QListWidgetItem* item)
 	}
 }
 
-void View::update_bounding_box()
+void View::update_bb()
 {
 	if (!maps_.empty())
 	{
@@ -748,30 +674,30 @@ void View::update_bounding_box()
 
 		foreach (MapHandlerGen* mhg, maps_)
 		{
-//			qoglviewer::Vec minbb;
-//			qoglviewer::Vec maxbb;
-//			if (mhg->transformed_bb(minbb, maxbb))
-//			{
-//				if (initialized)
-//				{
-//					for (unsigned int dim = 0; dim < 3; ++dim)
-//					{
-//						if (minbb[dim] < bb_min_[dim])
-//							bb_min_[dim] = minbb[dim];
-//						if (maxbb[dim] > bb_max_[dim])
-//							bb_max_[dim] = maxbb[dim];
-//					}
-//				}
-//				else
-//				{
-//					for (unsigned int dim = 0; dim < 3; ++dim)
-//					{
-//						bb_min_[dim] = minbb[dim];
-//						bb_max_[dim] = maxbb[dim];
-//					}
-//					initialized = true;
-//				}
-//			}
+			qoglviewer::Vec minbb;
+			qoglviewer::Vec maxbb;
+			if (mhg->get_transformed_bb(minbb, maxbb))
+			{
+				if (initialized)
+				{
+					for (unsigned int dim = 0; dim < 3; ++dim)
+					{
+						if (minbb[dim] < bb_min_[dim])
+							bb_min_[dim] = minbb[dim];
+						if (maxbb[dim] > bb_max_[dim])
+							bb_max_[dim] = maxbb[dim];
+					}
+				}
+				else
+				{
+					for (unsigned int dim = 0; dim < 3; ++dim)
+					{
+						bb_min_[dim] = minbb[dim];
+						bb_max_[dim] = maxbb[dim];
+					}
+					initialized = true;
+				}
+			}
 		}
 
 		if (!initialized)
@@ -786,7 +712,7 @@ void View::update_bounding_box()
 		bb_max_.setValue(0, 0, 0);
 	}
 
-	emit(bounding_box_changed());
+	emit(bb_changed());
 }
 
 void View::ui_vertical_split_view(int, int, int, int)

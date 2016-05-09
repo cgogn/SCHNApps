@@ -21,76 +21,70 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_PLUGIN_H_
-#define SCHNAPPS_CORE_PLUGIN_H_
+#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
+#define SCHNAPPS_PLUGIN_IMPORT_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/plugin_processing.h>
 
-#include <QtPlugin>
+#include <QAction>
 
 namespace schnapps
 {
 
-class SCHNApps;
+class MapHandlerGen;
 
-class SCHNAPPS_CORE_API Plugin : public QObject
+/**
+* @brief Plugin for CGoGN mesh import
+*/
+class Plugin_Import : public PluginProcessing
 {
 	Q_OBJECT
-
-	friend class SCHNApps;
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
 
 public:
 
-	inline Plugin()	{}
-	virtual inline ~Plugin() {}
+	inline Plugin_Import() {}
 
-	inline const QString& get_name() const { return name_; }
+	~Plugin_Import() {}
+
+private:
+
+	bool enable() override;
+	inline void disable() override {}
 
 public slots:
 
 	/**
-	 * @brief get the name of Plugin object
-	 * @return name
+	 * @brief import a surface mesh from a file
+	 * @param filename file name of mesh file
+	 * @return a new MapHandlerGen that handles the mesh
 	 */
-	inline QString get_name() { return name_; }
+	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
 
 	/**
-	 * @brief get the file path to the plugin library file
-	 * @return file path
+	 * @brief import a surface mesh by opening a FileDialog
 	 */
-	inline QString get_file_path() { return file_path_; }
+	void import_surface_mesh_from_file_dialog();
 
-	/**
-	 * @brief get the schnapps objet ptr
-	 * @return the ptr
-	 */
-	inline SCHNApps* get_schnapps() const { return schnapps_; }
+//	/**
+//	 * @brief import a 2D image into a surface mesh from a file
+//	 * @param filename file name of mesh file
+//	 * @return a new MapHandlerGen that handles the mesh
+//	 */
+//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
+
+//	/**
+//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
+//	 */
+//	void import_2D_image_from_file_dialog();
 
 private:
 
-	inline void set_name(const QString& name) { name_ = name; }
-
-	inline void set_file_path(const QString& f) { file_path_ = f; }
-
-	inline void set_schnapps(SCHNApps* s) { schnapps_ = s; }
-
-	virtual bool enable() = 0;
-	virtual void disable() = 0;
-
-protected:
-
-	// plugin name
-	QString name_;
-
-	// file path to the plugin library file
-	QString file_path_;
-
-	// pointer to schnapps object
-	SCHNApps* schnapps_;
+	QAction* import_surface_mesh_action;
+//	QAction* import_2D_image_action;
 };
 
 } // namespace schnapps
 
-Q_DECLARE_INTERFACE(schnapps::Plugin, "SCHNApps.Plugin")
-
-#endif // SCHNAPPS_CORE_PLUGIN_H_
+#endif // SCHNAPPS_PLUGIN_IMPORT_H_

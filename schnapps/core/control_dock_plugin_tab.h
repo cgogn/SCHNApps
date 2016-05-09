@@ -21,76 +21,49 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_PLUGIN_H_
-#define SCHNAPPS_CORE_PLUGIN_H_
+#ifndef SCHNAPPS_CORE_CONTROL_DOCK_PLUGIN_TAB_H_
+#define SCHNAPPS_CORE_CONTROL_DOCK_PLUGIN_TAB_H_
 
 #include <schnapps/core/dll.h>
 
-#include <QtPlugin>
+#include <ui_control_dock_plugin_tab_widget.h>
+
+#include <QWidget>
+#include <QString>
 
 namespace schnapps
 {
 
 class SCHNApps;
+class Plugin;
 
-class SCHNAPPS_CORE_API Plugin : public QObject
+class SCHNAPPS_CORE_API ControlDock_PluginTab : public QWidget, public Ui::ControlDock_PluginTabWidget
 {
 	Q_OBJECT
 
-	friend class SCHNApps;
-
 public:
 
-	inline Plugin()	{}
-	virtual inline ~Plugin() {}
+	ControlDock_PluginTab(SCHNApps* s);
+	QString title() { return QString("Plugins"); }
 
-	inline const QString& get_name() const { return name_; }
+private slots:
 
-public slots:
+	// slots called from UI actions
+	void add_plugin_directory_clicked();
+	void enable_selected_plugins_clicked();
+	void disable_selected_plugins_clicked();
 
-	/**
-	 * @brief get the name of Plugin object
-	 * @return name
-	 */
-	inline QString get_name() { return name_; }
-
-	/**
-	 * @brief get the file path to the plugin library file
-	 * @return file path
-	 */
-	inline QString get_file_path() { return file_path_; }
-
-	/**
-	 * @brief get the schnapps objet ptr
-	 * @return the ptr
-	 */
-	inline SCHNApps* get_schnapps() const { return schnapps_; }
+	// slots called from SCHNApps signals
+	void plugin_available_added(QString name);
+	void plugin_enabled(Plugin* plugin);
+	void plugin_disabled(Plugin* plugin);
 
 private:
 
-	inline void set_name(const QString& name) { name_ = name; }
-
-	inline void set_file_path(const QString& f) { file_path_ = f; }
-
-	inline void set_schnapps(SCHNApps* s) { schnapps_ = s; }
-
-	virtual bool enable() = 0;
-	virtual void disable() = 0;
-
-protected:
-
-	// plugin name
-	QString name_;
-
-	// file path to the plugin library file
-	QString file_path_;
-
-	// pointer to schnapps object
 	SCHNApps* schnapps_;
+	bool updating_ui_;
 };
 
 } // namespace schnapps
 
-Q_DECLARE_INTERFACE(schnapps::Plugin, "SCHNApps.Plugin")
-
-#endif // SCHNAPPS_CORE_PLUGIN_H_
+#endif // SCHNAPPS_CORE_CONTROL_DOCK_PLUGIN_TAB_H_

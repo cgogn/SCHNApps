@@ -21,76 +21,80 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_PLUGIN_H_
-#define SCHNAPPS_CORE_PLUGIN_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 
-#include <schnapps/core/dll.h>
+#include "ui_surface_render.h"
 
-#include <QtPlugin>
+#include <QColorDialog>
 
 namespace schnapps
 {
 
 class SCHNApps;
+class MapHandlerGen;
+class Plugin_SurfaceRender;
 
-class SCHNAPPS_CORE_API Plugin : public QObject
+struct MapParameters;
+
+class SurfaceRender_DockTab : public QWidget, public Ui::Surface_Render_TabWidget
 {
 	Q_OBJECT
 
-	friend class SCHNApps;
+	friend class Plugin_SurfaceRender;
 
 public:
 
-	inline Plugin()	{}
-	virtual inline ~Plugin() {}
-
-	inline const QString& get_name() const { return name_; }
-
-public slots:
-
-	/**
-	 * @brief get the name of Plugin object
-	 * @return name
-	 */
-	inline QString get_name() { return name_; }
-
-	/**
-	 * @brief get the file path to the plugin library file
-	 * @return file path
-	 */
-	inline QString get_file_path() { return file_path_; }
-
-	/**
-	 * @brief get the schnapps objet ptr
-	 * @return the ptr
-	 */
-	inline SCHNApps* get_schnapps() const { return schnapps_; }
+	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
 
 private:
 
-	inline void set_name(const QString& name) { name_ = name; }
-
-	inline void set_file_path(const QString& f) { file_path_ = f; }
-
-	inline void set_schnapps(SCHNApps* s) { schnapps_ = s; }
-
-	virtual bool enable() = 0;
-	virtual void disable() = 0;
-
-protected:
-
-	// plugin name
-	QString name_;
-
-	// file path to the plugin library file
-	QString file_path_;
-
-	// pointer to schnapps object
 	SCHNApps* schnapps_;
+	Plugin_SurfaceRender* plugin_;
+
+	QColorDialog* color_dial_;
+	int current_color_dial_;
+
+	QColor vertex_color_;
+	QColor edge_color_;
+	QColor front_color_;
+	QColor back_color_;
+
+	bool updating_ui_;
+
+private slots:
+
+	void position_vbo_changed(int index);
+	void normal_vbo_changed(int index);
+	void color_vbo_changed(int index);
+	void render_vertices_changed(bool b);
+	void vertices_scale_factor_changed(int i);
+	void vertices_scale_factor_pressed();
+	void render_edges_changed(bool b);
+	void render_faces_changed(bool b);
+	void face_style_changed(QAbstractButton* b);
+	void render_boundary_changed(bool b);
+	void render_backface_changed(bool b);
+
+	void vertex_color_clicked();
+	void edge_color_clicked();
+	void front_color_clicked();
+	void back_color_clicked();
+	void both_color_clicked();
+	void color_selected();
+
+private:
+
+	void add_position_vbo(QString name);
+	void remove_position_vbo(QString name);
+	void add_normal_vbo(QString name);
+	void remove_normal_vbo(QString name);
+	void add_color_vbo(QString name);
+	void remove_color_vbo(QString name);
+
+	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace schnapps
 
-Q_DECLARE_INTERFACE(schnapps::Plugin, "SCHNApps.Plugin")
-
-#endif // SCHNAPPS_CORE_PLUGIN_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_

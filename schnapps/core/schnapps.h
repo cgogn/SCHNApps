@@ -26,13 +26,12 @@
 
 #include <schnapps/core/dll.h>
 
-#include <ui_schnapps.h>
+#include <QObject>
+#include <QMap>
+#include <QString>
 
-#include <QTextStream>
-
-class QVBoxLayout;
 class QSplitter;
-class QFile;
+class QAction;
 
 namespace schnapps
 {
@@ -43,20 +42,22 @@ class Plugin;
 class PluginInteraction;
 class MapHandlerGen;
 
-// class ControlDock_CameraTab;
-// class ControlDock_MapTab;
-// class ControlDock_PluginTab;
+class SCHNAppsWindow;
+
+class ControlDock_CameraTab;
+class ControlDock_MapTab;
+class ControlDock_PluginTab;
 
 /**
  * @brief The SCHNApps central object application
  */
-class SCHNAPPS_CORE_API SCHNApps : public QMainWindow, Ui::SCHNApps
+class SCHNAPPS_CORE_API SCHNApps : public QObject
 {
 	Q_OBJECT
 
 public:
 
-	SCHNApps(const QString& app_path);
+	SCHNApps(const QString& app_path, SCHNAppsWindow* window);
 	~SCHNApps();
 
 public slots:
@@ -65,13 +66,11 @@ public slots:
 	 * @brief get the file path where application has been launched
 	 * @return the path
 	 */
-	const QString& get_app_path() { return app_path_; }
+	inline const QString& get_app_path() { return app_path_; }
 
 	/*********************************************************
 	 * MANAGE CAMERAS
 	 *********************************************************/
-
-public slots:
 
 	/**
 	* @brief add a camera with a given name
@@ -98,7 +97,7 @@ public slots:
 	Camera* get_camera(const QString& name) const;
 
 	// get the set of all cameras
-	const QMap<QString, Camera*>& get_camera_set() const { return cameras_; }
+	inline const QMap<QString, Camera*>& get_camera_set() const { return cameras_; }
 
 	/*********************************************************
 	 * MANAGE PLUGINS
@@ -129,24 +128,31 @@ public slots:
 	Plugin* get_plugin(const QString& name) const;
 
 	// get set of loaded plugins
-	const QMap<QString, Plugin*>& get_plugin_set() const { return plugins_; }
+	inline const QMap<QString, Plugin*>& get_plugin_set() const { return plugins_; }
 
 	// get a set of available plugins
-	const QMap<QString, QString>& get_available_plugins() const { return available_plugins_; }
+	inline const QMap<QString, QString>& get_available_plugins() const { return available_plugins_; }
 
-//public:
+public:
 
-//	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
-//	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
+	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
 
-//private slots:
+private:
 
-//	void enable_plugin_tab_widgets(PluginInteraction* plugin);
-//	void disable_plugin_tab_widgets(PluginInteraction* plugin);
+	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
+
+private slots:
+
+	void enable_plugin_tab_widgets(PluginInteraction* plugin);
+
+	void disable_plugin_tab_widgets(PluginInteraction* plugin);
 
 	/*********************************************************
 	 * MANAGE MAPS
 	 *********************************************************/
+
+public slots:
+
 	/**
 	* @brief add a new empty map
 	* @param name name given to the map
@@ -174,7 +180,7 @@ public slots:
 	MapHandlerGen* get_map(const QString& name) const;
 
 	// get the set of maps
-	const QMap<QString, MapHandlerGen*>& get_map_set() const { return maps_; }
+	inline const QMap<QString, MapHandlerGen*>& get_map_set() const { return maps_; }
 
 	/**
 	* @brief Get the current selected map
@@ -189,7 +195,7 @@ public slots:
 	void set_selected_map(const QString& name);
 
 	// notify that current selected map has changed
-	void notify_selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur) { emit(selected_map_changed(old, cur)); }
+	inline void notify_selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur) { emit(selected_map_changed(old, cur)); }
 
 //	/**
 //	* @brief Get the current selected tab orbit in control dock map tab interface
@@ -201,7 +207,7 @@ public slots:
 //	* @brief Get cell selector
 //	* @param orbit Orbit (0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume)
 //	*/
-//	CellSelectorGen* getSelectedSelector(unsigned int orbit) const;
+//	CellSelectorGen* get_selected_selector(unsigned int orbit) const;
 
 //	/**
 //	* @brief Set the selector of the current map (warning change the current orbit)
@@ -242,12 +248,12 @@ public slots:
 	View* get_view(const QString& name) const;
 
 	// get the set of all views
-	const QMap<QString, View*>& get_view_set() const { return views_; }
+	inline const QMap<QString, View*>& get_view_set() const { return views_; }
 
 	/**
 	* @brief get the selected view
 	*/
-	View* get_selected_view() const { return selected_view_; }
+	inline View* get_selected_view() const { return selected_view_; }
 
 	/**
 	* @brief set the selected view
@@ -280,12 +286,28 @@ public slots:
 	*/
 	void set_split_view_positions(QString positions);
 
-public slots:
+	/*********************************************************
+	 * MANAGE MENU ACTIONS
+	 *********************************************************/
 
-	void about_SCHNApps();
-	void about_CGoGN();
+	/**
+	 * @brief add an entry in menu for a plugin
+	 * @param plugin plugin object ptr
+	 * @param menuPath path of menu (ex: "Surface; Import Mesh"
+	 * @param action action to associate with entry
+	 */
+	void add_menu_action(Plugin* plugin, const QString& menu_path, QAction* action);
 
-	void toggle_control_dock();
+	/**
+	 * @brief remove an entry in the menu (when plugin disable)
+	 * @param plugin plugin object ptr
+	 * @param action action entry to remove
+	 */
+	void remove_menu_action(Plugin* plugin, QAction* action);
+
+	/*********************************************************
+	 * MANAGE WINDOW
+	 *********************************************************/
 
 	/**
 	* @brief Print a message in the status bar
@@ -299,11 +321,11 @@ public slots:
 	* @param w width of window
 	* @param h height of window
 	*/
-	inline void set_window_size(int w, int h) { this->resize(w, h); }
+	void set_window_size(int w, int h);
 
-protected:
-
-	void closeEvent(QCloseEvent *event);
+	void close_window();
+	void schnapps_window_closing();
+	SCHNAppsWindow* get_window() { return window_; }
 
 signals:
 
@@ -332,6 +354,8 @@ protected:
 
 	QMap<QString, Plugin*> plugins_;
 	QMap<QString, QString> available_plugins_;
+	QMap<Plugin*, QList<QAction*>> plugin_menu_actions_;
+	QMap<Plugin*, QList<QWidget*>> plugin_dock_tabs_;
 
 	QMap<QString, MapHandlerGen*> maps_;
 
@@ -339,13 +363,12 @@ protected:
 	View* first_view_;
 	View* selected_view_;
 
-	QDockWidget* control_dock_;
-	QTabWidget* control_dock_tab_widget_;
-	// ControlDock_CameraTab* control_camera_tab_;
-	// ControlDock_MapTab* control_map_tab_;
-	// ControlDock_PluginTab* control_plugin_tab_;
+	SCHNAppsWindow* window_;
 
-	QVBoxLayout* central_layout_;
+	ControlDock_CameraTab* control_camera_tab_;
+	ControlDock_PluginTab* control_plugin_tab_;
+	ControlDock_MapTab* control_map_tab_;
+
 	QSplitter* root_splitter_;
 	bool root_splitter_initialized_;
 };
