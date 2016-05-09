@@ -21,24 +21,23 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef CORE_TYPES_H_
-#define CORE_TYPES_H_
+#ifndef SCHNAPPS_CORE_TYPES_H_
+#define SCHNAPPS_CORE_TYPES_H_
 
-#include <QMap>
+#include <cgogn/core/utils/numerics.h>
+
+#include <Eigen/Dense>
 
 namespace schnapps
 {
 
-// class Plugin;
-// class View;
-// class Camera;
-// class MapHandlerGen;
-// 
-// using PluginSet = QMap<QString, Plugin*>;
-// using ViewSet = QMap<QString, View*>;
-// using CameraSet = QMap<QString, Camera*>;
-// using MapSet = QMap<QString, MapHandlerGen*>;
+using namespace cgogn::numerics;
+
+using VEC4 = Eigen::Vector4d;
+using VEC3 = Eigen::Vector3d;
+using VEC2 = Eigen::Vector2d;
+using SCALAR = float64;
 
 } // namespace schnapps
 
-#endif // CORE_TYPES_H_
+#endif // SCHNAPPS_CORE_TYPES_H_

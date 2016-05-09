@@ -35,7 +35,7 @@ Camera::Camera(const QString& name, SCHNApps* schnapps) :
 	schnapps_(schnapps),
 	draw_(false),
 	draw_path_(false),
-	fit_to_views_bounding_box_(true)
+	fit_to_views_bb_(true)
 {
 	++camera_count_;
 	connect(this->frame(), SIGNAL(modified()), this, SLOT(frame_modified()));
@@ -100,8 +100,8 @@ void Camera::link_view(View* view)
 	if(view && !views_.contains(view))
 	{
 		views_.push_back(view);
-		fit_to_views_bounding_box();
-		connect(view, SIGNAL(bounding_box_changed()), this, SLOT(fit_to_views_bounding_box()));
+		fit_to_views_bb();
+		connect(view, SIGNAL(bb_changed()), this, SLOT(fit_to_views_bb()));
 	}
 }
 
@@ -109,8 +109,8 @@ void Camera::unlink_view(View* view)
 {
 	if (views_.removeOne(view))
 	{
-		fit_to_views_bounding_box();
-		disconnect(view, SIGNAL(bounding_box_changed()), this, SLOT(fit_to_views_bounding_box()));
+		fit_to_views_bb();
+		disconnect(view, SIGNAL(bb_changed()), this, SLOT(fit_to_views_bb()));
 	}
 }
 
@@ -128,9 +128,9 @@ void Camera::frame_modified()
 	}
 }
 
-void Camera::fit_to_views_bounding_box()
+void Camera::fit_to_views_bb()
 {
-	if (fit_to_views_bounding_box_)
+	if (fit_to_views_bb_)
 	{
 		qoglviewer::Vec bb_min;
 		qoglviewer::Vec bb_max;

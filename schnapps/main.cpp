@@ -21,23 +21,27 @@
 *                                                                              *
 *******************************************************************************/
 
+#include <schnapps/core/schnapps_window.h>
+
+#include <QOGLViewer/qoglviewer.h>
+
 #include <QApplication>
 #include <QSplashScreen>
-
-#include <schnapps/core/schnapps.h>
 
 int main(int argc, char* argv[])
 {
 	QApplication app(argc, argv);
 
+	qoglviewer::init_ogl_context();
+
 	QSplashScreen splash(QPixmap(":splash/cgogn/splash.png"));
 	splash.show();
 	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
 
-	schnapps::SCHNApps schnapps(app.applicationDirPath());
-	schnapps.show();
+	schnapps::SCHNAppsWindow w(app.applicationDirPath());
+	w.show();
 
-	splash.finish(&schnapps);
+	splash.finish(&w);
 
-	return app.exec();;
+	return app.exec();
 }
