@@ -47,10 +47,6 @@ qt5_add_resources(RCC_FILES
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${RCC_FILES})
 
-# use of target_compile_options to have a transitive c++11 flag
-if(NOT MSVC)
-	target_compile_options(${PROJECT_NAME} PUBLIC "-std=c++11")
-endif()
 if(MSVC)
 	target_compile_options(${PROJECT_NAME} PUBLIC "-D_USE_MATH_DEFINES")
 endif()
