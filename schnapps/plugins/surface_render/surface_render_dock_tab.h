@@ -37,7 +37,7 @@ class Plugin_SurfaceRender;
 
 struct MapParameters;
 
-class SurfaceRender_DockTab : public QWidget, public Ui::Surface_Render_TabWidget
+class SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
 	Q_OBJECT
 

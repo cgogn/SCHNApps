@@ -237,13 +237,6 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		plugin->disable();
 		plugins_.remove(plugin_name);
 
-		// remove plugin dock tabs
-		foreach (QWidget* tab, plugin_dock_tabs_[plugin])
-			remove_plugin_dock_tab(plugin, tab);
-		// remove plugin menu actions
-		foreach (QAction* action, plugin_menu_actions_[plugin])
-			remove_menu_action(plugin, action);
-
 		QPluginLoader loader(plugin->get_file_path());
 		loader.unload();
 
@@ -591,9 +584,11 @@ void SCHNApps::set_split_view_positions(QString positions)
  * MANAGE MENU ACTIONS
  *********************************************************/
 
-void SCHNApps::add_menu_action(Plugin* plugin, const QString& menu_path, QAction* action)
+QAction* SCHNApps::add_menu_action(Plugin* plugin, const QString& menu_path, const QString& action_text)
 {
-	if(action && !menu_path.isEmpty() && !plugin_menu_actions_[plugin].contains(action))
+	QAction* action = nullptr;
+
+	if(!menu_path.isEmpty())
 	{
 		// extracting all the substring separated by ';'
 		QStringList step_names = menu_path.split(";");
@@ -644,21 +639,22 @@ void SCHNApps::add_menu_action(Plugin* plugin, const QString& menu_path, QAction
 				}
 				else // if last substring (= action name)
 				{
+					action = new QAction(action_text, last_menu);
 					last_menu->addAction(action);
 					action->setText(step);
-					action->setParent(last_menu);
+					plugin_menu_actions_[plugin].append(action);
+
+					// just to update the menu in buggy Qt5 on macOS
+//					#if (defined CGOGN_APPLE) && ((QT_VERSION>>16) == 5)
+//					QMenu* fakemenu = window_->menubar->addMenu("X");
+//					delete fakemenu;
+//					#endif
 				}
 			}
 		}
-
-		// just to update the menu in buggy Qt5 on macOS
-//		#if (defined CGOGN_APPLE) && ((QT_VERSION>>16) == 5)
-//		QMenu* fakemenu = window_->menubar->addMenu("X");
-//		delete fakemenu;
-//		#endif
-
-		plugin_menu_actions_[plugin].append(action);
 	}
+
+	return action;
 }
 
 void SCHNApps::remove_menu_action(Plugin* plugin, QAction* action)

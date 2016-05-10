@@ -21,70 +21,34 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_CORE_COLOR_COMBO_BOX_H_
+#define SCHNAPPS_CORE_COLOR_COMBO_BOX_H_
 
-#include <schnapps/core/plugin_processing.h>
+#include <schnapps/core/dll.h>
+#include <QComboBox>
 
-#include <QAction>
+class QColor;
+class QWidget;
 
-namespace schnapps
-{
-
-class MapHandlerGen;
-
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class Plugin_Import : public PluginProcessing
+class SCHNAPPS_CORE_API ColorComboBox : public QComboBox
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+	Q_PROPERTY(QColor color READ color WRITE setColor USER true)
 
 public:
 
-	inline Plugin_Import() {}
+	QColor color() const;
+	void setColor(QColor c);
 
-	~Plugin_Import() {}
+	ColorComboBox(QWidget *widget = 0);
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	void populate_list();
 
 public slots:
 
-	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
-	void import_surface_mesh_from_file_dialog();
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QAction* import_surface_mesh_action;
-//	QAction* import_2D_image_action;
+	void slot_highlight(int index);
 };
 
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_CORE_COLOR_COMBO_BOX_H_
