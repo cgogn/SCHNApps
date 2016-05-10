@@ -48,24 +48,24 @@ void Camera::set_projection_type(int t)
 {
 	this->setType(qoglviewer::Camera::Type(t));
 	emit(projection_type_changed(t));
-	foreach (View* view, schnapps_->get_view_set().values())
-		view->update();
+	for (const auto& view_it : schnapps_->get_view_set())
+		view_it.second->update();
 }
 
 void Camera::set_draw(bool b)
 {
 	draw_ = b;
 	emit(draw_changed(b));
-	foreach (View* view, schnapps_->get_view_set().values())
-		view->update();
+	for (const auto& view_it : schnapps_->get_view_set())
+		view_it.second->update();
 }
 
 void Camera::set_draw_path(bool b)
 {
 	draw_path_ = b;
 	emit(draw_path_changed(b));
-	foreach (View* view, schnapps_->get_view_set().values())
-		view->update();
+	for (const auto& view_it : schnapps_->get_view_set())
+		view_it.second->update();
 }
 
 QString Camera::to_string()
@@ -118,8 +118,8 @@ void Camera::frame_modified()
 {
 	if(draw_ || draw_path_)
 	{
-		foreach (View* view, schnapps_->get_view_set().values())
-			view->update();
+		for (const auto& view_it : schnapps_->get_view_set())
+			view_it.second->update();
 	}
 	else
 	{
