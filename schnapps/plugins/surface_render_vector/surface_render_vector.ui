@@ -96,7 +96,7 @@
   <customwidget>
    <class>ColorComboBox</class>
    <extends>QComboBox</extends>
-   <header>colorComboBox.h</header>
+   <header>schnapps/core/color_combo_box.h</header>
   </customwidget>
  </customwidgets>
  <resources/>
