@@ -34,8 +34,7 @@ namespace schnapps
 MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
-	auto it = parameter_set_.find(view);
-	return it->second.find(map)->second;
+	return parameter_set_[view][map];
 }
 
 bool Plugin_SurfaceRender::enable()

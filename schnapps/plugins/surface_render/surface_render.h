@@ -189,12 +189,12 @@ struct MapParameters
 
 private:
 
-	std::unique_ptr<cgogn::rendering::ShaderFlat::Param>	 shader_flat_param_;
-	std::unique_ptr<cgogn::rendering::ShaderFlatColor::Param> shader_flat_color_param_;
-	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param> shader_simple_color_param_;
-	std::unique_ptr<cgogn::rendering::ShaderPhong::Param> shader_phong_param_;
-	std::unique_ptr<cgogn::rendering::ShaderPhongColor::Param> shader_phong_color_param_;
-	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param> shader_point_sprite_param_;
+	std::unique_ptr<cgogn::rendering::ShaderFlat::Param>		shader_flat_param_;
+	std::unique_ptr<cgogn::rendering::ShaderFlatColor::Param>	shader_flat_color_param_;
+	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_;
+	std::unique_ptr<cgogn::rendering::ShaderPhong::Param>		shader_phong_param_;
+	std::unique_ptr<cgogn::rendering::ShaderPhongColor::Param>	shader_phong_color_param_;
+	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
 
 	cgogn::rendering::VBO* position_vbo_;
 	cgogn::rendering::VBO* normal_vbo_;
