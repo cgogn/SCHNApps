@@ -197,20 +197,19 @@ void MapHandlerGen::update_bb_drawer()
 
 cgogn::rendering::VBO* MapHandlerGen::get_vbo(const QString& name) const
 {
-	if (vbos_.contains(name))
-		return vbos_[name];
+	if (vbos_.count(name) > 0ul)
+		return vbos_.find(name)->second.get();
 	else
 		return nullptr;
 }
 
 void MapHandlerGen::delete_vbo(const QString &name)
 {
-	if (vbos_.contains(name))
+	if (vbos_.count(name) > 0ul)
 	{
-		cgogn::rendering::VBO* vbo = vbos_[name];
-		vbos_.remove(name);
-		emit(vbo_removed(vbo));
-		delete vbo;
+		auto vbo = std::move(vbos_.find(name)->second);
+		vbos_.erase(name);
+		emit(vbo_removed(vbo.get()));
 	}
 }
 
@@ -230,7 +229,6 @@ void MapHandlerGen::link_view(View* view)
 
 void MapHandlerGen::unlink_view(View* view)
 {
-	delete bb_drawer_renderer_[view];
 	views_.removeOne(view);
 }
 

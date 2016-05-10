@@ -416,25 +416,27 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 	combo_colorVBO->addItem("- select VBO -");
 
 	unsigned int i = 1;
-	foreach(cgogn::rendering::VBO* vbo, map->get_vbo_set().values())
+	for (const auto& it_vbo : map->get_vbo_set())
 	{
+		auto& vbo = it_vbo.second;
 		if (vbo->vector_dimension() == 3)
 		{
 			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
-			if (vbo == p.get_position_vbo())
+			if (vbo.get() == p.get_position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 
 			combo_normalVBO->addItem(QString::fromStdString(vbo->get_name()));
-			if (vbo == p.get_normal_vbo())
+			if (vbo.get() == p.get_normal_vbo())
 				combo_normalVBO->setCurrentIndex(i);
 
 			combo_colorVBO->addItem(QString::fromStdString(vbo->get_name()));
-			if (vbo == p.get_color_vbo())
+			if (vbo.get() == p.get_color_vbo())
 				combo_colorVBO->setCurrentIndex(i);
 
 			++i;
 		}
 	}
+
 
 	check_renderVertices->setChecked(p.render_vertices_);
 	slider_verticesScaleFactor->setSliderPosition(p.get_vertex_scale_factor() * 50.0);

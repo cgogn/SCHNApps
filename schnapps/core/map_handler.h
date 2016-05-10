@@ -189,7 +189,7 @@ public slots:
 
 	void delete_vbo(const QString& name);
 
-	inline const QMap<QString, cgogn::rendering::VBO*>& get_vbo_set() const { return vbos_; }
+	inline const std::map<QString, std::unique_ptr<cgogn::rendering::VBO>>& get_vbo_set() const { return vbos_; }
 
 	/*********************************************************
 	 * MANAGE LINKED VIEWS
@@ -238,7 +238,7 @@ protected:
 
 	// map bounding box
 	cgogn::rendering::DisplayListDrawer bb_drawer_;
-	QMap<View*, cgogn::rendering::DisplayListDrawer::Renderer*> bb_drawer_renderer_;
+	std::map<View*, std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer>> bb_drawer_renderer_;
 	cgogn::geometry::BoundingBox<VEC3> bb_;
 	float bb_diagonal_size_;
 	bool show_bb_;
@@ -248,7 +248,7 @@ protected:
 	cgogn::rendering::MapRender render_;
 
 	// VBO managed for the map attributes
-	QMap<QString, cgogn::rendering::VBO*> vbos_;
+	std::map<QString, std::unique_ptr<cgogn::rendering::VBO>> vbos_;
 };
 
 
@@ -354,10 +354,10 @@ private:
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
 			if (ca4)
 			{
-				vbo = new cgogn::rendering::VBO(4);
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
+				vbo = vbos_.find(name)->second.get();
 				VertexAttribute<VEC4> va(map, ca4);
 				cgogn::rendering::update_vbo(va, vbo);
-				this->vbos_.insert(name, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
@@ -365,10 +365,10 @@ private:
 			MapBaseData::ChunkArray<VEC3>* ca3 = dynamic_cast<MapBaseData::ChunkArray<VEC3>*>(cag);
 			if (ca3)
 			{
-				vbo = new cgogn::rendering::VBO(3);
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
+				vbo = vbos_.find(name)->second.get();
 				VertexAttribute<VEC3> va(map, ca3);
 				cgogn::rendering::update_vbo(va, vbo);
-				this->vbos_.insert(name, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
@@ -376,10 +376,10 @@ private:
 			MapBaseData::ChunkArray<VEC2>* ca2 = dynamic_cast<MapBaseData::ChunkArray<VEC2>*>(cag);
 			if (ca2)
 			{
-				vbo = new cgogn::rendering::VBO(2);
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
+				vbo = vbos_.find(name)->second.get();
 				VertexAttribute<VEC2> va(map, ca2);
 				cgogn::rendering::update_vbo(va, vbo);
-				this->vbos_.insert(name, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
@@ -387,10 +387,10 @@ private:
 			MapBaseData::ChunkArray<SCALAR>* ca1 = dynamic_cast<MapBaseData::ChunkArray<SCALAR>*>(cag);
 			if (ca1)
 			{
-				vbo = new cgogn::rendering::VBO(1);
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
+				vbo = vbos_.find(name)->second.get();
 				VertexAttribute<SCALAR> va(map, ca1);
 				cgogn::rendering::update_vbo(va, vbo);
-				this->vbos_.insert(name, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}

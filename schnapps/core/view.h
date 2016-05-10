@@ -297,8 +297,8 @@ protected:
 	ViewDialogList* dialog_plugins_;
 	ViewDialogList* dialog_cameras_;
 
-	cgogn::rendering::DisplayListDrawer* frame_drawer_;
-	cgogn::rendering::DisplayListDrawer::Renderer* frame_drawer_renderer_;
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer> frame_drawer_;
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer> frame_drawer_renderer_;
 
 	bool save_snapshots_;
 
