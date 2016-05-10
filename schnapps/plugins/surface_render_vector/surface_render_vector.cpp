@@ -86,7 +86,7 @@ void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const 
 
 	if (p.get_position_vbo())
 	{
-		for (cgogn::rendering::ShaderVectorPerVertex::Param* param : p.get_shader_params())
+		for (auto& param : p.get_shader_params())
 		{
 			param->bind(proj, mv);
 			map->draw(cgogn::rendering::POINTS);
@@ -157,10 +157,10 @@ void Plugin_SurfaceRenderVector::vbo_removed(cgogn::rendering::VBO* vbo)
 
 	QSet<View*> views_to_update;
 
-	for (auto i = parameter_set_.begin(); i != parameter_set_.end(); ++i)
+	for (auto& it : parameter_set_)
 	{
-		View* view = i.key();
-		QHash<MapHandlerGen*, MapParameters>& view_param_set = i.value();
+		View* view = it.first;
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
 		MapParameters& map_param = view_param_set[map];
 		if(map_param.get_position_vbo() == vbo)
 		{
