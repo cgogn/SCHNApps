@@ -137,8 +137,6 @@ public:
 
 	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
 
-private:
-
 	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
 
 private slots:
@@ -296,7 +294,7 @@ public slots:
 	 * @param menuPath path of menu (ex: "Surface; Import Mesh"
 	 * @param action action to associate with entry
 	 */
-	void add_menu_action(Plugin* plugin, const QString& menu_path, QAction* action);
+	QAction* add_menu_action(Plugin* plugin, const QString& menu_path, const QString& action_text);
 
 	/**
 	 * @brief remove an entry in the menu (when plugin disable)

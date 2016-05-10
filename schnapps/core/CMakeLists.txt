@@ -22,6 +22,7 @@ set(HEADER_FILES
 	control_dock_plugin_tab.h
 	control_dock_map_tab.h
 	types.h
+	color_combo_box.h
 )
 
 set(SOURCE_FILES
@@ -36,6 +37,7 @@ set(SOURCE_FILES
 	control_dock_camera_tab.cpp
 	control_dock_plugin_tab.cpp
 	control_dock_map_tab.cpp
+	color_combo_box.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
