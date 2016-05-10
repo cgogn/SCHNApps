@@ -49,10 +49,6 @@ qt5_add_resources(RCC_FILES
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${RCC_FILES})
 
-if(MSVC)
-	target_compile_options(${PROJECT_NAME} PUBLIC "-D_USE_MATH_DEFINES")
-endif()
-
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
