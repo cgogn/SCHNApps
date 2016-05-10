@@ -79,22 +79,22 @@ View::View(const QString& name, SCHNApps* s) :
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(dialog_maps_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(map_check_state_changed(QListWidgetItem*)));
 
-	foreach (MapHandlerGen* map, schnapps_->get_map_set().values())
-		map_added(map);
+	for (const auto& map_it : schnapps_->get_map_set())
+		map_added(map_it.second);
 
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
 	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
 	connect(dialog_plugins_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(plugin_check_state_changed(QListWidgetItem*)));
 
-	foreach (Plugin* plugin, schnapps_->get_plugin_set().values())
-		plugin_enabled(plugin);
+	for (const auto& plugin_it : schnapps_->get_plugin_set())
+		plugin_enabled(plugin_it.second);
 
 	connect(schnapps_, SIGNAL(camera_added(Camera*)), this, SLOT(camera_added(Camera*)));
 	connect(schnapps_, SIGNAL(camera_removed(Camera*)), this, SLOT(camera_removed(Camera*)));
 	connect(dialog_cameras_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(camera_check_state_changed(QListWidgetItem*)));
 
-	foreach (Camera* camera, schnapps_->get_camera_set().values())
-		camera_added(camera);
+	for (const auto& camera_it : schnapps_->get_camera_set())
+		camera_added(camera_it.second);
 
 	current_camera_ = schnapps_->add_camera();
 	current_camera_->link_view(this);
@@ -388,10 +388,9 @@ void View::draw()
 	glDepthFunc(GL_LESS);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	const QMap<QString, Camera*>& cameras = schnapps_->get_camera_set();
-	QList<Camera*> lc = cameras.values();
-	foreach (Camera* camera, lc)
+	for (const auto& camera_it : schnapps_->get_camera_set())
 	{
+		const Camera* camera = camera_it.second;
 		if (camera != current_camera_)
 		{
 			// TODO recode this in QOGLViewer

@@ -51,8 +51,8 @@ bool Plugin_SurfaceRender::enable()
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
-	foreach(MapHandlerGen* map, schnapps_->get_map_set().values())
-		map_added(map);
+	for (const auto& map_it : schnapps_->get_map_set())
+		map_added(map_it.second);
 
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map)
@@ -76,8 +76,8 @@ void Plugin_SurfaceRender::disable()
 	disconnect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	disconnect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
-	foreach(MapHandlerGen* map, schnapps_->get_map_set().values())
-		map_removed(map);
+	for (const auto& map_it : schnapps_->get_map_set())
+		map_removed(map_it.second);
 }
 
 void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)

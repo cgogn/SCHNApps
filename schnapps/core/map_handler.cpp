@@ -198,7 +198,7 @@ void MapHandlerGen::update_bb_drawer()
 cgogn::rendering::VBO* MapHandlerGen::get_vbo(const QString& name) const
 {
 	if (vbos_.count(name) > 0ul)
-		return vbos_.find(name)->second.get();
+		return vbos_.at(name).get();
 	else
 		return nullptr;
 }
@@ -207,7 +207,7 @@ void MapHandlerGen::delete_vbo(const QString &name)
 {
 	if (vbos_.count(name) > 0ul)
 	{
-		auto vbo = std::move(vbos_.find(name)->second);
+		auto vbo = std::move(vbos_.at(name));
 		vbos_.erase(name);
 		emit(vbo_removed(vbo.get()));
 	}

@@ -416,9 +416,9 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 	combo_colorVBO->addItem("- select VBO -");
 
 	unsigned int i = 1;
-	for (const auto& it_vbo : map->get_vbo_set())
+	for (const auto& vbo_it : map->get_vbo_set())
 	{
-		auto& vbo = it_vbo.second;
+		auto& vbo = vbo_it.second;
 		if (vbo->vector_dimension() == 3)
 		{
 			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
