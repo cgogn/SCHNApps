@@ -39,15 +39,12 @@ ViewButton::ViewButton(const QString& image, View* view) :
 	wall_paper_(nullptr),
 	wall_paper_renderer_(nullptr)
 {
-	wall_paper_ = new cgogn::rendering::WallPaper(QImage(image));
+	wall_paper_ = cgogn::make_unique<cgogn::rendering::WallPaper>(QImage(image));
 	wall_paper_renderer_ = wall_paper_->generate_renderer();
 }
 
 ViewButton::~ViewButton()
-{
-	delete wall_paper_renderer_;
-	delete wall_paper_;
-}
+{}
 
 void ViewButton::click(int x, int y, int globalX, int globalY)
 {

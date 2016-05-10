@@ -60,8 +60,8 @@ protected:
 
 	QString img_;
 	View* view_;
-	cgogn::rendering::WallPaper* wall_paper_;
-	cgogn::rendering::WallPaper::Renderer* wall_paper_renderer_;
+	std::unique_ptr<cgogn::rendering::WallPaper> wall_paper_;
+	std::unique_ptr<cgogn::rendering::WallPaper::Renderer> wall_paper_renderer_;
 
 signals:
 

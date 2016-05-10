@@ -220,19 +220,20 @@ void SurfaceRenderVector_DockTab::update_map_parameters(MapHandlerGen* map, cons
 	list_vectorVBO->clearSelection();
 
 	unsigned int i = 1;
-	foreach(cgogn::rendering::VBO* vbo, map->get_vbo_set().values())
+	for(auto& it_vbo : map->get_vbo_set())
 	{
+		auto& vbo = it_vbo.second;
 		if(vbo->vector_dimension() == 3)
 		{
 			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
-			if(vbo == p.get_position_vbo())
+			if(vbo.get() == p.get_position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 
 			list_vectorVBO->addItem(QString::fromStdString(vbo->get_name()));
 			QListWidgetItem* item = list_vectorVBO->item(list_vectorVBO->count() - 1);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
 			item->setCheckState(Qt::Unchecked);
-			if(p.get_vector_vbo_index(vbo) >= 0)
+			if(p.get_vector_vbo_index(vbo.get()) >= 0)
 				list_vectorVBO->item(i-1)->setCheckState(Qt::Checked);
 
 			++i;

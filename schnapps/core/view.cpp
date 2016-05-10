@@ -173,7 +173,7 @@ void View::set_current_camera(Camera* c)
 }
 
 void View::set_current_camera(const QString& name)
-{	
+{
 	Camera* c = schnapps_->get_camera(name);
 	if (c)
 		set_current_camera(c);
@@ -329,7 +329,7 @@ void View::init()
 
 	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
 
-	frame_drawer_ = new cgogn::rendering::DisplayListDrawer();
+	frame_drawer_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 	frame_drawer_renderer_ = frame_drawer_->generate_renderer();
 
 	frame_drawer_->new_list();
