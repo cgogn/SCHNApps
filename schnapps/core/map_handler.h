@@ -196,10 +196,13 @@ public slots:
 	 *********************************************************/
 
 	// get the list of views linked to the map
-	inline const QList<View*>& get_linked_views() const { return views_; }
+	inline const std::list<View*>& get_linked_views() const { return views_; }
 
 	// test if a view is linked to this map
-	inline bool is_linked_to_view(View* view) const { return views_.contains(view); }
+	inline bool is_linked_to_view(View* view) const
+	{
+		return std::find(views_.begin(), views_.end(), view) != views_.end();
+	}
 
 private:
 
@@ -234,7 +237,7 @@ protected:
 	QMatrix4x4 transformation_matrix_;
 
 	// list of views that are linked to this map
-	QList<View*> views_;
+	std::list<View*> views_;
 
 	// map bounding box
 	cgogn::rendering::DisplayListDrawer bb_drawer_;

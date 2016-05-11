@@ -88,11 +88,18 @@ public:
 	void set_top_left_position(int x, int y);
 	void draw();
 
+private:
+
+	inline bool has_button(ViewButton* b) const
+	{
+		return std::find(buttons_.begin(), buttons_.end(), b) != buttons_.end();
+	}
+
 protected:
 
 	View* view_;
 	QRect form_;
-	QList<ViewButton*> buttons_;
+	std::list<ViewButton*> buttons_;
 };
 
 } // namespace schnapps

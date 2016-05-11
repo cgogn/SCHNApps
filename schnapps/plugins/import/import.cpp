@@ -56,10 +56,10 @@ void Plugin_Import::disable()
 MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filename)
 {
 	QFileInfo fi(filename);
-	if(fi.exists())
+	if (fi.exists())
 	{
 		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 2);
-		if(mhg)
+		if (mhg)
 		{
 			MapHandler<CMap2>* mh = static_cast<MapHandler<CMap2>*>(mhg);
 			CMap2* map = mh->get_map();
