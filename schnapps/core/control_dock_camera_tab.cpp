@@ -71,7 +71,7 @@ void ControlDock_CameraTab::selected_camera_changed()
 		}
 
 		QList<QListWidgetItem*> items = list_cameras->selectedItems();
-		if(!items.empty())
+		if (!items.empty())
 		{
 			QString selected_camera_name = items[0]->text();
 			selected_camera_ = schnapps_->get_camera(selected_camera_name);
@@ -91,9 +91,9 @@ void ControlDock_CameraTab::camera_projection_changed(QAbstractButton* b)
 {
 	if (!updating_ui_ && selected_camera_)
 	{
-		if(radio_orthographicProjection->isChecked())
+		if (radio_orthographicProjection->isChecked())
 			selected_camera_->set_projection_type(qoglviewer::Camera::ORTHOGRAPHIC);
-		else if(radio_perspectiveProjection->isChecked())
+		else if (radio_perspectiveProjection->isChecked())
 			selected_camera_->set_projection_type(qoglviewer::Camera::PERSPECTIVE);
 	}
 }

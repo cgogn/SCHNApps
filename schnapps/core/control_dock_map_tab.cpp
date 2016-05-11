@@ -316,7 +316,7 @@ void ControlDock_MapTab::map_removed(MapHandlerGen* m)
 	}
 
 	QList<QListWidgetItem*> items = list_maps->findItems(m->get_name(), Qt::MatchExactly);
-	if(!items.empty())
+	if (!items.empty())
 	{
 		updating_ui_ = true;
 		delete items[0];

@@ -47,7 +47,7 @@ struct MapParameters
 		position_vbo_(nullptr)
 	{}
 
-	const std::list<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const { return shader_vector_per_vertex_param_list_; }
+	const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const { return shader_vector_per_vertex_param_list_; }
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
@@ -60,34 +60,40 @@ struct MapParameters
 		}
 	}
 
-	int get_vector_vbo_index(cgogn::rendering::VBO* v) const { return vector_vbo_list_.indexOf(v); }
+	int get_vector_vbo_index(cgogn::rendering::VBO* v) const
+	{
+		int index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
+		return index >= vector_vbo_list_.size() ? -1 : index;
+	}
 	void add_vector_vbo(cgogn::rendering::VBO* v)
 	{
-		if (!vector_vbo_list_.contains(v))
+		if (std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) == vector_vbo_list_.end())
 		{
-			vector_vbo_list_.append(v);
-			vector_scale_factor_list_.append(1.0f);
-			vector_color_list_.append(QColor("green"));
+			vector_vbo_list_.push_back(v);
+			vector_scale_factor_list_.push_back(1.0f);
+			vector_color_list_.push_back(QColor("green"));
 			auto p = cgogn::rendering::ShaderVectorPerVertex::generate_param();
 			if (position_vbo_)
 				p->set_position_vbo(position_vbo_);
-			p->set_vector_vbo(vector_vbo_list_.last());
-			p->length_ = vector_scale_factor_list_.last();
-			p->color_ = vector_color_list_.last();
+			p->set_vector_vbo(vector_vbo_list_.back());
+			p->length_ = vector_scale_factor_list_.back();
+			p->color_ = vector_color_list_.back();
 			shader_vector_per_vertex_param_list_.push_back(std::move(p));
 		}
 	}
 	void remove_vector_vbo(cgogn::rendering::VBO* v)
 	{
-		int idx = vector_vbo_list_.indexOf(v);
+		int idx = get_vector_vbo_index(v);
 		if (idx >= 0)
 		{
-			vector_vbo_list_.removeAt(idx);
-			vector_scale_factor_list_.removeAt(idx);
-			vector_color_list_.removeAt(idx);
-			auto it_v = shader_vector_per_vertex_param_list_.begin();
-			std::advance(it_v,idx);
-			shader_vector_per_vertex_param_list_.erase(it_v);
+			vector_vbo_list_[idx] = vector_vbo_list_.back();
+			vector_vbo_list_.pop_back();
+			vector_scale_factor_list_[idx] = vector_scale_factor_list_.back();
+			vector_scale_factor_list_.pop_back();
+			vector_color_list_[idx] = vector_color_list_.back();
+			vector_color_list_.pop_back();
+			shader_vector_per_vertex_param_list_[idx].swap(shader_vector_per_vertex_param_list_.back());
+			shader_vector_per_vertex_param_list_.pop_back();
 		}
 	}
 
@@ -95,28 +101,24 @@ struct MapParameters
 	void set_vector_scale_factor(int i, float32 sf)
 	{
 		vector_scale_factor_list_[i] = sf;
-		auto list_it = shader_vector_per_vertex_param_list_.begin();
-		std::advance(list_it,i);
-		(*list_it)->length_ = vector_scale_factor_list_[i];
+		shader_vector_per_vertex_param_list_[i]->length_ = vector_scale_factor_list_[i];
 	}
 
 	const QColor& get_vector_color(int i) const { return vector_color_list_[i]; }
 	void set_vector_color(int i, const QColor& c)
 	{
 		vector_color_list_[i] = c;
-		auto list_it = shader_vector_per_vertex_param_list_.begin();
-		std::advance(list_it,i);
-		(*list_it)->color_ = vector_color_list_[i];
+		shader_vector_per_vertex_param_list_[i]->color_ = vector_color_list_[i];
 	}
 
 private:
 
-	std::list<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>> shader_vector_per_vertex_param_list_;
+	std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>> shader_vector_per_vertex_param_list_;
 
 	cgogn::rendering::VBO* position_vbo_;
-	QList<cgogn::rendering::VBO*> vector_vbo_list_;
-	QList<float32> vector_scale_factor_list_;
-	QList<QColor> vector_color_list_;
+	std::vector<cgogn::rendering::VBO*> vector_vbo_list_;
+	std::vector<float32> vector_scale_factor_list_;
+	std::vector<QColor> vector_color_list_;
 };
 
 /**

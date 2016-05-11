@@ -27,7 +27,6 @@
 #include <schnapps/core/dll.h>
 
 #include <QObject>
-#include <QMap>
 #include <QString>
 
 class QSplitter;
@@ -97,7 +96,7 @@ public slots:
 	Camera* get_camera(const QString& name) const;
 
 	// get the set of all cameras
-	inline const QMap<QString, Camera*>& get_camera_set() const { return cameras_; }
+	inline const std::map<QString, Camera*>& get_camera_set() const { return cameras_; }
 
 	/*********************************************************
 	 * MANAGE PLUGINS
@@ -128,10 +127,10 @@ public slots:
 	Plugin* get_plugin(const QString& name) const;
 
 	// get set of loaded plugins
-	inline const QMap<QString, Plugin*>& get_plugin_set() const { return plugins_; }
+	inline const std::map<QString, Plugin*>& get_plugin_set() const { return plugins_; }
 
 	// get a set of available plugins
-	inline const QMap<QString, QString>& get_available_plugins() const { return available_plugins_; }
+	inline const std::map<QString, QString>& get_available_plugins() const { return available_plugins_; }
 
 public:
 
@@ -178,7 +177,7 @@ public slots:
 	MapHandlerGen* get_map(const QString& name) const;
 
 	// get the set of maps
-	inline const QMap<QString, MapHandlerGen*>& get_map_set() const { return maps_; }
+	inline const std::map<QString, MapHandlerGen*>& get_map_set() const { return maps_; }
 
 	/**
 	* @brief Get the current selected map
@@ -246,7 +245,7 @@ public slots:
 	View* get_view(const QString& name) const;
 
 	// get the set of all views
-	inline const QMap<QString, View*>& get_view_set() const { return views_; }
+	inline const std::map<QString, View*>& get_view_set() const { return views_; }
 
 	/**
 	* @brief get the selected view
@@ -348,16 +347,16 @@ protected:
 
 	QString app_path_;
 
-	QMap<QString, Camera*> cameras_;
+	std::map<QString, Camera*> cameras_;
 
-	QMap<QString, Plugin*> plugins_;
-	QMap<QString, QString> available_plugins_;
-	QMap<Plugin*, QList<QAction*>> plugin_menu_actions_;
-	QMap<Plugin*, QList<QWidget*>> plugin_dock_tabs_;
+	std::map<QString, Plugin*> plugins_;
+	std::map<QString, QString> available_plugins_;
+	std::map<Plugin*, std::list<QAction*> > plugin_menu_actions_;
+	std::map<Plugin*, std::list<QWidget*> > plugin_dock_tabs_;
 
-	QMap<QString, MapHandlerGen*> maps_;
+	std::map<QString, MapHandlerGen*> maps_;
 
-	QMap<QString, View*> views_;
+	std::map<QString, View*> views_;
 	View* first_view_;
 	View* selected_view_;
 

@@ -62,8 +62,8 @@ QMatrix4x4 MapHandlerGen::get_frame_matrix() const
 	QMatrix4x4 m;
 	GLdouble tmp[16];
 	frame_.getMatrix(tmp);
-	for (unsigned int i=0; i<4; ++i)
-		for (unsigned int j=0; j<4; ++j)
+	for (unsigned int i = 0; i < 4; ++i)
+		for (unsigned int j = 0; j < 4; ++j)
 			m(j,i) = tmp[i*4+j];
 	return m;
 }
@@ -80,7 +80,7 @@ void MapHandlerGen::frame_changed()
 void MapHandlerGen::set_show_bb(bool b)
 {
 	show_bb_ = b;
-	foreach (View* view, views_)
+	for (View* view : views_)
 		view->update();
 }
 
@@ -198,7 +198,7 @@ void MapHandlerGen::update_bb_drawer()
 cgogn::rendering::VBO* MapHandlerGen::get_vbo(const QString& name) const
 {
 	if (vbos_.count(name) > 0ul)
-		return vbos_.find(name)->second.get();
+		return vbos_.at(name).get();
 	else
 		return nullptr;
 }
@@ -207,7 +207,7 @@ void MapHandlerGen::delete_vbo(const QString &name)
 {
 	if (vbos_.count(name) > 0ul)
 	{
-		auto vbo = std::move(vbos_.find(name)->second);
+		auto vbo = std::move(vbos_.at(name));
 		vbos_.erase(name);
 		emit(vbo_removed(vbo.get()));
 	}
@@ -219,7 +219,7 @@ void MapHandlerGen::delete_vbo(const QString &name)
 
 void MapHandlerGen::link_view(View* view)
 {
-	if (view && !views_.contains(view))
+	if (view && !is_linked_to_view(view))
 	{
 		views_.push_back(view);
 		view->makeCurrent();
@@ -229,7 +229,8 @@ void MapHandlerGen::link_view(View* view)
 
 void MapHandlerGen::unlink_view(View* view)
 {
-	views_.removeOne(view);
+	if (is_linked_to_view(view))
+		views_.remove(view);
 }
 
 } // namespace schnapps
