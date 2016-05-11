@@ -21,55 +21,43 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_
+#define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_
 
-#include <ui_surface_render_vector.h>
+#include <ui_dialog_compute_curvature.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
 class MapHandlerGen;
-class Plugin_SurfaceRenderVector;
+class Plugin_SurfaceDifferentialProperties;
 
-struct MapParameters;
-
-class SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
+class ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRenderVector;
+	friend class Plugin_SurfaceDifferentialProperties;
 
 public:
-
-	SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p);
+	ComputeCurvature_Dialog(SCHNApps* s);
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_SurfaceRenderVector* plugin_;
-
-	bool updating_ui_;
+	MapHandlerGen* selected_map_;
 
 private slots:
 
-	void position_vbo_changed(int index);
-	void selected_vector_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
-	void vector_vbo_checked(QListWidgetItem* item);
-	void vector_scale_factor_changed(int i);
-	void vector_color_changed(int i);
+	void selected_map_changed();
 
 private:
 
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_vector_vbo(QString name);
-	void remove_vector_vbo(QString name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+	void add_map_to_list(MapHandlerGen* map);
+	void remove_map_from_list(MapHandlerGen* map);
+	void add_attribute_to_list(unsigned int orbit, const QString& attr_name);
 };
 
 } // namespace schnapps
 
-#endif
+#endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_

@@ -1,4 +1,4 @@
-project(schnapps_plugin_import
+project(plugin_import
 	LANGUAGES CXX
 )
 
