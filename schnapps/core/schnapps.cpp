@@ -158,7 +158,7 @@ void SCHNApps::register_plugins_directory(const QString& path)
 #endif
 			QString plugin_file_path = directory.absoluteFilePath(plugin_file);
 
-			if (!available_plugins_.count(plugin_name) > 0ul)
+			if (available_plugins_.count(plugin_name) == 0ul)
 			{
 				available_plugins_.insert(std::make_pair(plugin_name, plugin_file_path));
 				emit(plugin_available_added(plugin_name));

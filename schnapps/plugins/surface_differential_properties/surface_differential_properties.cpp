@@ -154,7 +154,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal_from_dialog()
 		else
 			normal_name = compute_normal_dialog_->normal_attribute_name->text();
 
-		bool auto_update = (currentItems[0]->checkState() == Qt::Checked);
+		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
 
 		compute_normal(map_name, position_name, normal_name, auto_update);
 
@@ -208,9 +208,9 @@ void Plugin_SurfaceDifferentialProperties::compute_normal_from_dialog()
 //		else
 //			Knormal_name = compute_curvature_dialog_->Knormal_attribute_name->text();
 
-//		bool compute_kmean = (compute_curvature_dialog_->check_computeKmean->checkState() == Qt::Checked);
-//		bool compute_kgaussian = (compute_curvature_dialog_->check_computeKgaussian->checkState() == Qt::Checked);
-//		bool auto_update = (currentItems[0]->checkState() == Qt::Checked);
+//		bool compute_kmean = compute_curvature_dialog_->check_computeKmean->checkState() == Qt::Checked;
+//		bool compute_kgaussian = compute_curvature_dialog_->check_computeKgaussian->checkState() == Qt::Checked;
+//		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
 
 //		compute_curvature(
 //			map_name,
@@ -232,17 +232,15 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	if(!mh)
 		return;
 
-	CMap2* map = mh->get_map();
-
-	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
+	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
 	if(!position.is_valid())
 		return;
 
-	CMap2::VertexAttribute<VEC3> normal = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name.toStdString());
+	CMap2::VertexAttribute<VEC3> normal = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 	if(!normal.is_valid())
-		normal = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name.toStdString());
+		normal = mh->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 
-	cgogn::geometry::compute_normal_vertices<VEC3>(*map, position, normal);
+	cgogn::geometry::compute_normal_vertices<VEC3>(*mh->get_map(), position, normal);
 
 	compute_normal_last_parameters_[map_name] =
 		ComputeNormalParameters(position_attribute_name, normal_attribute_name, auto_update);

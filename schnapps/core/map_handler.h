@@ -260,6 +260,8 @@ class MapHandler : public MapHandlerGen
 {
 public:
 
+	template <typename T, cgogn::Orbit ORBIT>
+	using Attribute = typename MAP_TYPE::template Attribute<T, ORBIT>;
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
 	template <typename T>
@@ -287,7 +289,7 @@ public:
 	 * MANAGE BOUNDING BOX
 	 *********************************************************/
 
-	QString get_bb_vertex_attribute_name() const
+	inline QString get_bb_vertex_attribute_name() const
 	{
 		if (bb_vertex_attribute_.is_valid())
 			return QString::fromStdString(bb_vertex_attribute_.get_name());
@@ -323,7 +325,7 @@ private:
 	 * MANAGE DRAWING
 	 *********************************************************/
 
-	void draw(cgogn::rendering::DrawingType primitive) override
+	inline void draw(cgogn::rendering::DrawingType primitive) override
 	{
 		if (!render_.is_primitive_uptodate(primitive))
 			render_.init_primitives<VEC3>(*get_map(), primitive);
@@ -334,7 +336,23 @@ private:
 	 * MANAGE ATTRIBUTES
 	 *********************************************************/
 
-//protected:
+public:
+
+	template <typename T, cgogn::Orbit ORBIT>
+	inline Attribute<T, ORBIT> add_attribute(const QString& attribute_name)
+	{
+		Attribute<T, ORBIT> a = get_map()->template add_attribute<T, ORBIT>(attribute_name.toStdString());
+		emit(attribute_added(ORBIT, attribute_name));
+		return a;
+	}
+
+	template <typename T, cgogn::Orbit ORBIT>
+	inline Attribute<T, ORBIT> get_attribute(const QString& attribute_name)
+	{
+		return get_map()->template get_attribute<T, ORBIT>(attribute_name.toStdString());
+	}
+
+protected:
 
 //	const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container()
 //	{
