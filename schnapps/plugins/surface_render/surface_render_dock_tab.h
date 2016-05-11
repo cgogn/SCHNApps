@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 
-#include "ui_surface_render.h"
+#include <ui_surface_render.h>
 
 #include <QColorDialog>
 

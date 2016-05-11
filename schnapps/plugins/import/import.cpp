@@ -39,18 +39,19 @@ bool Plugin_Import::enable()
 //	magic line that init static variables of GenericMap in the plugins
 //	GenericMap::copyAllStatics(m_schnapps->getStaticPointers());
 
-	import_surface_mesh_action = schnapps_->add_menu_action(this, "Surface;Import Mesh", "import surface mesh");
-	connect(import_surface_mesh_action, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
+	import_surface_mesh_action_ = schnapps_->add_menu_action(this, "Surface;Import Mesh", "import surface mesh");
+	connect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 
-//	import_2D_image_action = schnapps_->add_menu_action(this, "Surface;Import 2D Image", "import 2D image");
-//	connect(import_2D_image_action, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
+//	import_2D_image_action_ = schnapps_->add_menu_action(this, "Surface;Import 2D Image", "import 2D image");
+//	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
 
 	return true;
 }
 
 void Plugin_Import::disable()
 {
-	schnapps_->remove_menu_action(this, import_surface_mesh_action);
+	schnapps_->remove_menu_action(this, import_surface_mesh_action_);
+//	schnapps_->remove_menu_action(this, import_2D_image_action_);
 }
 
 MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filename)

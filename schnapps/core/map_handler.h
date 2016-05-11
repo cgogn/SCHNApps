@@ -262,6 +262,10 @@ public:
 
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
+	template <typename T>
+	using EdgeAttribute = typename MAP_TYPE::template EdgeAttribute<T>;
+	template <typename T>
+	using FaceAttribute = typename MAP_TYPE::template FaceAttribute<T>;
 	using Vertex = typename MAP_TYPE::Vertex;
 	using Edge = typename MAP_TYPE::Edge;
 	using Face = typename MAP_TYPE::Face;

@@ -1,4 +1,4 @@
-project(plugin_surface_render
+project(plugin_surface_differential_properties
 	LANGUAGES CXX
 )
 
@@ -8,13 +8,15 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
-	surface_render.h
-	surface_render_dock_tab.h
+	surface_differential_properties.h
+	dialog_compute_normal.h
+	dialog_compute_curvature.h
 )
 
 set(SOURCE_FILES
-	surface_render.cpp
-	surface_render_dock_tab.cpp
+	surface_differential_properties.cpp
+	dialog_compute_normal.cpp
+	dialog_compute_curvature.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -36,7 +38,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
-	${cgogn_rendering_LIBRARIES}
+	${cgogn_geometry_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
-	${QOGLViewer_LIBRARIES}
 )
