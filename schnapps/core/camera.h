@@ -110,14 +110,17 @@ public slots:
 	 * @brief get the list of views linked with the camera
 	 * @return the list
 	 */
-	inline const QList<View*>& get_linked_views() const { return views_; }
+	inline const std::list<View*>& get_linked_views() const { return views_; }
 
 	/**
 	 * @brief is the camera linked to the given view
 	 * @param view
 	 * @return
 	 */
-	inline bool is_linked_to_view(View* view) const { return views_.contains(view); }
+	inline bool is_linked_to_view(View* view) const
+	{
+		return std::find(views_.begin(), views_.end(), view) != views_.end();
+	}
 
 	/**
 	* @brief set the projection type
@@ -178,7 +181,7 @@ protected:
 	SCHNApps* schnapps_;
 
 	// list of views that are using this camera
-	QList<View*> views_;
+	std::list<View*> views_;
 
 	bool draw_;
 	bool draw_path_;

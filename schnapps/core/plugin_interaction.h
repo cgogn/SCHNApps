@@ -55,8 +55,7 @@ public slots:
 	 * @brief get the list of views linked to the plugin
 	 * @return the list
 	 */
-	inline const QList<View*>& get_linked_views() const
-	{ return views_; }
+	inline const std::list<View*>& get_linked_views() const	{ return views_; }
 
 	/**
 	 * @brief is the plugin linked to the given view
@@ -64,14 +63,9 @@ public slots:
 	 * @return
 	 */
 	inline bool is_linked_to_view(View* view) const
-	{ return views_.contains(view); }
-
-	/**
-	 * @brief get list of shaders used by this plugin
-	 * @return list of shaders ptr
-	 */
-	inline const QList<cgogn::rendering::ShaderProgram*> get_shaders() const
-	{ return shaders_; }
+	{
+		return std::find(views_.begin(), views_.end(), view) != views_.end();
+	}
 
 private:
 
@@ -91,19 +85,10 @@ private:
 	void link_view(View* view);
 	void unlink_view(View* view);
 
-	void register_shader(cgogn::rendering::ShaderProgram* sp);
-	void register_shaders(const std::vector<cgogn::rendering::ShaderProgram*>& sp);
-
-	void unregister_shader(cgogn::rendering::ShaderProgram* sp);
-	void unregister_shaders(const std::vector<cgogn::rendering::ShaderProgram*>& sp);
-
 protected:
 
 	// list of views that are linked to this plugin
-	QList<View*> views_;
-
-	// list of shaders that are used by this plugin
-	QList<cgogn::rendering::ShaderProgram*> shaders_;
+	std::list<View*> views_;
 };
 
 } // namespace schnapps

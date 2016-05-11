@@ -55,7 +55,7 @@ void SurfaceRenderVector_DockTab::position_vbo_changed(int index)
 	{
 		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if(view && map)
+		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
@@ -127,7 +127,7 @@ void SurfaceRenderVector_DockTab::vector_vbo_checked(QListWidgetItem* item)
 
 void SurfaceRenderVector_DockTab::vector_scale_factor_changed(int i)
 {
-	if(!updating_ui_)
+	if (!updating_ui_)
 	{
 		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
@@ -184,7 +184,7 @@ void SurfaceRenderVector_DockTab::remove_position_vbo(QString name)
 	updating_ui_ = true;
 	int curIndex = combo_positionVBO->currentIndex();
 	int index = combo_positionVBO->findText(name, Qt::MatchExactly);
-	if(curIndex == index)
+	if (curIndex == index)
 		combo_positionVBO->setCurrentIndex(0);
 	combo_positionVBO->removeItem(index);
 	updating_ui_ = false;
@@ -204,7 +204,7 @@ void SurfaceRenderVector_DockTab::remove_vector_vbo(QString name)
 {
 	updating_ui_ = true;
 	QList<QListWidgetItem*> vbo = list_vectorVBO->findItems(name, Qt::MatchExactly);
-	if(!vbo.empty())
+	if (!vbo.empty())
 		delete vbo[0];
 	updating_ui_ = false;
 }
@@ -223,17 +223,17 @@ void SurfaceRenderVector_DockTab::update_map_parameters(MapHandlerGen* map, cons
 	for(auto& vbo_it : map->get_vbo_set())
 	{
 		auto& vbo = vbo_it.second;
-		if(vbo->vector_dimension() == 3)
+		if (vbo->vector_dimension() == 3)
 		{
 			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
-			if(vbo.get() == p.get_position_vbo())
+			if (vbo.get() == p.get_position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 
 			list_vectorVBO->addItem(QString::fromStdString(vbo->get_name()));
 			QListWidgetItem* item = list_vectorVBO->item(list_vectorVBO->count() - 1);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
 			item->setCheckState(Qt::Unchecked);
-			if(p.get_vector_vbo_index(vbo.get()) >= 0)
+			if (p.get_vector_vbo_index(vbo.get()) >= 0)
 				list_vectorVBO->item(i-1)->setCheckState(Qt::Checked);
 
 			++i;

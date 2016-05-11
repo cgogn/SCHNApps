@@ -27,7 +27,6 @@
 #include <schnapps/core/dll.h>
 
 #include <QObject>
-#include <QMap>
 #include <QString>
 
 class QSplitter;
