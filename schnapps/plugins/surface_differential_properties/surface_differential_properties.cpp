@@ -245,7 +245,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	compute_normal_last_parameters_[map_name] =
 		ComputeNormalParameters(position_attribute_name, normal_attribute_name, auto_update);
 
-//	mh->notify_attribute_modification(normal);
+	mh->notify_attribute_change(CMap2::Vertex::ORBIT, normal_attribute_name);
 }
 
 //void Plugin_SurfaceDifferentialProperties::compute_curvature(
