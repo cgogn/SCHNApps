@@ -233,4 +233,38 @@ void MapHandlerGen::unlink_view(View* view)
 		views_.remove(view);
 }
 
+/*********************************************************
+ * MANAGE ATTRIBUTES & CONNECTIVITY
+ *********************************************************/
+
+void MapHandlerGen::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	update_vbo(attribute_name);
+	check_bb_vertex_attribute(orbit, attribute_name);
+
+	emit(attribute_changed(orbit, attribute_name));
+
+	for (View* view : views_)
+		view->update();
+}
+
+void MapHandlerGen::notify_connectivity_change()
+{
+	render_.set_primitive_dirty(cgogn::rendering::POINTS);
+	render_.set_primitive_dirty(cgogn::rendering::LINES);
+	render_.set_primitive_dirty(cgogn::rendering::TRIANGLES);
+//	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
+
+//	for(unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
+//	{
+//		foreach (CellSelectorGen* cs, m_cellSelectors[orbit])
+//			cs->rebuild();
+//	}
+
+	emit(connectivity_changed());
+
+	for (View* view : views_)
+		view->update();
+}
+
 } // namespace schnapps

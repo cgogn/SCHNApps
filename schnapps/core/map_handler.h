@@ -136,7 +136,9 @@ public slots:
 	* @brief choose the vertex attribute used to compute the bounding box
 	* @param name name of attribute
 	*/
-	virtual void set_bb_vertex_attribute(const QString& name) = 0;
+	virtual void set_bb_vertex_attribute(const QString& attribute_name) = 0;
+
+	virtual void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) = 0;
 
 	/**
 	* @brief get the length of diagonal of bounding box of the map
@@ -182,6 +184,7 @@ public:
 	* @return pointer on created VBO
 	*/
 	virtual cgogn::rendering::VBO* create_vbo(const QString& name) = 0;
+	virtual void update_vbo(const QString& name) = 0;
 
 public slots:
 
@@ -204,6 +207,15 @@ public slots:
 		return std::find(views_.begin(), views_.end(), view) != views_.end();
 	}
 
+public:
+
+	/*********************************************************
+	 * MANAGE ATTRIBUTES & CONNECTIVITY
+	 *********************************************************/
+
+	void notify_attribute_change(cgogn::Orbit, const QString&);
+	void notify_connectivity_change();
+
 private:
 
 	void link_view(View* view);
@@ -218,6 +230,10 @@ signals:
 	void vbo_removed(cgogn::rendering::VBO*);
 
 	void attribute_added(cgogn::Orbit, const QString&);
+	void attribute_removed(cgogn::Orbit, const QString&);
+	void attribute_changed(cgogn::Orbit, const QString&);
+
+	void connectivity_changed();
 
 protected:
 
@@ -297,13 +313,24 @@ public:
 			return QString();
 	}
 
-	void set_bb_vertex_attribute(const QString& name) override
+	void set_bb_vertex_attribute(const QString& attribute_name) override
 	{
-		bb_vertex_attribute_ = get_map()->template get_attribute<VEC3, Vertex::ORBIT>(name.toStdString());
+		bb_vertex_attribute_ = get_map()->template get_attribute<VEC3, Vertex::ORBIT>(attribute_name.toStdString());
 		compute_bb();
 		this->update_bb_drawer();
-		emit(bb_vertex_attribute_changed(name));
+		emit(bb_vertex_attribute_changed(attribute_name));
 		emit(bb_changed());
+	}
+
+	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) override
+	{
+		QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.get_name());
+		if (orbit == Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
+		{
+			compute_bb();
+			this->update_bb_drawer();
+			emit(bb_changed());
+		}
 	}
 
 private:
@@ -342,8 +369,20 @@ public:
 	inline Attribute<T, ORBIT> add_attribute(const QString& attribute_name)
 	{
 		Attribute<T, ORBIT> a = get_map()->template add_attribute<T, ORBIT>(attribute_name.toStdString());
-		emit(attribute_added(ORBIT, attribute_name));
+		if (a.is_valid())
+			emit(attribute_added(ORBIT, attribute_name));
 		return a;
+	}
+
+	template <typename T, cgogn::Orbit ORBIT>
+	inline bool remove_attribute(Attribute<T, ORBIT>& ah)
+	{
+		if (ah.is_valid())
+		{
+			QString attribute_name = QString::fromStdString(ah->get_name());
+			return get_map()->remove_attribute(ah);
+			emit(attribute_removed(ORBIT, attribute_name));
+		}
 	}
 
 	template <typename T, cgogn::Orbit ORBIT>
@@ -366,8 +405,7 @@ protected:
 
 	cgogn::rendering::VBO* create_vbo(const QString& name) override
 	{
-		cgogn::rendering::VBO* vbo = get_vbo(name);
-
+		cgogn::rendering::VBO* vbo = this->get_vbo(name);
 		if (!vbo)
 		{
 			MAP_TYPE* map = get_map();
@@ -380,7 +418,7 @@ protected:
 			if (ca4)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
-				vbo = vbos_.find(name)->second.get();
+				vbo = vbos_.at(name).get();
 				VertexAttribute<VEC4> va(map, ca4);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -391,7 +429,7 @@ protected:
 			if (ca3)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
-				vbo = vbos_.find(name)->second.get();
+				vbo = vbos_.at(name).get();
 				VertexAttribute<VEC3> va(map, ca3);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -402,7 +440,7 @@ protected:
 			if (ca2)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
-				vbo = vbos_.find(name)->second.get();
+				vbo = vbos_.at(name).get();
 				VertexAttribute<VEC2> va(map, ca2);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -413,7 +451,7 @@ protected:
 			if (ca1)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
-				vbo = vbos_.find(name)->second.get();
+				vbo = vbos_.at(name).get();
 				VertexAttribute<SCALAR> va(map, ca1);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -422,6 +460,51 @@ protected:
 		}
 
 		return vbo;
+	}
+
+	void update_vbo(const QString& name) override
+	{
+		cgogn::rendering::VBO* vbo = get_vbo(name);
+		if (vbo)
+		{
+			MAP_TYPE* map = get_map();
+
+			const MAP_TYPE* cmap = map;
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_attribute_container<Vertex::ORBIT>();
+			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
+
+			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
+			if (ca4)
+			{
+				vbo = vbos_.at(name).get();
+				VertexAttribute<VEC4> va(map, ca4);
+				cgogn::rendering::update_vbo(va, vbo);
+			}
+
+			MapBaseData::ChunkArray<VEC3>* ca3 = dynamic_cast<MapBaseData::ChunkArray<VEC3>*>(cag);
+			if (ca3)
+			{
+				vbo = vbos_.at(name).get();
+				VertexAttribute<VEC3> va(map, ca3);
+				cgogn::rendering::update_vbo(va, vbo);
+			}
+
+			MapBaseData::ChunkArray<VEC2>* ca2 = dynamic_cast<MapBaseData::ChunkArray<VEC2>*>(cag);
+			if (ca2)
+			{
+				vbo = vbos_.at(name).get();
+				VertexAttribute<VEC2> va(map, ca2);
+				cgogn::rendering::update_vbo(va, vbo);
+			}
+
+			MapBaseData::ChunkArray<SCALAR>* ca1 = dynamic_cast<MapBaseData::ChunkArray<SCALAR>*>(cag);
+			if (ca1)
+			{
+				vbo = vbos_.at(name).get();
+				VertexAttribute<SCALAR> va(map, ca1);
+				cgogn::rendering::update_vbo(va, vbo);
+			}
+		}
 	}
 
 private:
