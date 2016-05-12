@@ -269,8 +269,17 @@ public slots:
 	*/
 	View* get_view(const QString& name) const;
 
-	// get the set of all views
-	inline const std::map<QString, View*>& get_view_set() const { return views_; }
+public:
+
+	template <typename FUNC>
+	void foreach_view(const FUNC& f)
+	{
+		static_assert(check_func_parameter_type(FUNC, View*), "Wrong function parameter type");
+		for (const auto& view_it : views_)
+			f(view_it.second.get());
+	}
+
+public slots:
 
 	/**
 	* @brief get the selected view
@@ -385,7 +394,7 @@ protected:
 
 	std::map<QString, std::unique_ptr<MapHandlerGen>> maps_;
 
-	std::map<QString, View*> views_;
+	std::map<QString, std::unique_ptr<View>> views_;
 	View* first_view_;
 	View* selected_view_;
 

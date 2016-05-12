@@ -379,8 +379,8 @@ View* SCHNApps::add_view(const QString& name)
 	if (views_.count(name) > 0ul)
 		return nullptr;
 
-	View* view = new View(name, this);
-	views_.insert(std::make_pair(name, view));
+	views_.insert(std::make_pair(name, cgogn::make_unique<View>(name, this)));
+	View* view = views_.at(name).get();
 	emit(view_added(view));
 	return view;
 }
@@ -396,24 +396,23 @@ void SCHNApps::remove_view(const QString& name)
 	{
 		if (views_.size() > 1)
 		{
-			View* view = views_[name];
-			if (view == first_view_)
+			auto view = std::move(views_.at(name));
+			if (view.get() == first_view_)
 			{
 				for (const auto& view_it : views_)
 				{
-					if (view_it.second != view)
+					if (view_it.second.get() != view.get())
 					{
-						first_view_ = view_it.second;
+						first_view_ = view_it.second.get();
 						break;
 					}
 				}
 			}
-			if (view == selected_view_)
+			if (view.get() == selected_view_)
 				set_selected_view(first_view_);
 
 			views_.erase(name);
-			emit(view_removed(view));
-			delete view;
+			emit(view_removed(view.get()));
 		}
 	}
 }
@@ -421,7 +420,7 @@ void SCHNApps::remove_view(const QString& name)
 View* SCHNApps::get_view(const QString& name) const
 {
 	if (views_.count(name) > 0ul)
-		return views_.at(name);
+		return views_.at(name).get();
 	else
 		return nullptr;
 }
@@ -460,14 +459,15 @@ void SCHNApps::set_selected_view(View* view)
 void SCHNApps::set_selected_view(const QString& name)
 {
 	View* v = this->get_view(name);
-	set_selected_view(v);
+	if (v)
+		set_selected_view(v);
 }
 
 View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 {
 	View* new_view = add_view();
 
-	View* view = views_[name];
+	View* view = views_.at(name).get();
 	QSplitter* parent = static_cast<QSplitter*>(view->parentWidget());
 
 	if (parent == root_splitter_ && !root_splitter_initialized_)
