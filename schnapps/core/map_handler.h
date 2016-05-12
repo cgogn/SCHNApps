@@ -61,7 +61,7 @@ class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 
 public:
 
-	MapHandlerGen(const QString& name, SCHNApps* s, MapBaseData* map);
+	MapHandlerGen(const QString& name, SCHNApps* s, std::unique_ptr<MapBaseData> map);
 
 	~MapHandlerGen();
 
@@ -79,7 +79,7 @@ public slots:
 	 */
 	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
-	inline const MapBaseData* get_map() const { return map_; }
+	inline const MapBaseData* get_map() const { return map_.get(); }
 
 	bool is_selected_map() const;
 
@@ -244,7 +244,7 @@ protected:
 	SCHNApps* schnapps_;
 
 	// MapBaseData generic pointer
-	MapBaseData* map_;
+	std::unique_ptr<MapBaseData> map_;
 
 	// frame that allow user object manipulation (ctrl + mouse)
 	qoglviewer::ManipulatedFrame frame_;
@@ -288,14 +288,14 @@ public:
 	using Edge = typename MAP_TYPE::Edge;
 	using Face = typename MAP_TYPE::Face;
 
-	MapHandler(const QString& name, SCHNApps* s, MAP_TYPE* map) :
-		MapHandlerGen(name, s, map)
+	MapHandler(const QString& name, SCHNApps* s) :
+		MapHandlerGen(name, s, cgogn::make_unique<MAP_TYPE>())
 	{}
 
 	~MapHandler()
 	{}
 
-	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(map_); }
+	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(this->map_.get()); }
 
 	uint32 nb_vertices() override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
 	uint32 nb_edges() override { return get_map()->template nb_cells<Edge::ORBIT>(); }

@@ -79,22 +79,19 @@ View::View(const QString& name, SCHNApps* s) :
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(dialog_maps_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(map_check_state_changed(QListWidgetItem*)));
 
-	for (const auto& map_it : schnapps_->get_map_set())
-		map_added(map_it.second);
+	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
 	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
 	connect(dialog_plugins_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(plugin_check_state_changed(QListWidgetItem*)));
 
-	for (const auto& plugin_it : schnapps_->get_plugin_set())
-		plugin_enabled(plugin_it.second);
+	schnapps_->foreach_plugin([this] (Plugin* plugin) { plugin_enabled(plugin); });
 
 	connect(schnapps_, SIGNAL(camera_added(Camera*)), this, SLOT(camera_added(Camera*)));
 	connect(schnapps_, SIGNAL(camera_removed(Camera*)), this, SLOT(camera_removed(Camera*)));
 	connect(dialog_cameras_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(camera_check_state_changed(QListWidgetItem*)));
 
-	for (const auto& camera_it : schnapps_->get_camera_set())
-		camera_added(camera_it.second);
+	schnapps_->foreach_camera([this] (Camera* camera) { camera_added(camera); });
 
 	current_camera_ = schnapps_->add_camera();
 	current_camera_->link_view(this);
@@ -390,16 +387,15 @@ void View::draw()
 	glDepthFunc(GL_LESS);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	for (const auto& camera_it : schnapps_->get_camera_set())
+	schnapps_->foreach_camera([this] (Camera* camera)
 	{
-		const Camera* camera = camera_it.second;
 		if (camera != current_camera_)
 		{
 			// TODO recode this in QOGLViewer
 //			if (camera->get_draw()) camera->draw();
 //			if (camera->get_draw_path()) camera->drawAllPaths();
 		}
-	}
+	});
 
 	QMatrix4x4 pm;
 	current_camera_->getProjectionMatrix(pm);

@@ -33,8 +33,6 @@
 #include <schnapps/core/control_dock_plugin_tab.h>
 #include <schnapps/core/control_dock_map_tab.h>
 
-#include <schnapps/core/schnapps_window.h>
-
 #include <QVBoxLayout>
 #include <QSplitter>
 #include <QMessageBox>
@@ -94,8 +92,8 @@ Camera* SCHNApps::add_camera(const QString& name)
 	if (cameras_.count(name) > 0ul)
 		return nullptr;
 
-	Camera* camera = new Camera(name, this);
-	cameras_.insert(std::make_pair(name, camera));
+	cameras_.insert(std::make_pair(name, cgogn::make_unique<Camera>(name, this)));
+	Camera* camera = cameras_.at(name).get();
 	emit(camera_added(camera));
 	return camera;
 }
@@ -107,19 +105,21 @@ Camera* SCHNApps::add_camera()
 
 void SCHNApps::remove_camera(const QString& name)
 {
-	Camera* camera = get_camera(name);
-	if (camera && !camera->is_used())
+	if (cameras_.count(name) > 0ul)
 	{
-		cameras_.erase(name);
-		emit(camera_removed(camera));
-		delete camera;
+		auto camera = std::move(cameras_.at(name));
+		if (!camera->is_used())
+		{
+			cameras_.erase(name);
+			emit(camera_removed(camera.get()));
+		}
 	}
 }
 
 Camera* SCHNApps::get_camera(const QString& name) const
 {
 	if (cameras_.count(name) > 0ul)
-		return cameras_.at(name);
+		return cameras_.at(name).get();
 	else
 		return nullptr;
 }
@@ -170,13 +170,11 @@ void SCHNApps::register_plugins_directory(const QString& path)
 Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 {
 	if (plugins_.count(plugin_name) > 0ul)
-		return plugins_.at(plugin_name);
+		return plugins_.at(plugin_name).get();
 
 	if (available_plugins_.count(plugin_name) > 0ul)
 	{
 		QString plugin_file_path = available_plugins_[plugin_name];
-
-		std::cout << plugin_file_path.toStdString() << std::endl;
 		QPluginLoader loader(plugin_file_path);
 
 		// if the loader loads a plugin instance
@@ -193,7 +191,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 			if (plugin->enable())
 			{
 				// if it succeeded we reference this plugin
-				plugins_.insert(std::make_pair(plugin_name, plugin));
+				plugins_.insert(std::make_pair(plugin_name, std::unique_ptr<Plugin>(plugin)));
 
 				status_bar_message(plugin_name + QString(" successfully loaded."), 2000);
 				emit(plugin_enabled(plugin));
@@ -214,19 +212,17 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 		}
 	}
 	else
-	{
 		return nullptr;
-	}
 }
 
 void SCHNApps::disable_plugin(const QString& plugin_name)
 {
 	if (plugins_.count(plugin_name) > 0ul)
 	{
-		Plugin* plugin = plugins_[plugin_name];
+		auto plugin = std::move(plugins_.at(plugin_name));
 
 		// unlink linked views (for interaction plugins)
-		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin);
+		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin.get());
 		if (pi)
 		{
 			for (View* view : pi->get_linked_views())
@@ -241,16 +237,14 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		loader.unload();
 
 		status_bar_message(plugin_name + QString(" successfully unloaded."), 2000);
-		emit(plugin_disabled(plugin));
-
-		delete plugin;
+		emit(plugin_disabled(plugin.get()));
 	}
 }
 
 Plugin* SCHNApps::get_plugin(const QString& name) const
 {
 	if (plugins_.count(name) > 0ul)
-		return plugins_.at(name);
+		return plugins_.at(name).get();
 	else
 		return nullptr;
 }
@@ -327,46 +321,41 @@ MapHandlerGen* SCHNApps::add_map(const QString &name, unsigned int dimension)
 		} while (maps_.count(final_name) > 0ul);
 	}
 
-	MapHandlerGen* mh = nullptr;
 	switch(dimension)
 	{
 		case 2 : {
-			CMap2* map = new CMap2();
-			mh = new MapHandler<CMap2>(final_name, this, map);
+			maps_.insert(std::make_pair(final_name, cgogn::make_unique<MapHandler<CMap2>>(final_name, this)));
 			break;
 		}
 		case 3 : {
-			CMap3* map = new CMap3();
-			mh = new MapHandler<CMap3>(final_name, this, map);
+			maps_.insert(std::make_pair(final_name, cgogn::make_unique<MapHandler<CMap3>>(final_name, this)));
 			break;
 		}
 	}
 
-	maps_.insert(std::make_pair(final_name, mh));
-	emit(map_added(mh));
+	MapHandlerGen* mhg = maps_.at(final_name).get();
+	emit(map_added(mhg));
 
-	return mh;
+	return mhg;
 }
 
 void SCHNApps::remove_map(const QString &name)
 {
 	if (maps_.count(name) > 0ul)
 	{
-		MapHandlerGen* map = maps_[name];
+		auto map = std::move(maps_.at(name));
 		for (View* view : map->get_linked_views())
-			view->unlink_map(map);
+			view->unlink_map(map.get());
 
 		maps_.erase(name);
-		emit(map_removed(map));
-
-		delete map;
+		emit(map_removed(map.get()));
 	}
 }
 
 MapHandlerGen* SCHNApps::get_map(const QString& name) const
 {
 	if (maps_.count(name) > 0ul)
-		return maps_.at(name);
+		return maps_.at(name).get();
 	else
 		return nullptr;
 }
@@ -577,113 +566,6 @@ void SCHNApps::set_split_view_positions(QString positions)
 		}
 		spl->restoreState(ba);
 		liste.pop_front();
-	}
-}
-
-/*********************************************************
- * MANAGE MENU ACTIONS
- *********************************************************/
-
-QAction* SCHNApps::add_menu_action(Plugin* plugin, const QString& menu_path, const QString& action_text)
-{
-	QAction* action = nullptr;
-
-	if (!menu_path.isEmpty())
-	{
-		// extracting all the substring separated by ';'
-		QStringList step_names = menu_path.split(";");
-		step_names.removeAll("");
-		unsigned int nb_steps = step_names.count();
-
-		// if only one substring: error + failure
-		// No action directly in the menu bar
-		if (nb_steps >= 1)
-		{
-			unsigned int i = 0;
-			QMenu* last_menu = nullptr;
-			for (QString step : step_names)
-			{
-				++i;
-				if (i < nb_steps) // if not last substring (= menu)
-				{
-					// try to find an existing sub_menu with step name
-					bool found = false;
-					QList<QAction*> actions;
-					if (i == 1) actions = window_->menubar->actions();
-					else actions = last_menu->actions();
-					for (QAction* action : actions)
-					{
-						QMenu* sub_menu = action->menu();
-						if (sub_menu && sub_menu->title() == step)
-						{
-							last_menu = sub_menu;
-							found = true;
-							break;
-						}
-					}
-					if (!found)
-					{
-						QMenu* new_menu;
-						if (i == 1)
-						{
-							new_menu = window_->menubar->addMenu(step);
-							new_menu->setParent(window_->menubar);
-						}
-						else
-						{
-							new_menu = last_menu->addMenu(step);
-							new_menu->setParent(last_menu);
-						}
-						last_menu = new_menu;
-					}
-				}
-				else // if last substring (= action name)
-				{
-					action = new QAction(action_text, last_menu);
-					last_menu->addAction(action);
-					action->setText(step);
-					plugin_menu_actions_[plugin].push_back(action);
-
-					// just to update the menu in buggy Qt5 on macOS
-//					#if (defined CGOGN_APPLE) && ((QT_VERSION>>16) == 5)
-//					QMenu* fakemenu = window_->menubar->addMenu("X");
-//					delete fakemenu;
-//					#endif
-				}
-			}
-		}
-	}
-
-	return action;
-}
-
-void SCHNApps::remove_menu_action(Plugin* plugin, QAction* action)
-{
-	std::list<QAction*>& action_list = plugin_menu_actions_[plugin];
-	auto action_it = std::find(action_list.begin(), action_list.end(), action);
-	if (action_it != action_list.end())
-	{
-		action->setEnabled(false);
-
-		action_list.erase(action_it);
-
-		// parent of the action
-		// which is an instance of QMenu if the action was created
-		// using the add_menu_action() method
-		QObject* parent = action->parent();
-		delete action;
-
-		while(parent != nullptr)
-		{
-			QMenu* parent_menu = dynamic_cast<QMenu*>(parent);
-			if (parent_menu && parent_menu->actions().empty())
-			{
-				parent = parent->parent();
-				delete parent_menu;
-			}
-			else
-				parent = nullptr;
-		}
 	}
 }
 

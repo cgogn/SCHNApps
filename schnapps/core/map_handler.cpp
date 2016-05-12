@@ -30,10 +30,10 @@
 namespace schnapps
 {
 
-MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseData* map) :
+MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, std::unique_ptr<MapBaseData> map) :
 	name_(name),
 	schnapps_(schnapps),
-	map_(map),
+	map_(std::move(map)),
 	show_bb_(true),
 	bb_diagonal_size_(.0f),
 	bb_color_(Qt::green)
@@ -44,9 +44,7 @@ MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseDat
 }
 
 MapHandlerGen::~MapHandlerGen()
-{
-	delete map_;
-}
+{}
 
 bool MapHandlerGen::is_selected_map() const
 {
