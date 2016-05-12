@@ -1,4 +1,4 @@
-project(schnapps_plugin_surface_render_vector
+project(plugin_surface_render_vector
 	LANGUAGES CXX
 )
 

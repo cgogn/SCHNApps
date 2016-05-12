@@ -81,8 +81,8 @@ public slots:
 
 private:
 
-	QAction* import_surface_mesh_action;
-//	QAction* import_2D_image_action;
+	QAction* import_surface_mesh_action_;
+//	QAction* import_2D_image_action_;
 };
 
 } // namespace schnapps
