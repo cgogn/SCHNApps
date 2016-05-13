@@ -44,11 +44,11 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s) :
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
-	for (const auto& map_it : schnapps_->get_map_set())
+	schnapps_->foreach_map([this] (MapHandlerGen* map)
 	{
-		QListWidgetItem* item = new QListWidgetItem(map_it.second->get_name(), list_maps);
+		QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
 		item->setCheckState(Qt::Unchecked);
-	}
+	});
 }
 
 void ComputeNormal_Dialog::selected_map_changed()
