@@ -49,6 +49,9 @@ qt5_add_resources(RCC_FILES
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${RCC_FILES})
 
+if(NOT MSVC)
+	target_compile_options(${PROJECT_NAME} PUBLIC "-std=c++11")
+endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
