@@ -1,9 +1,15 @@
 add_subdirectory(core)
 add_subdirectory(plugins)
 
-project(schnapps_main
+project(schnapps
 	LANGUAGES CXX
 )
 
-add_executable(schnapps main.cpp)
-target_link_libraries(schnapps schnapps_core)
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+
+add_executable(${PROJECT_NAME} main.cpp)
+
+target_link_libraries(${PROJECT_NAME}
+	schnapps_core
+	${Qt5Widgets_LIBRARIES}
+)
