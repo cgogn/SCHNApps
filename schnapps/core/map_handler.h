@@ -411,7 +411,7 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_attribute_container<Vertex::ORBIT>();
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_const_attribute_container<Vertex::ORBIT>();
 			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
 
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
@@ -470,7 +470,7 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_attribute_container<Vertex::ORBIT>();
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_const_attribute_container<Vertex::ORBIT>();
 			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
 
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
