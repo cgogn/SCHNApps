@@ -72,7 +72,7 @@ void ComputeNormal_Dialog::selected_map_changed()
 		{
 			QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-			const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_attribute_container<CMap2::Vertex::ORBIT>();
+			const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Vertex::ORBIT>();
 			const std::vector<std::string>& names = container.get_names();
 			const std::vector<std::string>& type_names = container.get_type_names();
 

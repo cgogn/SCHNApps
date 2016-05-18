@@ -414,7 +414,7 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::CDart::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_attribute_container<CMap2::CDart::ORBIT>();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::CDart::ORBIT>();
 				const std::vector<std::string>& names = container.get_names();
 				const std::vector<std::string>& type_names = container.get_type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
@@ -440,7 +440,7 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_attribute_container<CMap2::Vertex::ORBIT>();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Vertex::ORBIT>();
 				const std::vector<std::string>& names = container.get_names();
 				const std::vector<std::string>& type_names = container.get_type_names();
 				unsigned int bb_index = 1;
@@ -478,7 +478,7 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Edge::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_attribute_container<CMap2::Edge::ORBIT>();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Edge::ORBIT>();
 				const std::vector<std::string>& names = container.get_names();
 				const std::vector<std::string>& type_names = container.get_type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
@@ -504,7 +504,7 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Face::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_attribute_container<CMap2::Face::ORBIT>();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Face::ORBIT>();
 				const std::vector<std::string>& names = container.get_names();
 				const std::vector<std::string>& type_names = container.get_type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
@@ -530,7 +530,7 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Volume::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_attribute_container<CMap2::Volume::ORBIT>();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Volume::ORBIT>();
 				const std::vector<std::string>& names = container.get_names();
 				const std::vector<std::string>& type_names = container.get_type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
