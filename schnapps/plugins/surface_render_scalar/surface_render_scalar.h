@@ -21,15 +21,15 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 
-#include <surface_render_vector_dock_tab.h>
+#include <surface_render_scalar_dock_tab.h>
 
-#include <cgogn/rendering/shaders/shader_vector_per_vertex.h>
+#include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>
 
 #include <QAction>
 
@@ -37,106 +37,57 @@ namespace schnapps
 {
 
 class MapHandlerGen;
-class Plugin_SurfaceRenderVector;
+class Plugin_SurfaceRenderScalar;
 
 struct MapParameters
 {
-	friend class Plugin_SurfaceRenderVector;
+	friend class Plugin_SurfaceRenderScalar;
 
 	MapParameters() :
-		position_vbo_(nullptr)
+		position_vbo_(nullptr),
+		scalar_vbo_(nullptr)
 	{}
-
-	const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const { return shader_vector_per_vertex_param_list_; }
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
 		if (position_vbo_)
-		{
-			for (auto& p : shader_vector_per_vertex_param_list_)
-				p->set_position_vbo(position_vbo_);
-		}
+			shader_scalar_per_vertex_param_->set_position_vbo(position_vbo_);
 	}
 
-	int get_vector_vbo_index(cgogn::rendering::VBO* v) const
+	cgogn::rendering::VBO* get_scalar_vbo() const { return scalar_vbo_; }
+	void set_scalar_vbo(cgogn::rendering::VBO* v)
 	{
-		int index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
-		return index >= vector_vbo_list_.size() ? -1 : index;
-	}
-	void add_vector_vbo(cgogn::rendering::VBO* v)
-	{
-		if (std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) == vector_vbo_list_.end())
-		{
-			vector_vbo_list_.push_back(v);
-			vector_scale_factor_list_.push_back(1.0f);
-			vector_color_list_.push_back(QColor("green"));
-			auto p = cgogn::rendering::ShaderVectorPerVertex::generate_param();
-			if (position_vbo_)
-				p->set_position_vbo(position_vbo_);
-			p->set_vector_vbo(vector_vbo_list_.back());
-			p->length_ = vector_scale_factor_list_.back();
-			p->color_ = vector_color_list_.back();
-			shader_vector_per_vertex_param_list_.push_back(std::move(p));
-		}
-	}
-	void remove_vector_vbo(cgogn::rendering::VBO* v)
-	{
-		int idx = get_vector_vbo_index(v);
-		if (idx >= 0)
-		{
-			vector_vbo_list_[idx] = vector_vbo_list_.back();
-			vector_vbo_list_.pop_back();
-			vector_scale_factor_list_[idx] = vector_scale_factor_list_.back();
-			vector_scale_factor_list_.pop_back();
-			vector_color_list_[idx] = vector_color_list_.back();
-			vector_color_list_.pop_back();
-			shader_vector_per_vertex_param_list_[idx].swap(shader_vector_per_vertex_param_list_.back());
-			shader_vector_per_vertex_param_list_.pop_back();
-		}
-	}
-
-	float32 get_vector_scale_factor(int i) const { return vector_scale_factor_list_[i]; }
-	void set_vector_scale_factor(int i, float32 sf)
-	{
-		vector_scale_factor_list_[i] = sf;
-		shader_vector_per_vertex_param_list_[i]->length_ = vector_scale_factor_list_[i];
-	}
-
-	const QColor& get_vector_color(int i) const { return vector_color_list_[i]; }
-	void set_vector_color(int i, const QColor& c)
-	{
-		vector_color_list_[i] = c;
-		shader_vector_per_vertex_param_list_[i]->color_ = vector_color_list_[i];
+		scalar_vbo_ = v;
+		if (scalar_vbo_)
+			shader_scalar_per_vertex_param_->set_scalar_vbo(scalar_vbo_);
 	}
 
 private:
 
-	std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>> shader_vector_per_vertex_param_list_;
+	std::unique_ptr<cgogn::rendering::ShaderScalarPerVertex::Param> shader_scalar_per_vertex_param_;
 
 	cgogn::rendering::VBO* position_vbo_;
-	std::vector<cgogn::rendering::VBO*> vector_vbo_list_;
-	std::vector<float32> vector_scale_factor_list_;
-	std::vector<QColor> vector_color_list_;
+	cgogn::rendering::VBO* scalar_vbo_;
 };
 
 /**
-* @brief Plugin that renders vectors on surface vertices
+* @brief Plugin that renders color-coded scalar values on surface vertices
 */
-class Plugin_SurfaceRenderVector : public PluginInteraction
+class Plugin_SurfaceRenderScalar : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
-	friend class SurfaceRenderVector_DockTab;
+	friend class SurfaceRenderScalar_DockTab;
 
 public:
 
-	inline Plugin_SurfaceRenderVector() {}
+	inline Plugin_SurfaceRenderScalar() {}
 
-	~Plugin_SurfaceRenderVector() {}
+	~Plugin_SurfaceRenderScalar() {}
 
 private:
 
@@ -178,10 +129,10 @@ public slots:
 
 private:
 
-	SurfaceRenderVector_DockTab* dock_tab_;
+	SurfaceRenderScalar_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_

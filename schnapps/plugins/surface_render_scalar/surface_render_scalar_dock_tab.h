@@ -21,21 +21,21 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 
-#include <ui_surface_render_vector.h>
+#include <ui_surface_render_scalar.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
 class MapHandlerGen;
-class Plugin_SurfaceRenderVector;
+class Plugin_SurfaceRenderScalar;
 
 struct MapParameters;
 
-class SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
+class SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
 {
 	Q_OBJECT
 
@@ -43,12 +43,12 @@ class SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVect
 
 public:
 
-	SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p);
+	SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p);
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_SurfaceRenderVector* plugin_;
+	Plugin_SurfaceRenderScalar* plugin_;
 
 	bool updating_ui_;
 
@@ -72,4 +72,4 @@ private:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
