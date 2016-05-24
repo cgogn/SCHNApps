@@ -46,15 +46,18 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s) :
 
 	schnapps_->foreach_map([this] (MapHandlerGen* map)
 	{
-		QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
-		item->setCheckState(Qt::Unchecked);
+		if (dynamic_cast<MapHandler<CMap2>*>(map))
+		{
+			QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
+			item->setCheckState(Qt::Unchecked);
+		}
 	});
 }
 
 void ComputeNormal_Dialog::selected_map_changed()
 {
-//	if (selected_map_)
-//		disconnect(selected_map_, SIGNAL(attribute_added(unsigned int, const QString&)), this, SLOT(add_attribute_to_list(unsigned int, const QString&)));
+	if (selected_map_)
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(add_attribute_to_list(cgogn::Orbit, const QString&)));
 
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
@@ -63,32 +66,33 @@ void ComputeNormal_Dialog::selected_map_changed()
 		combo_normalAttribute->clear();
 
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = schnapps_->get_map(map_name);
+		MapHandlerGen* mhg = schnapps_->get_map(map_name);
+		selected_map_ = dynamic_cast<MapHandler<CMap2>*>(mhg);
 
-		const MapBaseData* map = selected_map_->get_map();
-		const CMap2* map2 = dynamic_cast<const CMap2*>(map);
-
-		if (map2 && map2->is_embedded<CMap2::Vertex::ORBIT>())
+		if (selected_map_)
 		{
-			QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
-
-			const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Vertex::ORBIT>();
-			const std::vector<std::string>& names = container.get_names();
-			const std::vector<std::string>& type_names = container.get_type_names();
-
-			for (std::size_t i = 0u; i < names.size(); ++i)
+			const CMap2* map2 = selected_map_->get_map();
+			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
 			{
-				QString name = QString::fromStdString(names[i]);
-				QString type = QString::fromStdString(type_names[i]);
-				if (type == vec3_type_name)
+				QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Vertex::ORBIT>();
+				const std::vector<std::string>& names = container.get_names();
+				const std::vector<std::string>& type_names = container.get_type_names();
+
+				for (std::size_t i = 0u; i < names.size(); ++i)
 				{
-					combo_positionAttribute->addItem(name);
-					combo_normalAttribute->addItem(name);
+					QString name = QString::fromStdString(names[i]);
+					QString type = QString::fromStdString(type_names[i]);
+					if (type == vec3_type_name)
+					{
+						combo_positionAttribute->addItem(name);
+						combo_normalAttribute->addItem(name);
+					}
 				}
 			}
+			connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(add_attribute_to_list(cgogn::Orbit, const QString&)));
 		}
-
-//		connect(selected_map_, SIGNAL(attribute_added(unsigned int, const QString&)), this, SLOT(add_attribute_to_list(unsigned int, const QString&)));
 	}
 	else
 		selected_map_ = nullptr;
@@ -108,23 +112,23 @@ void ComputeNormal_Dialog::remove_map_from_list(MapHandlerGen* map)
 
 	if (selected_map_ == map)
 	{
-		disconnect(selected_map_, SIGNAL(attribute_added(unsigned int, const QString&)), this, SLOT(add_attribute_to_list(unsigned int, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(add_attribute_to_list(unsigned int, const QString&)));
 		selected_map_ = nullptr;
 	}
 }
 
-//void ComputeNormal_Dialog::add_attribute_to_list(unsigned int orbit, const QString& attr_name)
-//{
-//	if (orbit == CMap2::Vertex::ORBIT)
-//	{
-//		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
-//		const QString& attr_type_name = selected_map_->getAttributeTypeName(orbit, attr_name);
-//		if (attr_type_name == vec3_type_name)
-//		{
-//			combo_positionAttribute->addItem(attr_name);
-//			combo_normalAttribute->addItem(attr_name);
-//		}
-//	}
-//}
+void ComputeNormal_Dialog::add_attribute_to_list(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+		QString attribute_type_name = QString::fromStdString(selected_map_->get_chunk_array_gen(orbit, attribute_name)->get_type_name());
+		if (attribute_type_name == vec3_type_name)
+		{
+			combo_positionAttribute->addItem(attribute_name);
+			combo_normalAttribute->addItem(attribute_name);
+		}
+	}
+}
 
 } // namespace schnapps

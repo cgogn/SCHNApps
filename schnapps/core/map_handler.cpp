@@ -96,7 +96,7 @@ bool MapHandlerGen::get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec&
 	const VEC3& min = bb_.min();
 	const VEC3& max = bb_.max();
 
-	cgogn::geometry::BoundingBox<VEC3> bb;
+	cgogn::geometry::AABB<VEC3> bb;
 
 	QVector4D v4 = transformation_matrix_ * QVector4D(min[0], min[1], min[2], 1.0f);
 	qoglviewer::Vec v = qoglviewer::Vec(v4[0], v4[1], v4[2]);

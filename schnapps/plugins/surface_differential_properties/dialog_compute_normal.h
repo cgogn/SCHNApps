@@ -26,11 +26,12 @@
 
 #include <ui_dialog_compute_normal.h>
 
+#include <schnapps/core/map_handler.h>
+
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
 class Plugin_SurfaceDifferentialProperties;
 
 class ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
@@ -46,7 +47,7 @@ public:
 private:
 
 	SCHNApps* schnapps_;
-	MapHandlerGen* selected_map_;
+	MapHandler<CMap2>* selected_map_;
 
 private slots:
 
@@ -56,7 +57,7 @@ private slots:
 
 private:
 
-//	void add_attribute_to_list(unsigned int orbit, const QString& attr_name);
+	void add_attribute_to_list(cgogn::Orbit orbit, const QString& attribute_name);
 };
 
 } // namespace schnapps

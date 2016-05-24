@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>SurfaceRenderVector_TabWidget</class>
- <widget class="QWidget" name="SurfaceRenderVector_TabWidget">
+ <class>SurfaceRenderScalar_TabWidget</class>
+ <widget class="QWidget" name="SurfaceRenderScalar_TabWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>200</width>
+    <width>235</width>
     <height>600</height>
    </rect>
   </property>
@@ -14,7 +14,14 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="1">
+   <item row="0" column="0" colspan="2">
+    <widget class="QLabel" name="label_2">
+     <property name="text">
+      <string>Position :</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" colspan="2">
     <widget class="QComboBox" name="combo_positionVBO">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -29,38 +36,78 @@
      </item>
     </widget>
    </item>
-   <item row="4" column="0" colspan="2">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Selected vector size :</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="text">
-      <string>Position :</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0" colspan="2">
-    <widget class="ColorComboBox" name="combo_color"/>
-   </item>
-   <item row="2" column="0" colspan="2">
-    <widget class="QListWidget" name="list_vectorVBO">
-     <property name="selectionMode">
-      <enum>QAbstractItemView::MultiSelection</enum>
-     </property>
-    </widget>
-   </item>
    <item row="1" column="0">
     <widget class="QLabel" name="label_3">
      <property name="text">
-      <string>Vectors :</string>
+      <string>Scalar :</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="0" colspan="2">
+   <item row="2" column="0" colspan="4">
+    <widget class="QListWidget" name="list_scalarVBO">
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0" colspan="3">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Colormap :</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QComboBox" name="combo_colorMap">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <item>
+      <property name="text">
+       <string>BWR</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>CWR</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>BCGYR</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>BGR</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="4" column="0" colspan="3">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Expansion :</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="3">
+    <widget class="QSlider" name="slider_expansion">
+     <property name="maximum">
+      <number>10</number>
+     </property>
+     <property name="pageStep">
+      <number>1</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" colspan="3">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -73,32 +120,8 @@
      </property>
     </spacer>
    </item>
-   <item row="6" column="0" colspan="2">
-    <widget class="QSlider" name="slider_vectorsScaleFactor">
-     <property name="value">
-      <number>50</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0" colspan="2">
-    <widget class="QLabel" name="label_4">
-     <property name="text">
-      <string>Selected vector color :</string>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>ColorComboBox</class>
-   <extends>QComboBox</extends>
-   <header>schnapps/core/color_combo_box.h</header>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>
