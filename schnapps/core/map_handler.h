@@ -258,7 +258,7 @@ protected:
 	// map bounding box
 	cgogn::rendering::DisplayListDrawer bb_drawer_;
 	std::map<View*, std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer>> bb_drawer_renderer_;
-	cgogn::geometry::BoundingBox<VEC3> bb_;
+	cgogn::geometry::AABB<VEC3> bb_;
 	float bb_diagonal_size_;
 	bool show_bb_;
 	QColor bb_color_;
@@ -340,7 +340,7 @@ private:
 		this->bb_.reset();
 
 		if (bb_vertex_attribute_.is_valid())
-			cgogn::geometry::compute_bounding_box(bb_vertex_attribute_, this->bb_);
+			cgogn::geometry::compute_AABB(bb_vertex_attribute_, this->bb_);
 
 		if (this->bb_.is_initialized())
 			this->bb_diagonal_size_ = this->bb_.diag_size();
@@ -391,13 +391,13 @@ public:
 		return get_map()->template get_attribute<T, ORBIT>(attribute_name.toStdString());
 	}
 
-protected:
+	inline MapBaseData::ChunkArrayGen* get_chunk_array_gen(cgogn::Orbit orbit, const QString& attribute_name)
+	{
+		const MapBaseData::ChunkArrayContainer<cgogn::uint32>& cac = this->map_->get_const_attribute_container(orbit);
+		return cac.get_attribute(attribute_name.toStdString());
+	}
 
-//	const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container()
-//	{
-//		const MapBaseData* cm = this->map_;
-//		return cm->get_attribute_container<Vertex::ORBIT>();
-//	}
+protected:
 
 	/*********************************************************
 	 * MANAGE VBOs

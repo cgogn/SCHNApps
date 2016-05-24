@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_vector_dock_tab.h>
-#include <surface_render_vector.h>
+#include <surface_render_scalar_dock_tab.h>
+#include <surface_render_scalar.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -31,25 +31,24 @@
 namespace schnapps
 {
 
-SurfaceRenderVector_DockTab::SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p) :
+SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p) :
 	schnapps_(s),
 	plugin_(p),
 	updating_ui_(false)
 {
 	setupUi(this);
 
-	list_vectorVBO->setSelectionMode(QAbstractItemView::SingleSelection);
-	slider_vectorsScaleFactor->setDisabled(true);
-	combo_color->setDisabled(true);
+	list_scalarVBO->setSelectionMode(QAbstractItemView::SingleSelection);
+	combo_colorMap->setDisabled(true);
+	slider_expansion->setDisabled(true);
 
 	connect(combo_positionVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(position_vbo_changed(int)));
-	connect(list_vectorVBO, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(selected_vector_vbo_changed(QListWidgetItem*, QListWidgetItem*)));
-	connect(list_vectorVBO, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(vector_vbo_checked(QListWidgetItem*)));
-	connect(slider_vectorsScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vector_scale_factor_changed(int)));
-	connect(combo_color, SIGNAL(currentIndexChanged(int)), this, SLOT(vector_color_changed(int)));
+	connect(list_scalarVBO, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(selected_scalar_vbo_changed(QListWidgetItem*, QListWidgetItem*)));
+	connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
+	connect(slider_expansion, SIGNAL(valueChanged(int)), this, SLOT(expansion_changed(int)));
 }
 
-void SurfaceRenderVector_DockTab::position_vbo_changed(int index)
+void SurfaceRenderScalar_DockTab::position_vbo_changed(int index)
 {
 	if (!updating_ui_)
 	{
@@ -64,33 +63,7 @@ void SurfaceRenderVector_DockTab::position_vbo_changed(int index)
 	}
 }
 
-void SurfaceRenderVector_DockTab::selected_vector_vbo_changed(QListWidgetItem* item, QListWidgetItem* old)
-{
-	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			if ((item->checkState() == Qt::Checked))
-			{
-				const MapParameters& p = plugin_->get_parameters(view, map);
-				int idx = p.get_vector_vbo_index(map->get_vbo(item->text()));
-				slider_vectorsScaleFactor->setEnabled(true);
-				slider_vectorsScaleFactor->setSliderPosition(p.get_vector_scale_factor(idx) * 50.0f);
-				combo_color->setEnabled(true);
-				combo_color->setColor(p.get_vector_color(idx));
-			}
-			else
-			{
-				slider_vectorsScaleFactor->setDisabled(true);
-				combo_color->setDisabled(true);
-			}
-		}
-	}
-}
-
-void SurfaceRenderVector_DockTab::vector_vbo_checked(QListWidgetItem* item)
+void SurfaceRenderScalar_DockTab::selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old)
 {
 	if (!updating_ui_)
 	{
@@ -99,71 +72,42 @@ void SurfaceRenderVector_DockTab::vector_vbo_checked(QListWidgetItem* item)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			cgogn::rendering::VBO* vbo = map->get_vbo(item->text());
-
-			if (item->checkState() == Qt::Checked)
-			{
-				p.add_vector_vbo(vbo);
-				int idx = p.get_vector_vbo_index(vbo);
-				slider_vectorsScaleFactor->setEnabled(true);
-				slider_vectorsScaleFactor->setSliderPosition(p.get_vector_scale_factor(idx) * 50.0f);
-				combo_color->setEnabled(true);
-				combo_color->setColor(p.get_vector_color(idx));
-				if (list_vectorVBO->currentItem() != item)
-					list_vectorVBO->setCurrentItem(item);
-			}
-			else
-			{
-				p.remove_vector_vbo(vbo);
-//				list_vectorVBO->setCurrentItem(item);
-				list_vectorVBO->clearSelection();
-				slider_vectorsScaleFactor->setDisabled(true);
-				combo_color->setDisabled(true);
-			}
+			p.set_scalar_vbo(map->get_vbo(item->text()));
+			combo_colorMap->setEnabled(true);
+			combo_colorMap->setCurrentIndex(p.get_color_map());
+			slider_expansion->setEnabled(true);
+			slider_expansion->setSliderPosition(p.get_expansion());
 			view->update();
 		}
 	}
 }
 
-void SurfaceRenderVector_DockTab::vector_scale_factor_changed(int i)
+void SurfaceRenderScalar_DockTab::color_map_changed(int index)
 {
 	if (!updating_ui_)
 	{
 		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		QListWidgetItem* item = list_vectorVBO->currentItem();
-		if (view && map && item)
+		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			int idx = p.get_vector_vbo_index(map->get_vbo(item->text()));
-			float scale = p.get_vector_scale_factor(idx);
-			float new_scale = float(i) / 50.0f;
-			if (fabs(scale - new_scale) > 0.01f)
-			{
-				p.set_vector_scale_factor(idx, new_scale);
-				view->update();
-			}
+			p.set_color_map(index);
+			view->update();
 		}
 	}
 }
 
-void SurfaceRenderVector_DockTab::vector_color_changed(int i)
+void SurfaceRenderScalar_DockTab::expansion_changed(int i)
 {
 	if (!updating_ui_)
 	{
 		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		QListWidgetItem* item = list_vectorVBO->currentItem();
-		if (view && map && item)
+		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			int idx = p.get_vector_vbo_index(map->get_vbo(item->text()));
-			const QColor& col = p.get_vector_color(idx);
-			if (col != combo_color->color())
-			{
-				p.set_vector_color(idx, combo_color->color());
-				view->update();
-			}
+			p.set_expansion(i);
+			view->update();
 		}
 	}
 }
@@ -172,14 +116,14 @@ void SurfaceRenderVector_DockTab::vector_color_changed(int i)
 
 
 
-void SurfaceRenderVector_DockTab::add_position_vbo(QString name)
+void SurfaceRenderScalar_DockTab::add_position_vbo(QString name)
 {
 	updating_ui_ = true;
 	combo_positionVBO->addItem(name);
 	updating_ui_ = false;
 }
 
-void SurfaceRenderVector_DockTab::remove_position_vbo(QString name)
+void SurfaceRenderScalar_DockTab::remove_position_vbo(QString name)
 {
 	updating_ui_ = true;
 	int curIndex = combo_positionVBO->currentIndex();
@@ -190,58 +134,56 @@ void SurfaceRenderVector_DockTab::remove_position_vbo(QString name)
 	updating_ui_ = false;
 }
 
-void SurfaceRenderVector_DockTab::add_vector_vbo(QString name)
+void SurfaceRenderScalar_DockTab::add_scalar_vbo(QString name)
 {
 	updating_ui_ = true;
-	list_vectorVBO->addItem(name);
-	QListWidgetItem* item = list_vectorVBO->item(list_vectorVBO->count() - 1);
-	item->setFlags(item->flags() | Qt::ItemIsEditable);
-	item->setCheckState(Qt::Unchecked);
+	list_scalarVBO->addItem(name);
 	updating_ui_ = false;
 }
 
-void SurfaceRenderVector_DockTab::remove_vector_vbo(QString name)
+void SurfaceRenderScalar_DockTab::remove_scalar_vbo(QString name)
 {
 	updating_ui_ = true;
-	QList<QListWidgetItem*> vbo = list_vectorVBO->findItems(name, Qt::MatchExactly);
+	QList<QListWidgetItem*> vbo = list_scalarVBO->findItems(name, Qt::MatchExactly);
 	if (!vbo.empty())
 		delete vbo[0];
 	updating_ui_ = false;
 }
 
-void SurfaceRenderVector_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
+void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
 	updating_ui_ = true;
 
 	combo_positionVBO->clear();
 	combo_positionVBO->addItem("- select VBO -");
 
-	list_vectorVBO->clear();
-	list_vectorVBO->clearSelection();
+	list_scalarVBO->clear();
+	list_scalarVBO->clearSelection();
 
 	unsigned int i = 1;
+	unsigned int j = 0;
 	for(auto& vbo_it : map->get_vbo_set())
 	{
 		auto& vbo = vbo_it.second;
-		if (vbo->vector_dimension() == 3)
+		const uint32 dimension = vbo->vector_dimension();
+		if (dimension == 3)
 		{
 			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
 			if (vbo.get() == p.get_position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
-
-			list_vectorVBO->addItem(QString::fromStdString(vbo->get_name()));
-			QListWidgetItem* item = list_vectorVBO->item(list_vectorVBO->count() - 1);
-			item->setFlags(item->flags() | Qt::ItemIsEditable);
-			item->setCheckState(Qt::Unchecked);
-			if (p.get_vector_vbo_index(vbo.get()) >= 0)
-				list_vectorVBO->item(i-1)->setCheckState(Qt::Checked);
-
 			++i;
+		}
+		if (dimension == 1)
+		{
+			list_scalarVBO->addItem(QString::fromStdString(vbo->get_name()));
+			if (vbo.get() == p.get_scalar_vbo())
+				list_scalarVBO->item(j)->setSelected(true);
+			++j;
 		}
 	}
 
-	slider_vectorsScaleFactor->setDisabled(true);
-	combo_color->setDisabled(true);
+	combo_colorMap->setDisabled(true);
+	slider_expansion->setDisabled(true);
 
 	updating_ui_ = false;
 }

@@ -26,37 +26,36 @@
 #include <surface_differential_properties.h>
 
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-//ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s) :
-//	schnapps_(s),
-//	selected_map_(nullptr)
-//{
-//	setupUi(this);
+ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s) :
+	schnapps_(s),
+	selected_map_(nullptr)
+{
+	setupUi(this);
 
-//	KmaxAttributeName->setText("Kmax");
-//	kmaxAttributeName->setText("kmax");
-//	KminAttributeName->setText("Kmin");
-//	kminAttributeName->setText("kmin");
-//	KnormalAttributeName->setText("Knormal");
+	Kmax_attribute_name->setText("Kmax");
+	kmax_attribute_name->setText("kmax");
+	Kmin_attribute_name->setText("Kmin");
+	kmin_attribute_name->setText("kmin");
+	Knormal_attribute_name->setText("Knormal");
 
-//	connect(schnapps_, SIGNAL(mapAdded(MapHandlerGen*)), this, SLOT(addMapToList(MapHandlerGen*)));
-//	connect(schnapps_, SIGNAL(mapRemoved(MapHandlerGen*)), this, SLOT(removeMapFromList(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(mapAdded(MapHandlerGen*)), this, SLOT(addMapToList(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(mapRemoved(MapHandlerGen*)), this, SLOT(removeMapFromList(MapHandlerGen*)));
 
-//	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selectedMapChanged()));
+	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selectedMapChanged()));
 
-//	foreach(MapHandlerGen* map,  schnapps_->getMapSet().values())
-//	{
-//		QListWidgetItem* item = new QListWidgetItem(map->getName(), list_maps);
-//		item->setCheckState(Qt::Unchecked);
-//	}
-//}
+	schnapps_->foreach_map([this] (MapHandlerGen* map)
+	{
+		QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
+		item->setCheckState(Qt::Unchecked);
+	});
+}
 
-//void ComputeCurvature_Dialog::selectedMapChanged()
-//{
+void ComputeCurvature_Dialog::selected_map_changed()
+{
 //	if(selected_map_)
 //		disconnect(selected_map_, SIGNAL(attributeAdded(unsigned int, const QString&)), this, SLOT(addAttributeToList(unsigned int, const QString&)));
 
@@ -106,16 +105,16 @@ namespace schnapps
 //	}
 //	else
 //		selected_map_ = nullptr;
-//}
+}
 
-//void ComputeCurvature_Dialog::addMapToList(MapHandlerGen* m)
-//{
+void ComputeCurvature_Dialog::add_map_to_list(MapHandlerGen* map)
+{
 //	QListWidgetItem* item = new QListWidgetItem(m->getName(), list_maps);
 //	item->setCheckState(Qt::Unchecked);
-//}
+}
 
-//void ComputeCurvature_Dialog::removeMapFromList(MapHandlerGen* m)
-//{
+void ComputeCurvature_Dialog::remove_map_from_list(MapHandlerGen* map)
+{
 //	QList<QListWidgetItem*> items = list_maps->findItems(m->getName(), Qt::MatchExactly);
 //	if(!items.empty())
 //		delete items[0];
@@ -125,10 +124,10 @@ namespace schnapps
 //		disconnect(selected_map_, SIGNAL(attributeAdded(unsigned int, const QString&)), this, SLOT(addAttributeToList(unsigned int, const QString&)));
 //		selected_map_ = nullptr;
 //	}
-//}
+}
 
-//void ComputeCurvature_Dialog::addAttributeToList(unsigned int orbit, const QString& nameAttr)
-//{
+void ComputeCurvature_Dialog::add_attribute_to_list(unsigned int orbit, const QString& attribute_name)
+{
 //	QString vec3TypeName = QString::fromStdString(nameOfType(PFP2::VEC3()));
 //	QString realTypeName = QString::fromStdString(nameOfType(PFP2::REAL()));
 
@@ -147,6 +146,6 @@ namespace schnapps
 //		combo_kmaxAttribute->addItem(nameAttr);
 //		combo_kminAttribute->addItem(nameAttr);
 //	}
-//}
+}
 
 } // namespace schnapps

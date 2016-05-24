@@ -26,6 +26,7 @@
 
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
+#include <schnapps/core/map_handler.h>
 
 #include <surface_render_scalar_dock_tab.h>
 
@@ -36,7 +37,6 @@
 namespace schnapps
 {
 
-class MapHandlerGen;
 class Plugin_SurfaceRenderScalar;
 
 struct MapParameters
@@ -45,8 +45,16 @@ struct MapParameters
 
 	MapParameters() :
 		position_vbo_(nullptr),
-		scalar_vbo_(nullptr)
-	{}
+		scalar_vbo_(nullptr),
+		color_map_(cgogn::rendering::ShaderScalarPerVertex::BWR),
+		expansion_(1)
+	{
+		shader_scalar_per_vertex_param_ = cgogn::rendering::ShaderScalarPerVertex::generate_param();
+		shader_scalar_per_vertex_param_->color_map_ = color_map_;
+		shader_scalar_per_vertex_param_->expansion_ = expansion_;
+		shader_scalar_per_vertex_param_->min_value_ = 0.0f;
+		shader_scalar_per_vertex_param_->max_value_ = 1.0f;
+	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
@@ -61,15 +69,46 @@ struct MapParameters
 	{
 		scalar_vbo_ = v;
 		if (scalar_vbo_)
+		{
+			const typename MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->get_name()));
+			float32 scalar_min = std::numeric_limits<float>::max();
+			float32 scalar_max = std::numeric_limits<float>::min();
+			for (const SCALAR& s : attr)
+			{
+				scalar_min = s < scalar_min ? s : scalar_min;
+				scalar_max = s > scalar_max ? s : scalar_max;
+			}
 			shader_scalar_per_vertex_param_->set_scalar_vbo(scalar_vbo_);
+			shader_scalar_per_vertex_param_->min_value_ = scalar_min;
+			shader_scalar_per_vertex_param_->max_value_ = scalar_max;
+		}
+	}
+
+	cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
+	void set_color_map(int color_map)
+	{
+		color_map_ = cgogn::rendering::ShaderScalarPerVertex::ColorMap(color_map);
+		shader_scalar_per_vertex_param_->color_map_ = color_map_;
+	}
+
+	int32 get_expansion() const { return expansion_; }
+	void set_expansion(int32 expansion)
+	{
+		expansion_ = expansion;
+		shader_scalar_per_vertex_param_->expansion_ = expansion_;
 	}
 
 private:
+
+	MapHandler<CMap2>* map_;
 
 	std::unique_ptr<cgogn::rendering::ShaderScalarPerVertex::Param> shader_scalar_per_vertex_param_;
 
 	cgogn::rendering::VBO* position_vbo_;
 	cgogn::rendering::VBO* scalar_vbo_;
+
+	cgogn::rendering::ShaderScalarPerVertex::ColorMap color_map_;
+	int32 expansion_;
 };
 
 /**

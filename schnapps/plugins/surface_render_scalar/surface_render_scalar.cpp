@@ -26,7 +26,6 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
@@ -34,7 +33,9 @@ namespace schnapps
 MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
-	return parameter_set_[view][map];
+	MapParameters& p = parameter_set_[view][map];
+	p.map_ = static_cast<MapHandler<CMap2>*>(map);
+	return p;
 }
 
 bool Plugin_SurfaceRenderScalar::enable()
@@ -84,9 +85,9 @@ void Plugin_SurfaceRenderScalar::draw_map(View* view, MapHandlerGen* map, const 
 
 	if (p.get_position_vbo() && p.get_scalar_vbo())
 	{
-		param->bind(proj, mv);
+		p.shader_scalar_per_vertex_param_->bind(proj, mv);
 		map->draw(cgogn::rendering::TRIANGLES);
-		param->release();
+		p.shader_scalar_per_vertex_param_->release();
 	}
 }
 
@@ -168,9 +169,9 @@ void Plugin_SurfaceRenderScalar::vbo_removed(cgogn::rendering::VBO* vbo)
 			map_param.set_position_vbo(nullptr);
 			if (view->is_linked_to_map(map)) views_to_update.insert(view);
 		}
-		if (map_param.get_scalar_vbo_index(vbo) >= 0)
+		if (map_param.get_scalar_vbo() == vbo)
 		{
-			map_param.remove_scalar_vbo(vbo);
+			map_param.set_scalar_vbo(nullptr);
 			if (view->is_linked_to_map(map)) views_to_update.insert(view);
 		}
 	}
