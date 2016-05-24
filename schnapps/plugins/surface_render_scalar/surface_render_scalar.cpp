@@ -131,13 +131,9 @@ void Plugin_SurfaceRenderScalar::vbo_added(cgogn::rendering::VBO* vbo)
 	if (map == schnapps_->get_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
-		{
 			dock_tab_->add_position_vbo(QString::fromStdString(vbo->get_name()));
-		}
 		if (vbo->vector_dimension() == 1)
-		{
 			dock_tab_->add_scalar_vbo(QString::fromStdString(vbo->get_name()));
-		}
 	}
 }
 
@@ -148,13 +144,9 @@ void Plugin_SurfaceRenderScalar::vbo_removed(cgogn::rendering::VBO* vbo)
 	if (map == schnapps_->get_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
-		{
 			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->get_name()));
-		}
 		if (vbo->vector_dimension() == 1)
-		{
 			dock_tab_->remove_scalar_vbo(QString::fromStdString(vbo->get_name()));
-		}
 	}
 
 	std::set<View*> views_to_update;

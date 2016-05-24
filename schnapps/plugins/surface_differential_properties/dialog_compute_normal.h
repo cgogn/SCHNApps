@@ -52,12 +52,9 @@ private:
 private slots:
 
 	void selected_map_changed();
-	void add_map_to_list(MapHandlerGen* map);
-	void remove_map_from_list(MapHandlerGen* map);
-
-private:
-
-	void add_attribute_to_list(cgogn::Orbit orbit, const QString& attribute_name);
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 };
 
 } // namespace schnapps

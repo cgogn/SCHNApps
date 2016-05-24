@@ -391,12 +391,6 @@ public:
 		return get_map()->template get_attribute<T, ORBIT>(attribute_name.toStdString());
 	}
 
-	inline MapBaseData::ChunkArrayGen* get_chunk_array_gen(cgogn::Orbit orbit, const QString& attribute_name)
-	{
-		const MapBaseData::ChunkArrayContainer<cgogn::uint32>& cac = this->map_->get_const_attribute_container(orbit);
-		return cac.get_attribute(attribute_name.toStdString());
-	}
-
 protected:
 
 	/*********************************************************
