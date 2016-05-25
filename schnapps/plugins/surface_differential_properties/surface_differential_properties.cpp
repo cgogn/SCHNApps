@@ -27,6 +27,8 @@
 #include <schnapps/core/map_handler.h>
 
 #include <cgogn/geometry/algos/normal.h>
+#include <cgogn/geometry/algos/angle.h>
+#include <cgogn/geometry/algos/length.h>
 
 namespace schnapps
 {
@@ -89,13 +91,13 @@ void Plugin_SurfaceDifferentialProperties::disable()
 
 void Plugin_SurfaceDifferentialProperties::map_added(MapHandlerGen *map)
 {
-	if (dynamic_cast<MapHandler<CMap2>*>(map))
+	if (map->dimension() == 2)
 		connect(map, SIGNAL(attribute_modified(cgogn::Orbit, QString)), this, SLOT(attribute_modified(cgogn::Orbit, const QString&)));
 }
 
 void Plugin_SurfaceDifferentialProperties::map_removed(MapHandlerGen *map)
 {
-	if (dynamic_cast<MapHandler<CMap2>*>(map))
+	if (map->dimension() == 2)
 		disconnect(map, SIGNAL(attribute_modified(cgogn::Orbit, QString)), this, SLOT(attribute_modified(cgogn::Orbit, const QString&)));
 }
 
@@ -241,7 +243,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	if (!normal.is_valid())
 		normal = mh->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 
-	cgogn::geometry::compute_normal_vertices<VEC3>(*mh->get_map(), position, normal);
+	cgogn::geometry::compute_normal_vertices<VEC3, CMap2>(*mh->get_map(), position, normal);
 
 	compute_normal_last_parameters_[map_name] =
 		ComputeNormalParameters(position_attribute_name, normal_attribute_name, auto_update);
@@ -262,7 +264,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 	bool compute_kgaussian,
 	bool auto_update)
 {
-	MapHandler<CMap2>* mh = static_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
+	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
 	if (!mh)
 		return;
 
@@ -304,12 +306,12 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 
 	CMap2* map2 = mh->get_map();
 
-//	cgogn::geometry::compute_angles_between_normals_on_edges<VEC3>(*map2, position, edge_angle);
-//	cgogn::geometry::compute_area_edges<VEC3>(*map2, position, edge_area);
+	cgogn::geometry::compute_angle_between_face_normals<VEC3>(*map2, position, edge_angle);
+	cgogn::geometry::compute_cell_area<VEC3, CMap2::Edge>(*map2, position, edge_area);
 
-//	SCALAR mean_edge_length = cgogn::geometry::mean_edge_length<VEC3>(*map2, position);
+	SCALAR mean_edge_length = cgogn::geometry::mean_edge_length<VEC3>(*map2, position);
 
-//	float32 radius = 2.0f * mean_edge_length;
+	float32 radius = 2.0f * mean_edge_length;
 //	cgogn::geometry::compute_curvature_vertices_normal_cycles_projected<VEC3>(*map2, radius, position, normal, edge_angle, edge_area, kmax, kmin, Kmax, Kmin, Knormal);
 
 	compute_curvature_last_parameters_[map_name] =

@@ -46,6 +46,7 @@ SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_Sur
 	connect(list_scalarVBO, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(selected_scalar_vbo_changed(QListWidgetItem*, QListWidgetItem*)));
 	connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
 	connect(slider_expansion, SIGNAL(valueChanged(int)), this, SLOT(expansion_changed(int)));
+	connect(check_showIsoLines, SIGNAL(toggled(bool)), this, SLOT(show_iso_lines_changed(bool)));
 }
 
 void SurfaceRenderScalar_DockTab::position_vbo_changed(int index)
@@ -107,6 +108,21 @@ void SurfaceRenderScalar_DockTab::expansion_changed(int i)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_expansion(i);
+			view->update();
+		}
+	}
+}
+
+void SurfaceRenderScalar_DockTab::show_iso_lines_changed(bool b)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_show_iso_lines(b);
 			view->update();
 		}
 	}
@@ -184,6 +200,7 @@ void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, cons
 
 	combo_colorMap->setDisabled(true);
 	slider_expansion->setDisabled(true);
+	check_showIsoLines->setChecked(p.get_show_iso_lines());
 
 	updating_ui_ = false;
 }
