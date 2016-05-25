@@ -58,6 +58,7 @@ private slots:
 	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
 	void color_map_changed(int index);
 	void expansion_changed(int i);
+	void show_iso_lines_changed(bool b);
 
 private:
 

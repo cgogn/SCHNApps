@@ -47,13 +47,15 @@ struct MapParameters
 		position_vbo_(nullptr),
 		scalar_vbo_(nullptr),
 		color_map_(cgogn::rendering::ShaderScalarPerVertex::BWR),
-		expansion_(1)
+		expansion_(1),
+		show_iso_lines_(false)
 	{
 		shader_scalar_per_vertex_param_ = cgogn::rendering::ShaderScalarPerVertex::generate_param();
 		shader_scalar_per_vertex_param_->color_map_ = color_map_;
 		shader_scalar_per_vertex_param_->expansion_ = expansion_;
 		shader_scalar_per_vertex_param_->min_value_ = 0.0f;
 		shader_scalar_per_vertex_param_->max_value_ = 1.0f;
+		shader_scalar_per_vertex_param_->show_iso_lines_ = show_iso_lines_;
 	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
@@ -98,6 +100,13 @@ struct MapParameters
 		shader_scalar_per_vertex_param_->expansion_ = expansion_;
 	}
 
+	int32 get_show_iso_lines() const { return show_iso_lines_; }
+	void set_show_iso_lines(bool show_iso_lines)
+	{
+		show_iso_lines_ = show_iso_lines;
+		shader_scalar_per_vertex_param_->show_iso_lines_ = show_iso_lines_;
+	}
+
 private:
 
 	MapHandler<CMap2>* map_;
@@ -109,6 +118,7 @@ private:
 
 	cgogn::rendering::ShaderScalarPerVertex::ColorMap color_map_;
 	int32 expansion_;
+	bool show_iso_lines_;
 };
 
 /**
@@ -138,12 +148,12 @@ private:
 	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
-	inline void keyPress(View* , QKeyEvent*) override {}
-	inline void keyRelease(View* , QKeyEvent*) override {}
-	inline void mousePress(View* , QMouseEvent*) override {}
-	inline void mouseRelease(View* , QMouseEvent*) override {}
-	inline void mouseMove(View* , QMouseEvent*) override {}
-	inline void wheelEvent(View* , QWheelEvent*) override {}
+	void keyPress(View*, QKeyEvent*) override;
+	inline void keyRelease(View*, QKeyEvent*) override {}
+	inline void mousePress(View*, QMouseEvent*) override {}
+	inline void mouseRelease(View*, QMouseEvent*) override {}
+	inline void mouseMove(View*, QMouseEvent*) override {}
+	inline void wheelEvent(View*, QWheelEvent*) override {}
 
 	inline void view_linked(View*) override {}
 	inline void view_unlinked(View*) override {}

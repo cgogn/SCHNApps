@@ -93,7 +93,7 @@ void ComputeNormal_Dialog::selected_map_changed()
 
 void ComputeNormal_Dialog::map_added(MapHandlerGen* map)
 {
-	if (dynamic_cast<MapHandler<CMap2>*>(map))
+	if (map->dimension() == 2)
 	{
 		QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
 		item->setCheckState(Qt::Unchecked);

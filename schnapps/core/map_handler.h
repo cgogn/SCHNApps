@@ -83,9 +83,11 @@ public slots:
 
 	bool is_selected_map() const;
 
-	virtual uint32 nb_vertices() = 0;
-	virtual uint32 nb_edges() = 0;
-	virtual uint32 nb_faces() = 0;
+	virtual uint8 dimension() const = 0;
+
+	virtual uint32 nb_vertices() const = 0;
+	virtual uint32 nb_edges() const = 0;
+	virtual uint32 nb_faces() const = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -295,11 +297,13 @@ public:
 	~MapHandler()
 	{}
 
-	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(this->map_.get()); }
+	inline MAP_TYPE* get_map() const { return static_cast<MAP_TYPE*>(this->map_.get()); }
 
-	uint32 nb_vertices() override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
-	uint32 nb_edges() override { return get_map()->template nb_cells<Edge::ORBIT>(); }
-	uint32 nb_faces() override { return get_map()->template nb_cells<Face::ORBIT>(); }
+	uint8 dimension() const override { return MAP_TYPE::DIMENSION; }
+
+	uint32 nb_vertices() const override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
+	uint32 nb_edges() const override { return get_map()->template nb_cells<Edge::ORBIT>(); }
+	uint32 nb_faces() const override { return get_map()->template nb_cells<Face::ORBIT>(); }
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
