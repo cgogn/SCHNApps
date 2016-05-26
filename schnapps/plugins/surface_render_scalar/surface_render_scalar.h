@@ -47,7 +47,7 @@ struct MapParameters
 		position_vbo_(nullptr),
 		scalar_vbo_(nullptr),
 		color_map_(cgogn::rendering::ShaderScalarPerVertex::BWR),
-		expansion_(1),
+		expansion_(0),
 		show_iso_lines_(false)
 	{
 		shader_scalar_per_vertex_param_ = cgogn::rendering::ShaderScalarPerVertex::generate_param();
