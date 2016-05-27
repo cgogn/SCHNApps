@@ -312,7 +312,7 @@ public:
 	inline QString get_bb_vertex_attribute_name() const
 	{
 		if (bb_vertex_attribute_.is_valid())
-			return QString::fromStdString(bb_vertex_attribute_.get_name());
+			return QString::fromStdString(bb_vertex_attribute_.name());
 		else
 			return QString();
 	}
@@ -328,7 +328,7 @@ public:
 
 	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) override
 	{
-		QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.get_name());
+		QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
 		if (orbit == Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
 		{
 			compute_bb();
@@ -409,8 +409,8 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_const_attribute_container<Vertex::ORBIT>();
-			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
+			MapBaseData::ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
 
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
 			if (ca4)
@@ -468,8 +468,8 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_const_attribute_container<Vertex::ORBIT>();
-			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
+			MapBaseData::ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
 
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
 			if (ca4)

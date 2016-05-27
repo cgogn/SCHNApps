@@ -29,6 +29,7 @@
 #include <cgogn/geometry/algos/normal.h>
 #include <cgogn/geometry/algos/angle.h>
 #include <cgogn/geometry/algos/length.h>
+#include <cgogn/geometry/algos/curvature.h>
 
 namespace schnapps
 {
@@ -243,7 +244,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	if (!normal.is_valid())
 		normal = mh->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 
-	cgogn::geometry::compute_normal_vertices<VEC3, CMap2>(*mh->get_map(), position, normal);
+	cgogn::geometry::normal<VEC3>(*mh->get_map(), position, normal);
 
 	compute_normal_last_parameters_[map_name] =
 		ComputeNormalParameters(position_attribute_name, normal_attribute_name, auto_update);
@@ -306,13 +307,12 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 
 	CMap2* map2 = mh->get_map();
 
-	cgogn::geometry::compute_angle_between_face_normals<VEC3>(*map2, position, edge_angle);
-	cgogn::geometry::compute_cell_area<VEC3, CMap2::Edge>(*map2, position, edge_area);
+	cgogn::geometry::angle_between_face_normals<VEC3>(*map2, position, edge_angle);
+	cgogn::geometry::area<VEC3, CMap2::Edge>(*map2, position, edge_area);
 
 	SCALAR mean_edge_length = cgogn::geometry::mean_edge_length<VEC3>(*map2, position);
-
 	float32 radius = 2.0f * mean_edge_length;
-//	cgogn::geometry::compute_curvature_vertices_normal_cycles_projected<VEC3>(*map2, radius, position, normal, edge_angle, edge_area, kmax, kmin, Kmax, Kmin, Knormal);
+	cgogn::geometry::curvature<VEC3>(*map2, radius, position, normal, edge_angle, edge_area, kmax, kmin, Kmax, Kmin, Knormal);
 
 	compute_curvature_last_parameters_[map_name] =
 		ComputeCurvatureParameters(
@@ -332,7 +332,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 		if (!kmean.is_valid())
 			kmean = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("kmean");
 
-		const CMap2::ChunkArrayContainer<uint32>& container = map2->get_const_attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2::ChunkArrayContainer<uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
 		for (uint32 i = container.begin(); i != container.end(); container.next(i))
 			kmean[i] = (kmin[i] + kmax[i]) / 2.0;
 
@@ -345,7 +345,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 		if (!kgaussian.is_valid())
 			kgaussian = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("kgaussian");
 
-		const CMap2::ChunkArrayContainer<uint32>& container = map2->get_const_attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2::ChunkArrayContainer<uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
 		for (uint32 i = container.begin(); i != container.end(); container.next(i))
 			kgaussian[i] = kmin[i] * kmax[i];
 
