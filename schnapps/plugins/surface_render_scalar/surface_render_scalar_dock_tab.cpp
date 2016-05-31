@@ -186,14 +186,14 @@ void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, cons
 		const uint32 dimension = vbo->vector_dimension();
 		if (dimension == 3)
 		{
-			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
+			combo_positionVBO->addItem(QString::fromStdString(vbo->name()));
 			if (vbo.get() == p.get_position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 			++i;
 		}
 		if (dimension == 1)
 		{
-			list_scalarVBO->addItem(QString::fromStdString(vbo->get_name()));
+			list_scalarVBO->addItem(QString::fromStdString(vbo->name()));
 			if (vbo.get() == p.get_scalar_vbo())
 				list_scalarVBO->item(j)->setSelected(true);
 			++j;

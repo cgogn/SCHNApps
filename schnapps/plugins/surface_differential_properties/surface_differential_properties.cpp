@@ -311,7 +311,8 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 	cgogn::geometry::compute_area<VEC3, CMap2::Edge>(*map2, position, edge_area);
 
 	SCALAR mean_edge_length = cgogn::geometry::mean_edge_length<VEC3>(*map2, position);
-	float32 radius = 2.0f * mean_edge_length;
+	float32 radius = 2.5f * mean_edge_length;
+
 	cgogn::geometry::compute_curvature<VEC3>(*map2, radius, position, normal, edge_angle, edge_area, kmax, kmin, Kmax, Kmin, Knormal);
 
 	compute_curvature_last_parameters_[map_name] =

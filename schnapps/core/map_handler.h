@@ -328,12 +328,15 @@ public:
 
 	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) override
 	{
-		QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
-		if (orbit == Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
+		if (bb_vertex_attribute_.is_valid())
 		{
-			compute_bb();
-			this->update_bb_drawer();
-			emit(bb_changed());
+			QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
+			if (orbit == Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
+			{
+				compute_bb();
+				this->update_bb_drawer();
+				emit(bb_changed());
+			}
 		}
 	}
 
