@@ -66,7 +66,7 @@ private slots:
 	void schnapps_closing();
 
 	// slots called from MapHandler signals
-	void attribute_modified(cgogn::Orbit orbit, const QString& attribute_name);
+	void attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
 
 	// slots called from action signals
 	void open_compute_normal_dialog();

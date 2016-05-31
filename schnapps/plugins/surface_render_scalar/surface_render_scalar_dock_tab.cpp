@@ -73,11 +73,13 @@ void SurfaceRenderScalar_DockTab::selected_scalar_vbo_changed(QListWidgetItem* i
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
+			updating_ui_ = true;
 			p.set_scalar_vbo(map->get_vbo(item->text()));
 			combo_colorMap->setEnabled(true);
 			combo_colorMap->setCurrentIndex(p.get_color_map());
 			slider_expansion->setEnabled(true);
 			slider_expansion->setSliderPosition(p.get_expansion());
+			updating_ui_ = false;
 			view->update();
 		}
 	}

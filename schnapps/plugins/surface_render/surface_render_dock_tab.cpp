@@ -437,7 +437,6 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 		}
 	}
 
-
 	check_renderVertices->setChecked(p.render_vertices_);
 	slider_verticesScaleFactor->setSliderPosition(p.get_vertex_scale_factor() * 50.0);
 	check_renderEdges->setChecked(p.render_edges_);
