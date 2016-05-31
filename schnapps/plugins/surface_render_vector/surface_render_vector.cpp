@@ -80,6 +80,7 @@ void Plugin_SurfaceRenderVector::disable()
 
 void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
+	view->makeCurrent();
 	const MapParameters& p = get_parameters(view, map);
 
 	if (p.get_position_vbo())

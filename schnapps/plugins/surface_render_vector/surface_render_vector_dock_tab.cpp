@@ -103,14 +103,16 @@ void SurfaceRenderVector_DockTab::vector_vbo_checked(QListWidgetItem* item)
 
 			if (item->checkState() == Qt::Checked)
 			{
+				updating_ui_ = true;
 				p.add_vector_vbo(vbo);
 				int idx = p.get_vector_vbo_index(vbo);
+				if (list_vectorVBO->currentItem() != item)
+					list_vectorVBO->setCurrentItem(item);
 				slider_vectorsScaleFactor->setEnabled(true);
 				slider_vectorsScaleFactor->setSliderPosition(p.get_vector_scale_factor(idx) * 50.0f);
 				combo_color->setEnabled(true);
 				combo_color->setColor(p.get_vector_color(idx));
-				if (list_vectorVBO->currentItem() != item)
-					list_vectorVBO->setCurrentItem(item);
+				updating_ui_ = false;
 			}
 			else
 			{

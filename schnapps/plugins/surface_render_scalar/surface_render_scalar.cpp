@@ -27,6 +27,9 @@
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
+#include <cgogn/geometry/algos/area.h>
+#include <cgogn/geometry/algos/selection.h>
+
 namespace schnapps
 {
 
@@ -81,6 +84,7 @@ void Plugin_SurfaceRenderScalar::disable()
 
 void Plugin_SurfaceRenderScalar::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
+	view->makeCurrent();
 	const MapParameters& p = get_parameters(view, map);
 
 	if (p.get_position_vbo() && p.get_scalar_vbo())
@@ -91,22 +95,6 @@ void Plugin_SurfaceRenderScalar::draw_map(View* view, MapHandlerGen* map, const 
 		map->draw(cgogn::rendering::TRIANGLES);
 		p.shader_scalar_per_vertex_param_->release();
 		glDisable(GL_POLYGON_OFFSET_FILL);
-	}
-}
-
-void Plugin_SurfaceRenderScalar::keyPress(View* v, QKeyEvent* e)
-{
-	switch (e->key())
-	{
-		case Qt::Key_L:
-			MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_selected_map());
-			CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
-			CMap2::VertexAttribute<SCALAR> length = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("length");
-			mh->get_map()->foreach_cell([&] (CMap2::Vertex v)
-			{
-				length[v] = position[v].norm();
-			});
-			break;
 	}
 }
 
