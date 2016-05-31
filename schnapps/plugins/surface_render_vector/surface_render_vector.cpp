@@ -135,8 +135,8 @@ void Plugin_SurfaceRenderVector::vbo_added(cgogn::rendering::VBO* vbo)
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->add_position_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->add_vector_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->add_vector_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 }
@@ -149,8 +149,8 @@ void Plugin_SurfaceRenderVector::vbo_removed(cgogn::rendering::VBO* vbo)
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->remove_vector_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->remove_vector_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 

@@ -421,15 +421,15 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 		auto& vbo = vbo_it.second;
 		if (vbo->vector_dimension() == 3)
 		{
-			combo_positionVBO->addItem(QString::fromStdString(vbo->get_name()));
+			combo_positionVBO->addItem(QString::fromStdString(vbo->name()));
 			if (vbo.get() == p.get_position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 
-			combo_normalVBO->addItem(QString::fromStdString(vbo->get_name()));
+			combo_normalVBO->addItem(QString::fromStdString(vbo->name()));
 			if (vbo.get() == p.get_normal_vbo())
 				combo_normalVBO->setCurrentIndex(i);
 
-			combo_colorVBO->addItem(QString::fromStdString(vbo->get_name()));
+			combo_colorVBO->addItem(QString::fromStdString(vbo->name()));
 			if (vbo.get() == p.get_color_vbo())
 				combo_colorVBO->setCurrentIndex(i);
 

@@ -79,7 +79,7 @@ private slots:
 	void selected_map_bb_vertex_attribute_changed(const QString& name);
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
-//	void selected_map_connectivity_changed();
+	void selected_map_connectivity_changed();
 //	void selected_map_cell_selector_added(unsigned int orbit, const QString& name);
 //	void selected_map_cell_selector_removed(unsigned int orbit, const QString& name);
 

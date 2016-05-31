@@ -28,6 +28,8 @@
 #include <schnapps/core/camera.h>
 #include <schnapps/core/map_handler.h>
 
+#include <cgogn/geometry/algos/selection.h>
+
 namespace schnapps
 {
 
@@ -193,9 +195,9 @@ void Plugin_SurfaceRender::vbo_added(cgogn::rendering::VBO* vbo)
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->add_position_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->add_normal_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->add_color_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->add_normal_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->add_color_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 }
@@ -208,9 +210,9 @@ void Plugin_SurfaceRender::vbo_removed(cgogn::rendering::VBO* vbo)
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->remove_normal_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->remove_color_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->remove_normal_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->remove_color_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 
