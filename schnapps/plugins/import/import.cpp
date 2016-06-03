@@ -36,9 +36,6 @@ namespace schnapps
 
 bool Plugin_Import::enable()
 {
-//	magic line that init static variables of GenericMap in the plugins
-//	GenericMap::copyAllStatics(m_schnapps->getStaticPointers());
-
 	import_surface_mesh_action_ = schnapps_->add_menu_action("Surface;Import Mesh", "import surface mesh");
 	connect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 
