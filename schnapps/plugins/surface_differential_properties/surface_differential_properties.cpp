@@ -36,9 +36,6 @@ namespace schnapps
 
 bool Plugin_SurfaceDifferentialProperties::enable()
 {
-//	//	magic line that init static variables of GenericMap in the plugins
-//	GenericMap::copyAllStatics(schnapps_->getStaticPointers());
-
 	compute_normal_dialog_ = new ComputeNormal_Dialog(schnapps_);
 	compute_curvature_dialog_ = new ComputeCurvature_Dialog(schnapps_);
 

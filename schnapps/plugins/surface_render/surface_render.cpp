@@ -41,9 +41,6 @@ MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* m
 
 bool Plugin_SurfaceRender::enable()
 {
-//	magic line that init static variables of GenericMap in the plugins
-//	GenericMap::copyAllStatics(m_schnapps->getStaticPointers());
-
 	dock_tab_ = new SurfaceRender_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render");
 

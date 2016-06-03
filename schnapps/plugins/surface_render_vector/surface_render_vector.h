@@ -26,6 +26,7 @@
 
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
+#include <schnapps/core/map_handler.h>
 
 #include <surface_render_vector_dock_tab.h>
 
@@ -36,7 +37,6 @@
 namespace schnapps
 {
 
-class MapHandlerGen;
 class Plugin_SurfaceRenderVector;
 
 struct MapParameters
@@ -101,7 +101,7 @@ struct MapParameters
 	void set_vector_scale_factor(int i, float32 sf)
 	{
 		vector_scale_factor_list_[i] = sf;
-		shader_vector_per_vertex_param_list_[i]->length_ = vector_scale_factor_list_[i];
+		shader_vector_per_vertex_param_list_[i]->length_ = map_->get_bb_diagonal_size() / 100.0f * vector_scale_factor_list_[i];
 	}
 
 	const QColor& get_vector_color(int i) const { return vector_color_list_[i]; }
@@ -112,6 +112,8 @@ struct MapParameters
 	}
 
 private:
+
+	MapHandler<CMap2>* map_;
 
 	std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>> shader_vector_per_vertex_param_list_;
 

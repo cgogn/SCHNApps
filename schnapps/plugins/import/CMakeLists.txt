@@ -24,7 +24,6 @@ add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	${Eigen3_INCLUDE_DIRS}
 	${tinyxml2_INCLUDE_DIRS}
 	${lm6_INCLUDE_DIRS}
 	${ply_INCLUDE_DIRS}
