@@ -66,16 +66,15 @@ private slots:
 	void schnapps_closing();
 
 	// slots called from MapHandler signals
-//	void attribute_modified(unsigned int orbit, QString name_attr);
+	void attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
 
 	// slots called from action signals
 	void open_compute_normal_dialog();
-//	void open_compute_curvature_dialog();
+	void open_compute_curvature_dialog();
 
 	// slots called from dialogs signals
 	void compute_normal_from_dialog();
-//	void compute_curvature_from_dialog();
-
+	void compute_curvature_from_dialog();
 
 public slots:
 
@@ -93,41 +92,41 @@ public slots:
 		bool auto_update = true
 	);
 
-//	/**
-//	 * @brief compute curvatures of a mesh
-//	 * @param map_name name of 2d map
-//	 * @param position_attribute_name name of input position attribute
-//	 * @param normal_attribute_name name of input normal attributes
-//	 * @param Kmax_attribute_name ?? result attribute name
-//	 * @param kmax_attribute_name ?? result attribute name
-//	 * @param Kmin_attribute_name ?? result attribute name
-//	 * @param kmin_attribute_name ?? result attribute name
-//	 * @param Knormal_attribute_name ?? result attribute aname
-//	 * @param compute_kmean compute the mean curvature
-//	 * @param compute_kgaussian compute the gaussian curvature
-//	 * @param auto_update automatically update the output attributes when input attribute change.
-//	 */
-//	void compute_curvature(
-//		const QString& map_name,
-//		const QString& position_attribute_name = "position",
-//		const QString& normal_attribute_name = "normal",
-//		const QString& Kmax_attribute_name = "Kmax",
-//		const QString& kmax_attribute_name = "kmax",
-//		const QString& Kmin_attribute_name = "Kmin",
-//		const QString& kmin_attribute_name = "kmin",
-//		const QString& Knormal_attribute_name = "Knormal",
-//		bool compute_kmean = true,
-//		bool compute_kgaussian = true,
-//		bool auto_update = true
-//	);
+	/**
+	 * @brief compute curvatures of a mesh
+	 * @param map_name name of 2d map
+	 * @param position_attribute_name name of input position attribute
+	 * @param normal_attribute_name name of input normal attributes
+	 * @param Kmax_attribute_name ?? result attribute name
+	 * @param kmax_attribute_name ?? result attribute name
+	 * @param Kmin_attribute_name ?? result attribute name
+	 * @param kmin_attribute_name ?? result attribute name
+	 * @param Knormal_attribute_name ?? result attribute aname
+	 * @param compute_kmean compute the mean curvature
+	 * @param compute_kgaussian compute the gaussian curvature
+	 * @param auto_update automatically update the output attributes when input attribute change.
+	 */
+	void compute_curvature(
+		const QString& map_name,
+		const QString& position_attribute_name = "position",
+		const QString& normal_attribute_name = "normal",
+		const QString& Kmax_attribute_name = "Kmax",
+		const QString& kmax_attribute_name = "kmax",
+		const QString& Kmin_attribute_name = "Kmin",
+		const QString& kmin_attribute_name = "kmin",
+		const QString& Knormal_attribute_name = "Knormal",
+		bool compute_kmean = true,
+		bool compute_kgaussian = true,
+		bool auto_update = true
+	);
 
 private:
 
 	ComputeNormal_Dialog* compute_normal_dialog_;
-//	ComputeCurvature_Dialog* compute_curvature_dialog_;
+	ComputeCurvature_Dialog* compute_curvature_dialog_;
 
 	QAction* compute_normal_action_;
-//	QAction* compute_curvature_action_;
+	QAction* compute_curvature_action_;
 
 	struct ComputeNormalParameters
 	{
@@ -142,30 +141,30 @@ private:
 
 	std::map<QString, ComputeNormalParameters> compute_normal_last_parameters_;
 
-//	struct ComputeCurvatureParameters
-//	{
-//		ComputeCurvatureParameters() {}
-//		ComputeCurvatureParameters(
-//			const QString& p, const QString& n,
-//			const QString& Kmax, const QString& kmax, const QString& Kmin, const QString& kmin, const QString& Knormal,
-//			bool kmean, bool kgaussian, bool update) :
-//			position_name(p), normal_name(n),
-//			Kmax_name(Kmax), kmax_name(kmax), Kmin_name(Kmin), kmin_name(kmin), Knormal_name(Knormal),
-//			compute_kmean(kmean), compute_kgaussian(kgaussian), auto_update(update)
-//		{}
-//		QString position_name;
-//		QString normal_name;
-//		QString Kmax_name;
-//		QString kmax_name;
-//		QString Kmin_name;
-//		QString kmin_name;
-//		QString Knormal_name;
-//		bool compute_kmean;
-//		bool compute_kgaussian;
-//		bool auto_update;
-//	};
+	struct ComputeCurvatureParameters
+	{
+		ComputeCurvatureParameters() {}
+		ComputeCurvatureParameters(
+			const QString& p, const QString& n,
+			const QString& Kmax, const QString& kmax, const QString& Kmin, const QString& kmin, const QString& Knormal,
+			bool kmean, bool kgaussian, bool update) :
+			position_name(p), normal_name(n),
+			Kmax_name(Kmax), kmax_name(kmax), Kmin_name(Kmin), kmin_name(kmin), Knormal_name(Knormal),
+			compute_kmean(kmean), compute_kgaussian(kgaussian), auto_update(update)
+		{}
+		QString position_name;
+		QString normal_name;
+		QString Kmax_name;
+		QString kmax_name;
+		QString Kmin_name;
+		QString kmin_name;
+		QString Knormal_name;
+		bool compute_kmean;
+		bool compute_kgaussian;
+		bool auto_update;
+	};
 
-//	std::map<QString, ComputeCurvatureParameters> compute_curvature_last_parameters_;
+	std::map<QString, ComputeCurvatureParameters> compute_curvature_last_parameters_;
 };
 
 } // namespace schnapps

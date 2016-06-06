@@ -72,4 +72,4 @@ private:
 
 } // namespace schnapps
 
-#endif
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_

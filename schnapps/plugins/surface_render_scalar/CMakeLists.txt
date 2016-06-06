@@ -1,4 +1,4 @@
-project(plugin_surface_render_vector
+project(plugin_surface_render_scalar
 	LANGUAGES CXX
 )
 
@@ -8,13 +8,13 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
-	surface_render_vector.h
-	surface_render_vector_dock_tab.h
+	surface_render_scalar.h
+	surface_render_scalar_dock_tab.h
 )
 
 set(SOURCE_FILES
-	surface_render_vector.cpp
-	surface_render_vector_dock_tab.cpp
+	surface_render_scalar.cpp
+	surface_render_scalar_dock_tab.cpp
 )
 
 set(CMAKE_AUTOMOC ON)

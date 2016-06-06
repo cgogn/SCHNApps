@@ -21,42 +21,55 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
-#define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 
-#include <ui_dialog_compute_normal.h>
-
-#include <schnapps/core/map_handler.h>
+#include <ui_surface_render_scalar.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class Plugin_SurfaceDifferentialProperties;
+class MapHandlerGen;
+class Plugin_SurfaceRenderScalar;
 
-class ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
+struct MapParameters;
+
+class SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceDifferentialProperties;
+	friend class Plugin_SurfaceRenderScalar;
 
 public:
 
-	ComputeNormal_Dialog(SCHNApps* s);
+	SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p);
 
 private:
 
 	SCHNApps* schnapps_;
-	MapHandler<CMap2>* selected_map_;
+	Plugin_SurfaceRenderScalar* plugin_;
+
+	bool updating_ui_;
 
 private slots:
 
-	void selected_map_changed();
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
-	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void position_vbo_changed(int index);
+	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
+	void color_map_changed(int index);
+	void expansion_changed(int i);
+	void show_iso_lines_changed(bool b);
+
+private:
+
+	void add_position_vbo(QString name);
+	void remove_position_vbo(QString name);
+	void add_scalar_vbo(QString name);
+	void remove_scalar_vbo(QString name);
+
+	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_

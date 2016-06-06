@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_TYPES_H_
 
 #include <cgogn/core/utils/numerics.h>
+#include <cgogn/geometry/types/geometry_traits.h>
 
 #include <Eigen/Dense>
 
@@ -36,7 +37,7 @@ using namespace cgogn::numerics;
 using VEC4 = Eigen::Vector4d;
 using VEC3 = Eigen::Vector3d;
 using VEC2 = Eigen::Vector2d;
-using SCALAR = float64;
+using SCALAR = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
 
 } // namespace schnapps
 

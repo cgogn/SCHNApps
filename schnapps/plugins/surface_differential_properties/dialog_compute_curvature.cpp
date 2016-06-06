@@ -26,127 +26,135 @@
 #include <surface_differential_properties.h>
 
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-//ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s) :
-//	schnapps_(s),
-//	selected_map_(nullptr)
-//{
-//	setupUi(this);
+ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s) :
+	schnapps_(s),
+	selected_map_(nullptr)
+{
+	setupUi(this);
 
-//	KmaxAttributeName->setText("Kmax");
-//	kmaxAttributeName->setText("kmax");
-//	KminAttributeName->setText("Kmin");
-//	kminAttributeName->setText("kmin");
-//	KnormalAttributeName->setText("Knormal");
+	Kmax_attribute_name->setText("Kmax");
+	kmax_attribute_name->setText("kmax");
+	Kmin_attribute_name->setText("Kmin");
+	kmin_attribute_name->setText("kmin");
+	Knormal_attribute_name->setText("Knormal");
 
-//	connect(schnapps_, SIGNAL(mapAdded(MapHandlerGen*)), this, SLOT(addMapToList(MapHandlerGen*)));
-//	connect(schnapps_, SIGNAL(mapRemoved(MapHandlerGen*)), this, SLOT(removeMapFromList(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
-//	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selectedMapChanged()));
+	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
-//	foreach(MapHandlerGen* map,  schnapps_->getMapSet().values())
-//	{
-//		QListWidgetItem* item = new QListWidgetItem(map->getName(), list_maps);
-//		item->setCheckState(Qt::Unchecked);
-//	}
-//}
+	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+}
 
-//void ComputeCurvature_Dialog::selectedMapChanged()
-//{
-//	if(selected_map_)
-//		disconnect(selected_map_, SIGNAL(attributeAdded(unsigned int, const QString&)), this, SLOT(addAttributeToList(unsigned int, const QString&)));
+void ComputeCurvature_Dialog::selected_map_changed()
+{
+	if(selected_map_)
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
 
-//	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
-//	if(!currentItems.empty())
-//	{
-//		combo_positionAttribute->clear();
-//		combo_normalAttribute->clear();
-//		combo_KmaxAttribute->clear();
-//		combo_KminAttribute->clear();
-//		combo_KnormalAttribute->clear();
-//		combo_kmaxAttribute->clear();
-//		combo_kminAttribute->clear();
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if(!currentItems.empty())
+	{
+		combo_positionAttribute->clear();
+		combo_normalAttribute->clear();
+		combo_KmaxAttribute->clear();
+		combo_KminAttribute->clear();
+		combo_KnormalAttribute->clear();
+		combo_kmaxAttribute->clear();
+		combo_kminAttribute->clear();
 
-//		const QString& mapname = currentItems[0]->text();
-//		MapHandlerGen* mh = schnapps_->getMap(mapname);
+		const QString& map_name = currentItems[0]->text();
+		MapHandlerGen* mhg = schnapps_->get_map(map_name);
+		selected_map_ = dynamic_cast<MapHandler<CMap2>*>(mhg);
 
-//		QString vec3TypeName = QString::fromStdString(nameOfType(PFP2::VEC3()));
-//		QString realTypeName = QString::fromStdString(nameOfType(PFP2::REAL()));
+		if (selected_map_)
+		{
+			const CMap2* map2 = selected_map_->get_map();
+			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
+			{
+				QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+				QString scalar_type_name = QString::fromStdString(cgogn::name_of_type(SCALAR()));
 
-//		unsigned int j = 0;
-//		unsigned int k = 0;
-//		const AttributeSet& attribs = mh->getAttributeSet(VERTEX);
-//		for(AttributeSet::const_iterator i = attribs.constBegin(); i != attribs.constEnd(); ++i)
-//		{
-//			if(i.value() == vec3TypeName)
-//			{
-//				combo_positionAttribute->addItem(i.key());
-//				combo_normalAttribute->addItem(i.key());
-//				combo_KmaxAttribute->addItem(i.key());
-//				combo_KminAttribute->addItem(i.key());
-//				combo_KnormalAttribute->addItem(i.key());
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				const std::vector<std::string>& type_names = container.type_names();
 
-//				++j;
-//			}
-//			else if(i.value() == realTypeName)
-//			{
-//				combo_kmaxAttribute->addItem(i.key());
-//				combo_kminAttribute->addItem(i.key());
+				for (std::size_t i = 0u; i < names.size(); ++i)
+				{
+					QString name = QString::fromStdString(names[i]);
+					QString type = QString::fromStdString(type_names[i]);
+					if (type == vec3_type_name)
+					{
+						combo_positionAttribute->addItem(name);
+						combo_normalAttribute->addItem(name);
+						combo_KmaxAttribute->addItem(name);
+						combo_KminAttribute->addItem(name);
+						combo_KnormalAttribute->addItem(name);
+					}
+					else if (type == scalar_type_name)
+					{
+						combo_kmaxAttribute->addItem(name);
+						combo_kminAttribute->addItem(name);
+					}
+				}
+			}
+			connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		}
+	}
+	else
+		selected_map_ = nullptr;
+}
 
-//				++k;
-//			}
-//		}
+void ComputeCurvature_Dialog::map_added(MapHandlerGen* map)
+{
+	if (map->dimension() == 2)
+	{
+		QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
+		item->setCheckState(Qt::Unchecked);
+	}
+}
 
-//		selected_map_ = mh;
-//		connect(selected_map_, SIGNAL(attributeAdded(unsigned int, const QString&)), this, SLOT(addAttributeToList(unsigned int, const QString&)));
-//	}
-//	else
-//		selected_map_ = nullptr;
-//}
+void ComputeCurvature_Dialog::map_removed(MapHandlerGen* map)
+{
+	QList<QListWidgetItem*> items = list_maps->findItems(map->get_name(), Qt::MatchExactly);
+	if (!items.empty())
+		delete items[0];
 
-//void ComputeCurvature_Dialog::addMapToList(MapHandlerGen* m)
-//{
-//	QListWidgetItem* item = new QListWidgetItem(m->getName(), list_maps);
-//	item->setCheckState(Qt::Unchecked);
-//}
+	if (selected_map_ == map)
+	{
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(unsigned int, const QString&)));
+		selected_map_ = nullptr;
+	}
+}
 
-//void ComputeCurvature_Dialog::removeMapFromList(MapHandlerGen* m)
-//{
-//	QList<QListWidgetItem*> items = list_maps->findItems(m->getName(), Qt::MatchExactly);
-//	if(!items.empty())
-//		delete items[0];
+void ComputeCurvature_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+		QString scalar_type_name = QString::fromStdString(cgogn::name_of_type(SCALAR()));
 
-//	if(selected_map_ == m)
-//	{
-//		disconnect(selected_map_, SIGNAL(attributeAdded(unsigned int, const QString&)), this, SLOT(addAttributeToList(unsigned int, const QString&)));
-//		selected_map_ = nullptr;
-//	}
-//}
+		const CMap2* map2 = selected_map_->get_map();
+		const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
 
-//void ComputeCurvature_Dialog::addAttributeToList(unsigned int orbit, const QString& nameAttr)
-//{
-//	QString vec3TypeName = QString::fromStdString(nameOfType(PFP2::VEC3()));
-//	QString realTypeName = QString::fromStdString(nameOfType(PFP2::REAL()));
-
-//	const QString& typeAttr = selected_map_->getAttributeTypeName(orbit, nameAttr);
-
-//	if(typeAttr == vec3TypeName)
-//	{
-//		combo_positionAttribute->addItem(nameAttr);
-//		combo_normalAttribute->addItem(nameAttr);
-//		combo_KmaxAttribute->addItem(nameAttr);
-//		combo_KminAttribute->addItem(nameAttr);
-//		combo_KnormalAttribute->addItem(nameAttr);
-//	}
-//	else if(typeAttr == realTypeName)
-//	{
-//		combo_kmaxAttribute->addItem(nameAttr);
-//		combo_kminAttribute->addItem(nameAttr);
-//	}
-//}
+		if (attribute_type_name == vec3_type_name)
+		{
+			combo_positionAttribute->addItem(attribute_name);
+			combo_normalAttribute->addItem(attribute_name);
+			combo_KmaxAttribute->addItem(attribute_name);
+			combo_KminAttribute->addItem(attribute_name);
+			combo_KnormalAttribute->addItem(attribute_name);
+		}
+		else if (attribute_type_name == scalar_type_name)
+		{
+			combo_kmaxAttribute->addItem(attribute_name);
+			combo_kminAttribute->addItem(attribute_name);
+		}
+	}
+}
 
 } // namespace schnapps

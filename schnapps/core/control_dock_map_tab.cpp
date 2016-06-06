@@ -121,7 +121,7 @@ void ControlDock_MapTab::selected_map_changed()
 			disconnect(old, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
-//			disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
+			disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 //			disconnect(old, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			disconnect(old, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
 		}
@@ -136,7 +136,7 @@ void ControlDock_MapTab::selected_map_changed()
 			connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
-//			connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
+			connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 //			connect(selected_map_, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
 //			connect(selected_map_, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
 
@@ -348,10 +348,10 @@ void ControlDock_MapTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 	update_selected_map_info();
 }
 
-//void ControlDock_MapTab::selected_map_connectivity_changed()
-//{
-//	update_selected_map_info();
-//}
+void ControlDock_MapTab::selected_map_connectivity_changed()
+{
+	update_selected_map_info();
+}
 
 //void ControlDock_MapTab::selected_map_cell_selector_added(unsigned int orbit, const QString& name)
 //{
@@ -414,9 +414,9 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::CDart::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::CDart::ORBIT>();
-				const std::vector<std::string>& names = container.get_names();
-				const std::vector<std::string>& type_names = container.get_type_names();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::CDart::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				const std::vector<std::string>& type_names = container.type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
 				{
 					QString name = QString::fromStdString(names[i]);
@@ -440,9 +440,9 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Vertex::ORBIT>();
-				const std::vector<std::string>& names = container.get_names();
-				const std::vector<std::string>& type_names = container.get_type_names();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				const std::vector<std::string>& type_names = container.type_names();
 				unsigned int bb_index = 1;
 				for (std::size_t i = 0u; i < names.size(); ++i)
 				{
@@ -478,9 +478,9 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Edge::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Edge::ORBIT>();
-				const std::vector<std::string>& names = container.get_names();
-				const std::vector<std::string>& type_names = container.get_type_names();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Edge::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				const std::vector<std::string>& type_names = container.type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
 				{
 					QString name = QString::fromStdString(names[i]);
@@ -504,9 +504,9 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Face::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Face::ORBIT>();
-				const std::vector<std::string>& names = container.get_names();
-				const std::vector<std::string>& type_names = container.get_type_names();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Face::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				const std::vector<std::string>& type_names = container.type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
 				{
 					QString name = QString::fromStdString(names[i]);
@@ -530,9 +530,9 @@ void ControlDock_MapTab::update_selected_map_info()
 //			}
 			if (map2->is_embedded<CMap2::Volume::ORBIT>())
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->get_const_attribute_container<CMap2::Volume::ORBIT>();
-				const std::vector<std::string>& names = container.get_names();
-				const std::vector<std::string>& type_names = container.get_type_names();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Volume::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				const std::vector<std::string>& type_names = container.type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
 				{
 					QString name = QString::fromStdString(names[i]);

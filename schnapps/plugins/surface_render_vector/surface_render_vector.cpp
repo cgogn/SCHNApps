@@ -26,7 +26,6 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
@@ -34,14 +33,13 @@ namespace schnapps
 MapParameters& Plugin_SurfaceRenderVector::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
-	return parameter_set_[view][map];
+	MapParameters& p = parameter_set_[view][map];
+	p.map_ = static_cast<MapHandler<CMap2>*>(map);
+	return p;
 }
 
 bool Plugin_SurfaceRenderVector::enable()
 {
-//	magic line that init static variables of GenericMap in the plugins
-//	GenericMap::copyAllStatics(m_schnapps->getStaticPointers());
-
 	dock_tab_ = new SurfaceRenderVector_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render Vector");
 
@@ -80,6 +78,7 @@ void Plugin_SurfaceRenderVector::disable()
 
 void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
+	view->makeCurrent();
 	const MapParameters& p = get_parameters(view, map);
 
 	if (p.get_position_vbo())
@@ -134,8 +133,8 @@ void Plugin_SurfaceRenderVector::vbo_added(cgogn::rendering::VBO* vbo)
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->add_position_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->add_vector_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->add_vector_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 }
@@ -148,8 +147,8 @@ void Plugin_SurfaceRenderVector::vbo_removed(cgogn::rendering::VBO* vbo)
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->get_name()));
-			dock_tab_->remove_vector_vbo(QString::fromStdString(vbo->get_name()));
+			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->name()));
+			dock_tab_->remove_vector_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 
@@ -159,16 +158,19 @@ void Plugin_SurfaceRenderVector::vbo_removed(cgogn::rendering::VBO* vbo)
 	{
 		View* view = it.first;
 		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-		MapParameters& map_param = view_param_set[map];
-		if (map_param.get_position_vbo() == vbo)
+		if (view_param_set.count(map) > 0)
 		{
-			map_param.set_position_vbo(nullptr);
-			if (view->is_linked_to_map(map)) views_to_update.insert(view);
-		}
-		if (map_param.get_vector_vbo_index(vbo) >= 0)
-		{
-			map_param.remove_vector_vbo(vbo);
-			if (view->is_linked_to_map(map)) views_to_update.insert(view);
+			MapParameters& map_param = view_param_set[map];
+			if (map_param.get_position_vbo() == vbo)
+			{
+				map_param.set_position_vbo(nullptr);
+				if (view->is_linked_to_map(map)) views_to_update.insert(view);
+			}
+			if (map_param.get_vector_vbo_index(vbo) >= 0)
+			{
+				map_param.remove_vector_vbo(vbo);
+				if (view->is_linked_to_map(map)) views_to_update.insert(view);
+			}
 		}
 	}
 
@@ -178,7 +180,18 @@ void Plugin_SurfaceRenderVector::vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_SurfaceRenderVector::bb_changed()
 {
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
+	for (auto& it : parameter_set_)
+	{
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(map) > 0)
+		{
+			MapParameters& map_param = view_param_set[map];
+			for (uint32 i = 0, size = map_param.vector_scale_factor_list_.size(); i < size; ++i)
+				map_param.set_vector_scale_factor(i, map_param.vector_scale_factor_list_[i]);
+		}
+	}
 }
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

@@ -26,6 +26,8 @@
 
 #include <ui_dialog_compute_curvature.h>
 
+#include <schnapps/core/map_handler.h>
+
 namespace schnapps
 {
 
@@ -33,30 +35,27 @@ class SCHNApps;
 class MapHandlerGen;
 class Plugin_SurfaceDifferentialProperties;
 
-//class ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
-//{
-//	Q_OBJECT
+class ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
+{
+	Q_OBJECT
 
-//	friend class Plugin_SurfaceDifferentialProperties;
+	friend class Plugin_SurfaceDifferentialProperties;
 
-//public:
-//	ComputeCurvature_Dialog(SCHNApps* s);
+public:
+	ComputeCurvature_Dialog(SCHNApps* s);
 
-//private:
+private:
 
-//	SCHNApps* schnapps_;
-//	MapHandlerGen* selected_map_;
+	SCHNApps* schnapps_;
+	MapHandler<CMap2>* selected_map_;
 
-//private slots:
+private slots:
 
-//	void selected_map_changed();
-
-//private:
-
-//	void add_map_to_list(MapHandlerGen* map);
-//	void remove_map_from_list(MapHandlerGen* map);
-//	void add_attribute_to_list(unsigned int orbit, const QString& attr_name);
-//};
+	void selected_map_changed();
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+};
 
 } // namespace schnapps
 

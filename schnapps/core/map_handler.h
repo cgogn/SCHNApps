@@ -83,9 +83,11 @@ public slots:
 
 	bool is_selected_map() const;
 
-	virtual uint32 nb_vertices() = 0;
-	virtual uint32 nb_edges() = 0;
-	virtual uint32 nb_faces() = 0;
+	virtual uint8 dimension() const = 0;
+
+	virtual uint32 nb_vertices() const = 0;
+	virtual uint32 nb_edges() const = 0;
+	virtual uint32 nb_faces() const = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -258,7 +260,7 @@ protected:
 	// map bounding box
 	cgogn::rendering::DisplayListDrawer bb_drawer_;
 	std::map<View*, std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer>> bb_drawer_renderer_;
-	cgogn::geometry::BoundingBox<VEC3> bb_;
+	cgogn::geometry::AABB<VEC3> bb_;
 	float bb_diagonal_size_;
 	bool show_bb_;
 	QColor bb_color_;
@@ -295,11 +297,13 @@ public:
 	~MapHandler()
 	{}
 
-	inline MAP_TYPE* get_map() { return static_cast<MAP_TYPE*>(this->map_.get()); }
+	inline MAP_TYPE* get_map() const { return static_cast<MAP_TYPE*>(this->map_.get()); }
 
-	uint32 nb_vertices() override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
-	uint32 nb_edges() override { return get_map()->template nb_cells<Edge::ORBIT>(); }
-	uint32 nb_faces() override { return get_map()->template nb_cells<Face::ORBIT>(); }
+	uint8 dimension() const override { return MAP_TYPE::DIMENSION; }
+
+	uint32 nb_vertices() const override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
+	uint32 nb_edges() const override { return get_map()->template nb_cells<Edge::ORBIT>(); }
+	uint32 nb_faces() const override { return get_map()->template nb_cells<Face::ORBIT>(); }
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
@@ -308,7 +312,7 @@ public:
 	inline QString get_bb_vertex_attribute_name() const
 	{
 		if (bb_vertex_attribute_.is_valid())
-			return QString::fromStdString(bb_vertex_attribute_.get_name());
+			return QString::fromStdString(bb_vertex_attribute_.name());
 		else
 			return QString();
 	}
@@ -324,12 +328,15 @@ public:
 
 	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) override
 	{
-		QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.get_name());
-		if (orbit == Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
+		if (bb_vertex_attribute_.is_valid())
 		{
-			compute_bb();
-			this->update_bb_drawer();
-			emit(bb_changed());
+			QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
+			if (orbit == Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
+			{
+				compute_bb();
+				this->update_bb_drawer();
+				emit(bb_changed());
+			}
 		}
 	}
 
@@ -340,7 +347,7 @@ private:
 		this->bb_.reset();
 
 		if (bb_vertex_attribute_.is_valid())
-			cgogn::geometry::compute_bounding_box(bb_vertex_attribute_, this->bb_);
+			cgogn::geometry::compute_AABB(bb_vertex_attribute_, this->bb_);
 
 		if (this->bb_.is_initialized())
 			this->bb_diagonal_size_ = this->bb_.diag_size();
@@ -393,12 +400,6 @@ public:
 
 protected:
 
-//	const MapBaseData::ChunkArrayContainer<cgogn::uint32>& get_vertex_attribute_container()
-//	{
-//		const MapBaseData* cm = this->map_;
-//		return cm->get_attribute_container<Vertex::ORBIT>();
-//	}
-
 	/*********************************************************
 	 * MANAGE VBOs
 	 *********************************************************/
@@ -411,8 +412,8 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_const_attribute_container<Vertex::ORBIT>();
-			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
+			MapBaseData::ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
 
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
 			if (ca4)
@@ -470,8 +471,8 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template get_const_attribute_container<Vertex::ORBIT>();
-			MapBaseData::ChunkArrayGen* cag = vcont.get_attribute(name.toStdString());
+			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
+			MapBaseData::ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
 
 			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
 			if (ca4)
