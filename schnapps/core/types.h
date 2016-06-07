@@ -34,9 +34,17 @@ namespace schnapps
 
 using namespace cgogn::numerics;
 
-using VEC4 = Eigen::Vector4d;
-using VEC3 = Eigen::Vector3d;
-using VEC2 = Eigen::Vector2d;
+using VEC4F = Eigen::Vector4f;
+using VEC4D = Eigen::Vector4d;
+using VEC3F = Eigen::Vector3f;
+using VEC3D = Eigen::Vector3d;
+using VEC2F = Eigen::Vector2f;
+using VEC2D = Eigen::Vector2d;
+
+using VEC4 = VEC4D;
+using VEC3 = VEC3D;
+using VEC2 = VEC2D;
+
 using SCALAR = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
 
 } // namespace schnapps
