@@ -48,24 +48,21 @@ void Camera::set_projection_type(int t)
 {
 	this->setType(qoglviewer::Camera::Type(t));
 	emit(projection_type_changed(t));
-	foreach (View* view, schnapps_->get_view_set().values())
-		view->update();
+	schnapps_->foreach_view([] (View* view) { view->update(); });
 }
 
 void Camera::set_draw(bool b)
 {
 	draw_ = b;
 	emit(draw_changed(b));
-	foreach (View* view, schnapps_->get_view_set().values())
-		view->update();
+	schnapps_->foreach_view([] (View* view) { view->update(); });
 }
 
 void Camera::set_draw_path(bool b)
 {
 	draw_path_ = b;
 	emit(draw_path_changed(b));
-	foreach (View* view, schnapps_->get_view_set().values())
-		view->update();
+	schnapps_->foreach_view([] (View* view) { view->update(); });
 }
 
 QString Camera::to_string()
@@ -97,7 +94,7 @@ void Camera::from_string(QString cam)
 
 void Camera::link_view(View* view)
 {
-	if(view && !views_.contains(view))
+	if (view && !is_linked_to_view(view))
 	{
 		views_.push_back(view);
 		fit_to_views_bb();
@@ -107,8 +104,9 @@ void Camera::link_view(View* view)
 
 void Camera::unlink_view(View* view)
 {
-	if (views_.removeOne(view))
+	if (is_linked_to_view(view))
 	{
+		views_.remove(view);
 		fit_to_views_bb();
 		disconnect(view, SIGNAL(bb_changed()), this, SLOT(fit_to_views_bb()));
 	}
@@ -116,14 +114,11 @@ void Camera::unlink_view(View* view)
 
 void Camera::frame_modified()
 {
-	if(draw_ || draw_path_)
-	{
-		foreach (View* view, schnapps_->get_view_set().values())
-			view->update();
-	}
+	if (draw_ || draw_path_)
+		schnapps_->foreach_view([] (View* view) { view->update(); });
 	else
 	{
-		foreach (View* view, views_)
+		for (View* view : views_)
 			view->update();
 	}
 }
@@ -137,18 +132,18 @@ void Camera::fit_to_views_bb()
 
 		if (!views_.empty())
 		{
-			views_.first()->get_bb(bb_min, bb_max);
+			views_.front()->get_bb(bb_min, bb_max);
 
-			foreach (View* v, views_)
+			for (View* v : views_)
 			{
 				qoglviewer::Vec minbb;
 				qoglviewer::Vec maxbb;
 				v->get_bb(minbb, maxbb);
-				for(unsigned int dim = 0; dim < 3; ++dim)
+				for (unsigned int dim = 0; dim < 3; ++dim)
 				{
-					if(minbb[dim] < bb_min[dim])
+					if (minbb[dim] < bb_min[dim])
 						bb_min[dim] = minbb[dim];
-					if(maxbb[dim] > bb_max[dim])
+					if (maxbb[dim] > bb_max[dim])
 						bb_max[dim] = maxbb[dim];
 				}
 			}

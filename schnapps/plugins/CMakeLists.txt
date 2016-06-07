@@ -1,2 +1,5 @@
 add_subdirectory(import)
+add_subdirectory(surface_differential_properties)
 add_subdirectory(surface_render)
+add_subdirectory(surface_render_vector)
+add_subdirectory(surface_render_scalar)

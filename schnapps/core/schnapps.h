@@ -26,8 +26,9 @@
 
 #include <schnapps/core/dll.h>
 
+#include <schnapps/core/schnapps_window.h>
+
 #include <QObject>
-#include <QMap>
 #include <QString>
 
 class QSplitter;
@@ -96,12 +97,21 @@ public slots:
 	*/
 	Camera* get_camera(const QString& name) const;
 
-	// get the set of all cameras
-	inline const QMap<QString, Camera*>& get_camera_set() const { return cameras_; }
+public:
+
+	template <typename FUNC>
+	void foreach_camera(const FUNC& f)
+	{
+		static_assert(check_func_parameter_type(FUNC, Camera*), "Wrong function parameter type");
+		for (const auto& camera_it : cameras_)
+			f(camera_it.second.get());
+	}
 
 	/*********************************************************
 	 * MANAGE PLUGINS
 	 *********************************************************/
+
+public slots:
 
 	/**
 	* @brief Add a directory for searching available plugins
@@ -127,17 +137,20 @@ public slots:
 	*/
 	Plugin* get_plugin(const QString& name) const;
 
-	// get set of loaded plugins
-	inline const QMap<QString, Plugin*>& get_plugin_set() const { return plugins_; }
-
 	// get a set of available plugins
-	inline const QMap<QString, QString>& get_available_plugins() const { return available_plugins_; }
+	inline const std::map<QString, QString>& get_available_plugins() const { return available_plugins_; }
 
 public:
 
-	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
+	template <typename FUNC>
+	void foreach_plugin(const FUNC& f)
+	{
+		static_assert(check_func_parameter_type(FUNC, Plugin*), "Wrong function parameter type");
+		for (const auto& plugin_it : plugins_)
+			f(plugin_it.second.get());
+	}
 
-private:
+	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
 
 	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
 
@@ -179,8 +192,17 @@ public slots:
 	*/
 	MapHandlerGen* get_map(const QString& name) const;
 
-	// get the set of maps
-	inline const QMap<QString, MapHandlerGen*>& get_map_set() const { return maps_; }
+public:
+
+	template <typename FUNC>
+	void foreach_map(const FUNC& f)
+	{
+		static_assert(check_func_parameter_type(FUNC, MapHandlerGen*), "Wrong function parameter type");
+		for (const auto& map_it : maps_)
+			f(map_it.second.get());
+	}
+
+public slots:
 
 	/**
 	* @brief Get the current selected map
@@ -247,8 +269,17 @@ public slots:
 	*/
 	View* get_view(const QString& name) const;
 
-	// get the set of all views
-	inline const QMap<QString, View*>& get_view_set() const { return views_; }
+public:
+
+	template <typename FUNC>
+	void foreach_view(const FUNC& f)
+	{
+		static_assert(check_func_parameter_type(FUNC, View*), "Wrong function parameter type");
+		for (const auto& view_it : views_)
+			f(view_it.second.get());
+	}
+
+public slots:
 
 	/**
 	* @brief get the selected view
@@ -291,19 +322,23 @@ public slots:
 	 *********************************************************/
 
 	/**
-	 * @brief add an entry in menu for a plugin
-	 * @param plugin plugin object ptr
-	 * @param menuPath path of menu (ex: "Surface; Import Mesh"
+	 * @brief add an entry in menu
+	 * @param menuPath path of menu (ex: "Surface; Import Mesh")
 	 * @param action action to associate with entry
 	 */
-	void add_menu_action(Plugin* plugin, const QString& menu_path, QAction* action);
+	inline QAction* add_menu_action(const QString& menu_path, const QString& action_text)
+	{
+		return window_->add_menu_action(menu_path, action_text);
+	}
 
 	/**
-	 * @brief remove an entry in the menu (when plugin disable)
-	 * @param plugin plugin object ptr
+	 * @brief remove an entry in the menu
 	 * @param action action entry to remove
 	 */
-	void remove_menu_action(Plugin* plugin, QAction* action);
+	inline void remove_menu_action(QAction* action)
+	{
+		window_->remove_menu_action(action);
+	}
 
 	/*********************************************************
 	 * MANAGE WINDOW
@@ -350,16 +385,16 @@ protected:
 
 	QString app_path_;
 
-	QMap<QString, Camera*> cameras_;
+	std::map<QString, std::unique_ptr<Camera>> cameras_;
 
-	QMap<QString, Plugin*> plugins_;
-	QMap<QString, QString> available_plugins_;
-	QMap<Plugin*, QList<QAction*>> plugin_menu_actions_;
-	QMap<Plugin*, QList<QWidget*>> plugin_dock_tabs_;
+	std::map<QString, std::unique_ptr<Plugin>> plugins_;
+	std::map<QString, QString> available_plugins_;
+	std::map<Plugin*, std::list<QAction*> > plugin_menu_actions_;
+	std::map<Plugin*, std::list<QWidget*> > plugin_dock_tabs_;
 
-	QMap<QString, MapHandlerGen*> maps_;
+	std::map<QString, std::unique_ptr<MapHandlerGen>> maps_;
 
-	QMap<QString, View*> views_;
+	std::map<QString, std::unique_ptr<View>> views_;
 	View* first_view_;
 	View* selected_view_;
 

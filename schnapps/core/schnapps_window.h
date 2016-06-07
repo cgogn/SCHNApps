@@ -25,9 +25,11 @@
 #define SCHNAPPS_CORE_SCHNAPPS_WINDOW_H_
 
 #include <schnapps/core/dll.h>
-#include <schnapps/core/schnapps.h>
 
 #include <ui_schnapps.h>
+
+#include <cgogn/core/utils/unique_ptr.h>
+#include <cgogn/core/utils/assert.h>
 
 #include <QDockWidget>
 #include <QTabWidget>
@@ -37,6 +39,8 @@
 namespace schnapps
 {
 
+class SCHNApps;
+
 class SCHNAPPS_CORE_API SCHNAppsWindow : public QMainWindow, public Ui::SCHNAppsWindow
 {
 	Q_OBJECT
@@ -45,61 +49,8 @@ class SCHNAPPS_CORE_API SCHNAppsWindow : public QMainWindow, public Ui::SCHNApps
 
 public:
 
-	SCHNAppsWindow(const QString& app_path) :
-		QMainWindow()
-	{
-		this->setupUi(this);
-
-		// setup control dock
-
-		control_dock_ = new QDockWidget("Control Dock", this);
-		control_dock_->setAllowedAreas(Qt::LeftDockWidgetArea);
-		control_dock_->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-		control_dock_->setMaximumWidth(250);
-
-		control_dock_tab_widget_ = new QTabWidget(control_dock_);
-		control_dock_tab_widget_->setObjectName("ControlDockTabWidget");
-		control_dock_tab_widget_->setLayoutDirection(Qt::LeftToRight);
-		control_dock_tab_widget_->setTabPosition(QTabWidget::North);
-		control_dock_tab_widget_->setMovable(true);
-
-		addDockWidget(Qt::LeftDockWidgetArea, control_dock_);
-		control_dock_->setVisible(true);
-		control_dock_->setWidget(control_dock_tab_widget_);
-
-		connect(action_ToggleControlDock, SIGNAL(triggered()), this, SLOT(toggle_control_dock()));
-
-		// setup plugin dock
-
-		plugin_dock_ = new QDockWidget("Plugins Dock", this);
-		plugin_dock_->setAllowedAreas(Qt::RightDockWidgetArea);
-		plugin_dock_->setFeatures(QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
-
-		plugin_dock_tab_widget_ = new QTabWidget(plugin_dock_);
-		plugin_dock_tab_widget_->setObjectName("PluginDockTabWidget");
-		plugin_dock_tab_widget_->setLayoutDirection(Qt::LeftToRight);
-		plugin_dock_tab_widget_->setTabPosition(QTabWidget::East);
-		plugin_dock_tab_widget_->setMovable(true);
-
-		addDockWidget(Qt::RightDockWidgetArea, plugin_dock_);
-		plugin_dock_->setVisible(false);
-		plugin_dock_->setWidget(plugin_dock_tab_widget_);
-
-		connect(action_TogglePluginDock, SIGNAL(triggered()), this, SLOT(toggle_plugin_dock()));
-
-		// setup central widget
-
-		central_layout_ = new QVBoxLayout(centralwidget);
-		central_layout_->setMargin(2);
-
-		connect(action_AboutSCHNApps, SIGNAL(triggered()), this, SLOT(about_SCHNApps()));
-		connect(action_AboutCGoGN, SIGNAL(triggered()), this, SLOT(about_CGoGN()));
-
-		schnapps_ = new SCHNApps(app_path, this);
-	}
-
-	~SCHNAppsWindow()
-	{}
+	SCHNAppsWindow(const QString& app_path);
+	~SCHNAppsWindow();
 
 private slots:
 
@@ -120,25 +71,32 @@ private slots:
 		QMessageBox::about(this, "About CGoGN", str);
 	}
 
-	void toggle_control_dock()
-	{
-		control_dock_->setVisible(control_dock_->isHidden());
-	}
+	void toggle_control_dock() { control_dock_->setVisible(control_dock_->isHidden()); }
 
-	void toggle_plugin_dock()
-	{
-		plugin_dock_->setVisible(plugin_dock_->isHidden());
-	}
+	void toggle_plugin_dock() { plugin_dock_->setVisible(plugin_dock_->isHidden()); }
+
+	/*********************************************************
+	 * MANAGE MENU ACTIONS
+	 *********************************************************/
+
+	/**
+	 * @brief add an entry in menu for a plugin
+	 * @param menuPath path of menu (ex: "Surface; Import Mesh")
+	 * @param action action to associate with entry
+	 */
+	QAction* add_menu_action(const QString& menu_path, const QString& action_text);
+
+	/**
+	 * @brief remove an entry in the menu
+	 * @param action action entry to remove
+	 */
+	void remove_menu_action(QAction* action);
 
 protected:
 
-	void closeEvent(QCloseEvent *event)
-	{
-		schnapps_->schnapps_window_closing();
-		QMainWindow::closeEvent(event);
-	}
+	void closeEvent(QCloseEvent *event);
 
-	SCHNApps* schnapps_;
+	std::unique_ptr<SCHNApps> schnapps_;
 
 	QDockWidget* control_dock_;
 	QTabWidget* control_dock_tab_widget_;

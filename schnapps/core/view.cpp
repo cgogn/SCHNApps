@@ -79,22 +79,19 @@ View::View(const QString& name, SCHNApps* s) :
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(dialog_maps_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(map_check_state_changed(QListWidgetItem*)));
 
-	foreach (MapHandlerGen* map, schnapps_->get_map_set().values())
-		map_added(map);
+	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
 	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
 	connect(dialog_plugins_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(plugin_check_state_changed(QListWidgetItem*)));
 
-	foreach (Plugin* plugin, schnapps_->get_plugin_set().values())
-		plugin_enabled(plugin);
+	schnapps_->foreach_plugin([this] (Plugin* plugin) { plugin_enabled(plugin); });
 
 	connect(schnapps_, SIGNAL(camera_added(Camera*)), this, SLOT(camera_added(Camera*)));
 	connect(schnapps_, SIGNAL(camera_removed(Camera*)), this, SLOT(camera_removed(Camera*)));
 	connect(dialog_cameras_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(camera_check_state_changed(QListWidgetItem*)));
 
-	foreach (Camera* camera, schnapps_->get_camera_set().values())
-		camera_added(camera);
+	schnapps_->foreach_camera([this] (Camera* camera) { camera_added(camera); });
 
 	current_camera_ = schnapps_->add_camera();
 	current_camera_->link_view(this);
@@ -109,10 +106,10 @@ View::~View()
 	this->setCamera(c);
 	current_camera_->unlink_view(this);
 
-	foreach (PluginInteraction* p, plugins_)
+	for (PluginInteraction* p : plugins_)
 		unlink_plugin(p);
 
-	foreach (MapHandlerGen* m, maps_)
+	for (MapHandlerGen* m : maps_)
 		unlink_map(m);
 
 	delete button_area_;
@@ -149,7 +146,7 @@ void View::set_current_camera(Camera* c)
 		if (prev)
 		{
 			QListWidgetItem* prev_item = dialog_cameras_->find_item(prev->get_name());
-			if(prev_item)
+			if (prev_item)
 			{
 				updating_ui_ = true;
 				prev_item->setCheckState(Qt::Unchecked);
@@ -160,7 +157,7 @@ void View::set_current_camera(Camera* c)
 		if (current_camera_)
 		{
 			QListWidgetItem* cur_item = dialog_cameras_->find_item(current_camera_->get_name());
-			if(cur_item)
+			if (cur_item)
 			{
 				updating_ui_ = true;
 				cur_item->setCheckState(Qt::Checked);
@@ -173,7 +170,7 @@ void View::set_current_camera(Camera* c)
 }
 
 void View::set_current_camera(const QString& name)
-{	
+{
 	Camera* c = schnapps_->get_camera(name);
 	if (c)
 		set_current_camera(c);
@@ -191,7 +188,7 @@ bool View::uses_camera(const QString& name) const
 
 void View::link_plugin(PluginInteraction* plugin)
 {
-	if(plugin && !plugins_.contains(plugin))
+	if (plugin && !is_linked_to_plugin(plugin))
 	{
 		plugins_.push_back(plugin);
 		plugin->link_view(this);
@@ -215,8 +212,9 @@ void View::link_plugin(const QString& name)
 
 void View::unlink_plugin(PluginInteraction* plugin)
 {
-	if(plugins_.removeOne(plugin))
+	if (is_linked_to_plugin(plugin))
 	{
+		plugins_.remove(plugin);
 		plugin->unlink_view(this);
 
 		emit(plugin_unlinked(plugin));
@@ -239,7 +237,7 @@ void View::unlink_plugin(const QString& name)
 bool View::is_linked_to_plugin(const QString& name) const
 {
 	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
-	return plugins_.contains(p);
+	return is_linked_to_plugin(p);
 }
 
 /*********************************************************
@@ -248,7 +246,7 @@ bool View::is_linked_to_plugin(const QString& name) const
 
 void View::link_map(MapHandlerGen* map)
 {
-	if(map && !maps_.contains(map))
+	if (map && !is_linked_to_map(map))
 	{
 		maps_.push_back(map);
 		map->link_view(this);
@@ -258,7 +256,7 @@ void View::link_map(MapHandlerGen* map)
 		connect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
 		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-		if(map->is_selected_map())
+		if (map->is_selected_map())
 			this->setManipulatedFrame(&map->get_frame());
 
 		update_bb();
@@ -280,8 +278,9 @@ void View::link_map(const QString& name)
 
 void View::unlink_map(MapHandlerGen* map)
 {
-	if(maps_.removeOne(map))
+	if (is_linked_to_map(map))
 	{
+		maps_.remove(map);
 		map->unlink_view(this);
 
 		emit(map_unlinked(map));
@@ -289,7 +288,7 @@ void View::unlink_map(MapHandlerGen* map)
 		disconnect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-		if(map->is_selected_map())
+		if (map->is_selected_map())
 			this->setManipulatedFrame(nullptr);
 
 		update_bb();
@@ -312,7 +311,7 @@ void View::unlink_map(const QString& name)
 bool View::is_linked_to_map(const QString& name) const
 {
 	MapHandlerGen* m = schnapps_->get_map(name);
-	return maps_.contains(m);
+	return is_linked_to_map(m);
 }
 
 
@@ -329,7 +328,7 @@ void View::init()
 
 	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
 
-	frame_drawer_ = new cgogn::rendering::DisplayListDrawer();
+	frame_drawer_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 	frame_drawer_renderer_ = frame_drawer_->generate_renderer();
 
 	frame_drawer_->new_list();
@@ -388,9 +387,7 @@ void View::draw()
 	glDepthFunc(GL_LESS);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
-	const QMap<QString, Camera*>& cameras = schnapps_->get_camera_set();
-	QList<Camera*> lc = cameras.values();
-	foreach (Camera* camera, lc)
+	schnapps_->foreach_camera([this] (Camera* camera)
 	{
 		if (camera != current_camera_)
 		{
@@ -398,7 +395,7 @@ void View::draw()
 //			if (camera->get_draw()) camera->draw();
 //			if (camera->get_draw_path()) camera->drawAllPaths();
 		}
-	}
+	});
 
 	QMatrix4x4 pm;
 	current_camera_->getProjectionMatrix(pm);
@@ -407,21 +404,19 @@ void View::draw()
 
 	MapHandlerGen* selected_map = schnapps_->get_selected_map();
 
-	foreach (MapHandlerGen* map, maps_)
+	for (MapHandlerGen* map : maps_)
 	{
 		QMatrix4x4 map_mm = mm * map->get_frame_matrix() * map->get_transformation_matrix();
 
-		if(map == selected_map && map->get_show_bb())
+		if (map == selected_map && map->get_show_bb())
 			map->draw_bb(this, pm, map_mm);
 
-		foreach (PluginInteraction* plugin, plugins_)
+		for (PluginInteraction* plugin : plugins_)
 			plugin->draw_map(this, map, pm, map_mm);
 	}
 
-	foreach (PluginInteraction* plugin, plugins_)
-	{
+	for (PluginInteraction* plugin : plugins_)
 		plugin->draw(this, pm, mm);
-	}
 }
 
 void View::postDraw()
@@ -437,10 +432,10 @@ void View::resizeGL(int width, int height)
 {
 	QOGLViewer::resizeGL(width, height);
 
-	if(button_area_)
+	if (button_area_)
 		button_area_->set_top_right_position(width / this->pixel_ratio(), 0);
 
-	if(button_area_left_)
+	if (button_area_left_)
 		button_area_left_->set_top_left_position(0, 0);
 }
 
@@ -498,7 +493,7 @@ void View::keyPressEvent(QKeyEvent* event)
 
 		default:
 		{
-			foreach (PluginInteraction* plugin, plugins_)
+			for (PluginInteraction* plugin : plugins_)
 				plugin->keyPress(this, event);
 
 			if (event->key() == Qt::Key_Escape)
@@ -518,7 +513,7 @@ void View::keyPressEvent(QKeyEvent* event)
 
 void View::keyReleaseEvent(QKeyEvent *event)
 {
-	foreach (PluginInteraction* plugin, plugins_)
+	for (PluginInteraction* plugin : plugins_)
 		plugin->keyRelease(this, event);
 
 	QOGLViewer::keyReleaseEvent(event);
@@ -543,7 +538,7 @@ void View::mousePressEvent(QMouseEvent* event)
 			button_area_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
 		else
 		{
-			foreach (PluginInteraction* plugin, plugins_)
+			for (PluginInteraction* plugin : plugins_)
 				plugin->mousePress(this, event);
 
 			QOGLViewer::mousePressEvent(event);
@@ -553,7 +548,7 @@ void View::mousePressEvent(QMouseEvent* event)
 
 void View::mouseReleaseEvent(QMouseEvent* event)
 {
-	foreach (PluginInteraction* plugin, plugins_)
+	for (PluginInteraction* plugin : plugins_)
 		plugin->mouseRelease(this, event);
 
 	QOGLViewer::mouseReleaseEvent(event);
@@ -561,7 +556,7 @@ void View::mouseReleaseEvent(QMouseEvent* event)
 
 void View::mouseMoveEvent(QMouseEvent* event)
 {
-	foreach (PluginInteraction* plugin, plugins_)
+	for (PluginInteraction* plugin : plugins_)
 		plugin->mouseMove(this, event);
 
 	QOGLViewer::mouseMoveEvent(event);
@@ -569,7 +564,7 @@ void View::mouseMoveEvent(QMouseEvent* event)
 
 void View::wheelEvent(QWheelEvent* event)
 {
-	foreach (PluginInteraction* plugin, plugins_)
+	for (PluginInteraction* plugin : plugins_)
 		plugin->wheelEvent(this, event);
 
 	QOGLViewer::wheelEvent(event);
@@ -594,7 +589,7 @@ void View::close_dialogs()
 
 void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
 {
-	if(cur && is_linked_to_map(cur))
+	if (cur && is_linked_to_map(cur))
 		this->setManipulatedFrame(&cur->get_frame());
 	this->update();
 }
@@ -672,7 +667,7 @@ void View::update_bb()
 	{
 		bool initialized = false;
 
-		foreach (MapHandlerGen* mhg, maps_)
+		for (MapHandlerGen* mhg : maps_)
 		{
 			qoglviewer::Vec minbb;
 			qoglviewer::Vec maxbb;

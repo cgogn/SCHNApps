@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 
-#include "ui_surface_render.h"
+#include <ui_surface_render.h>
 
 #include <QColorDialog>
 
@@ -37,7 +37,7 @@ class Plugin_SurfaceRender;
 
 struct MapParameters;
 
-class SurfaceRender_DockTab : public QWidget, public Ui::Surface_Render_TabWidget
+class SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
 	Q_OBJECT
 

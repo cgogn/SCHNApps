@@ -4,7 +4,7 @@ project(schnapps_core
 
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_rendering REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
@@ -22,6 +22,7 @@ set(HEADER_FILES
 	control_dock_plugin_tab.h
 	control_dock_map_tab.h
 	types.h
+	color_combo_box.h
 )
 
 set(SOURCE_FILES
@@ -36,6 +37,7 @@ set(SOURCE_FILES
 	control_dock_camera_tab.cpp
 	control_dock_plugin_tab.cpp
 	control_dock_map_tab.cpp
+	color_combo_box.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -47,19 +49,13 @@ qt5_add_resources(RCC_FILES
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${RCC_FILES})
 
-# use of target_compile_options to have a transitive c++11 flag
 if(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PUBLIC "-std=c++11")
 endif()
-if(MSVC)
-	target_compile_options(${PROJECT_NAME} PUBLIC "-D_USE_MATH_DEFINES")
-endif()
-
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_QOGLVIEWER_INCLUDE_DIR}>
-	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_EIGEN3_INCLUDE_DIR}>
+	${QOGLViewer_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
 	${CMAKE_CURRENT_BINARY_DIR}

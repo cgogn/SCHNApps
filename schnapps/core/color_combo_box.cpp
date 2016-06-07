@@ -21,70 +21,55 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#include <schnapps/core/color_combo_box.h>
 
-#include <schnapps/core/plugin_processing.h>
+#include <QtGui>
 
-#include <QAction>
-
-namespace schnapps
+ColorComboBox::ColorComboBox(QWidget *widget) : QComboBox(widget)
 {
+	//connect( this, SIGNAL(highlighted(int)), this, SLOT(slotHighlight(int)) );
+	populate_list();
+}
 
-class MapHandlerGen;
-
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class Plugin_Import : public PluginProcessing
+QColor ColorComboBox::color() const
 {
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+	return qvariant_cast<QColor>(itemData(currentIndex(), Qt::DecorationRole));
+}
 
-public:
+void ColorComboBox::setColor(QColor color)
+{
+	setCurrentIndex(findData(color, int(Qt::DecorationRole)));
+}
 
-	inline Plugin_Import() {}
+void ColorComboBox::populate_list()
+{
+	//QStringList color_names = QColor::colorNames();
+	QStringList color_names;
+	color_names <<
+		"red" <<
+		"green" <<
+		"blue" <<
+		"cyan "<<
+		"magenta" <<
+		"yellow" <<
+		"gray" <<
+		"white" <<
+		"black";
 
-	~Plugin_Import() {}
+	for (int i = 0; i < color_names.size(); ++i)
+	{
+		QColor color(color_names[i]);
+		insertItem(i, color_names[i]);
+		setItemData(i, color, Qt::DecorationRole);
+	}
+}
 
-private:
+void ColorComboBox::slot_highlight(int index)
+{
+	const QStringList color_names = QColor::colorNames();
+	QColor color(color_names.at(index));
 
-	bool enable() override;
-	void disable() override;
-
-public slots:
-
-	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
-	void import_surface_mesh_from_file_dialog();
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QAction* import_surface_mesh_action_;
-//	QAction* import_2D_image_action_;
-};
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+	QPalette palette = this->palette();
+	palette.setColor(QPalette::Highlight, color);
+	setPalette(palette);
+}

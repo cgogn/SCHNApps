@@ -30,10 +30,10 @@
 namespace schnapps
 {
 
-MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseData* map) :
+MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, std::unique_ptr<MapBaseData> map) :
 	name_(name),
 	schnapps_(schnapps),
-	map_(map),
+	map_(std::move(map)),
 	show_bb_(true),
 	bb_diagonal_size_(.0f),
 	bb_color_(Qt::green)
@@ -44,9 +44,7 @@ MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, MapBaseDat
 }
 
 MapHandlerGen::~MapHandlerGen()
-{
-	delete map_;
-}
+{}
 
 bool MapHandlerGen::is_selected_map() const
 {
@@ -62,8 +60,8 @@ QMatrix4x4 MapHandlerGen::get_frame_matrix() const
 	QMatrix4x4 m;
 	GLdouble tmp[16];
 	frame_.getMatrix(tmp);
-	for (unsigned int i=0; i<4; ++i)
-		for (unsigned int j=0; j<4; ++j)
+	for (unsigned int i = 0; i < 4; ++i)
+		for (unsigned int j = 0; j < 4; ++j)
 			m(j,i) = tmp[i*4+j];
 	return m;
 }
@@ -80,7 +78,7 @@ void MapHandlerGen::frame_changed()
 void MapHandlerGen::set_show_bb(bool b)
 {
 	show_bb_ = b;
-	foreach (View* view, views_)
+	for (View* view : views_)
 		view->update();
 }
 
@@ -98,7 +96,7 @@ bool MapHandlerGen::get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec&
 	const VEC3& min = bb_.min();
 	const VEC3& max = bb_.max();
 
-	cgogn::geometry::BoundingBox<VEC3> bb;
+	cgogn::geometry::AABB<VEC3> bb;
 
 	QVector4D v4 = transformation_matrix_ * QVector4D(min[0], min[1], min[2], 1.0f);
 	qoglviewer::Vec v = qoglviewer::Vec(v4[0], v4[1], v4[2]);
@@ -197,20 +195,19 @@ void MapHandlerGen::update_bb_drawer()
 
 cgogn::rendering::VBO* MapHandlerGen::get_vbo(const QString& name) const
 {
-	if (vbos_.contains(name))
-		return vbos_[name];
+	if (vbos_.count(name) > 0ul)
+		return vbos_.at(name).get();
 	else
 		return nullptr;
 }
 
 void MapHandlerGen::delete_vbo(const QString &name)
 {
-	if (vbos_.contains(name))
+	if (vbos_.count(name) > 0ul)
 	{
-		cgogn::rendering::VBO* vbo = vbos_[name];
-		vbos_.remove(name);
-		emit(vbo_removed(vbo));
-		delete vbo;
+		auto vbo = std::move(vbos_.at(name));
+		vbos_.erase(name);
+		emit(vbo_removed(vbo.get()));
 	}
 }
 
@@ -220,7 +217,7 @@ void MapHandlerGen::delete_vbo(const QString &name)
 
 void MapHandlerGen::link_view(View* view)
 {
-	if (view && !views_.contains(view))
+	if (view && !is_linked_to_view(view))
 	{
 		views_.push_back(view);
 		view->makeCurrent();
@@ -230,8 +227,42 @@ void MapHandlerGen::link_view(View* view)
 
 void MapHandlerGen::unlink_view(View* view)
 {
-	delete bb_drawer_renderer_[view];
-	views_.removeOne(view);
+	if (is_linked_to_view(view))
+		views_.remove(view);
+}
+
+/*********************************************************
+ * MANAGE ATTRIBUTES & CONNECTIVITY
+ *********************************************************/
+
+void MapHandlerGen::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	update_vbo(attribute_name);
+	check_bb_vertex_attribute(orbit, attribute_name);
+
+	emit(attribute_changed(orbit, attribute_name));
+
+	for (View* view : views_)
+		view->update();
+}
+
+void MapHandlerGen::notify_connectivity_change()
+{
+	render_.set_primitive_dirty(cgogn::rendering::POINTS);
+	render_.set_primitive_dirty(cgogn::rendering::LINES);
+	render_.set_primitive_dirty(cgogn::rendering::TRIANGLES);
+//	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
+
+//	for(unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
+//	{
+//		foreach (CellSelectorGen* cs, m_cellSelectors[orbit])
+//			cs->rebuild();
+//	}
+
+	emit(connectivity_changed());
+
+	for (View* view : views_)
+		view->update();
 }
 
 } // namespace schnapps

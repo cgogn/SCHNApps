@@ -144,9 +144,12 @@ public slots:
 	*/
 	void unlink_plugin(const QString& name);
 
-	inline const QList<PluginInteraction*>& get_linked_plugins() const { return plugins_; }
+	inline const std::list<PluginInteraction*>& get_linked_plugins() const { return plugins_; }
 
-	inline bool is_linked_to_plugin(PluginInteraction* plugin) const { return plugins_.contains(plugin); }
+	inline bool is_linked_to_plugin(PluginInteraction* plugin) const
+	{
+		return std::find(plugins_.begin(), plugins_.end(), plugin) != plugins_.end();
+	}
 
 	/**
 	* @brief test if the view is linked to a plugin
@@ -174,9 +177,12 @@ public slots:
 	*/
 	void unlink_map(const QString& name);
 
-	inline const QList<MapHandlerGen*>& get_linked_maps() const { return maps_; }
+	inline const std::list<MapHandlerGen*>& get_linked_maps() const { return maps_; }
 
-	inline bool is_linked_to_map(MapHandlerGen* map) const { return maps_.contains(map); }
+	inline bool is_linked_to_map(MapHandlerGen* map) const
+	{
+		return std::find(maps_.begin(), maps_.end(), map) != maps_.end();
+	}
 
 	/**
 	* @brief test if the view is linked to a lao
@@ -273,8 +279,8 @@ protected:
 	SCHNApps* schnapps_;
 
 	Camera* current_camera_;
-	QList<PluginInteraction*> plugins_;
-	QList<MapHandlerGen*> maps_;
+	std::list<PluginInteraction*> plugins_;
+	std::list<MapHandlerGen*> maps_;
 
 	qoglviewer::Vec bb_min_;
 	qoglviewer::Vec bb_max_;
@@ -297,8 +303,8 @@ protected:
 	ViewDialogList* dialog_plugins_;
 	ViewDialogList* dialog_cameras_;
 
-	cgogn::rendering::DisplayListDrawer* frame_drawer_;
-	cgogn::rendering::DisplayListDrawer::Renderer* frame_drawer_renderer_;
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer> frame_drawer_;
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer> frame_drawer_renderer_;
 
 	bool save_snapshots_;
 

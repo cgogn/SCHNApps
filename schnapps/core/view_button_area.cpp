@@ -39,15 +39,12 @@ ViewButton::ViewButton(const QString& image, View* view) :
 	wall_paper_(nullptr),
 	wall_paper_renderer_(nullptr)
 {
-	wall_paper_ = new cgogn::rendering::WallPaper(QImage(image));
+	wall_paper_ = cgogn::make_unique<cgogn::rendering::WallPaper>(QImage(image));
 	wall_paper_renderer_ = wall_paper_->generate_renderer();
 }
 
 ViewButton::~ViewButton()
-{
-	delete wall_paper_renderer_;
-	delete wall_paper_;
-}
+{}
 
 void ViewButton::click(int x, int y, int globalX, int globalY)
 {
@@ -73,7 +70,7 @@ ViewButtonArea::~ViewButtonArea()
 
 void ViewButtonArea::add_button(ViewButton* button)
 {
-	if (!buttons_.contains(button))
+	if (!has_button(button))
 	{
 		form_.setWidth(form_.width() + ViewButton::SIZE + ViewButton::SPACE);
 		form_.moveTopLeft(QPoint(form_.x() - ViewButton::SIZE - ViewButton::SPACE, form_.y()));
@@ -85,8 +82,9 @@ void ViewButtonArea::add_button(ViewButton* button)
 
 void ViewButtonArea::remove_button(ViewButton* button)
 {
-	if (buttons_.removeOne(button))
+	if (has_button(button))
 	{
+		buttons_.remove(button);
 		form_.setWidth(form_.width() - ViewButton::SIZE - ViewButton::SPACE);
 		form_.moveTopLeft(QPoint(form_.x() + ViewButton::SIZE + ViewButton::SPACE, form_.y()));
 		form_.setHeight(ViewButton::SIZE + 2 * ViewButton::SPACE);
@@ -102,7 +100,7 @@ void ViewButtonArea::click_button(int x, int y, int globalX, int globalY)
 {
 	QPoint p = form_.topLeft();
 	p.setY(p.y() + ViewButton::SPACE);
-	foreach (ViewButton* b, buttons_)
+	for (ViewButton* b : buttons_)
 	{
 		if (QRect(p, QSize(ViewButton::SIZE, ViewButton::SIZE)).contains(x, y))
 		{
@@ -128,7 +126,7 @@ void ViewButtonArea::draw()
 	int p_x = form_.x();
 	int p_y = form_.y();
 
-	foreach (ViewButton* b, buttons_)
+	for (ViewButton* b : buttons_)
 	{
 		b->draw_at(p_x, p_y + ViewButton::SPACE);
 		p_x += ViewButton::SIZE + ViewButton::SPACE;

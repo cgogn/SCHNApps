@@ -35,14 +35,18 @@
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 
 #include <QAction>
+#include <map>
 
 namespace schnapps
 {
 
 class MapHandlerGen;
+class Plugin_SurfaceRender;
 
 struct MapParameters
 {
+	friend class Plugin_SurfaceRender;
+
 	enum FaceShadingStyle
 	{
 		FLAT = 0,
@@ -51,7 +55,11 @@ struct MapParameters
 
 	MapParameters() :
 		shader_flat_param_(nullptr),
+		shader_flat_color_param_(nullptr),
 		shader_simple_color_param_(nullptr),
+		shader_phong_param_(nullptr),
+		shader_phong_color_param_(nullptr),
+		shader_point_sprite_param_(nullptr),
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
 		color_vbo_(nullptr),
@@ -181,6 +189,13 @@ struct MapParameters
 
 private:
 
+	std::unique_ptr<cgogn::rendering::ShaderFlat::Param>		shader_flat_param_;
+	std::unique_ptr<cgogn::rendering::ShaderFlatColor::Param>	shader_flat_color_param_;
+	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_;
+	std::unique_ptr<cgogn::rendering::ShaderPhong::Param>		shader_phong_param_;
+	std::unique_ptr<cgogn::rendering::ShaderPhongColor::Param>	shader_phong_color_param_;
+	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
+
 	cgogn::rendering::VBO* position_vbo_;
 	cgogn::rendering::VBO* normal_vbo_;
 	cgogn::rendering::VBO* color_vbo_;
@@ -196,13 +211,6 @@ private:
 	float32 vertex_base_size_;
 
 public:
-
-	cgogn::rendering::ShaderFlat::Param* shader_flat_param_;
-	cgogn::rendering::ShaderFlatColor::Param* shader_flat_color_param_;
-	cgogn::rendering::ShaderSimpleColor::Param* shader_simple_color_param_;
-	cgogn::rendering::ShaderPhong::Param* shader_phong_param_;
-	cgogn::rendering::ShaderPhongColor::Param* shader_phong_color_param_;
-	cgogn::rendering::ShaderPointSprite::Param* shader_point_sprite_param_;
 
 	bool render_vertices_;
 	bool render_edges_;
@@ -239,12 +247,12 @@ private:
 	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
-	inline void keyPress(View* , QKeyEvent*) override {}
-	inline void keyRelease(View* , QKeyEvent*) override {}
-	inline void mousePress(View* , QMouseEvent*) override {}
-	inline void mouseRelease(View* , QMouseEvent*) override {}
-	inline void mouseMove(View* , QMouseEvent*) override {}
-	inline void wheelEvent(View* , QWheelEvent*) override {}
+	inline void keyPress(View*, QKeyEvent*) override {}
+	inline void keyRelease(View*, QKeyEvent*) override {}
+	inline void mousePress(View*, QMouseEvent*) override {}
+	inline void mouseRelease(View*, QMouseEvent*) override {}
+	inline void mouseMove(View*, QMouseEvent*) override {}
+	inline void wheelEvent(View*, QWheelEvent*) override {}
 
 	inline void view_linked(View*) override {}
 	inline void view_unlinked(View*) override {}
@@ -270,7 +278,7 @@ public slots:
 private:
 
 	SurfaceRender_DockTab* dock_tab_;
-	QHash<View*, QHash<MapHandlerGen*, MapParameters>> parameter_set_;
+	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
 } // namespace schnapps

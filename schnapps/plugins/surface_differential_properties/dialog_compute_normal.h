@@ -21,70 +21,42 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
+#define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
 
-#include <schnapps/core/plugin_processing.h>
+#include <ui_dialog_compute_normal.h>
 
-#include <QAction>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+class SCHNApps;
+class Plugin_SurfaceDifferentialProperties;
 
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class Plugin_Import : public PluginProcessing
+class ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+
+	friend class Plugin_SurfaceDifferentialProperties;
 
 public:
 
-	inline Plugin_Import() {}
-
-	~Plugin_Import() {}
+	ComputeNormal_Dialog(SCHNApps* s);
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	SCHNApps* schnapps_;
+	MapHandler<CMap2>* selected_map_;
 
-public slots:
+private slots:
 
-	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
-	void import_surface_mesh_from_file_dialog();
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QAction* import_surface_mesh_action_;
-//	QAction* import_2D_image_action_;
+	void selected_map_changed();
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_

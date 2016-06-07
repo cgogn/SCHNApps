@@ -21,70 +21,55 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
 
-#include <schnapps/core/plugin_processing.h>
-
-#include <QAction>
+#include <ui_surface_render_vector.h>
 
 namespace schnapps
 {
 
+class SCHNApps;
 class MapHandlerGen;
+class Plugin_SurfaceRenderVector;
 
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class Plugin_Import : public PluginProcessing
+struct MapParameters;
+
+class SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+
+	friend class Plugin_SurfaceRenderVector;
 
 public:
 
-	inline Plugin_Import() {}
-
-	~Plugin_Import() {}
+	SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p);
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	SCHNApps* schnapps_;
+	Plugin_SurfaceRenderVector* plugin_;
 
-public slots:
+	bool updating_ui_;
 
-	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
+private slots:
 
-	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
-	void import_surface_mesh_from_file_dialog();
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
+	void position_vbo_changed(int index);
+	void selected_vector_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
+	void vector_vbo_checked(QListWidgetItem* item);
+	void vector_scale_factor_changed(int i);
+	void vector_color_changed(int i);
 
 private:
 
-	QAction* import_surface_mesh_action_;
-//	QAction* import_2D_image_action_;
+	void add_position_vbo(QString name);
+	void remove_position_vbo(QString name);
+	void add_vector_vbo(QString name);
+	void remove_vector_vbo(QString name);
+
+	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_

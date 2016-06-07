@@ -36,27 +36,28 @@ namespace schnapps
 
 bool Plugin_Import::enable()
 {
-//	magic line that init static variables of GenericMap in the plugins
-//	GenericMap::copyAllStatics(m_schnapps->getStaticPointers());
+	import_surface_mesh_action_ = schnapps_->add_menu_action("Surface;Import Mesh", "import surface mesh");
+	connect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 
-	import_surface_mesh_action = new QAction("import surface mesh", this);
-	schnapps_->add_menu_action(this, "Surface;Import Mesh", import_surface_mesh_action);
-	connect(import_surface_mesh_action, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
-
-//	import_2D_image_action = new QAction("import 2D image", this);
-//	schnapps_->add_menu_action(this, "Surface;Import 2D Image", import_2D_image_action);
-//	connect(import_2D_image_action, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
+//	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
+//	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
 
 	return true;
+}
+
+void Plugin_Import::disable()
+{
+	schnapps_->remove_menu_action(import_surface_mesh_action_);
+//	schnapps_->remove_menu_action(import_2D_image_action_);
 }
 
 MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filename)
 {
 	QFileInfo fi(filename);
-	if(fi.exists())
+	if (fi.exists())
 	{
 		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 2);
-		if(mhg)
+		if (mhg)
 		{
 			MapHandler<CMap2>* mh = static_cast<MapHandler<CMap2>*>(mhg);
 			CMap2* map = mh->get_map();
@@ -82,7 +83,7 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 
 void Plugin_Import::import_surface_mesh_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", schnapps_->get_app_path(), "Surface mesh Files (*.ply *.off *.trian)");
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", schnapps_->get_app_path(), "Surface mesh Files (*.ply *.off *.trian *.vtk *.vtp *.obj)");
 	QStringList::Iterator it = filenames.begin();
 	while(it != filenames.end())
 	{
