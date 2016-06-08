@@ -251,7 +251,7 @@ void MapHandlerGen::notify_connectivity_change()
 	render_.set_primitive_dirty(cgogn::rendering::POINTS);
 	render_.set_primitive_dirty(cgogn::rendering::LINES);
 	render_.set_primitive_dirty(cgogn::rendering::TRIANGLES);
-//	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
+	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
 
 //	for(unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
 //	{
