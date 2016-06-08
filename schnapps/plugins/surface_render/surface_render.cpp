@@ -149,6 +149,16 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 			p.shader_point_sprite_param_->release();
 		}
 	}
+
+	if (p.render_boundary_)
+	{
+		if (p.get_position_vbo())
+		{
+			p.shader_simple_color_param_boundary_->bind(proj, mv);
+			map->draw(cgogn::rendering::BOUNDARY);
+			p.shader_simple_color_param_boundary_->release();
+		}
+	}
 }
 
 void Plugin_SurfaceRender::selected_view_changed(View* old, View* cur)

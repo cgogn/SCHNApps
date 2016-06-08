@@ -57,6 +57,7 @@ struct MapParameters
 		shader_flat_param_(nullptr),
 		shader_flat_color_param_(nullptr),
 		shader_simple_color_param_(nullptr),
+		shader_simple_color_param_boundary_(nullptr),
 		shader_phong_param_(nullptr),
 		shader_phong_color_param_(nullptr),
 		shader_point_sprite_param_(nullptr),
@@ -85,6 +86,9 @@ struct MapParameters
 		shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
 		shader_simple_color_param_->color_ = edge_color_;
 
+		shader_simple_color_param_boundary_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+		shader_simple_color_param_boundary_->color_ = QColor(200, 200, 25);
+
 		shader_phong_param_ = cgogn::rendering::ShaderPhong::generate_param();
 		shader_phong_param_->front_color_ = front_color_;
 		shader_phong_param_->back_color_ = back_color_;
@@ -107,6 +111,7 @@ struct MapParameters
 			shader_flat_param_->set_position_vbo(position_vbo_);
 			shader_flat_color_param_->set_position_vbo(position_vbo_);
 			shader_simple_color_param_->set_position_vbo(position_vbo_);
+			shader_simple_color_param_boundary_->set_position_vbo(position_vbo_);
 			shader_phong_param_->set_position_vbo(position_vbo_);
 			shader_phong_color_param_->set_position_vbo(position_vbo_);
 			shader_point_sprite_param_->set_position_vbo(position_vbo_);
@@ -192,6 +197,7 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderFlat::Param>		shader_flat_param_;
 	std::unique_ptr<cgogn::rendering::ShaderFlatColor::Param>	shader_flat_color_param_;
 	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_;
+	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_boundary_;
 	std::unique_ptr<cgogn::rendering::ShaderPhong::Param>		shader_phong_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPhongColor::Param>	shader_phong_color_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
