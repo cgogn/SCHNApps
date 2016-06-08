@@ -59,6 +59,7 @@ private slots:
 	void color_map_changed(int index);
 	void expansion_changed(int i);
 	void show_iso_lines_changed(bool b);
+	void nb_iso_levels_changed(int i);
 
 private:
 
