@@ -21,56 +21,21 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
-
-#include <ui_surface_render_scalar.h>
+#include <schnapps/core/cells_set.h>
+#include <schnapps/core/schnapps.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
-class Plugin_SurfaceRenderScalar;
+uint32 CellsSetGen::cells_set_count_ = 0;
 
-struct MapParameters;
-
-class SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
+CellsSetGen::CellsSetGen(const QString& name) :
+	name_(name)
 {
-	Q_OBJECT
+	++cells_set_count_;
+}
 
-	friend class Plugin_SurfaceRenderScalar;
-
-public:
-
-	SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_SurfaceRenderScalar* plugin_;
-
-	bool updating_ui_;
-
-private slots:
-
-	void position_vbo_changed(int index);
-	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
-	void color_map_changed(int index);
-	void expansion_changed(int i);
-	void show_iso_lines_changed(bool b);
-	void nb_iso_levels_changed(int i);
-
-private:
-
-	void add_position_vbo(const QString& name);
-	void remove_position_vbo(const QString& name);
-	void add_scalar_vbo(const QString& name);
-	void remove_scalar_vbo(const QString& name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
-};
+CellsSetGen::~CellsSetGen()
+{}
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_

@@ -198,7 +198,7 @@ void Plugin_SurfaceRender::vbo_added(cgogn::rendering::VBO* vbo)
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
-	if (map == schnapps_->get_selected_map())
+	if (map->is_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
 		{
@@ -213,7 +213,7 @@ void Plugin_SurfaceRender::vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
-	if (map == schnapps_->get_selected_map())
+	if (map->is_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
 		{
@@ -223,32 +223,20 @@ void Plugin_SurfaceRender::vbo_removed(cgogn::rendering::VBO* vbo)
 		}
 	}
 
-	std::set<View*> views_to_update;
-
 	for (auto& it : parameter_set_)
 	{
-		View* view = it.first;
 		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
 		MapParameters& map_param = view_param_set[map];
 		if (map_param.get_position_vbo() == vbo)
-		{
 			map_param.set_position_vbo(nullptr);
-			if (view->is_linked_to_map(map)) views_to_update.insert(view);
-		}
 		if (map_param.get_normal_vbo() == vbo)
-		{
 			map_param.set_normal_vbo(nullptr);
-			if (view->is_linked_to_map(map)) views_to_update.insert(view);
-		}
 		if (map_param.get_color_vbo() == vbo)
-		{
 			map_param.set_color_vbo(nullptr);
-			if (view->is_linked_to_map(map)) views_to_update.insert(view);
-		}
 	}
 
-	for (View* v : views_to_update)
-		v->update();
+	for (View* view : map->get_linked_views())
+		view->update();
 }
 
 void Plugin_SurfaceRender::bb_changed()

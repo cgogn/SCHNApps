@@ -21,56 +21,54 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
 
-#include <ui_surface_render_scalar.h>
+#include <ui_selection.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
 class MapHandlerGen;
-class Plugin_SurfaceRenderScalar;
+class Plugin_Selection;
 
 struct MapParameters;
 
-class SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
+class Selection_DockTab : public QWidget, public Ui::Selection_TabWidget
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRenderScalar;
+	friend class Plugin_Selection;
 
 public:
 
-	SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p);
+	Selection_DockTab(SCHNApps* s, Plugin_Selection* p);
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_SurfaceRenderScalar* plugin_;
+	Plugin_Selection* plugin_;
 
 	bool updating_ui_;
 
 private slots:
 
-	void position_vbo_changed(int index);
-	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
-	void color_map_changed(int index);
-	void expansion_changed(int i);
-	void show_iso_lines_changed(bool b);
-	void nb_iso_levels_changed(int i);
+	void position_attribute_changed(int index);
+	void normal_attribute_changed(int index);
+	void selection_method_changed(int index);
+	void vertices_scale_factor_changed(int i);
+	void vertices_scale_factor_pressed();
+	void color_changed(int i);
+	void clear_clicked();
 
 private:
 
-	void add_position_vbo(const QString& name);
-	void remove_position_vbo(const QString& name);
-	void add_scalar_vbo(const QString& name);
-	void remove_scalar_vbo(const QString& name);
+	void add_vertex_attribute(const QString& attribute_name);
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_

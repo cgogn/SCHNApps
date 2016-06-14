@@ -26,6 +26,7 @@
 
 #include <schnapps/core/dll.h>
 #include <schnapps/core/types.h>
+#include <schnapps/core/cells_set.h>
 
 #include <cgogn/core/cmap/map_base.h>
 #include <cgogn/core/cmap/cmap2.h>
@@ -88,6 +89,7 @@ public slots:
 	virtual uint32 nb_vertices() const = 0;
 	virtual uint32 nb_edges() const = 0;
 	virtual uint32 nb_faces() const = 0;
+	virtual uint32 nb_volumes() const = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -197,6 +199,12 @@ public slots:
 	inline const std::map<QString, std::unique_ptr<cgogn::rendering::VBO>>& get_vbo_set() const { return vbos_; }
 
 	/*********************************************************
+	 * MANAGE CELLS SETS
+	 *********************************************************/
+
+	virtual CellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name) = 0;
+
+	/*********************************************************
 	 * MANAGE LINKED VIEWS
 	 *********************************************************/
 
@@ -235,6 +243,8 @@ signals:
 	void attribute_removed(cgogn::Orbit, const QString&);
 	void attribute_changed(cgogn::Orbit, const QString&);
 
+	void cells_set_added(cgogn::Orbit, const QString&);
+
 	void connectivity_changed();
 
 protected:
@@ -270,6 +280,9 @@ protected:
 
 	// VBO managed for the map attributes
 	std::map<QString, std::unique_ptr<cgogn::rendering::VBO>> vbos_;
+
+	// CellsSets of the map
+	std::map<QString, std::unique_ptr<CellsSetGen>> cells_sets_[cgogn::NB_ORBITS];
 };
 
 
@@ -286,9 +299,12 @@ public:
 	using EdgeAttribute = typename MAP_TYPE::template EdgeAttribute<T>;
 	template <typename T>
 	using FaceAttribute = typename MAP_TYPE::template FaceAttribute<T>;
+	template <typename T>
+	using VolumeAttribute = typename MAP_TYPE::template VolumeAttribute<T>;
 	using Vertex = typename MAP_TYPE::Vertex;
 	using Edge = typename MAP_TYPE::Edge;
 	using Face = typename MAP_TYPE::Face;
+	using Volume = typename MAP_TYPE::Volume;
 
 	MapHandler(const QString& name, SCHNApps* s) :
 		MapHandlerGen(name, s, cgogn::make_unique<MAP_TYPE>())
@@ -304,6 +320,7 @@ public:
 	uint32 nb_vertices() const override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
 	uint32 nb_edges() const override { return get_map()->template nb_cells<Edge::ORBIT>(); }
 	uint32 nb_faces() const override { return get_map()->template nb_cells<Face::ORBIT>(); }
+	uint32 nb_volumes() const override { return get_map()->template nb_cells<Volume::ORBIT>(); }
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
@@ -361,9 +378,9 @@ private:
 
 	inline void draw(cgogn::rendering::DrawingType primitive) override
 	{
-		if (!render_.is_primitive_uptodate(primitive))
-			render_.init_primitives<VEC3>(*get_map(), primitive);
-		render_.draw(primitive);
+		if (!this->render_.is_primitive_uptodate(primitive))
+			this->render_.init_primitives(*get_map(), primitive);
+		this->render_.draw(primitive);
 	}
 
 	/*********************************************************
@@ -419,7 +436,7 @@ protected:
 			if (ca4f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<VEC4F> va(map, ca4f);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -430,7 +447,7 @@ protected:
 			if (ca4d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<VEC4D> va(map, ca4d);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -441,7 +458,7 @@ protected:
 			if (ca3f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<VEC3F> va(map, ca3f);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -452,7 +469,7 @@ protected:
 			if (ca3d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<VEC3D> va(map, ca3d);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -463,7 +480,7 @@ protected:
 			if (ca2f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<VEC2F> va(map, ca2f);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -474,7 +491,7 @@ protected:
 			if (ca2d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<VEC2D> va(map, ca2d);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -485,7 +502,7 @@ protected:
 			if (ca1f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<float32> va(map, ca1f);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -496,7 +513,7 @@ protected:
 			if (ca1d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
-				vbo = vbos_.at(name).get();
+				vbo = this->vbos_.at(name).get();
 				VertexAttribute<float64> va(map, ca1d);
 				cgogn::rendering::update_vbo(va, vbo);
 				emit(vbo_added(vbo));
@@ -518,38 +535,103 @@ protected:
 			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
 			MapBaseData::ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
 
-			MapBaseData::ChunkArray<VEC4>* ca4 = dynamic_cast<MapBaseData::ChunkArray<VEC4>*>(cag);
-			if (ca4)
+			MapBaseData::ChunkArray<VEC4F>* ca4f = dynamic_cast<MapBaseData::ChunkArray<VEC4F>*>(cag);
+			if (ca4f)
 			{
-				vbo = vbos_.at(name).get();
-				VertexAttribute<VEC4> va(map, ca4);
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<VEC4F> va(map, ca4f);
 				cgogn::rendering::update_vbo(va, vbo);
+				return;
 			}
 
-			MapBaseData::ChunkArray<VEC3>* ca3 = dynamic_cast<MapBaseData::ChunkArray<VEC3>*>(cag);
-			if (ca3)
+			MapBaseData::ChunkArray<VEC4D>* ca4d = dynamic_cast<MapBaseData::ChunkArray<VEC4D>*>(cag);
+			if (ca4f)
 			{
-				vbo = vbos_.at(name).get();
-				VertexAttribute<VEC3> va(map, ca3);
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<VEC4D> va(map, ca4d);
 				cgogn::rendering::update_vbo(va, vbo);
+				return;
 			}
 
-			MapBaseData::ChunkArray<VEC2>* ca2 = dynamic_cast<MapBaseData::ChunkArray<VEC2>*>(cag);
-			if (ca2)
+			MapBaseData::ChunkArray<VEC3F>* ca3f = dynamic_cast<MapBaseData::ChunkArray<VEC3F>*>(cag);
+			if (ca3f)
 			{
-				vbo = vbos_.at(name).get();
-				VertexAttribute<VEC2> va(map, ca2);
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<VEC3F> va(map, ca3f);
 				cgogn::rendering::update_vbo(va, vbo);
+				return;
 			}
 
-			MapBaseData::ChunkArray<SCALAR>* ca1 = dynamic_cast<MapBaseData::ChunkArray<SCALAR>*>(cag);
-			if (ca1)
+			MapBaseData::ChunkArray<VEC3D>* ca3d = dynamic_cast<MapBaseData::ChunkArray<VEC3D>*>(cag);
+			if (ca3d)
 			{
-				vbo = vbos_.at(name).get();
-				VertexAttribute<SCALAR> va(map, ca1);
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<VEC3D> va(map, ca3d);
 				cgogn::rendering::update_vbo(va, vbo);
+				return;
+			}
+
+			MapBaseData::ChunkArray<VEC2F>* ca2f = dynamic_cast<MapBaseData::ChunkArray<VEC2F>*>(cag);
+			if (ca2f)
+			{
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<VEC2F> va(map, ca2f);
+				cgogn::rendering::update_vbo(va, vbo);
+				return;
+			}
+
+			MapBaseData::ChunkArray<VEC2D>* ca2d = dynamic_cast<MapBaseData::ChunkArray<VEC2D>*>(cag);
+			if (ca2d)
+			{
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<VEC2D> va(map, ca2d);
+				cgogn::rendering::update_vbo(va, vbo);
+				return;
+			}
+
+			MapBaseData::ChunkArray<float32>* ca1f = dynamic_cast<MapBaseData::ChunkArray<float32>*>(cag);
+			if (ca1f)
+			{
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<float32> va(map, ca1f);
+				cgogn::rendering::update_vbo(va, vbo);
+				return;
+			}
+
+			MapBaseData::ChunkArray<float64>* ca1d = dynamic_cast<MapBaseData::ChunkArray<float64>*>(cag);
+			if (ca1d)
+			{
+				vbo = this->vbos_.at(name).get();
+				VertexAttribute<float64> va(map, ca1d);
+				cgogn::rendering::update_vbo(va, vbo);
+				return;
 			}
 		}
+	}
+
+	/*********************************************************
+	 * MANAGE CELLS SETS
+	 *********************************************************/
+
+	CellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name) override
+	{
+		if (this->cells_sets_[orbit].count(name) > 0ul)
+			return nullptr;
+
+		switch (orbit)
+		{
+			case Vertex::ORBIT:
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(get_map(), name)));
+				break;
+			case Edge::ORBIT:
+				break;
+			case Face::ORBIT:
+				break;
+		}
+
+		CellsSetGen* cells_set = this->cells_sets_[orbit].at(name).get();
+		emit(cells_set_added(orbit, name));
+		return cells_set;
 	}
 
 private:

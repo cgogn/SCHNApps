@@ -541,6 +541,10 @@ void ControlDock_MapTab::update_selected_map_info()
 				}
 			}
 		}
+		else if (map3)
+		{
+
+		}
 	}
 	else
 	{

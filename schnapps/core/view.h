@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_VIEW_H_
 
 #include <schnapps/core/dll.h>
+#include <schnapps/core/types.h>
 
 #include <schnapps/core/view_dialog_list.h>
 #include <schnapps/core/view_button_area.h>
@@ -61,7 +62,7 @@ class SCHNAPPS_CORE_API View : public QOGLViewer
 
 public:
 
-	static unsigned int view_count_;
+	static uint32 view_count_;
 
 	View(const QString& name, SCHNApps* s);
 

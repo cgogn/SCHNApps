@@ -21,56 +21,55 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
+#include <selection.h>
 
-#include <ui_surface_render_scalar.h>
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/view.h>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
-class Plugin_SurfaceRenderScalar;
-
-struct MapParameters;
-
-class SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
+MapParameters& Plugin_Selection::get_parameters(MapHandlerGen* map)
 {
-	Q_OBJECT
+	MapParameters& p = parameter_set_[map];
+	p.map_ = static_cast<MapHandler<CMap2>*>(map);
+	return p;
+}
 
-	friend class Plugin_SurfaceRenderScalar;
+bool Plugin_Selection::enable()
+{
+	dock_tab_ = new Selection_DockTab(this->schnapps_, this);
+	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Selection");
 
-public:
+	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 
-	SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p);
+	return true;
+}
 
-private:
+void Plugin_Selection::disable()
+{
+}
 
-	SCHNApps* schnapps_;
-	Plugin_SurfaceRenderScalar* plugin_;
+void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
+{
+	if (map->is_selected_map())
+	{
+		view->makeCurrent();
+		const MapParameters& p = get_parameters(map);
+		if (p.get_position_attribute().is_valid())
+		{
 
-	bool updating_ui_;
+		}
+	}
+}
 
-private slots:
+void Plugin_Selection::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
+{
+	const MapParameters& p = get_parameters(cur);
+	dock_tab_->update_map_parameters(cur, p);
+}
 
-	void position_vbo_changed(int index);
-	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
-	void color_map_changed(int index);
-	void expansion_changed(int i);
-	void show_iso_lines_changed(bool b);
-	void nb_iso_levels_changed(int i);
-
-private:
-
-	void add_position_vbo(const QString& name);
-	void remove_position_vbo(const QString& name);
-	void add_scalar_vbo(const QString& name);
-	void remove_scalar_vbo(const QString& name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
-};
+Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_

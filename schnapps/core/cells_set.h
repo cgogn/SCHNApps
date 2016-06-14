@@ -21,56 +21,61 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
+#ifndef SCHNAPPS_CORE_CELLS_SET_H_
+#define SCHNAPPS_CORE_CELLS_SET_H_
 
-#include <ui_surface_render_scalar.h>
+#include <schnapps/core/dll.h>
+#include <schnapps/core/types.h>
+
+#include <cgogn/core/basic/cell.h>
+
+#include <QObject>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
-class Plugin_SurfaceRenderScalar;
 
-struct MapParameters;
-
-class SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
+class SCHNAPPS_CORE_API CellsSetGen : public QObject
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRenderScalar;
-
 public:
 
-	SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p);
+	// counter for easy cells set unique naming
+	static uint32 cells_set_count_;
 
-private:
+	/**
+	 * @brief CellsSet constructor
+	 * @param name
+	 * @param s
+	 */
+	CellsSetGen(const QString& name);
 
-	SCHNApps* schnapps_;
-	Plugin_SurfaceRenderScalar* plugin_;
+	~CellsSetGen();
 
-	bool updating_ui_;
+protected:
 
-private slots:
+	// cells set name
+	QString name_;
+};
 
-	void position_vbo_changed(int index);
-	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
-	void color_map_changed(int index);
-	void expansion_changed(int i);
-	void show_iso_lines_changed(bool b);
-	void nb_iso_levels_changed(int i);
 
-private:
+template <typename MAP, typename CellType>
+class CellsSet : public CellsSetGen
+{
+public:
 
-	void add_position_vbo(const QString& name);
-	void remove_position_vbo(const QString& name);
-	void add_scalar_vbo(const QString& name);
-	void remove_scalar_vbo(const QString& name);
+	CellsSet(MAP* m, const QString& name) :
+		CellsSetGen(name),
+		map_(m)
+	{}
 
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+protected:
+
+	MAP* map_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
+#endif // SCHNAPPS_CORE_CELLS_SET_H_

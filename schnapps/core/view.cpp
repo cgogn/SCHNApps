@@ -39,7 +39,7 @@ namespace schnapps
 
 using Vec3 = Eigen::Vector3d;
 
-unsigned int View::view_count_ = 0;
+uint32 View::view_count_ = 0;
 
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
@@ -675,7 +675,7 @@ void View::update_bb()
 			{
 				if (initialized)
 				{
-					for (unsigned int dim = 0; dim < 3; ++dim)
+					for (uint32 dim = 0; dim < 3; ++dim)
 					{
 						if (minbb[dim] < bb_min_[dim])
 							bb_min_[dim] = minbb[dim];
@@ -685,7 +685,7 @@ void View::update_bb()
 				}
 				else
 				{
-					for (unsigned int dim = 0; dim < 3; ++dim)
+					for (uint32 dim = 0; dim < 3; ++dim)
 					{
 						bb_min_[dim] = minbb[dim];
 						bb_max_[dim] = maxbb[dim];
