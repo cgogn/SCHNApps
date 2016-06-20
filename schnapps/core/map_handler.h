@@ -362,7 +362,7 @@ private:
 	inline void draw(cgogn::rendering::DrawingType primitive) override
 	{
 		if (!render_.is_primitive_uptodate(primitive))
-			render_.init_primitives<VEC3>(*get_map(), primitive);
+			render_.init_primitives(*get_map(), primitive);
 		render_.draw(primitive);
 	}
 
