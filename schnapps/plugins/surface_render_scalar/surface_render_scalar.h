@@ -48,7 +48,8 @@ struct MapParameters
 		scalar_vbo_(nullptr),
 		color_map_(cgogn::rendering::ShaderScalarPerVertex::BWR),
 		expansion_(0),
-		show_iso_lines_(false)
+		show_iso_lines_(false),
+		nb_iso_levels_(10)
 	{
 		shader_scalar_per_vertex_param_ = cgogn::rendering::ShaderScalarPerVertex::generate_param();
 		shader_scalar_per_vertex_param_->color_map_ = color_map_;
@@ -56,6 +57,7 @@ struct MapParameters
 		shader_scalar_per_vertex_param_->min_value_ = 0.0f;
 		shader_scalar_per_vertex_param_->max_value_ = 1.0f;
 		shader_scalar_per_vertex_param_->show_iso_lines_ = show_iso_lines_;
+		shader_scalar_per_vertex_param_->nb_iso_levels_ = nb_iso_levels_;
 	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
@@ -100,11 +102,18 @@ struct MapParameters
 		shader_scalar_per_vertex_param_->expansion_ = expansion_;
 	}
 
-	int32 get_show_iso_lines() const { return show_iso_lines_; }
+	bool get_show_iso_lines() const { return show_iso_lines_; }
 	void set_show_iso_lines(bool show_iso_lines)
 	{
 		show_iso_lines_ = show_iso_lines;
 		shader_scalar_per_vertex_param_->show_iso_lines_ = show_iso_lines_;
+	}
+
+	int32 get_nb_iso_levels() const { return nb_iso_levels_; }
+	void set_nb_iso_levels(int32 n)
+	{
+		nb_iso_levels_ = n;
+		shader_scalar_per_vertex_param_->nb_iso_levels_ = nb_iso_levels_;
 	}
 
 private:
@@ -119,6 +128,7 @@ private:
 	cgogn::rendering::ShaderScalarPerVertex::ColorMap color_map_;
 	int32 expansion_;
 	bool show_iso_lines_;
+	int32 nb_iso_levels_;
 };
 
 /**
