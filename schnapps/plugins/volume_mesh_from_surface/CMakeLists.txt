@@ -8,11 +8,13 @@ find_package(cgogn_io REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(HEADER_FILES
+	tetgen_structure_io.h
 	volume_mesh_from_surface.h
 	volume_mesh_from_surface_dock_tab.h
 )
 
 set(SOURCE_FILES
+	tetgen_structure_io.cpp
 	volume_mesh_from_surface.cpp
 	volume_mesh_from_surface_dock_tab.cpp
 )

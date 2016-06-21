@@ -47,7 +47,7 @@
    <item row="1" column="0">
     <widget class="QLineEdit" name="lineEdit_tetgen_args">
      <property name="text">
-      <string>-p0</string>
+      <string>-pO</string>
      </property>
     </widget>
    </item>

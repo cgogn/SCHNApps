@@ -1,5 +1,5 @@
 /*******************************************************************************
-* SCHNApps                                                                     *
+* CGoGN: Combinatorial and Geometric modeling with Generic N-dimensional Maps  *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
 *                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
@@ -21,53 +21,40 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_mesh_from_surface.h>
-#include <schnapps/core/schnapps.h>
+#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H
+#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H
+
+#include <memory>
+
+#include <cgogn/io/volume_import.h>
+#include <cgogn/geometry/types/geometry_traits.h>
 #include <schnapps/core/map_handler.h>
-#include <cgogn/core/utils/unique_ptr.h>
-#include <tetgen_structure_io.h>
-#include <cgogn/io/map_export.h>
+#include <tetgen/tetgen.h>
 
 namespace schnapps
 {
 
-bool Plugin_VolumeMeshFromSurface::enable()
+class TetgenStructureVolumeImport : public cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>
 {
-	dock_tab_ = cgogn::make_unique<VolumeMeshFromSurface_DockTab>(this->schnapps_, this);
-	schnapps_->add_plugin_dock_tab(this, dock_tab_.get(), "Volume Mesh From Surface");
-	return true;
-}
+public:
+	using Inherit = cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>;
+	using Self = TetgenStructureVolumeImport;
+	using Scalar = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
+	template <typename T>
+	using ChunkArray = typename Inherit::template ChunkArray<T>;
 
-void Plugin_VolumeMeshFromSurface::disable()
-{
-	schnapps_->remove_plugin_dock_tab(this, dock_tab_.get());
-	dock_tab_.reset();
-}
+	explicit TetgenStructureVolumeImport(tetgenio * tetgen_output);
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
 
-void Plugin_VolumeMeshFromSurface::generate_button_pressed()
-{
-	const MapHandler* handler = dynamic_cast<const MapHandler*>(schnapps_->get_selected_map());
-	if (handler)
-	{
-		Map* map = const_cast<Map*>(handler->get_map());
-		auto tetgen_input = export_tetgen(*map, map->template get_attribute<VEC3, Map::Vertex::ORBIT>("position"));
-		tetgenio tetgen_output;
+protected:
+	virtual bool import_file_impl(const std::string& /*filename*/) override;
 
-		tetrahedralize(this->tetgen_args.toStdString().c_str(), tetgen_input.get(), &tetgen_output);
+private:
+	tetgenio* volume_;
+};
 
-		TetgenStructureVolumeImport tetgen_import(&tetgen_output);
-		tetgen_import.import_file("");
-
-		CMap3 result_map3;
-		tetgen_import.create_map(result_map3);
-
-		cgogn::io::export_volume(result_map3, cgogn::io::ExportOptions("test.vtu", {cgogn::Orbit(Map::Vertex::ORBIT), "position"}));
-	}
-}
-
-void Plugin_VolumeMeshFromSurface::tetgen_args_updated(QString str)
-{
-	this->tetgen_args = std::move(str);
-}
+std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
 
 } // namespace schnapps
+
+#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H

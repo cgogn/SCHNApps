@@ -25,6 +25,7 @@
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
 
 #include <schnapps/core/plugin_processing.h>
+#include <schnapps/core/map_handler.h>
 #include <volume_mesh_from_surface_dock_tab.h>
 #include <QAction>
 #include <memory>
@@ -32,23 +33,26 @@
 namespace schnapps
 {
 
-class MapHandlerGen;
-
-
 class Plugin_VolumeMeshFromSurface : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
+public:
+	using Map = schnapps::CMap2;
+	using MapHandler = schnapps::MapHandler<Map>;
 private:
 	virtual bool enable() override;
 	virtual void disable() override;
 
 	std::unique_ptr<VolumeMeshFromSurface_DockTab> dock_tab_;
+private:
+	QString	tetgen_args;
 
 public slots:
 	void generate_button_pressed();
+	void tetgen_args_updated(QString str);
 };
 
 } // namespace schnapps

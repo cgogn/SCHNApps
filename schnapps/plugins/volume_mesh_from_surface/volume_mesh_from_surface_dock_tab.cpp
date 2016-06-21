@@ -38,6 +38,9 @@ VolumeMeshFromSurface_DockTab::VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin
 	this->pushButton_gen_volume_mesh->setDisabled(true);
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 	connect(this->pushButton_gen_volume_mesh,SIGNAL(pressed()), plugin_, SLOT(generate_button_pressed()));
+	connect(this->lineEdit_tetgen_args, SIGNAL(textChanged(QString)), plugin_, SLOT(tetgen_args_updated(QString)));
+
+	plugin_->tetgen_args_updated(lineEdit_tetgen_args->text());
 }
 
 void VolumeMeshFromSurface_DockTab::selected_map_changed(MapHandlerGen*, MapHandlerGen* curr)
