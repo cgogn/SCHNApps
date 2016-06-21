@@ -1,10 +1,10 @@
+add_subdirectory(tetgen)
 project(plugin_volume_mesh_from_surface
 	LANGUAGES CXX
 )
 
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
-find_package(tet REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(HEADER_FILES
@@ -33,6 +33,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
+	tet
 	${cgogn_core_LIBRARIES}
 	${cgogn_io_LIBRARIES}
 )
