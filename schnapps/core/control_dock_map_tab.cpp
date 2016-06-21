@@ -81,19 +81,33 @@ ControlDock_MapTab::ControlDock_MapTab(SCHNApps* s) :
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 }
 
-//unsigned int ControlDock_MapTab::get_current_orbit()
-//{
-//	int current = tabWidget_mapInfo->currentIndex();
-//	switch (current)
-//	{
-//		case 0 : return DART; break;
-//		case 1 : return VERTEX; break;
-//		case 2 : return EDGE; break;
-//		case 3 : return FACE; break;
-//		case 4 : return VOLUME; break;
-//	}
-//	return DART;
-//}
+cgogn::Orbit ControlDock_MapTab::get_current_orbit()
+{
+	int current = tabWidget_mapInfo->currentIndex();
+	switch (selected_map_->dimension())
+	{
+		case 2 :
+			switch (current)
+			{
+				case 0 : return MapHandler<CMap2>::CDart::ORBIT; break;
+				case 1 : return MapHandler<CMap2>::Vertex::ORBIT; break;
+				case 2 : return MapHandler<CMap2>::Edge::ORBIT; break;
+				case 3 : return MapHandler<CMap2>::Face::ORBIT; break;
+				case 4 : return MapHandler<CMap2>::Volume::ORBIT; break;
+			}
+			break;
+		case 3 :
+			switch (current)
+			{
+				case 0 : return MapHandler<CMap3>::CDart::ORBIT; break;
+				case 1 : return MapHandler<CMap3>::Vertex::ORBIT; break;
+				case 2 : return MapHandler<CMap3>::Edge::ORBIT; break;
+				case 3 : return MapHandler<CMap3>::Face::ORBIT; break;
+				case 4 : return MapHandler<CMap3>::Volume::ORBIT; break;
+			}
+			break;
+	}
+}
 
 void ControlDock_MapTab::set_selected_map(const QString& map_name)
 {
@@ -118,12 +132,12 @@ void ControlDock_MapTab::selected_map_changed()
 		if (old)
 		{
 			disconnect(old, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+			disconnect(old, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 			disconnect(old, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-//			disconnect(old, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
-//			disconnect(old, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
+			disconnect(old, SIGNAL(cell_selector_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cell_selector_added(cgogn::Orbit, const QString&)));
 		}
 
 		QList<QListWidgetItem*> items = list_maps->selectedItems();
@@ -133,15 +147,12 @@ void ControlDock_MapTab::selected_map_changed()
 			selected_map_ = schnapps_->get_map(selected_map_name);
 
 			connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+			connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 			connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-//			connect(selected_map_, SIGNAL(cell_selector_added(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_added(unsigned int, const QString&)));
-//			connect(selected_map_, SIGNAL(cell_selector_removed(unsigned int, const QString&)), this, SLOT(selected_map_cell_selector_removed(unsigned int, const QString&)));
-
-//			for(unsigned int i = 0; i < NB_ORBITS; ++i)
-//				selected_selector_[i] = nullptr;
+			connect(selected_map_, SIGNAL(cell_selector_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cell_selector_added(cgogn::Orbit, const QString&)));
 		}
 		else
 			selected_map_ = nullptr;
@@ -203,31 +214,6 @@ void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem* i
 	}
 }
 
-//void ControlDock_MapTab::selected_selector_changed()
-//{
-//	if (!updating_ui_)
-//	{
-//		if (selected_map_)
-//		{
-//			QList<QListWidgetItem*> items;
-//			unsigned int orbit = get_current_orbit();
-//			switch (orbit)
-//			{
-//				case DART: items = list_dartSelectors->selectedItems(); break;
-//				case VERTEX: items = list_vertexSelectors->selectedItems(); break;
-//				case EDGE: items = list_edgeSelectors->selectedItems(); break;
-//				case FACE: items = list_faceSelectors->selectedItems(); break;
-//				case VOLUME: items = list_volumeSelectors->selectedItems(); break;
-//			}
-//
-//			if (!items.empty())
-//				selected_selector_[orbit] = selected_map_->get_cell_selector(orbit, items[0]->text());
-
-//			schnapps_->notify_selected_cell_selector_changed(selected_selector_[orbit]);
-//		}
-//	}
-//}
-
 //void ControlDock_MapTab::selector_check_state_changed(QListWidgetItem* item)
 //{
 //	if (!updating_ui_)
@@ -242,44 +228,18 @@ void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem* i
 //	}
 //}
 
-//void ControlDock_MapTab::add_selector()
-//{
-//	if (!updating_ui_)
-//	{
-//		if (selected_map_)
-//			selected_map_->add_cell_selector(get_current_orbit());
-//	}
-//}
-
-//void ControlDock_MapTab::remove_selector()
-//{
-//	if (!updating_ui_)
-//	{
-//		if (selected_map_)
-//		{
-//			QList<QListWidgetItem*> items;
-//			unsigned int orbit = get_current_orbit();
-//			switch (orbit)
-//			{
-//				case DART: items = list_dartSelectors->selectedItems(); break;
-//				case VERTEX: items = list_vertexSelectors->selectedItems(); break;
-//				case EDGE: items = list_edgeSelectors->selectedItems(); break;
-//				case FACE: items = list_faceSelectors->selectedItems(); break;
-//				case VOLUME: items = list_volumeSelectors->selectedItems(); break;
-//			}
-
-//			if (!items.empty())
-//			{
-//				if (selected_selector_[orbit]->get_name() == items[0]->text())
-//					selected_selector_[orbit] = nullptr;
-
-//				selected_map_->remove_cell_selector(orbit, items[0]->text());
-
-//				schnapps_->notify_selected_cell_selector_changed(selected_selector_[orbit]);
-//			}
-//		}
-//	}
-//}
+void ControlDock_MapTab::add_cells_set()
+{
+	if (!updating_ui_)
+	{
+		if (selected_map_)
+		{
+			cgogn::Orbit orbit = get_current_orbit();
+			QString set_name = QString::fromStdString(cgogn::orbit_name(orbit)) + QString("_set_") + QString::number(CellsSetGen::cells_set_count_);
+			selected_map_->add_cells_set(get_current_orbit(), set_name);
+		}
+	}
+}
 
 
 
@@ -333,6 +293,11 @@ void ControlDock_MapTab::selected_map_attribute_added(cgogn::Orbit orbit, const 
 	update_selected_map_info();
 }
 
+void ControlDock_MapTab::selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
+{
+	update_selected_map_info();
+}
+
 void ControlDock_MapTab::selected_map_bb_vertex_attribute_changed(const QString& name)
 {
 	update_selected_map_info();
@@ -353,15 +318,10 @@ void ControlDock_MapTab::selected_map_connectivity_changed()
 	update_selected_map_info();
 }
 
-//void ControlDock_MapTab::selected_map_cell_selector_added(unsigned int orbit, const QString& name)
-//{
-//	update_selected_map_info();
-//}
-
-//void ControlDock_MapTab::selected_map_cell_selector_removed(unsigned int orbit, const QString& name)
-//{
-//	update_selected_map_info();
-//}
+void ControlDock_MapTab::selected_map_cell_selector_added(cgogn::Orbit orbit, const QString& name)
+{
+	update_selected_map_info();
+}
 
 
 

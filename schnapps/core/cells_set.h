@@ -54,6 +54,10 @@ public:
 
 	~CellsSetGen();
 
+signals:
+
+	void selected_cells_changed();
+
 protected:
 
 	// cells set name

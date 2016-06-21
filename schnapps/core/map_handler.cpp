@@ -212,6 +212,16 @@ void MapHandlerGen::delete_vbo(const QString &name)
 }
 
 /*********************************************************
+ * MANAGE CELLS SETS
+ *********************************************************/
+
+void MapHandlerGen::selected_cells_changed()
+{
+	CellsSetGen* cs = static_cast<CellsSetGen*>(QObject::sender());
+	emit(selected_cells_changed(cs));
+}
+
+/*********************************************************
  * MANAGE LINKED VIEWS
  *********************************************************/
 

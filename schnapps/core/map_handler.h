@@ -204,6 +204,8 @@ public slots:
 
 	virtual CellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name) = 0;
 
+	void selected_cells_changed();
+
 	/*********************************************************
 	 * MANAGE LINKED VIEWS
 	 *********************************************************/
@@ -238,6 +240,8 @@ signals:
 
 	void vbo_added(cgogn::rendering::VBO*);
 	void vbo_removed(cgogn::rendering::VBO*);
+
+	void selected_cells_changed(CellsSetGen*);
 
 	void attribute_added(cgogn::Orbit, const QString&);
 	void attribute_removed(cgogn::Orbit, const QString&);
@@ -293,6 +297,7 @@ public:
 
 	template <typename T, cgogn::Orbit ORBIT>
 	using Attribute = typename MAP_TYPE::template Attribute<T, ORBIT>;
+
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
 	template <typename T>
@@ -301,6 +306,8 @@ public:
 	using FaceAttribute = typename MAP_TYPE::template FaceAttribute<T>;
 	template <typename T>
 	using VolumeAttribute = typename MAP_TYPE::template VolumeAttribute<T>;
+
+	using CDart = typename MAP_TYPE::CDart;
 	using Vertex = typename MAP_TYPE::Vertex;
 	using Edge = typename MAP_TYPE::Edge;
 	using Face = typename MAP_TYPE::Face;
@@ -624,13 +631,19 @@ protected:
 				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(get_map(), name)));
 				break;
 			case Edge::ORBIT:
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(get_map(), name)));
 				break;
 			case Face::ORBIT:
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(get_map(), name)));
+				break;
+			case Volume::ORBIT:
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(get_map(), name)));
 				break;
 		}
 
 		CellsSetGen* cells_set = this->cells_sets_[orbit].at(name).get();
 		emit(cells_set_added(orbit, name));
+		connect(cells_set, SIGNAL(selected_cells_changed()), this, SLOT(selected_cells_changed()));
 		return cells_set;
 	}
 
