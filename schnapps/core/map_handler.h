@@ -53,6 +53,16 @@ using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
 using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
 using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
 
+enum class CellType: uint16
+{
+	Dart_Cell,
+	Vertex_Cell,
+	Edge_Cell,
+	Face_Cell,
+	Volume_Cell
+};
+
+
 class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 {
 	Q_OBJECT
@@ -60,6 +70,16 @@ class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 	friend class View;
 
 public:
+
+	template<typename T>
+	using ChunkArray = cgogn::MapBaseData<cgogn::DefaultMapTraits>::ChunkArray<T>;
+	template<typename T>
+	using ChunkArrayContainer = MapBaseData::ChunkArrayContainer<T>;
+	using AttributeGen = cgogn::AttributeGen<cgogn::DefaultMapTraits>;
+	template <typename T>
+	using Attribute_T = cgogn::Attribute_T<cgogn::DefaultMapTraits, T>;
+	template <typename T, cgogn::Orbit ORBIT>
+	using Attribute = cgogn::Attribute<cgogn::DefaultMapTraits, T,ORBIT>;
 
 	MapHandlerGen(const QString& name, SCHNApps* s, std::unique_ptr<MapBaseData> map);
 
@@ -85,10 +105,14 @@ public slots:
 
 	virtual uint8 dimension() const = 0;
 
+	virtual uint32 nb_darts() const = 0;
 	virtual uint32 nb_vertices() const = 0;
 	virtual uint32 nb_edges() const = 0;
 	virtual uint32 nb_faces() const = 0;
+	virtual uint32 nb_volumes() const = 0;
 
+	virtual bool is_embedded(CellType ct) const = 0;
+	virtual const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const = 0;
 	/*********************************************************
 	 * MANAGE FRAME
 	 *********************************************************/
@@ -141,6 +165,8 @@ public slots:
 	virtual void set_bb_vertex_attribute(const QString& attribute_name) = 0;
 
 	virtual void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) = 0;
+
+	virtual QString get_bb_vertex_attribute_name() const = 0;
 
 	/**
 	* @brief get the length of diagonal of bounding box of the map
@@ -278,17 +304,17 @@ class MapHandler : public MapHandlerGen
 {
 public:
 
-	template <typename T, cgogn::Orbit ORBIT>
-	using Attribute = typename MAP_TYPE::template Attribute<T, ORBIT>;
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
 	template <typename T>
 	using EdgeAttribute = typename MAP_TYPE::template EdgeAttribute<T>;
 	template <typename T>
 	using FaceAttribute = typename MAP_TYPE::template FaceAttribute<T>;
+	using CDart = typename MAP_TYPE::CDart;
 	using Vertex = typename MAP_TYPE::Vertex;
 	using Edge = typename MAP_TYPE::Edge;
 	using Face = typename MAP_TYPE::Face;
+	using Volume = typename MAP_TYPE::Volume;
 
 	MapHandler(const QString& name, SCHNApps* s) :
 		MapHandlerGen(name, s, cgogn::make_unique<MAP_TYPE>())
@@ -301,15 +327,49 @@ public:
 
 	uint8 dimension() const override { return MAP_TYPE::DIMENSION; }
 
+	uint32 nb_darts() const override { return get_map()->nb_darts(); }
 	uint32 nb_vertices() const override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
 	uint32 nb_edges() const override { return get_map()->template nb_cells<Edge::ORBIT>(); }
 	uint32 nb_faces() const override { return get_map()->template nb_cells<Face::ORBIT>(); }
+	uint32 nb_volumes() const override { return get_map()->template nb_cells<Volume::ORBIT>(); }
+
+	bool is_embedded(CellType ct) const override
+	{
+		switch (ct) {
+			case CellType::Dart_Cell:
+				return get_map()->is_embedded(CDart::ORBIT);
+			case CellType::Vertex_Cell:
+				return get_map()->is_embedded(Vertex::ORBIT);
+			case CellType::Edge_Cell:
+				return get_map()->is_embedded(Edge::ORBIT);
+			case CellType::Face_Cell:
+				return get_map()->is_embedded(Face::ORBIT);
+			case CellType::Volume_Cell:
+				return get_map()->is_embedded(Volume::ORBIT);
+		}
+	}
+
+	const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const override
+	{
+		switch (ct) {
+			case CellType::Dart_Cell:
+				return get_map()->const_attribute_container(CDart::ORBIT);
+			case CellType::Vertex_Cell:
+				return get_map()->const_attribute_container(Vertex::ORBIT);
+			case CellType::Edge_Cell:
+				return get_map()->const_attribute_container(Edge::ORBIT);
+			case CellType::Face_Cell:
+				return get_map()->const_attribute_container(Face::ORBIT);
+			case CellType::Volume_Cell:
+				return get_map()->const_attribute_container(Volume::ORBIT);
+		}
+	}
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
 	 *********************************************************/
 
-	inline QString get_bb_vertex_attribute_name() const
+	QString get_bb_vertex_attribute_name() const override
 	{
 		if (bb_vertex_attribute_.is_valid())
 			return QString::fromStdString(bb_vertex_attribute_.name());
