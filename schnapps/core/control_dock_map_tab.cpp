@@ -49,31 +49,24 @@ ControlDock_MapTab::ControlDock_MapTab(SCHNApps* s) :
 	connect(combo_bbVertexAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(bb_vertex_attribute_changed(int)));
 	connect(list_vertexAttributes, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(vertex_attribute_check_state_changed(QListWidgetItem*)));
 
-//	connect(tabWidget_mapInfo, SIGNAL(currentChanged(int)), this, SLOT(selected_selector_changed()));
-
-//	connect(list_dartSelectors, SIGNAL(itemSelectionChanged()), this, SLOT(selected_selector_changed()));
-//	connect(list_dartSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(selector_check_state_changed(QListWidgetItem*)));
-//	connect(button_dartAddSelector, SIGNAL(clicked()), this, SLOT(add_selector()));
+	connect(list_dartSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_dartAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 //	connect(button_dartRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
 
-//	connect(list_vertexSelectors, SIGNAL(itemSelectionChanged()), this, SLOT(selected_selector_changed()));
-//	connect(list_vertexSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(selector_check_state_changed(QListWidgetItem*)));
-//	connect(button_vertexAddSelector, SIGNAL(clicked()), this, SLOT(add_selector()));
+	connect(list_vertexSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_vertexAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 //	connect(button_vertexRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
 
-//	connect(list_edgeSelectors, SIGNAL(itemSelectionChanged()), this, SLOT(selected_selector_changed()));
-//	connect(list_edgeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(selector_check_state_changed(QListWidgetItem*)));
-//	connect(button_edgeAddSelector, SIGNAL(clicked()), this, SLOT(add_selector()));
+	connect(list_edgeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_edgeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 //	connect(button_edgeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
 
-//	connect(list_faceSelectors, SIGNAL(itemSelectionChanged()), this, SLOT(selected_selector_changed()));
-//	connect(list_faceSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(selector_check_state_changed(QListWidgetItem*)));
-//	connect(button_faceAddSelector, SIGNAL(clicked()), this, SLOT(add_selector()));
+	connect(list_faceSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_faceAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 //	connect(button_faceRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
 
-//	connect(list_volumeSelectors, SIGNAL(itemSelectionChanged()), this, SLOT(selected_selector_changed()));
-//	connect(list_volumeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(selector_check_state_changed(QListWidgetItem*)));
-//	connect(button_volumeAddSelector, SIGNAL(clicked()), this, SLOT(add_selector()));
+	connect(list_volumeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_volumeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 //	connect(button_volumeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
 
 	// connect SCHNApps signals
@@ -137,7 +130,7 @@ void ControlDock_MapTab::selected_map_changed()
 			disconnect(old, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-			disconnect(old, SIGNAL(cell_selector_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cell_selector_added(cgogn::Orbit, const QString&)));
+			disconnect(old, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
 		}
 
 		QList<QListWidgetItem*> items = list_maps->selectedItems();
@@ -152,7 +145,7 @@ void ControlDock_MapTab::selected_map_changed()
 			connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-			connect(selected_map_, SIGNAL(cell_selector_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cell_selector_added(cgogn::Orbit, const QString&)));
+			connect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
 		}
 		else
 			selected_map_ = nullptr;
@@ -214,19 +207,19 @@ void ControlDock_MapTab::vertex_attribute_check_state_changed(QListWidgetItem* i
 	}
 }
 
-//void ControlDock_MapTab::selector_check_state_changed(QListWidgetItem* item)
-//{
-//	if (!updating_ui_)
-//	{
-//		if (selected_map_)
-//		{
-//			unsigned int orbit = get_current_orbit();
-//			CellSelectorGen* cs = selected_map_->get_cell_selector(orbit, item->text());
-//			cs->setMutuallyExclusive(item->checkState() == Qt::Checked);
-//			selected_map_->update_mutually_exclusive_selectors(orbit);
-//		}
-//	}
-//}
+void ControlDock_MapTab::cells_set_check_state_changed(QListWidgetItem* item)
+{
+	if (!updating_ui_)
+	{
+		if (selected_map_)
+		{
+			cgogn::Orbit orbit = get_current_orbit();
+			CellsSetGen* cs = selected_map_->get_cells_set(orbit, item->text());
+			cs->set_mutually_exclusive(item->checkState() == Qt::Checked);
+			selected_map_->update_mutually_exclusive_cells_sets(orbit);
+		}
+	}
+}
 
 void ControlDock_MapTab::add_cells_set()
 {
@@ -318,7 +311,7 @@ void ControlDock_MapTab::selected_map_connectivity_changed()
 	update_selected_map_info();
 }
 
-void ControlDock_MapTab::selected_map_cell_selector_added(cgogn::Orbit orbit, const QString& name)
+void ControlDock_MapTab::selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name)
 {
 	update_selected_map_info();
 }
@@ -361,17 +354,15 @@ void ControlDock_MapTab::update_selected_map_info()
 
 			unsigned int nb_d = map2->nb_darts();
 			label_dartNbCells->setText(QString::number(nb_d));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::CDart::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_dartSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
+			selected_map_->foreach_cells_set(CMap2::CDart::ORBIT, [&] (CellsSetGen* cells_set)
+			{
+				QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_dartSelectors);
+				item->setFlags(item->flags() | Qt::ItemIsEditable);
+				if (cells_set->is_mutually_exclusive())
+					item->setCheckState(Qt::Checked);
+				else
+					item->setCheckState(Qt::Unchecked);
+			});
 			if (map2->is_embedded<CMap2::CDart::ORBIT>())
 			{
 				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::CDart::ORBIT>();
@@ -387,17 +378,15 @@ void ControlDock_MapTab::update_selected_map_info()
 
 			unsigned int nb_v = map2->nb_cells<CMap2::Vertex::ORBIT>();
 			label_vertexNbCells->setText(QString::number(nb_v));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Vertex::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_vertexSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
+			selected_map_->foreach_cells_set(CMap2::Vertex::ORBIT, [&] (CellsSetGen* cells_set)
+			{
+				QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_vertexSelectors);
+				item->setFlags(item->flags() | Qt::ItemIsEditable);
+				if (cells_set->is_mutually_exclusive())
+					item->setCheckState(Qt::Checked);
+				else
+					item->setCheckState(Qt::Unchecked);
+			});
 			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
 			{
 				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
@@ -425,17 +414,15 @@ void ControlDock_MapTab::update_selected_map_info()
 
 			unsigned int nb_e = map2->nb_cells<CMap2::Edge::ORBIT>();
 			label_edgeNbCells->setText(QString::number(nb_e));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Edge::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_edgeSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
+			selected_map_->foreach_cells_set(CMap2::Edge::ORBIT, [&] (CellsSetGen* cells_set)
+			{
+				QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_edgeSelectors);
+				item->setFlags(item->flags() | Qt::ItemIsEditable);
+				if (cells_set->is_mutually_exclusive())
+					item->setCheckState(Qt::Checked);
+				else
+					item->setCheckState(Qt::Unchecked);
+			});
 			if (map2->is_embedded<CMap2::Edge::ORBIT>())
 			{
 				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Edge::ORBIT>();
@@ -451,17 +438,15 @@ void ControlDock_MapTab::update_selected_map_info()
 
 			unsigned int nb_f = map2->nb_cells<CMap2::Face::ORBIT>();
 			label_faceNbCells->setText(QString::number(nb_f));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Face::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_faceSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
+			selected_map_->foreach_cells_set(CMap2::Face::ORBIT, [&] (CellsSetGen* cells_set)
+			{
+				QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_faceSelectors);
+				item->setFlags(item->flags() | Qt::ItemIsEditable);
+				if (cells_set->is_mutually_exclusive())
+					item->setCheckState(Qt::Checked);
+				else
+					item->setCheckState(Qt::Unchecked);
+			});
 			if (map2->is_embedded<CMap2::Face::ORBIT>())
 			{
 				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Face::ORBIT>();
@@ -477,17 +462,15 @@ void ControlDock_MapTab::update_selected_map_info()
 
 			unsigned int nb_vol = map2->nb_cells<CMap2::Volume::ORBIT>();
 			label_volumeNbCells->setText(QString::number(nb_vol));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Volume::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_volumeSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
+			selected_map_->foreach_cells_set(CMap2::Volume::ORBIT, [&] (CellsSetGen* cells_set)
+			{
+				QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_volumeSelectors);
+				item->setFlags(item->flags() | Qt::ItemIsEditable);
+				if (cells_set->is_mutually_exclusive())
+					item->setCheckState(Qt::Checked);
+				else
+					item->setCheckState(Qt::Unchecked);
+			});
 			if (map2->is_embedded<CMap2::Volume::ORBIT>())
 			{
 				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Volume::ORBIT>();

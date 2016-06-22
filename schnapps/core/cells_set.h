@@ -54,6 +54,14 @@ public:
 
 	~CellsSetGen();
 
+	inline const QString& get_name() { return name_; }
+
+	inline void set_mutually_exclusive(bool b) { mutually_exclusive_ = b; }
+
+	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
+
+	virtual void set_mutually_exclusive_sets(const std::vector<CellsSetGen*>& mex) = 0;
+
 signals:
 
 	void selected_cells_changed();
@@ -62,6 +70,7 @@ protected:
 
 	// cells set name
 	QString name_;
+	bool mutually_exclusive_;
 };
 
 
@@ -70,14 +79,35 @@ class CellsSet : public CellsSetGen
 {
 public:
 
-	CellsSet(MAP* m, const QString& name) :
-		CellsSetGen(name),
-		map_(m)
+	using Inherit = CellsSetGen;
+	using Self = CellsSet<MAP, CellType>;
+
+	CellsSet(MAP& m, const QString& name) :
+		Inherit(name),
+		map_(m),
+		marker_(map_)
 	{}
+
+	inline void set_mutually_exclusive_sets(const std::vector<Inherit*>& mex) override
+	{
+		mutually_exclusive_sets_.clear();
+		for (Inherit* cs : mex)
+		{
+			if(cs != this)
+			{
+				Self* s = dynamic_cast<Self*>(cs);
+				if (s)
+					mutually_exclusive_sets_.push_back(s);
+			}
+		}
+	}
 
 protected:
 
-	MAP* map_;
+	MAP& map_;
+	typename MAP::template CellMarker<CellType::ORBIT> marker_;
+	std::vector<CellType> cells_;
+	std::vector<Self*> mutually_exclusive_sets_;
 };
 
 } // namespace schnapps

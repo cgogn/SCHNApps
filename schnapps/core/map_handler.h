@@ -204,11 +204,29 @@ public slots:
 
 	virtual CellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name) = 0;
 
+	CellsSetGen* get_cells_set(cgogn::Orbit orbit, const QString& name);
+
+public:
+
+	template <typename FUNC>
+	void foreach_cells_set(cgogn::Orbit orbit, const FUNC& f) const
+	{
+		static_assert(check_func_parameter_type(FUNC, CellsSetGen*), "Wrong function parameter type");
+		for (const auto& cells_set_it : cells_sets_[orbit])
+			f(cells_set_it.second.get());
+	}
+
+	void update_mutually_exclusive_cells_sets(cgogn::Orbit orbit);
+
+private slots:
+
 	void selected_cells_changed();
 
 	/*********************************************************
 	 * MANAGE LINKED VIEWS
 	 *********************************************************/
+
+public slots:
 
 	// get the list of views linked to the map
 	inline const std::list<View*>& get_linked_views() const { return views_; }
@@ -627,17 +645,20 @@ protected:
 
 		switch (orbit)
 		{
+			case CDart::ORBIT:
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, CDart>>(*get_map(), name)));
+				break;
 			case Vertex::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(get_map(), name)));
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(*get_map(), name)));
 				break;
 			case Edge::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(get_map(), name)));
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(*get_map(), name)));
 				break;
 			case Face::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(get_map(), name)));
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(*get_map(), name)));
 				break;
 			case Volume::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(get_map(), name)));
+				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(*get_map(), name)));
 				break;
 		}
 

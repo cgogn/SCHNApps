@@ -215,6 +215,29 @@ void MapHandlerGen::delete_vbo(const QString &name)
  * MANAGE CELLS SETS
  *********************************************************/
 
+CellsSetGen* MapHandlerGen::get_cells_set(cgogn::Orbit orbit, const QString& name)
+{
+	if (cells_sets_[orbit].count(name) > 0ul)
+		return cells_sets_[orbit].at(name).get();
+	else
+		return nullptr;
+}
+
+
+void MapHandlerGen::update_mutually_exclusive_cells_sets(cgogn::Orbit orbit)
+{
+	std::vector<CellsSetGen*> mex;
+	foreach_cells_set(orbit, [&] (CellsSetGen* cs)
+	{
+		if(cs->is_mutually_exclusive())
+			mex.push_back(cs);
+	});
+	foreach_cells_set(orbit, [&] (CellsSetGen* cs)
+	{
+		cs->set_mutually_exclusive_sets(mex);
+	});
+}
+
 void MapHandlerGen::selected_cells_changed()
 {
 	CellsSetGen* cs = static_cast<CellsSetGen*>(QObject::sender());
