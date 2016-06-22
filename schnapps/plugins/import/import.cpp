@@ -39,6 +39,9 @@ bool Plugin_Import::enable()
 	import_surface_mesh_action_ = schnapps_->add_menu_action("Surface;Import Mesh", "import surface mesh");
 	connect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 
+	import_volume_mesh_action_ = schnapps_->add_menu_action("Volume;Import Mesh", "import volume mesh");
+	connect(import_volume_mesh_action_, SIGNAL(triggered()), this, SLOT(import_volume_mesh_from_file_dialog()));
+
 //	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
 //	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
 
@@ -88,6 +91,36 @@ void Plugin_Import::import_surface_mesh_from_file_dialog()
 	while(it != filenames.end())
 	{
 		import_surface_mesh_from_file(*it);
+		++it;
+	}
+}
+
+MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filename)
+{
+	QFileInfo fi(filename);
+	if (fi.exists())
+	{
+		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 3);
+		if (mhg)
+		{
+			MapHandler<CMap3>* mh = static_cast<MapHandler<CMap3>*>(mhg);
+			CMap3* map = mh->get_map();
+
+			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
+		}
+		return mhg;
+	}
+	else
+		return nullptr;
+}
+
+void Plugin_Import::import_volume_mesh_from_file_dialog()
+{
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", schnapps_->get_app_path(), "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
+	QStringList::Iterator it = filenames.begin();
+	while(it != filenames.end())
+	{
+		import_volume_mesh_from_file(*it);
 		++it;
 	}
 }

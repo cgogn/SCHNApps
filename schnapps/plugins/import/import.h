@@ -67,6 +67,8 @@ public slots:
 	 */
 	void import_surface_mesh_from_file_dialog();
 
+	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
+	void import_volume_mesh_from_file_dialog();
 //	/**
 //	 * @brief import a 2D image into a surface mesh from a file
 //	 * @param filename file name of mesh file
@@ -82,6 +84,7 @@ public slots:
 private:
 
 	QAction* import_surface_mesh_action_;
+	QAction* import_volume_mesh_action_;
 //	QAction* import_2D_image_action_;
 };
 
