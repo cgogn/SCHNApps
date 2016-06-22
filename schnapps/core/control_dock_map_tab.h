@@ -49,7 +49,7 @@ public:
 
 	MapHandlerGen* get_selected_map() { return selected_map_; }
 
-	cgogn::Orbit get_current_orbit();
+	CellType get_current_cell_type();
 
 	void set_selected_map(const QString& map_name);
 

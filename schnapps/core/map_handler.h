@@ -54,6 +54,17 @@ using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
 using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
 using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
 
+enum CellType : uint16
+{
+	Dart_Cell = 0,
+	Vertex_Cell,
+	Edge_Cell,
+	Face_Cell,
+	Volume_Cell
+};
+
+static const std::size_t NB_CELL_TYPES = CellType::Volume_Cell + 1;
+
 class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 {
 	Q_OBJECT
@@ -61,6 +72,16 @@ class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 	friend class View;
 
 public:
+
+	template<typename T>
+	using ChunkArray = cgogn::MapBaseData<cgogn::DefaultMapTraits>::ChunkArray<T>;
+	template<typename T>
+	using ChunkArrayContainer = MapBaseData::ChunkArrayContainer<T>;
+	using AttributeGen = cgogn::AttributeGen<cgogn::DefaultMapTraits>;
+	template <typename T>
+	using Attribute_T = cgogn::Attribute_T<cgogn::DefaultMapTraits, T>;
+	template <typename T, cgogn::Orbit ORBIT>
+	using Attribute = cgogn::Attribute<cgogn::DefaultMapTraits, T,ORBIT>;
 
 	MapHandlerGen(const QString& name, SCHNApps* s, std::unique_ptr<MapBaseData> map);
 
@@ -85,11 +106,10 @@ public slots:
 	bool is_selected_map() const;
 
 	virtual uint8 dimension() const = 0;
-
-	virtual uint32 nb_vertices() const = 0;
-	virtual uint32 nb_edges() const = 0;
-	virtual uint32 nb_faces() const = 0;
-	virtual uint32 nb_volumes() const = 0;
+	virtual uint32 nb_cells(CellType ct) const = 0;
+	virtual bool is_embedded(CellType ct) const = 0;
+	virtual const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const = 0;
+	virtual cgogn::Orbit orbit(CellType ct) const = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -143,6 +163,8 @@ public slots:
 	virtual void set_bb_vertex_attribute(const QString& attribute_name) = 0;
 
 	virtual void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) = 0;
+
+	virtual QString get_bb_vertex_attribute_name() const = 0;
 
 	/**
 	* @brief get the length of diagonal of bounding box of the map
@@ -202,21 +224,21 @@ public slots:
 	 * MANAGE CELLS SETS
 	 *********************************************************/
 
-	virtual CellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name) = 0;
+	virtual CellsSetGen* add_cells_set(CellType ct, const QString& name) = 0;
 
-	CellsSetGen* get_cells_set(cgogn::Orbit orbit, const QString& name);
+	CellsSetGen* get_cells_set(CellType ct, const QString& name);
 
 public:
 
 	template <typename FUNC>
-	void foreach_cells_set(cgogn::Orbit orbit, const FUNC& f) const
+	void foreach_cells_set(CellType ct, const FUNC& f) const
 	{
 		static_assert(check_func_parameter_type(FUNC, CellsSetGen*), "Wrong function parameter type");
-		for (const auto& cells_set_it : cells_sets_[orbit])
+		for (const auto& cells_set_it : cells_sets_[ct])
 			f(cells_set_it.second.get());
 	}
 
-	void update_mutually_exclusive_cells_sets(cgogn::Orbit orbit);
+	void update_mutually_exclusive_cells_sets(CellType ct);
 
 private slots:
 
@@ -265,7 +287,7 @@ signals:
 	void attribute_removed(cgogn::Orbit, const QString&);
 	void attribute_changed(cgogn::Orbit, const QString&);
 
-	void cells_set_added(cgogn::Orbit, const QString&);
+	void cells_set_added(CellType, const QString&);
 
 	void connectivity_changed();
 
@@ -304,7 +326,7 @@ protected:
 	std::map<QString, std::unique_ptr<cgogn::rendering::VBO>> vbos_;
 
 	// CellsSets of the map
-	std::map<QString, std::unique_ptr<CellsSetGen>> cells_sets_[cgogn::NB_ORBITS];
+	std::map<QString, std::unique_ptr<CellsSetGen>> cells_sets_[NB_CELL_TYPES];
 };
 
 
@@ -315,7 +337,6 @@ public:
 
 	template <typename T, cgogn::Orbit ORBIT>
 	using Attribute = typename MAP_TYPE::template Attribute<T, ORBIT>;
-
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
 	template <typename T>
@@ -342,16 +363,59 @@ public:
 
 	uint8 dimension() const override { return MAP_TYPE::DIMENSION; }
 
-	uint32 nb_vertices() const override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
-	uint32 nb_edges() const override { return get_map()->template nb_cells<Edge::ORBIT>(); }
-	uint32 nb_faces() const override { return get_map()->template nb_cells<Face::ORBIT>(); }
-	uint32 nb_volumes() const override { return get_map()->template nb_cells<Volume::ORBIT>(); }
+	uint32 nb_cells(CellType ct) const override
+	{
+		switch (ct)
+		{
+			case CellType::Dart_Cell: return get_map()->nb_darts();
+			case CellType::Vertex_Cell: return get_map()->template nb_cells<Vertex::ORBIT>();
+			case CellType::Edge_Cell: return get_map()->template nb_cells<Edge::ORBIT>();
+			case CellType::Face_Cell: return get_map()->template nb_cells<Face::ORBIT>();
+			case CellType::Volume_Cell: return get_map()->template nb_cells<Volume::ORBIT>();
+		}
+	}
+
+	bool is_embedded(CellType ct) const override
+	{
+		switch (ct)
+		{
+			case CellType::Dart_Cell: return get_map()->is_embedded(CDart::ORBIT);
+			case CellType::Vertex_Cell: return get_map()->is_embedded(Vertex::ORBIT);
+			case CellType::Edge_Cell: return get_map()->is_embedded(Edge::ORBIT);
+			case CellType::Face_Cell: return get_map()->is_embedded(Face::ORBIT);
+			case CellType::Volume_Cell: return get_map()->is_embedded(Volume::ORBIT);
+		}
+	}
+
+	const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const override
+	{
+		switch (ct)
+		{
+			case CellType::Dart_Cell: return get_map()->const_attribute_container(CDart::ORBIT);
+			case CellType::Vertex_Cell: return get_map()->const_attribute_container(Vertex::ORBIT);
+			case CellType::Edge_Cell: return get_map()->const_attribute_container(Edge::ORBIT);
+			case CellType::Face_Cell: return get_map()->const_attribute_container(Face::ORBIT);
+			case CellType::Volume_Cell: return get_map()->const_attribute_container(Volume::ORBIT);
+		}
+	}
+
+	cgogn::Orbit orbit(CellType ct) const override
+	{
+		switch (ct)
+		{
+			case CellType::Dart_Cell: return CDart::ORBIT;
+			case CellType::Vertex_Cell: return Vertex::ORBIT;
+			case CellType::Edge_Cell: return Edge::ORBIT;
+			case CellType::Face_Cell: return Face::ORBIT;
+			case CellType::Volume_Cell: return Volume::ORBIT;
+		}
+	}
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
 	 *********************************************************/
 
-	inline QString get_bb_vertex_attribute_name() const
+	QString get_bb_vertex_attribute_name() const override
 	{
 		if (bb_vertex_attribute_.is_valid())
 			return QString::fromStdString(bb_vertex_attribute_.name());
@@ -638,32 +702,32 @@ protected:
 	 * MANAGE CELLS SETS
 	 *********************************************************/
 
-	CellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name) override
+	CellsSetGen* add_cells_set(CellType ct, const QString& name) override
 	{
-		if (this->cells_sets_[orbit].count(name) > 0ul)
+		if (this->cells_sets_[ct].count(name) > 0ul)
 			return nullptr;
 
-		switch (orbit)
+		switch (ct)
 		{
-			case CDart::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, CDart>>(*get_map(), name)));
+			case Dart_Cell:
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, CDart>>(*get_map(), name)));
 				break;
-			case Vertex::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(*get_map(), name)));
+			case Vertex_Cell:
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(*get_map(), name)));
 				break;
-			case Edge::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(*get_map(), name)));
+			case Edge_Cell:
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(*get_map(), name)));
 				break;
-			case Face::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(*get_map(), name)));
+			case Face_Cell:
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(*get_map(), name)));
 				break;
-			case Volume::ORBIT:
-				this->cells_sets_[orbit].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(*get_map(), name)));
+			case Volume_Cell:
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(*get_map(), name)));
 				break;
 		}
 
-		CellsSetGen* cells_set = this->cells_sets_[orbit].at(name).get();
-		emit(cells_set_added(orbit, name));
+		CellsSetGen* cells_set = this->cells_sets_[ct].at(name).get();
+		emit(cells_set_added(ct, name));
 		connect(cells_set, SIGNAL(selected_cells_changed()), this, SLOT(selected_cells_changed()));
 		return cells_set;
 	}

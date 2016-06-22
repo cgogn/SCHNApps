@@ -106,11 +106,11 @@ View::~View()
 	this->setCamera(c);
 	current_camera_->unlink_view(this);
 
-	for (PluginInteraction* p : plugins_)
-		unlink_plugin(p);
+	while(!plugins_.empty())
+		unlink_plugin(*plugins_.begin());
 
-	for (MapHandlerGen* m : maps_)
-		unlink_map(m);
+	while(!maps_.empty())
+		unlink_map(*maps_.begin());
 
 	delete button_area_;
 	delete button_area_left_;

@@ -73,7 +73,7 @@ void SurfaceRender_DockTab::position_vbo_changed(int index)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
 			view->update();
 		}
@@ -121,7 +121,7 @@ void SurfaceRender_DockTab::render_vertices_changed(bool b)
 			MapParameters& p = plugin_->get_parameters(view, map);
 
 			if (b)
-				p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
+				p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 
 			p.render_vertices_ = b;
 			view->update();
@@ -138,7 +138,7 @@ void SurfaceRender_DockTab::vertices_scale_factor_pressed()
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 			view->update();
 		}
 	}

@@ -137,7 +137,7 @@ void Selection_DockTab::vertices_scale_factor_pressed()
 		if (map)
 		{
 			MapParameters& p = plugin_->get_parameters(map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 			for (View* view : map->get_linked_views())
 				view->update();
 		}

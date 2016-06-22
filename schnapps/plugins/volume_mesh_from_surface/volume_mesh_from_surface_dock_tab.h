@@ -1,7 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Plugin Volume Mesh From Surface                                              *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -20,74 +21,43 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
+#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
-
-#include <schnapps/core/plugin_processing.h>
-
-#include <QAction>
+#include <ui_volume_mesh_from_surface.h>
 
 namespace schnapps
 {
 
+class SCHNApps;
 class MapHandlerGen;
+class Plugin_VolumeMeshFromSurface;
 
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class Plugin_Import : public PluginProcessing
+struct MapParameters;
+
+class VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+
+	friend class Plugin_VolumeMeshFromSurface;
 
 public:
 
-	inline Plugin_Import() {}
-
-	~Plugin_Import() {}
+	VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	SCHNApps* schnapps_;
+	Plugin_VolumeMeshFromSurface* plugin_;
 
-public slots:
+	bool updating_ui_;
 
-	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
-	void import_surface_mesh_from_file_dialog();
-
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
-
+private slots:
+	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
 private:
 
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-//	QAction* import_2D_image_action_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
