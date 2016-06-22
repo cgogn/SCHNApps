@@ -387,98 +387,72 @@ void ControlDock_MapTab::update_selected_map_info()
 	list_faceSelectors->clear();
 	list_volumeSelectors->clear();
 
+	label_dartNbCells->setText(QString::number(0));
+	label_vertexNbCells->setText(QString::number(0));
+	label_edgeNbCells->setText(QString::number(0));
+	label_faceNbCells->setText(QString::number(0));
+	label_volumeNbCells->setText(QString::number(0));
+
 	if (selected_map_)
 	{
 		check_drawBB->setChecked(selected_map_->get_show_bb());
 
-		const MapBaseData* map = selected_map_->get_map();
-		const CMap2* map2 = dynamic_cast<const CMap2*>(map);
-		const CMap3* map3 = dynamic_cast<const CMap3*>(map);
+		const uint32 nb_d = selected_map_->nb_cells(CellType::Dart_Cell);
+		label_dartNbCells->setText(QString::number(nb_d));
 
-		if (map2)
+		const uint32 nb_v = selected_map_->nb_cells(CellType::Vertex_Cell);
+		label_vertexNbCells->setText(QString::number(nb_v));
+
+		const uint32 nb_e = selected_map_->nb_cells(CellType::Edge_Cell);
+		label_edgeNbCells->setText(QString::number(nb_e));
+
+		const uint32 nb_f = selected_map_->nb_cells(CellType::Face_Cell);
+		label_faceNbCells->setText(QString::number(nb_f));
+
+		const uint32 nb_vol = selected_map_->nb_cells(CellType::Volume_Cell);
+		label_volumeNbCells->setText(QString::number(nb_vol));
+
+		if (selected_map_->is_embedded(CellType::Dart_Cell))
 		{
-			const MapHandler<CMap2>* map2h = dynamic_cast<const MapHandler<CMap2>*>(selected_map_);
-
-			unsigned int nb_d = map2->nb_darts();
-			label_dartNbCells->setText(QString::number(nb_d));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::CDart::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_dartSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
-			if (map2->is_embedded<CMap2::CDart::ORBIT>())
+			const auto& container = selected_map_->const_attribute_container(CellType::Dart_Cell);
+			const std::vector<std::string>& names = container.names();
+			const std::vector<std::string>& type_names = container.type_names();
+			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::CDart::ORBIT>();
-				const std::vector<std::string>& names = container.names();
-				const std::vector<std::string>& type_names = container.type_names();
-				for (std::size_t i = 0u; i < names.size(); ++i)
-				{
-					QString name = QString::fromStdString(names[i]);
-					QString type = QString::fromStdString(type_names[i]);
-					list_dartAttributes->addItem(name + " (" + type + ")");
-				}
+				QString name = QString::fromStdString(names[i]);
+				QString type = QString::fromStdString(type_names[i]);
+				list_dartAttributes->addItem(name + " (" + type + ")");
 			}
+		}
 
-			unsigned int nb_v = map2->nb_cells<CMap2::Vertex::ORBIT>();
-			label_vertexNbCells->setText(QString::number(nb_v));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Vertex::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_vertexSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
-			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
+		if (selected_map_->is_embedded(CellType::Vertex_Cell))
+		{
+			const auto& container = selected_map_->const_attribute_container(CellType::Vertex_Cell);
+			const std::vector<std::string>& names = container.names();
+			const std::vector<std::string>& type_names = container.type_names();
+			unsigned int bb_index = 1;
+			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
-				const std::vector<std::string>& names = container.names();
-				const std::vector<std::string>& type_names = container.type_names();
-				unsigned int bb_index = 1;
-				for (std::size_t i = 0u; i < names.size(); ++i)
+				QString name = QString::fromStdString(names[i]);
+				QString type = QString::fromStdString(type_names[i]);
+				QListWidgetItem* item = new QListWidgetItem(name /*+ " (" + type + ")"*/, list_vertexAttributes);
+				if (type == vec3_type_name)
 				{
-					QString name = QString::fromStdString(names[i]);
-					QString type = QString::fromStdString(type_names[i]);
-					QListWidgetItem* item = new QListWidgetItem(name /*+ " (" + type + ")"*/, list_vertexAttributes);
-					if (type == vec3_type_name)
-					{
-						combo_bbVertexAttribute->addItem(name);
-						if (map2h->get_bb_vertex_attribute_name() == name)
-							combo_bbVertexAttribute->setCurrentIndex(bb_index);
-						++bb_index;
-					}
-					if (selected_map_->get_vbo(name))
-						item->setCheckState(Qt::Checked);
-					else
-						item->setCheckState(Qt::Unchecked);
+					combo_bbVertexAttribute->addItem(name);
+					if (selected_map_->get_bb_vertex_attribute_name() == name)
+						combo_bbVertexAttribute->setCurrentIndex(bb_index);
+					++bb_index;
 				}
+				if (selected_map_->get_vbo(name))
+					item->setCheckState(Qt::Checked);
+				else
+					item->setCheckState(Qt::Unchecked);
 			}
+		}
 
-			unsigned int nb_e = map2->nb_cells<CMap2::Edge::ORBIT>();
-			label_edgeNbCells->setText(QString::number(nb_e));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Edge::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_edgeSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
-			if (map2->is_embedded<CMap2::Edge::ORBIT>())
+			if (selected_map_->is_embedded(CellType::Edge_Cell))
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Edge::ORBIT>();
+				const auto& container = selected_map_->const_attribute_container(CellType::Edge_Cell);
 				const std::vector<std::string>& names = container.names();
 				const std::vector<std::string>& type_names = container.type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
@@ -489,22 +463,9 @@ void ControlDock_MapTab::update_selected_map_info()
 				}
 			}
 
-			unsigned int nb_f = map2->nb_cells<CMap2::Face::ORBIT>();
-			label_faceNbCells->setText(QString::number(nb_f));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Face::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_faceSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
-			if (map2->is_embedded<CMap2::Face::ORBIT>())
+			if (selected_map_->is_embedded(CellType::Face_Cell))
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Face::ORBIT>();
+				const auto& container = selected_map_->const_attribute_container(CellType::Face_Cell);
 				const std::vector<std::string>& names = container.names();
 				const std::vector<std::string>& type_names = container.type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
@@ -515,22 +476,9 @@ void ControlDock_MapTab::update_selected_map_info()
 				}
 			}
 
-			unsigned int nb_vol = map2->nb_cells<CMap2::Volume::ORBIT>();
-			label_volumeNbCells->setText(QString::number(nb_vol));
-//			foreach (CellSelectorGen* cs, selected_map_->get_cell_selector_set(CMap2::Volume::ORBIT).values())
-//			{
-//				QListWidgetItem* item = new QListWidgetItem(cs->get_name(), list_volumeSelectors);
-//				item->setFlags(item->flags() | Qt::ItemIsEditable);
-//				if (selected_selector_[orbit] == cs)
-//					item->setSelected(true);
-//				if (cs->is_mutually_exclusive())
-//					item->setCheckState(Qt::Checked);
-//				else
-//					item->setCheckState(Qt::Unchecked);
-//			}
-			if (map2->is_embedded<CMap2::Volume::ORBIT>())
+			if (selected_map_->is_embedded(CellType::Volume_Cell))
 			{
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Volume::ORBIT>();
+				const auto& container = selected_map_->const_attribute_container(CellType::Volume_Cell);
 				const std::vector<std::string>& names = container.names();
 				const std::vector<std::string>& type_names = container.type_names();
 				for (std::size_t i = 0u; i < names.size(); ++i)
@@ -540,15 +488,6 @@ void ControlDock_MapTab::update_selected_map_info()
 					list_volumeAttributes->addItem(name + " (" + type + ")");
 				}
 			}
-		}
-	}
-	else
-	{
-		label_dartNbCells->setText(QString::number(0));
-		label_vertexNbCells->setText(QString::number(0));
-		label_edgeNbCells->setText(QString::number(0));
-		label_faceNbCells->setText(QString::number(0));
-		label_volumeNbCells->setText(QString::number(0));
 	}
 
 	updating_ui_ = false;

@@ -250,7 +250,7 @@ void Plugin_SurfaceRender::bb_changed()
 		if (parameter_set_.count(view) > 0ul)
 		{
 			MapParameters& p = get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(CellType::Edge_Cell))));
 		}
 	}
 }

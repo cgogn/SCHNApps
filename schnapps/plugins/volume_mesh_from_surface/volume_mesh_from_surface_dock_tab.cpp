@@ -1,7 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Plugin Volume Mesh From Surface                                              *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,73 +22,34 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
-
-#include <schnapps/core/plugin_processing.h>
-
-#include <QAction>
+#include <volume_mesh_from_surface.h>
+#include <volume_mesh_from_surface_dock_tab.h>
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-class MapHandlerGen;
-
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class Plugin_Import : public PluginProcessing
+VolumeMeshFromSurface_DockTab::VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p) :
+	schnapps_(s),
+	plugin_(p),
+	updating_ui_(false)
 {
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+	setupUi(this);
+	this->pushButton_gen_volume_mesh->setDisabled(true);
+	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
+	connect(this->pushButton_gen_volume_mesh,SIGNAL(pressed()), plugin_, SLOT(generate_button_pressed()));
+	connect(this->lineEdit_tetgen_args, SIGNAL(textChanged(QString)), plugin_, SLOT(tetgen_args_updated(QString)));
 
-public:
+	plugin_->tetgen_args_updated(lineEdit_tetgen_args->text());
+}
 
-	inline Plugin_Import() {}
-
-	~Plugin_Import() {}
-
-private:
-
-	bool enable() override;
-	void disable() override;
-
-public slots:
-
-	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
-	void import_surface_mesh_from_file_dialog();
-
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-//	QAction* import_2D_image_action_;
-};
+void VolumeMeshFromSurface_DockTab::selected_map_changed(MapHandlerGen*, MapHandlerGen* curr)
+{
+	if (dynamic_cast<const CMap2*>(curr->get_map()))
+		this->pushButton_gen_volume_mesh->setDisabled(false);
+	else
+		this->pushButton_gen_volume_mesh->setDisabled(true);
+}
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_

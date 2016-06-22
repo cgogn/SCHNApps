@@ -1,7 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Plugin Volume Mesh From Surface                                              *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,73 +22,40 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H
+#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H
 
-#include <schnapps/core/plugin_processing.h>
+#include <memory>
 
-#include <QAction>
+#include <cgogn/io/volume_import.h>
+#include <cgogn/geometry/types/geometry_traits.h>
+#include <schnapps/core/map_handler.h>
+#include <tetgen/tetgen.h>
 
 namespace schnapps
 {
 
-class MapHandlerGen;
-
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class Plugin_Import : public PluginProcessing
+class TetgenStructureVolumeImport : public cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>
 {
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
-
 public:
+	using Inherit = cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>;
+	using Self = TetgenStructureVolumeImport;
+	using Scalar = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
+	template <typename T>
+	using ChunkArray = typename Inherit::template ChunkArray<T>;
 
-	inline Plugin_Import() {}
+	explicit TetgenStructureVolumeImport(tetgenio * tetgen_output);
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
 
-	~Plugin_Import() {}
-
-private:
-
-	bool enable() override;
-	void disable() override;
-
-public slots:
-
-	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
-	void import_surface_mesh_from_file_dialog();
-
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
+protected:
+	virtual bool import_file_impl(const std::string& /*filename*/) override;
 
 private:
-
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-//	QAction* import_2D_image_action_;
+	tetgenio* volume_;
 };
+
+std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H

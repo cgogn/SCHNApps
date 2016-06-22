@@ -203,11 +203,8 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				delete plugin;
 				return nullptr;
 			}
-		}
-		// if loading fails
-		else
-		{
-			std::cout << "loader.instance() failed.." << std::endl;
+		} else { // if loading fails
+			std::cout << "loader.instance() failed with error \"" << loader.errorString().toStdString() << "\"." << std::endl;
 			return nullptr;
 		}
 	}
