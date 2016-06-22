@@ -104,12 +104,7 @@ public slots:
 	bool is_selected_map() const;
 
 	virtual uint8 dimension() const = 0;
-
-	virtual uint32 nb_darts() const = 0;
-	virtual uint32 nb_vertices() const = 0;
-	virtual uint32 nb_edges() const = 0;
-	virtual uint32 nb_faces() const = 0;
-	virtual uint32 nb_volumes() const = 0;
+	virtual uint32 nb_cells(CellType ct) const = 0;
 
 	virtual bool is_embedded(CellType ct) const = 0;
 	virtual const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const = 0;
@@ -327,11 +322,21 @@ public:
 
 	uint8 dimension() const override { return MAP_TYPE::DIMENSION; }
 
-	uint32 nb_darts() const override { return get_map()->nb_darts(); }
-	uint32 nb_vertices() const override { return get_map()->template nb_cells<Vertex::ORBIT>(); }
-	uint32 nb_edges() const override { return get_map()->template nb_cells<Edge::ORBIT>(); }
-	uint32 nb_faces() const override { return get_map()->template nb_cells<Face::ORBIT>(); }
-	uint32 nb_volumes() const override { return get_map()->template nb_cells<Volume::ORBIT>(); }
+	uint32 nb_cells(CellType ct) const override
+	{
+		switch (ct) {
+			case CellType::Dart_Cell:
+				return get_map()->nb_darts();
+			case CellType::Vertex_Cell:
+				return get_map()->template nb_cells<Vertex::ORBIT>();
+			case CellType::Edge_Cell:
+				return get_map()->template nb_cells<Edge::ORBIT>();
+			case CellType::Face_Cell:
+				return get_map()->template nb_cells<Face::ORBIT>();
+			case CellType::Volume_Cell:
+				return get_map()->template nb_cells<Volume::ORBIT>();
+		}
+	}
 
 	bool is_embedded(CellType ct) const override
 	{

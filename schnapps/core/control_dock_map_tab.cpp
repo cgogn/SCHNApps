@@ -397,19 +397,19 @@ void ControlDock_MapTab::update_selected_map_info()
 	{
 		check_drawBB->setChecked(selected_map_->get_show_bb());
 
-		const uint32 nb_d = selected_map_->nb_darts();
+		const uint32 nb_d = selected_map_->nb_cells(CellType::Dart_Cell);
 		label_dartNbCells->setText(QString::number(nb_d));
 
-		const uint32 nb_v = selected_map_->nb_vertices();
+		const uint32 nb_v = selected_map_->nb_cells(CellType::Vertex_Cell);
 		label_vertexNbCells->setText(QString::number(nb_v));
 
-		const uint32 nb_e = selected_map_->nb_edges();
+		const uint32 nb_e = selected_map_->nb_cells(CellType::Edge_Cell);
 		label_edgeNbCells->setText(QString::number(nb_e));
 
-		const uint32 nb_f = selected_map_->nb_faces();
+		const uint32 nb_f = selected_map_->nb_cells(CellType::Face_Cell);
 		label_faceNbCells->setText(QString::number(nb_f));
 
-		const uint32 nb_vol = selected_map_->nb_volumes();
+		const uint32 nb_vol = selected_map_->nb_cells(CellType::Volume_Cell);
 		label_volumeNbCells->setText(QString::number(nb_vol));
 
 		if (selected_map_->is_embedded(CellType::Dart_Cell))
