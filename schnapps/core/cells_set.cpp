@@ -31,7 +31,8 @@ uint32 CellsSetGen::cells_set_count_ = 0;
 
 CellsSetGen::CellsSetGen(const QString& name) :
 	name_(name),
-	mutually_exclusive_(false)
+	mutually_exclusive_(false),
+	selection_changed_(false)
 {
 	++cells_set_count_;
 }

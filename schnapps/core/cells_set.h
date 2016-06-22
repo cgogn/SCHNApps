@@ -68,9 +68,17 @@ signals:
 
 protected:
 
+	inline void emit_if_selection_changed()
+	{
+		if (selection_changed_)
+			emit(selected_cells_changed());
+		selection_changed_ = false;
+	}
+
 	// cells set name
 	QString name_;
 	bool mutually_exclusive_;
+	bool selection_changed_;
 };
 
 
@@ -88,6 +96,68 @@ public:
 		marker_(map_)
 	{}
 
+	inline void select(CellType c, bool emit_signal = true)
+	{
+		if (!marker_.is_marked(c))
+		{
+			marker_.mark(c);
+			cells_.push_back(c);
+			if (this->mutually_exclusive_ && !mutually_exclusive_sets_.empty())
+			{
+				for (Self* cs : mutually_exclusive_sets_)
+					cs->unselect(c, emit_signal);
+			}
+			if (emit_signal)
+				emit(selected_cells_changed());
+			else
+				selection_changed_ = true;
+		}
+	}
+
+	inline void select(const std::vector<CellType>& cells)
+	{
+		for (CellType c : cells)
+			select(c, false);
+		this->emit_if_selection_changed();
+		if (this->mutually_exclusive_ && !mutually_exclusive_sets_.empty())
+		{
+			for (Self* cs : mutually_exclusive_sets_)
+				cs->emit_if_selection_changed();
+		}
+	}
+
+	inline void unselect(CellType c, bool emit_signal = true)
+	{
+		if(marker_.is_marked(c))
+		{
+			uint32 emb = map_.embedding(c);
+			bool found = false;
+			std::size_t i;
+			for (i = 0; i < cells_.size() && !found; ++i)
+			{
+				if(map_.embedding(cells_[i]) == emb)
+					found = true ;
+			}
+			if (found)
+			{
+				marker_.unmark(cells_[i-1]);
+				cells_[i-1] = cells_.back();
+				cells_.pop_back();
+				if(emit_signal)
+					emit(selected_cells_changed());
+				else
+					selection_changed_ = true;
+			}
+		}
+	}
+
+	inline void unselect(const std::vector<CellType>& cells)
+	{
+		for (CellType c : cells)
+			unselect(c, false);
+		this->emit_if_selection_changed();
+	}
+
 	inline void set_mutually_exclusive_sets(const std::vector<Inherit*>& mex) override
 	{
 		mutually_exclusive_sets_.clear();
@@ -100,6 +170,14 @@ public:
 					mutually_exclusive_sets_.push_back(s);
 			}
 		}
+	}
+
+	template <typename FUNC>
+	void foreach_cell(const FUNC& f)
+	{
+		static_assert(check_func_parameter_type(FUNC, CellType), "Wrong function parameter type");
+		for (const CellType& cell : cells_)
+			f(cell);
 	}
 
 protected:
