@@ -79,7 +79,7 @@ private slots:
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void selected_map_connectivity_changed();
-	void selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_added(CellType ct, const QString& name);
 
 private:
 

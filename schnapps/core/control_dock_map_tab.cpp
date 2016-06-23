@@ -113,7 +113,7 @@ void ControlDock_MapTab::selected_map_changed()
 			disconnect(old, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-			disconnect(old, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+			disconnect(old, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
 		}
 
 		QList<QListWidgetItem*> items = list_maps->selectedItems();
@@ -128,7 +128,7 @@ void ControlDock_MapTab::selected_map_changed()
 			connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-			connect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+			connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
 		}
 		else
 			selected_map_ = nullptr;
@@ -294,7 +294,7 @@ void ControlDock_MapTab::selected_map_connectivity_changed()
 	update_selected_map_info();
 }
 
-void ControlDock_MapTab::selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name)
+void ControlDock_MapTab::selected_map_cells_set_added(CellType ct, const QString& name)
 {
 	update_selected_map_info();
 }

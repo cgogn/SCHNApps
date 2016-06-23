@@ -47,6 +47,10 @@ struct MapParameters
 	};
 
 	MapParameters() :
+		map_(nullptr),
+		vertex_scale_factor_(1.0f),
+		vertex_base_size_(1.0f),
+		cells_set_(nullptr),
 		selection_method_(SingleCell)
 	{}
 
@@ -54,6 +58,7 @@ struct MapParameters
 	QString get_position_attribute_name() const { return QString::fromStdString(position_.name()); }
 	void set_position_attribute(const QString& attribute_name)
 	{
+		position_ = map_->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name);
 	}
 
 	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_normal_attribute() const { return normal_; }
@@ -95,6 +100,7 @@ private:
 
 public:
 
+	CellsSetGen* cells_set_;
 	SelectionMethod selection_method_;
 };
 

@@ -66,8 +66,14 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 
 void Plugin_Selection::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
-	const MapParameters& p = get_parameters(cur);
-	dock_tab_->update_map_parameters(cur, p);
+	if (old)
+		disconnect(old, SIGNAL(cells_set_added(CellType, const QString&)), dock_tab_, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+	if (cur)
+	{
+		connect(cur, SIGNAL(cells_set_added(CellType, const QString&)), dock_tab_, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+		const MapParameters& p = get_parameters(cur);
+		dock_tab_->update_map_parameters(cur, p);
+	}
 }
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

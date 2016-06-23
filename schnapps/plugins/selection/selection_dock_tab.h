@@ -25,12 +25,12 @@
 #define SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
 
 #include <ui_selection.h>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
 class Plugin_Selection;
 
 struct MapParameters;
@@ -57,6 +57,9 @@ private slots:
 	void position_attribute_changed(int index);
 	void normal_attribute_changed(int index);
 	void selection_method_changed(int index);
+	void cell_type_changed(int index);
+	void cells_set_changed(int index);
+	void selected_map_cells_set_added(CellType ct, const QString& name);
 	void vertices_scale_factor_changed(int i);
 	void vertices_scale_factor_pressed();
 	void color_changed(int i);

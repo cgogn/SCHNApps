@@ -43,6 +43,8 @@ Selection_DockTab::Selection_DockTab(SCHNApps* s, Plugin_Selection* p) :
 	connect(combo_positionAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(position_attribute_changed(int)));
 	connect(combo_normalAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(normal_attribute_changed(int)));
 	connect(combo_selectionMethod, SIGNAL(currentIndexChanged(int)), this, SLOT(selection_method_changed(int)));
+	connect(combo_cellType, SIGNAL(currentIndexChanged(int)), this, SLOT(cell_type_changed(int)));
+	connect(combo_cellsSet, SIGNAL(currentIndexChanged(int)), this, SLOT(cells_set_changed(int)));
 	connect(slider_verticesScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertices_scale_factor_changed(int)));
 	connect(slider_verticesScaleFactor, SIGNAL(sliderPressed()), this, SLOT(vertices_scale_factor_pressed()));
 	connect(combo_color, SIGNAL(currentIndexChanged(int)), this, SLOT(color_changed(int)));
@@ -112,6 +114,47 @@ void Selection_DockTab::selection_method_changed(int index)
 				break;
 		}
 	}
+}
+
+void Selection_DockTab::cell_type_changed(int index)
+{
+	updating_ui_ = true;
+
+	combo_cellsSet->clear();
+	combo_cellsSet->addItem("- select set -");
+
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	if (map)
+	{
+		map->foreach_cells_set(CellType(combo_cellType->currentIndex()), [&] (CellsSetGen* cells_set)
+		{
+			combo_cellsSet->addItem(cells_set->get_name());
+		});
+	}
+
+	updating_ui_ = false;
+}
+
+void Selection_DockTab::cells_set_changed(int index)
+{
+	if (!updating_ui_)
+	{
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (map)
+		{
+			MapParameters& p = plugin_->get_parameters(map);
+			p.cells_set_ = map->get_cells_set(CellType(combo_cellType->currentIndex()), combo_cellsSet->currentText());
+//			plugin_->update_selected_cells_rendering();
+		}
+	}
+}
+
+void Selection_DockTab::selected_map_cells_set_added(CellType ct, const QString& name)
+{
+	updating_ui_ = true;
+	if (ct == CellType(combo_cellType->currentIndex()))
+		combo_cellsSet->addItem(name);
+	updating_ui_ = false;
 }
 
 void Selection_DockTab::vertices_scale_factor_changed(int i)
@@ -204,6 +247,9 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 	combo_normalAttribute->clear();
 	combo_normalAttribute->addItem("- select attribute -");
 
+	combo_cellsSet->clear();
+	combo_cellsSet->addItem("- select set -");
+
 	QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
 	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(map);
@@ -216,10 +262,10 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 	const std::vector<std::string>& type_names = container.type_names();
 
 	unsigned int i = 1;
-	for (std::size_t i = 0u; i < names.size(); ++i)
+	for (std::size_t j = 0u; j < names.size(); ++j)
 	{
-		QString name = QString::fromStdString(names[i]);
-		QString type = QString::fromStdString(type_names[i]);
+		QString name = QString::fromStdString(names[j]);
+		QString type = QString::fromStdString(type_names[j]);
 		if (type == vec3_type_name)
 		{
 			combo_positionAttribute->addItem(name);
@@ -233,6 +279,15 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 			++i;
 		}
 	}
+
+	i = 0;
+	map->foreach_cells_set(CellType(combo_cellType->currentIndex()), [&] (CellsSetGen* cells_set)
+	{
+		combo_cellsSet->addItem(cells_set->get_name());
+		if (p.cells_set_ && p.cells_set_ == cells_set)
+			combo_cellsSet->setCurrentIndex(i);
+		++i;
+	});
 
 	combo_selectionMethod->setCurrentIndex(p.selection_method_);
 	combo_color->setColor(p.get_color());
