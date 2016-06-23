@@ -36,10 +36,10 @@ namespace schnapps
 
 bool Plugin_Import::enable()
 {
-	import_surface_mesh_action_ = schnapps_->add_menu_action("Surface;Import Mesh", "import surface mesh");
+	import_surface_mesh_action_ = schnapps_->add_menu_action("Import;Surface Mesh", "import surface mesh");
 	connect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 
-	import_volume_mesh_action_ = schnapps_->add_menu_action("Volume;Import Mesh", "import volume mesh");
+	import_volume_mesh_action_ = schnapps_->add_menu_action("Import;Volume Mesh", "import volume mesh");
 	connect(import_volume_mesh_action_, SIGNAL(triggered()), this, SLOT(import_volume_mesh_from_file_dialog()));
 
 //	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
