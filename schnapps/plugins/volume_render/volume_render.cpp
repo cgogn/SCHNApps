@@ -1,7 +1,9 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Plugin Volume Render                                                         *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Inspired by the surface render plugin                                        *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -86,20 +88,9 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 	{
 		glEnable(GL_POLYGON_OFFSET_FILL);
 		glPolygonOffset(1.0f, 1.0f);
-		if (p.get_position_vbo())
+		if (p.volume_drawer_rend_)
 		{
-			if (p.get_color_vbo())
-			{
-				p.shader_expl_vol_col_->bind(proj, mv);
-				map->draw(cgogn::rendering::TRIANGLES);
-				p.shader_expl_vol_col_->release();
-			}
-			else
-			{
-				p.shader_expl_vol_->bind(proj, mv);
-				map->draw(cgogn::rendering::TRIANGLES);
-				p.shader_expl_vol_->release();
-			}
+			p.volume_drawer_rend_->draw_faces(proj,mv,view);
 		}
 		glDisable(GL_POLYGON_OFFSET_FILL);
 	}

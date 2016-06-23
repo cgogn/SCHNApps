@@ -1,7 +1,9 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Plugin Volume Render                                                         *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Inspired by the surface render plugin                                        *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,8 +23,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 
 #include <ui_volume_render.h>
 
@@ -71,8 +73,7 @@ private slots:
 	void render_edges_changed(bool b);
 	void render_faces_changed(bool b);
 	void render_boundary_changed(bool b);
-	void exlode_faces_changed(int);
-	void exlode_volumes_changed(int);
+	void explode_volumes_changed(int);
 
 	void vertex_color_clicked();
 	void edge_color_clicked();
@@ -91,4 +92,4 @@ private:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_

@@ -1,7 +1,9 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Plugin Volume Render                                                         *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Inspired by the surface render plugin                                        *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -53,6 +55,8 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
+
+	connect(sliderExplodeVolumes, SIGNAL(valueChanged(int)), this, SLOT(explode_volumes_changed(int)));
 }
 
 
@@ -70,6 +74,18 @@ void VolumeRender_DockTab::position_vbo_changed(int index)
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(CellType::Edge_Cell))));
 			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
+			MapHandler<CMap3>* mh3 = dynamic_cast<MapHandler<CMap3>*>(map);
+			if (mh3)
+			{
+				auto pos_attr = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(combo_positionVBO->currentText());
+				if (pos_attr.is_valid())
+				{
+					p.get_volume_drawer()->update_face<VEC3>(*mh3->get_map(),pos_attr);
+					p.get_volume_drawer()->update_edge<VEC3>(*mh3->get_map(),pos_attr);
+				}
+
+			}
+
 			view->update();
 		}
 	}
@@ -179,6 +195,21 @@ void VolumeRender_DockTab::render_boundary_changed(bool b)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.render_boundary_ = b;
+			view->update();
+		}
+	}
+}
+
+void VolumeRender_DockTab::explode_volumes_changed(int fact)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_volume_explode_factor(float32(fact) / 100.0f);
 			view->update();
 		}
 	}
@@ -323,7 +354,6 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 	check_renderEdges->setChecked(p.render_edges_);
 	check_renderFaces->setChecked(p.render_faces_);
 	check_renderBoundary->setChecked(p.render_boundary_);
-	sliderExplodeFaces->setValue(std::round(100.0f*p.get_volume_explode_factor()));
 	sliderExplodeVolumes->setValue(std::round(100.0f*p.get_volume_explode_factor()));
 
 
