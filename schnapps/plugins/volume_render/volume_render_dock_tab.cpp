@@ -174,6 +174,8 @@ void VolumeRender_DockTab::render_faces_changed(bool b)
 {
 	if (!updating_ui_)
 	{
+		this->sliderExplodeVolumes->setEnabled(b);
+		this->labelExplodVolumes->setEnabled(b);
 		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)

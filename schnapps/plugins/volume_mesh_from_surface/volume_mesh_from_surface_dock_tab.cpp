@@ -36,17 +36,17 @@ VolumeMeshFromSurface_DockTab::VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin
 	updating_ui_(false)
 {
 	setupUi(this);
-	this->pushButton_gen_volume_mesh->setDisabled(true);
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 	connect(this->pushButton_gen_volume_mesh,SIGNAL(pressed()), plugin_, SLOT(generate_button_pressed()));
 	connect(this->lineEdit_tetgen_args, SIGNAL(textChanged(QString)), plugin_, SLOT(tetgen_args_updated(QString)));
 
 	plugin_->tetgen_args_updated(lineEdit_tetgen_args->text());
+	this->selected_map_changed(nullptr, schnapps_->get_selected_map());
 }
 
 void VolumeMeshFromSurface_DockTab::selected_map_changed(MapHandlerGen*, MapHandlerGen* curr)
 {
-	if (dynamic_cast<const CMap2*>(curr->get_map()))
+	if (curr && dynamic_cast<const CMap2*>(curr->get_map()))
 		this->pushButton_gen_volume_mesh->setDisabled(false);
 	else
 		this->pushButton_gen_volume_mesh->setDisabled(true);
