@@ -451,7 +451,7 @@ public:
 	{
 		if (ah.is_valid())
 		{
-			QString attribute_name = QString::fromStdString(ah->get_name());
+			QString attribute_name = QString::fromStdString(ah.name());
 			return get_map()->remove_attribute(ah);
 			emit(attribute_removed(ORBIT, attribute_name));
 		}
