@@ -226,13 +226,16 @@ void Plugin_SurfaceRender::vbo_removed(cgogn::rendering::VBO* vbo)
 	for (auto& it : parameter_set_)
 	{
 		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-		MapParameters& map_param = view_param_set[map];
-		if (map_param.get_position_vbo() == vbo)
-			map_param.set_position_vbo(nullptr);
-		if (map_param.get_normal_vbo() == vbo)
-			map_param.set_normal_vbo(nullptr);
-		if (map_param.get_color_vbo() == vbo)
-			map_param.set_color_vbo(nullptr);
+		if (view_param_set.count(map) > 0ul)
+		{
+			MapParameters& p = view_param_set[map];
+			if (p.get_position_vbo() == vbo)
+				p.set_position_vbo(nullptr);
+			if (p.get_normal_vbo() == vbo)
+				p.set_normal_vbo(nullptr);
+			if (p.get_color_vbo() == vbo)
+				p.set_color_vbo(nullptr);
+		}
 	}
 
 	for (View* view : map->get_linked_views())
@@ -243,11 +246,12 @@ void Plugin_SurfaceRender::bb_changed()
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
-	for (View* view : map->get_linked_views())
+	for (auto& it : parameter_set_)
 	{
-		if (parameter_set_.count(view) > 0ul)
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(map) > 0ul)
 		{
-			MapParameters& p = get_parameters(view, map);
+			MapParameters& p = view_param_set[map];
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 		}
 	}

@@ -34,7 +34,8 @@ namespace schnapps
 Selection_DockTab::Selection_DockTab(SCHNApps* s, Plugin_Selection* p) :
 	schnapps_(s),
 	plugin_(p),
-	updating_ui_(false)
+	updating_ui_(false),
+	current_cells_set_(nullptr)
 {
 	setupUi(this);
 
@@ -59,12 +60,13 @@ void Selection_DockTab::position_attribute_changed(int index)
 {
 	if (!updating_ui_)
 	{
+		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
+		if (view && map)
 		{
-			MapParameters& p = plugin_->get_parameters(map);
+			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_position_attribute(combo_positionAttribute->currentText());
-//			plugin_->update_selected_cells_rendering();
+			p.update_selected_cells_rendering();
 		}
 	}
 }
@@ -73,12 +75,13 @@ void Selection_DockTab::normal_attribute_changed(int index)
 {
 	if (!updating_ui_)
 	{
+		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
+		if (view && map)
 		{
-			MapParameters& p = plugin_->get_parameters(map);
+			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_position_attribute(combo_normalAttribute->currentText());
-//			plugin_->update_selected_cells_rendering();
+			p.update_selected_cells_rendering();
 		}
 	}
 }
@@ -87,31 +90,32 @@ void Selection_DockTab::selection_method_changed(int index)
 {
 	if (!updating_ui_)
 	{
+		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
+		if (view && map)
 		{
-			MapParameters& p = plugin_->get_parameters(map);
+			MapParameters& p = plugin_->get_parameters(view, map);
 			p.selection_method_ = MapParameters::SelectionMethod(index);
-		}
-		
-		switch (index)
-		{
-			case MapParameters::SingleCell:
-				spin_angle_radius->setVisible(false);
-				label_angle_radius->setText(QString());
-				break;
-			case MapParameters::WithinSphere:
-				spin_angle_radius->setVisible(true);
-//				spin_angle_radius->setValue(plugin_->m_selectionRadiusBase * plugin_->m_selectionRadiusCoeff);
-				label_angle_radius->setText(QString("Radius:"));
-				break;
-			case MapParameters::NormalAngle:
-				spin_angle_radius->setVisible(true);
-//				spin_angle_radius->setValue(plugin_->m_normalAngleThreshold / M_PI * 180);
-				label_angle_radius->setText(QString("Angle:"));
-				break;
-			default:
-				break;
+
+			switch (index)
+			{
+				case MapParameters::SingleCell:
+					spin_angle_radius->setVisible(false);
+					label_angle_radius->setText(QString());
+					break;
+				case MapParameters::WithinSphere:
+					spin_angle_radius->setVisible(true);
+	//				spin_angle_radius->setValue(plugin_->m_selectionRadiusBase * plugin_->m_selectionRadiusCoeff);
+					label_angle_radius->setText(QString("Radius:"));
+					break;
+				case MapParameters::NormalAngle:
+					spin_angle_radius->setVisible(true);
+	//				spin_angle_radius->setValue(plugin_->m_normalAngleThreshold / M_PI * 180);
+					label_angle_radius->setText(QString("Angle:"));
+					break;
+				default:
+					break;
+			}
 		}
 	}
 }
@@ -126,7 +130,7 @@ void Selection_DockTab::cell_type_changed(int index)
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map)
 	{
-		map->foreach_cells_set(CellType(combo_cellType->currentIndex()), [&] (CellsSetGen* cells_set)
+		map->foreach_cells_set(static_cast<CellType>(combo_cellType->currentIndex()), [&] (CellsSetGen* cells_set)
 		{
 			combo_cellsSet->addItem(cells_set->get_name());
 		});
@@ -139,12 +143,13 @@ void Selection_DockTab::cells_set_changed(int index)
 {
 	if (!updating_ui_)
 	{
+		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
+		if (view && map)
 		{
-			MapParameters& p = plugin_->get_parameters(map);
-			p.cells_set_ = map->get_cells_set(CellType(combo_cellType->currentIndex()), combo_cellsSet->currentText());
-//			plugin_->update_selected_cells_rendering();
+			MapParameters& p = plugin_->get_parameters(view, map);
+			CellsSetGen* cs = map->get_cells_set(CellType(combo_cellType->currentIndex()), combo_cellsSet->currentText());
+			p.cells_set_ = dynamic_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(cs);
 		}
 	}
 }
@@ -206,10 +211,11 @@ void Selection_DockTab::vertices_scale_factor_changed(int i)
 {
 	if (!updating_ui_)
 	{
+		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
+		if (view && map)
 		{
-			MapParameters& p = plugin_->get_parameters(map);
+			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_vertex_scale_factor(i / 50.0);
 			for (View* view : map->get_linked_views())
 				view->update();
@@ -221,10 +227,11 @@ void Selection_DockTab::vertices_scale_factor_pressed()
 {
 	if (!updating_ui_)
 	{
+		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
+		if (view && map)
 		{
-			MapParameters& p = plugin_->get_parameters(map);
+			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 			for (View* view : map->get_linked_views())
 				view->update();
@@ -236,10 +243,11 @@ void Selection_DockTab::color_changed(int i)
 {
 	if (!updating_ui_)
 	{
+		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
+		if (view && map)
 		{
-			MapParameters& p = plugin_->get_parameters(map);
+			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_color(combo_color->color());
 			for (View* view : map->get_linked_views())
 				view->update();

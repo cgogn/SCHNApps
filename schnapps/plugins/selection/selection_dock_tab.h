@@ -45,13 +45,6 @@ public:
 
 	Selection_DockTab(SCHNApps* s, Plugin_Selection* p);
 
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_Selection* plugin_;
-
-	bool updating_ui_;
-
 private slots:
 
 	void position_attribute_changed(int index);
@@ -69,7 +62,15 @@ private slots:
 
 private:
 
+	void set_current_cells_set(CellsSetGen* cs);
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+
+	SCHNApps* schnapps_;
+	Plugin_Selection* plugin_;
+
+	bool updating_ui_;
+
+	CellsSetGen* current_cells_set_;
 };
 
 } // namespace schnapps

@@ -57,10 +57,12 @@ public:
 	inline const QString& get_name() { return name_; }
 
 	inline void set_mutually_exclusive(bool b) { mutually_exclusive_ = b; }
-
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
-
 	virtual void set_mutually_exclusive_sets(const std::vector<CellsSetGen*>& mex) = 0;
+
+private slots:
+
+	virtual void rebuild() = 0;
 
 signals:
 
@@ -82,13 +84,13 @@ protected:
 };
 
 
-template <typename MAP, typename CellType>
+template <typename MAP, typename CELL>
 class CellsSet : public CellsSetGen
 {
 public:
 
 	using Inherit = CellsSetGen;
-	using Self = CellsSet<MAP, CellType>;
+	using Self = CellsSet<MAP, CELL>;
 
 	CellsSet(MAP& m, const QString& name) :
 		Inherit(name),
@@ -96,7 +98,10 @@ public:
 		marker_(map_)
 	{}
 
-	inline void select(CellType c, bool emit_signal = true)
+	~CellsSet()
+	{}
+
+	inline void select(CELL c, bool emit_signal = true)
 	{
 		if (!marker_.is_marked(c))
 		{
@@ -114,9 +119,9 @@ public:
 		}
 	}
 
-	inline void select(const std::vector<CellType>& cells)
+	inline void select(const std::vector<CELL>& cells)
 	{
-		for (CellType c : cells)
+		for (CELL c : cells)
 			select(c, false);
 		this->emit_if_selection_changed();
 		if (this->mutually_exclusive_ && !mutually_exclusive_sets_.empty())
@@ -126,7 +131,7 @@ public:
 		}
 	}
 
-	inline void unselect(CellType c, bool emit_signal = true)
+	inline void unselect(CELL c, bool emit_signal = true)
 	{
 		if(marker_.is_marked(c))
 		{
@@ -151,9 +156,9 @@ public:
 		}
 	}
 
-	inline void unselect(const std::vector<CellType>& cells)
+	inline void unselect(const std::vector<CELL>& cells)
 	{
-		for (CellType c : cells)
+		for (CELL c : cells)
 			unselect(c, false);
 		this->emit_if_selection_changed();
 	}
@@ -172,19 +177,30 @@ public:
 		}
 	}
 
+	inline void rebuild() override
+	{
+		cells_.clear();
+		map_.foreach_cell([&] (CELL c)
+		{
+			if(marker_.is_marked(c))
+				cells_.push_back(c);
+		});
+		emit(selected_cells_changed());
+	}
+
 	template <typename FUNC>
 	void foreach_cell(const FUNC& f)
 	{
-		static_assert(check_func_parameter_type(FUNC, CellType), "Wrong function parameter type");
-		for (const CellType& cell : cells_)
+		static_assert(check_func_parameter_type(FUNC, CELL), "Wrong function parameter type");
+		for (const CELL& cell : cells_)
 			f(cell);
 	}
 
 protected:
 
 	MAP& map_;
-	typename MAP::template CellMarker<CellType::ORBIT> marker_;
-	std::vector<CellType> cells_;
+	typename MAP::template CellMarker<CELL::ORBIT> marker_;
+	std::vector<CELL> cells_;
 	std::vector<Self*> mutually_exclusive_sets_;
 };
 

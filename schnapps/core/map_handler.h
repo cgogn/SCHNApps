@@ -28,10 +28,6 @@
 #include <schnapps/core/types.h>
 #include <schnapps/core/cells_set.h>
 
-#include <cgogn/core/cmap/map_base.h>
-#include <cgogn/core/cmap/cmap2.h>
-#include <cgogn/core/cmap/cmap3.h>
-
 #include <cgogn/rendering/shaders/vbo.h>
 #include <cgogn/rendering/map_render.h>
 
@@ -49,21 +45,6 @@ namespace schnapps
 
 class SCHNApps;
 class View;
-
-using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
-using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
-using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
-
-enum CellType : uint16
-{
-	Dart_Cell = 0,
-	Vertex_Cell,
-	Edge_Cell,
-	Face_Cell,
-	Volume_Cell
-};
-
-static const std::size_t NB_CELL_TYPES = CellType::Volume_Cell + 1;
 
 class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 {
@@ -742,6 +723,7 @@ protected:
 		CellsSetGen* cells_set = this->cells_sets_[ct].at(name).get();
 		emit(cells_set_added(ct, name));
 		connect(cells_set, SIGNAL(selected_cells_changed()), this, SLOT(selected_cells_changed()));
+		connect(this, SIGNAL(connectivity_changed()), cells_set, SLOT(rebuild()));
 		return cells_set;
 	}
 

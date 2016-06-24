@@ -28,6 +28,8 @@
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
 
+#include <cgogn/rendering/shaders/shader_point_sprite.h>
+
 #include <selection_dock_tab.h>
 
 namespace schnapps
@@ -48,11 +50,21 @@ struct MapParameters
 
 	MapParameters() :
 		map_(nullptr),
+		shader_point_sprite_param_(nullptr),
+		selection_sphere_vbo_(nullptr),
+		color_(220, 60, 60),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
+		selecting_(false),
 		cells_set_(nullptr),
 		selection_method_(SingleCell)
-	{}
+	{
+		selection_sphere_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
+
+		shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
+		shader_point_sprite_param_->color_ = QColor(60, 60, 220, 128);
+		shader_point_sprite_param_->set_position_vbo(selection_sphere_vbo_.get());
+	}
 
 	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
 	QString get_position_attribute_name() const { return QString::fromStdString(position_.name()); }
@@ -65,27 +77,33 @@ struct MapParameters
 	QString get_normal_attribute_name() const { return QString::fromStdString(normal_.name()); }
 	void set_normal_attribute(const QString& attribute_name)
 	{
+		normal_ = map_->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name);
 	}
 
 	const QColor& get_color() const { return color_; }
 	void set_color(const QColor& c)
 	{
 		color_ = c;
-//		shader_point_sprite_param_->color_ = color_;
+		shader_point_sprite_param_->color_ = color_;
 	}
 
 	float32 get_vertex_base_size() const { return vertex_base_size_; }
 	void set_vertex_base_size(float32 bs)
 	{
 		vertex_base_size_ = bs;
-//		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
 	float32 get_vertex_scale_factor() const { return vertex_scale_factor_; }
 	void set_vertex_scale_factor(float32 sf)
 	{
 		vertex_scale_factor_ = sf;
-//		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+	}
+
+	void update_selected_cells_rendering()
+	{
+
 	}
 
 private:
@@ -94,13 +112,19 @@ private:
 	typename MapHandler<CMap2>::VertexAttribute<VEC3> position_;
 	typename MapHandler<CMap2>::VertexAttribute<VEC3> normal_;
 
+	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
+	std::unique_ptr<cgogn::rendering::VBO> selection_sphere_vbo_;
+
 	QColor color_;
 	float32 vertex_scale_factor_;
 	float32 vertex_base_size_;
 
+	bool selecting_;
+	MapHandler<CMap2>::Vertex selecting_vertex_;
+
 public:
 
-	CellsSetGen* cells_set_;
+	CellsSet<CMap2, MapHandler<CMap2>::Vertex>* cells_set_;
 	SelectionMethod selection_method_;
 };
 
@@ -117,13 +141,13 @@ class Plugin_Selection : public PluginInteraction
 
 public:
 
-	inline Plugin_Selection() {}
+	Plugin_Selection();
 
 	~Plugin_Selection() {}
 
 private:
 
-	MapParameters& get_parameters(MapHandlerGen* map);
+	MapParameters& get_parameters(View* view, MapHandlerGen* map);
 
 	bool enable() override;
 	void disable() override;
@@ -144,18 +168,19 @@ private:
 private slots:
 
 	// slots called from SCHNApps signals
+	void selected_view_changed(View*, View*);
 	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+
+	// slots called from MapHandlerGen signals
+	void selected_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
 	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
-	void selected_map_connectiviy_changed();
+	void selected_map_connectivity_changed();
 	void selected_map_bb_changed();
-
-public slots:
-
 
 private:
 
-	Selection_DockTab* dock_tab_;
-	std::map<MapHandlerGen*, MapParameters> parameter_set_;
+	std::unique_ptr<Selection_DockTab> dock_tab_;
+	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
 } // namespace schnapps
