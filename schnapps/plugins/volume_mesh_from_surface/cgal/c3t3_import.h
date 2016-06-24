@@ -21,68 +21,59 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
 
-#include <schnapps/core/types.h>
-#include <ui_volume_mesh_from_surface.h>
+#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H
+#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H
+
+#include "types.h"
+
+#include <CGAL/Mesh_triangulation_3.h>
+#include <CGAL/refine_mesh_3.h>
+#include <CGAL/Mesh_complex_3_in_triangulation_3.h>
+#include <CGAL/Mesh_criteria_3.h>
+
+#include <schnapps/core/map_handler.h>
+
+#include <cgogn/io/volume_import.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
-class Plugin_VolumeMeshFromSurface;
+// forward declaration of MapParameters
+class MapParameters;
 
-struct MapParameters;
+using Domain		= CGAL::Polyhedral_mesh_domain_3<Polyhedron, Kernel>;
+using Triangulation	= CGAL::Mesh_triangulation_3<Domain>::type;
+using Criteria		= CGAL::Mesh_criteria_3<Triangulation>;
+using C3T3			= CGAL::Mesh_complex_3_in_triangulation_3<Triangulation>;
 
-class VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
+
+class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits>
 {
-	Q_OBJECT
-
-	friend class Plugin_VolumeMeshFromSurface;
-
 public:
+	using Inherit = VolumeImport<CMap3::MapTraits>;
+	using Self = C3T3VolumeImport;
 
-	VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
+	inline C3T3VolumeImport(const C3T3& cpx) : Inherit(),
+		cpx_(cpx)
+	{}
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(C3T3VolumeImport);
 
+	template<typename T>
+	using ChunkArray = typename Inherit::template ChunkArray<T>;
+
+	using Triangulation = typename C3T3::Triangulation;
+	using Vertex_handle = typename Triangulation::Vertex_handle;
+
+protected:
+	virtual bool import_file_impl(const std::string& /*filename*/) override;
 private:
-
-	SCHNApps* schnapps_;
-	Plugin_VolumeMeshFromSurface* plugin_;
-
-	bool updating_ui_;
-
-private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
-
-	void cell_size_changed(double cs);
-	void cell_radius_edge_ratio_changed(double ratio);
-	void facet_angle_changed(double fa);
-	void facet_size_changed(double fs);
-	void facet_distance_changed(double fd);
-
-	void odt_changed(bool b);
-	void odt_freeze_changed(bool b);
-	void odt_max_iter_changed(int nb_it);
-	void odt_convergence_changed(double cv);
-	void odt_freeze_bound_changed(double fb);
-
-	void lloyd_changed(bool b);
-	void lloyd_freeze_changed(bool b);
-	void lloyd_max_iter_changed(int nb_it);
-	void lloyd_convergence_changed(double cv);
-	void lloyd_freeze_bound_changed(double fb);
-
-	void perturber_changed(bool b);
-	void perturber_sliver_changed(double sb);
-	void exuder_changed(bool b);
-	void exuder_sliver_changed(double sb);
-
-private:
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+	const C3T3& cpx_;
 };
+
+void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out);
+void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map);
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H

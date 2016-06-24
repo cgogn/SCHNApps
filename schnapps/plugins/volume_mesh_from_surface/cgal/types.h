@@ -21,68 +21,22 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
 
-#include <schnapps/core/types.h>
-#include <ui_volume_mesh_from_surface.h>
+#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
+#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
+
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyhedral_mesh_domain_3.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
-class Plugin_VolumeMeshFromSurface;
-
-struct MapParameters;
-
-class VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
-{
-	Q_OBJECT
-
-	friend class Plugin_VolumeMeshFromSurface;
-
-public:
-
-	VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_VolumeMeshFromSurface* plugin_;
-
-	bool updating_ui_;
-
-private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
-
-	void cell_size_changed(double cs);
-	void cell_radius_edge_ratio_changed(double ratio);
-	void facet_angle_changed(double fa);
-	void facet_size_changed(double fs);
-	void facet_distance_changed(double fd);
-
-	void odt_changed(bool b);
-	void odt_freeze_changed(bool b);
-	void odt_max_iter_changed(int nb_it);
-	void odt_convergence_changed(double cv);
-	void odt_freeze_bound_changed(double fb);
-
-	void lloyd_changed(bool b);
-	void lloyd_freeze_changed(bool b);
-	void lloyd_max_iter_changed(int nb_it);
-	void lloyd_convergence_changed(double cv);
-	void lloyd_freeze_bound_changed(double fb);
-
-	void perturber_changed(bool b);
-	void perturber_sliver_changed(double sb);
-	void exuder_changed(bool b);
-	void exuder_sliver_changed(double sb);
-
-private:
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
-};
+using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
+using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
+using HalfedgeDS = Polyhedron::HalfedgeDS;
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
