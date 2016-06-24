@@ -188,6 +188,11 @@ public:
 		emit(selected_cells_changed());
 	}
 
+	inline std::size_t get_nb_cells() const
+	{
+		return cells_.size();
+	}
+
 	template <typename FUNC>
 	void foreach_cell(const FUNC& f)
 	{

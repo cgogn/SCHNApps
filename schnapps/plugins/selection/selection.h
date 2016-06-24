@@ -37,9 +37,13 @@ namespace schnapps
 
 class Plugin_Selection;
 
-struct MapParameters
+struct MapParameters : public QObject
 {
+	Q_OBJECT
+
 	friend class Plugin_Selection;
+
+public:
 
 	enum SelectionMethod
 	{
@@ -50,8 +54,10 @@ struct MapParameters
 
 	MapParameters() :
 		map_(nullptr),
-		shader_point_sprite_param_(nullptr),
+		shader_point_sprite_param_selection_sphere_(nullptr),
 		selection_sphere_vbo_(nullptr),
+		shader_point_sprite_param_selected_vertices_(nullptr),
+		selected_vertices_vbo_(nullptr),
 		color_(220, 60, 60),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
@@ -61,9 +67,15 @@ struct MapParameters
 	{
 		selection_sphere_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
 
-		shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
-		shader_point_sprite_param_->color_ = QColor(60, 60, 220, 128);
-		shader_point_sprite_param_->set_position_vbo(selection_sphere_vbo_.get());
+		shader_point_sprite_param_selection_sphere_ = cgogn::rendering::ShaderPointSprite::generate_param();
+		shader_point_sprite_param_selection_sphere_->color_ = QColor(60, 60, 220, 128);
+		shader_point_sprite_param_selection_sphere_->set_position_vbo(selection_sphere_vbo_.get());
+
+		selected_vertices_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
+
+		shader_point_sprite_param_selected_vertices_ = cgogn::rendering::ShaderPointSprite::generate_param();
+		shader_point_sprite_param_selected_vertices_->color_ = color_;
+		shader_point_sprite_param_selected_vertices_->set_position_vbo(selected_vertices_vbo_.get());
 	}
 
 	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
@@ -84,26 +96,48 @@ struct MapParameters
 	void set_color(const QColor& c)
 	{
 		color_ = c;
-		shader_point_sprite_param_->color_ = color_;
+		shader_point_sprite_param_selected_vertices_->color_ = color_;
 	}
 
 	float32 get_vertex_base_size() const { return vertex_base_size_; }
 	void set_vertex_base_size(float32 bs)
 	{
 		vertex_base_size_ = bs;
-		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_param_selection_sphere_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_param_selected_vertices_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
 	float32 get_vertex_scale_factor() const { return vertex_scale_factor_; }
 	void set_vertex_scale_factor(float32 sf)
 	{
 		vertex_scale_factor_ = sf;
-		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_param_selection_sphere_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_param_selected_vertices_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
+
+	CellsSet<CMap2, MapHandler<CMap2>::Vertex>* get_cells_set() const { return cells_set_; }
+	void set_cells_set(CellsSet<CMap2, MapHandler<CMap2>::Vertex>* cells_set)
+	{
+		if (cells_set_)
+			disconnect(cells_set_, SIGNAL(selected_cells_changed()), this, SLOT(update_selected_cells_rendering()));
+		cells_set_ = cells_set;
+		if (cells_set_)
+			connect(cells_set_, SIGNAL(selected_cells_changed()), this, SLOT(update_selected_cells_rendering()));
+	}
+
+public slots:
 
 	void update_selected_cells_rendering()
 	{
-
+		std::vector<VEC3> selected_points;
+		if (position_.is_valid() && cells_set_)
+		{
+			cells_set_->foreach_cell([&] (MapHandler<CMap2>::Vertex v)
+			{
+				selected_points.push_back(position_[v]);
+			});
+		}
+		cgogn::rendering::update_vbo(selected_points, selected_vertices_vbo_.get());
 	}
 
 private:
@@ -112,8 +146,11 @@ private:
 	typename MapHandler<CMap2>::VertexAttribute<VEC3> position_;
 	typename MapHandler<CMap2>::VertexAttribute<VEC3> normal_;
 
-	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
+	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_selection_sphere_;
 	std::unique_ptr<cgogn::rendering::VBO> selection_sphere_vbo_;
+
+	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_selected_vertices_;
+	std::unique_ptr<cgogn::rendering::VBO> selected_vertices_vbo_;
 
 	QColor color_;
 	float32 vertex_scale_factor_;
@@ -122,9 +159,10 @@ private:
 	bool selecting_;
 	MapHandler<CMap2>::Vertex selecting_vertex_;
 
+	CellsSet<CMap2, MapHandler<CMap2>::Vertex>* cells_set_;
+
 public:
 
-	CellsSet<CMap2, MapHandler<CMap2>::Vertex>* cells_set_;
 	SelectionMethod selection_method_;
 };
 

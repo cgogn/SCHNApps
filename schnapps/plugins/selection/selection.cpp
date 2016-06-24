@@ -76,18 +76,25 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 				case Dart_Cell:
 					break;
 				case Vertex_Cell:
+					if (p.cells_set_->get_nb_cells() > 0)
+					{
+						p.shader_point_sprite_param_selected_vertices_->bind(proj, mv);
+//						glEnable(GL_BLEND);
+//						glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+						QOpenGLFunctions* ogl = QOpenGLContext::currentContext()->functions();
+						ogl->glDrawArrays(GL_POINTS, 0, p.cells_set_->get_nb_cells());
+//						glDisable(GL_BLEND);
+						p.shader_point_sprite_param_selected_vertices_->release();
+					}
 					if (p.selecting_ && p.selecting_vertex_.is_valid())
 					{
-						std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
-						cgogn::rendering::update_vbo(selection_point, p.selection_sphere_vbo_.get());
-						p.shader_point_sprite_param_->size_ = p.vertex_base_size_ * p.vertex_scale_factor_;
-						p.shader_point_sprite_param_->bind(proj, mv);
-						glEnable(GL_BLEND);
-						glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+						p.shader_point_sprite_param_selection_sphere_->bind(proj, mv);
+//						glEnable(GL_BLEND);
+//						glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 						QOpenGLFunctions* ogl = QOpenGLContext::currentContext()->functions();
 						ogl->glDrawArrays(GL_POINTS, 0, 1);
-						glDisable(GL_BLEND);
-						p.shader_point_sprite_param_->release();
+//						glDisable(GL_BLEND);
+						p.shader_point_sprite_param_selection_sphere_->release();
 					}
 					break;
 				case Edge_Cell:
@@ -157,7 +164,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 									p.cells_set_->select(p.selecting_vertex_);
 								else if(event->button() == Qt::RightButton)
 									p.cells_set_->unselect(p.selecting_vertex_);
-								break;
+								p.update_selected_cells_rendering();
 								break;
 							case MapParameters::WithinSphere:
 								break;
@@ -202,10 +209,18 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 			{
 				case Dart_Cell:
 					break;
-				case Vertex_Cell: {
+				case Vertex_Cell:
+				{
 					std::vector<MapHandler<CMap2>::Vertex> picked;
 					if (cgogn::geometry::picking<VEC3>(*map2, p.get_position_attribute(), A, B, picked))
-						p.selecting_vertex_ = picked[0];
+					{
+						if (!p.selecting_vertex_.is_valid() || (p.selecting_vertex_.is_valid() && !map2->same_cell(picked[0], p.selecting_vertex_)))
+						{
+							p.selecting_vertex_ = picked[0];
+							std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
+							cgogn::rendering::update_vbo(selection_point, p.selection_sphere_vbo_.get());
+						}
+					}
 				}
 					break;
 				case Edge_Cell:

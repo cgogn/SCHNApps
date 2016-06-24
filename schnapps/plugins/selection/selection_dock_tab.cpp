@@ -127,12 +127,18 @@ void Selection_DockTab::cell_type_changed(int index)
 	combo_cellsSet->clear();
 	combo_cellsSet->addItem("- select set -");
 
+	View* view = schnapps_->get_selected_view();
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map)
+	if (view && map)
 	{
+		MapParameters& p = plugin_->get_parameters(view, map);
+		uint32 i = 1;
 		map->foreach_cells_set(static_cast<CellType>(combo_cellType->currentIndex()), [&] (CellsSetGen* cells_set)
 		{
 			combo_cellsSet->addItem(cells_set->get_name());
+			if (p.get_cells_set() == cells_set)
+				combo_cellsSet->setCurrentIndex(i);
+			++i;
 		});
 	}
 
@@ -149,7 +155,8 @@ void Selection_DockTab::cells_set_changed(int index)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			CellsSetGen* cs = map->get_cells_set(CellType(combo_cellType->currentIndex()), combo_cellsSet->currentText());
-			p.cells_set_ = dynamic_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(cs);
+			p.set_cells_set(dynamic_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(cs));
+			p.update_selected_cells_rendering();
 		}
 	}
 }
@@ -310,11 +317,11 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 		}
 	}
 
-	i = 0;
+	i = 1;
 	map->foreach_cells_set(CellType(combo_cellType->currentIndex()), [&] (CellsSetGen* cells_set)
 	{
 		combo_cellsSet->addItem(cells_set->get_name());
-		if (p.cells_set_ && p.cells_set_ == cells_set)
+		if (p.get_cells_set() == cells_set)
 			combo_cellsSet->setCurrentIndex(i);
 		++i;
 	});
