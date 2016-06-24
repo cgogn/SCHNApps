@@ -110,6 +110,7 @@ public slots:
 	virtual bool is_embedded(CellType ct) const = 0;
 	virtual const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const = 0;
 	virtual cgogn::Orbit orbit(CellType ct) const = 0;
+	virtual CellType cell_type(cgogn::Orbit orbit) const = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -408,6 +409,18 @@ public:
 			case CellType::Edge_Cell: return Edge::ORBIT;
 			case CellType::Face_Cell: return Face::ORBIT;
 			case CellType::Volume_Cell: return Volume::ORBIT;
+		}
+	}
+
+	CellType cell_type(cgogn::Orbit orbit) const override
+	{
+		switch (orbit)
+		{
+			case CDart::ORBIT: return CellType::Dart_Cell;
+			case Vertex::ORBIT: return CellType::Vertex_Cell;
+			case Edge::ORBIT: return CellType::Edge_Cell;
+			case Face::ORBIT: return CellType::Face_Cell;
+			case Volume::ORBIT: return CellType::Volume_Cell;
 		}
 	}
 

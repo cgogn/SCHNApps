@@ -131,12 +131,12 @@ private:
 	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
-	inline void keyPress(View*, QKeyEvent*) override {}
-	inline void keyRelease(View*, QKeyEvent*) override {}
-	inline void mousePress(View*, QMouseEvent*) override {}
+	void keyPress(View*, QKeyEvent*) override;
+	void keyRelease(View*, QKeyEvent*) override;
+	void mousePress(View*, QMouseEvent*) override;
 	inline void mouseRelease(View*, QMouseEvent*) override {}
-	inline void mouseMove(View*, QMouseEvent*) override {}
-	inline void wheelEvent(View*, QWheelEvent*) override {}
+	void mouseMove(View*, QMouseEvent*) override;
+	void wheelEvent(View*, QWheelEvent*) override;
 
 	inline void view_linked(View*) override {}
 	inline void view_unlinked(View*) override {}
@@ -145,6 +145,9 @@ private slots:
 
 	// slots called from SCHNApps signals
 	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
+	void selected_map_connectiviy_changed();
+	void selected_map_bb_changed();
 
 public slots:
 
