@@ -15,12 +15,10 @@ if(CGAL_FOUND)
 	find_package(Boost REQUIRED)
 endif(CGAL_FOUND)
 
-
 set(HEADER_FILES
 	tetgen_structure_io.h
 	volume_mesh_from_surface.h
 	volume_mesh_from_surface_dock_tab.h
-
 )
 
 set(SOURCE_FILES

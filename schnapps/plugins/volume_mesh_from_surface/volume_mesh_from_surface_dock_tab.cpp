@@ -66,7 +66,6 @@ VolumeMeshFromSurface_DockTab::VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin
 	connect(this->checkBox_5Exuder, SIGNAL(toggled(bool)), this, SLOT(exuder_changed(bool)));
 	connect(this->doubleSpinBox_ExuderSliver, SIGNAL(valueChanged(double)), this, SLOT(exuder_sliver_changed(double)));
 
-	plugin_->tetgen_args_updated(lineEdit_tetgen_args->text());
 	this->selected_map_changed(nullptr, schnapps_->get_selected_map());
 }
 
@@ -76,9 +75,11 @@ void VolumeMeshFromSurface_DockTab::selected_map_changed(MapHandlerGen*, MapHand
 	{
 		this->pushButton_gen_volume_meshTetgen->setDisabled(false);
 		this->pushButtonGenMeshCGAL->setDisabled(false);
+		this->lineEdit_tetgen_args->setDisabled(false);
 	} else {
 		this->pushButton_gen_volume_meshTetgen->setDisabled(true);
 		this->pushButtonGenMeshCGAL->setDisabled(true);
+		this->lineEdit_tetgen_args->setDisabled(true);
 	}
 	update_map_parameters(curr, plugin_->parameter_set_[curr]);
 }
@@ -196,6 +197,8 @@ void VolumeMeshFromSurface_DockTab::update_map_parameters(MapHandlerGen* map, co
 	updating_ui_ = true;
 	if (map && dynamic_cast<MapHandler<CMap2>*>(map))
 	{
+		plugin_->tetgen_args_updated(QString::fromStdString(p.tetgen_command_line));
+
 		this->doubleSpinBox_CellSize->setValue(p.cell_size_);
 		this->doubleSpinBox_Radius->setValue(p.cell_radius_edge_ratio_);
 		this->doubleSpinBoxFacetAngle->setValue(p.facet_angle_);

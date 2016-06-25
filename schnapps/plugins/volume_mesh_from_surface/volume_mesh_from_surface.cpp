@@ -23,17 +23,15 @@
 *******************************************************************************/
 
 #include <volume_mesh_from_surface.h>
+#include <tetgen_structure_io.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
-#include <tetgen_structure_io.h>
-#include <cgal/c3t3_import.h>
-
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/io/map_export.h>
-
 #ifdef PLUGIN_VMFS_WITH_CGAL
-#include <CGAL/make_mesh_3.h>
+#include <cgal/c3t3_import.h>
 #endif // PLUGIN_VMFS_WITH_CGAL
+
 namespace schnapps
 {
 

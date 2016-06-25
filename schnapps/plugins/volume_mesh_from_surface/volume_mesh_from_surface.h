@@ -25,12 +25,9 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
 
+#include <volume_mesh_from_surface_dock_tab.h>
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
-#include <volume_mesh_from_surface_dock_tab.h>
-#ifdef PLUGIN_VMFS_WITH_CGAL
-#include <cgal/cgogn_surface_to_cgal_polyhedron.h>
-#endif // PLUGIN_VMFS_WITH_CGAL
 
 namespace schnapps
 {
