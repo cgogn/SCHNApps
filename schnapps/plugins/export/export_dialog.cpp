@@ -45,17 +45,23 @@ ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
 	connect(this->comboBoxMapSelection, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_map_changed(QString)));
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
-	connect(this->comboBoxPositionSelection, SIGNAL(currentIndexChanged(int)), this, SLOT(position_att_changed(QString)));
+	connect(this->comboBoxPositionSelection, SIGNAL(currentIndexChanged(QString)), this, SLOT(position_att_changed(QString)));
 	connect(this->pushButtonOutputSelection, SIGNAL(pressed()),this, SLOT(choose_file()));
+	connect(this->checkBoxBinary, SIGNAL(toggled(bool)), this, SLOT(binary_option_changed(bool)));
+	connect(this->checkBoxCompress, SIGNAL(toggled(bool)), this, SLOT(compress_option_changed(bool)));
+	connect(this->lineEditOutput, SIGNAL(textEdited(QString)), this, SLOT(output_file_changed(QString)));
+	connect(this->buttonBox,SIGNAL(rejected()), this, SLOT(reinit()));
+	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(export_validated()));
 
 	this->checkBoxBinary->setChecked(p->export_params_.binary_);
 	this->checkBoxCompress->setChecked(p->export_params_.compress_);
+
 }
 
 void ExportDialog::selected_map_changed(QString map_name)
 {
-	while (this->comboBoxPositionSelection->count() > 1)
-		this->comboBoxPositionSelection->removeItem(this->comboBoxPositionSelection->count() -1);
+	this->comboBoxPositionSelection->clear();
+	this->comboBoxPositionSelection->addItem("-select attribute-");
 
 	if (MapHandlerGen* mhg = schnapps_->get_map(map_name))
 	{
@@ -72,7 +78,13 @@ void ExportDialog::selected_map_changed(QString map_name)
 
 void ExportDialog::position_att_changed(QString pos_name)
 {
- // todo
+	if (!pos_name.isEmpty())
+		plugin_->export_params_.position_attribute_name_= pos_name.toStdString();
+}
+
+void ExportDialog::output_file_changed(QString output)
+{
+		plugin_->export_params_.output_ = output.toStdString();
 }
 
 void ExportDialog::map_added(MapHandlerGen* mhg)
@@ -90,10 +102,40 @@ void ExportDialog::map_removed(MapHandlerGen* mhg)
 void ExportDialog::choose_file()
 {
 		QString filename = QFileDialog::getSaveFileName(nullptr, "file name", schnapps_->get_app_path(), "Surface Mesh Files (*.ply *.off *.stl *.vtk *.vtp *.obj);; Volume Mesh Files (*.vtk *.vtu *.tet *.nas)");
-		if (!filename.isNull())
+		if (!filename.isEmpty())
+		{
 			this->lineEditOutput->setText(filename);
-		else
+			plugin_->export_params_.output_ = filename.toStdString();
+		} else
 			this->lineEditOutput->setText("-select output-");
+}
+
+void ExportDialog::binary_option_changed(bool b)
+{
+	plugin_->export_params_.binary_ = b;
+}
+
+void ExportDialog::compress_option_changed(bool b)
+{
+	plugin_->export_params_.compress_ = b;
+}
+
+void ExportDialog::reinit()
+{
+	ExportParams& p = plugin_->export_params_;
+	p = ExportParams();
+	this->checkBoxBinary->setChecked(p.binary_);
+	this->checkBoxCompress->setChecked(p.compress_);
+	this->comboBoxMapSelection->setCurrentIndex(0);
+	this->comboBoxPositionSelection->clear();
+	this->comboBoxPositionSelection->addItem("-select attribute-");
+	this->lineEditOutput->setText("-select output-");
+}
+
+void ExportDialog::export_validated()
+{
+	plugin_->export_mesh();
+	reinit();
 }
 
 } // namespace schnapps

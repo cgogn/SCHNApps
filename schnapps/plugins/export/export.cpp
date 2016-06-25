@@ -26,7 +26,7 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 #include <export_dialog.h>
-#include <cgogn/io/map_import.h>
+#include <cgogn/io/map_export.h>
 
 #include <QFileDialog>
 #include <QFileInfo>
@@ -51,6 +51,30 @@ Plugin_Export::Plugin_Export() {
 
 Plugin_Export::~Plugin_Export() {
 	delete export_dialog_;
+}
+
+void Plugin_Export::export_mesh()
+{
+	const ExportParams& p = this->export_params_;
+	MapHandlerGen* mhg = schnapps_->get_map(QString::fromStdString(p.map_name_));
+	if (mhg)
+	{
+		if (MapHandler<CMap2>* m2h = dynamic_cast<MapHandler<CMap2>*>(mhg))
+		{
+			CMap2& cmap2 = *m2h->get_map();
+			const cgogn::Orbit vertex_orbit = CMap2::Vertex::ORBIT;
+			cgogn::io::ExportOptions exp_opt(p.output_, {vertex_orbit, p.position_attribute_name_}, {}, p.binary_,p.compress_, true);
+			cgogn::io::export_surface(cmap2, exp_opt);
+		} else {
+			if (MapHandler<CMap3>* m3h = dynamic_cast<MapHandler<CMap3>*>(mhg))
+			{
+				CMap3& cmap3 = *m3h->get_map();
+				const cgogn::Orbit vertex_orbit = CMap3::Vertex::ORBIT;
+				cgogn::io::ExportOptions exp_opt(p.output_, {vertex_orbit, p.position_attribute_name_}, {}, p.binary_,p.compress_, true);
+				cgogn::io::export_volume(cmap3, exp_opt);
+			}
+		}
+	}
 }
 
 bool Plugin_Export::enable()

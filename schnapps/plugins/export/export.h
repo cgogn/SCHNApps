@@ -59,6 +59,7 @@ class Plugin_Export : public PluginProcessing
 public:
 	Plugin_Export();
 	~Plugin_Export() override;
+	void export_mesh();
 
 private:
 	bool enable() override;

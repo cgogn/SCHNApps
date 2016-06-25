@@ -45,9 +45,14 @@ public:
 private slots:
 	void selected_map_changed(QString map_name);
 	void position_att_changed(QString pos_name);
+	void output_file_changed(QString output);
 	void map_added(MapHandlerGen*);
 	void map_removed(MapHandlerGen*);
 	void choose_file();
+	void binary_option_changed(bool b);
+	void compress_option_changed(bool b);
+	void reinit();
+	void export_validated();
 
 private:
 	SCHNApps* schnapps_;
