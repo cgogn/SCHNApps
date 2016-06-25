@@ -1,8 +1,9 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+* Plugin Volume Render                                                         *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Inspired by the surface render plugin                                        *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,68 +22,74 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
 
-#include <schnapps/core/types.h>
-#include <ui_volume_mesh_from_surface.h>
+#ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
+
+#include <ui_volume_render.h>
+
+#include <QColorDialog>
 
 namespace schnapps
 {
 
 class SCHNApps;
 class MapHandlerGen;
-class Plugin_VolumeMeshFromSurface;
+class Plugin_VolumeRender;
 
 struct MapParameters;
 
-class VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
+class VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
 {
 	Q_OBJECT
 
-	friend class Plugin_VolumeMeshFromSurface;
+	friend class Plugin_VolumeRender;
 
 public:
 
-	VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
+	VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p);
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_VolumeMeshFromSurface* plugin_;
+	Plugin_VolumeRender* plugin_;
+
+	QColorDialog* color_dial_;
+	int current_color_dial_;
+
+	QColor vertex_color_;
+	QColor edge_color_;
+	QColor face_color_;
 
 	bool updating_ui_;
 
 private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
 
-	void cell_size_changed(double cs);
-	void cell_radius_edge_ratio_changed(double ratio);
-	void facet_angle_changed(double fa);
-	void facet_size_changed(double fs);
-	void facet_distance_changed(double fd);
+	void position_vbo_changed(int index);
+	void color_vbo_changed(int index);
+	void render_vertices_changed(bool b);
+	void vertices_scale_factor_changed(int i);
+	void vertices_scale_factor_pressed();
+	void render_edges_changed(bool b);
+	void render_faces_changed(bool b);
+	void render_boundary_changed(bool b);
+	void explode_volumes_changed(int);
 
-	void odt_changed(bool b);
-	void odt_freeze_changed(bool b);
-	void odt_max_iter_changed(int nb_it);
-	void odt_convergence_changed(double cv);
-	void odt_freeze_bound_changed(double fb);
-
-	void lloyd_changed(bool b);
-	void lloyd_freeze_changed(bool b);
-	void lloyd_max_iter_changed(int nb_it);
-	void lloyd_convergence_changed(double cv);
-	void lloyd_freeze_bound_changed(double fb);
-
-	void perturber_changed(bool b);
-	void perturber_sliver_changed(double sb);
-	void exuder_changed(bool b);
-	void exuder_sliver_changed(double sb);
+	void vertex_color_clicked();
+	void edge_color_clicked();
+	void face_color_clicked();
+	void color_selected();
 
 private:
+
+	void add_position_vbo(QString name);
+	void remove_position_vbo(QString name);
+	void add_color_vbo(QString name);
+	void remove_color_vbo(QString name);
+
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_

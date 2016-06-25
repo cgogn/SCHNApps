@@ -22,80 +22,67 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
+#include "cgogn_surface_to_cgal_polyhedron.h"
 
-#include <volume_mesh_from_surface_dock_tab.h>
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/core/map_handler.h>
+#include <CGAL/Polyhedron_incremental_builder_3.h>
+#include <CGAL/IO/Polyhedron_iostream.h>
 
 namespace schnapps
 {
 
-class Plugin_VolumeMeshFromSurface;
+PolyhedronBuilder::PolyhedronBuilder(MapHandler<CMap2>* mh, std::string position_att_name) :
+	map_(mh),
+	pos_att_name_(std::move(position_att_name))
+{}
 
-struct MapParameters
+void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 {
-	friend class Plugin_VolumeMeshFromSurface;
+	if (!map_)
+		return;
 
-	std::string tetgen_command_line;
+	const auto pos_att = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>(QString::fromStdString(pos_att_name_));
+	if (!pos_att.is_valid())
+		return;
 
-	float64 cell_size_;
-	float64 cell_radius_edge_ratio_;
-	float64 facet_angle_;
-	float64 facet_size_;
-	float64 facet_distance_;
+	uint32 id{0u};
+	auto id_attribute = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("ids_polyhedron_builder");
 
-	bool do_odt_;
-	bool do_odt_freeze_;
-	int32 odt_max_iter_;
-	float64 odt_convergence_;
-	float64 odt_freeze_bound_;
+	const CMap2& cmap2 = *map_->get_map();
+	cmap2.foreach_cell([&](CMap2::Vertex v) { id_attribute[v] = id++; });
 
-	bool do_lloyd_;
-	bool do_lloyd_freeze_;
-	int32 lloyd_max_iter_;
-	float64 lloyd_convergence_;
-	float64 lloyd_freeze_bound_;
+	CGAL::Polyhedron_incremental_builder_3<HalfedgeDS> B( hds, true);
+	B.begin_surface( map_->nb_cells(CellType::Vertex_Cell), map_->nb_cells(CellType::Face_Cell) );
 
-	bool do_perturber_;
-	float64 perturber_sliver_bound_;
-	bool do_exuder_;
-	float64 exuder_sliver_bound_;
+	cmap2.foreach_cell([&](CMap2::Vertex v)
+	{
+		const auto& P = pos_att[v];
+		B.add_vertex((Point(P[0], P[1], P[2])));
+	});
 
-	MapParameters();
-};
+	cmap2.foreach_cell([&](CMap2::Face f)
+	{
+		B.begin_facet();
+		cmap2.foreach_incident_vertex(f, [&](CMap2::Vertex v)
+		{
+			B.add_vertex_to_facet(id_attribute[v]);
+		});
+		B.end_facet();
+	});
 
-class Plugin_VolumeMeshFromSurface : public PluginProcessing
+	B.end_surface();
+
+	map_->remove_attribute(id_attribute);
+}
+
+std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name)
 {
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+	if (!mh)
+		return nullptr;
+	auto poly = cgogn::make_unique<Polyhedron>();
+	PolyhedronBuilder builder(mh, position_att_name);
+	poly->delegate(builder);
+	return poly;
+}
 
-	friend class VolumeMeshFromSurface_DockTab;
-public:
-	using Map2 = schnapps::CMap2;
-	using Map3 = schnapps::CMap3;
-	using MapHandler2 = schnapps::MapHandler<Map2>;
-	using MapHandler3 = schnapps::MapHandler<Map3>;
-
-private:
-	virtual bool enable() override;
-	virtual void disable() override;
-
-	std::map<MapHandlerGen*, MapParameters> parameter_set_;
-	std::unique_ptr<VolumeMeshFromSurface_DockTab> dock_tab_;
-	QString	tetgen_args;
-
-private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
-
-public slots:
-	void generate_button_tetgen_pressed();
-	void generate_button_cgal_pressed();
-	void tetgen_args_updated(QString str);
-};
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_

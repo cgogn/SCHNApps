@@ -1,8 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,68 +20,48 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
 
-#include <schnapps/core/types.h>
-#include <ui_volume_mesh_from_surface.h>
+#ifndef SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
+#define SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
+
+#include <ui_export_dialog.h>
 
 namespace schnapps
 {
 
+class Plugin_Export;
 class SCHNApps;
 class MapHandlerGen;
-class Plugin_VolumeMeshFromSurface;
 
-struct MapParameters;
 
-class VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
+class ExportDialog : public QDialog, public Ui::MapExport
 {
 	Q_OBJECT
-
-	friend class Plugin_VolumeMeshFromSurface;
+	friend class Plugin_Export;
 
 public:
-
-	VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_VolumeMeshFromSurface* plugin_;
-
-	bool updating_ui_;
+	ExportDialog(SCHNApps* s, Plugin_Export* p);
 
 private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
-
-	void cell_size_changed(double cs);
-	void cell_radius_edge_ratio_changed(double ratio);
-	void facet_angle_changed(double fa);
-	void facet_size_changed(double fs);
-	void facet_distance_changed(double fd);
-
-	void odt_changed(bool b);
-	void odt_freeze_changed(bool b);
-	void odt_max_iter_changed(int nb_it);
-	void odt_convergence_changed(double cv);
-	void odt_freeze_bound_changed(double fb);
-
-	void lloyd_changed(bool b);
-	void lloyd_freeze_changed(bool b);
-	void lloyd_max_iter_changed(int nb_it);
-	void lloyd_convergence_changed(double cv);
-	void lloyd_freeze_bound_changed(double fb);
-
-	void perturber_changed(bool b);
-	void perturber_sliver_changed(double sb);
-	void exuder_changed(bool b);
-	void exuder_sliver_changed(double sb);
+	void selected_map_changed(QString map_name);
+	void position_att_changed(QString pos_name);
+	void output_file_changed(QString output);
+	void map_added(MapHandlerGen*);
+	void map_removed(MapHandlerGen*);
+	void choose_file();
+	void binary_option_changed(bool b);
+	void compress_option_changed(bool b);
+	void reinit();
+	void export_validated();
+	void vertex_attribute_changed(QListWidgetItem* item);
+	void cell_attribute_changed(QListWidgetItem* item);
 
 private:
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+	SCHNApps* schnapps_;
+	Plugin_Export* plugin_;
+	bool updating_ui_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
