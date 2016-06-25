@@ -26,11 +26,10 @@
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H
 
 #include <memory>
-
-#include <cgogn/io/volume_import.h>
-#include <cgogn/geometry/types/geometry_traits.h>
 #include <schnapps/core/map_handler.h>
 #include <tetgen/tetgen.h>
+#include <cgogn/io/volume_import.h>
+#include <cgogn/geometry/types/geometry_traits.h>
 
 namespace schnapps
 {

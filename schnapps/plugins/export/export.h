@@ -1,8 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -22,80 +21,63 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
+#ifndef SCHNAPPS_PLUGIN_EXPORT_H_
+#define SCHNAPPS_PLUGIN_EXPORT_H_
 
-#include <volume_mesh_from_surface_dock_tab.h>
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
+// forward declaration of QAction
+class QAction;
 
 namespace schnapps
 {
 
-class Plugin_VolumeMeshFromSurface;
+class MapHandlerGen;
+class ExportDialog;
 
-struct MapParameters
+struct ExportParams
 {
-	friend class Plugin_VolumeMeshFromSurface;
+	ExportParams();
+	void reset();
 
-	std::string tetgen_command_line;
-
-	float64 cell_size_;
-	float64 cell_radius_edge_ratio_;
-	float64 facet_angle_;
-	float64 facet_size_;
-	float64 facet_distance_;
-
-	bool do_odt_;
-	bool do_odt_freeze_;
-	int32 odt_max_iter_;
-	float64 odt_convergence_;
-	float64 odt_freeze_bound_;
-
-	bool do_lloyd_;
-	bool do_lloyd_freeze_;
-	int32 lloyd_max_iter_;
-	float64 lloyd_convergence_;
-	float64 lloyd_freeze_bound_;
-
-	bool do_perturber_;
-	float64 perturber_sliver_bound_;
-	bool do_exuder_;
-	float64 exuder_sliver_bound_;
-
-	MapParameters();
+	std::string map_name_;
+	std::string position_attribute_name_;
+	std::map<CellType, std::vector<std::string>> other_exported_attributes_;
+	std::string output_;
+	bool binary_;
+	bool compress_;
 };
 
-class Plugin_VolumeMeshFromSurface : public PluginProcessing
+/**
+* @brief Plugin for CGoGN mesh import
+*/
+class Plugin_Export : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
-	friend class VolumeMeshFromSurface_DockTab;
+	friend class ExportDialog;
+
 public:
-	using Map2 = schnapps::CMap2;
-	using Map3 = schnapps::CMap3;
-	using MapHandler2 = schnapps::MapHandler<Map2>;
-	using MapHandler3 = schnapps::MapHandler<Map3>;
+	Plugin_Export();
+	~Plugin_Export() override;
+	void export_mesh();
 
 private:
-	virtual bool enable() override;
-	virtual void disable() override;
-
-	std::map<MapHandlerGen*, MapParameters> parameter_set_;
-	std::unique_ptr<VolumeMeshFromSurface_DockTab> dock_tab_;
-	QString	tetgen_args;
-
-private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+	bool enable() override;
+	void disable() override;
 
 public slots:
-	void generate_button_tetgen_pressed();
-	void generate_button_cgal_pressed();
-	void tetgen_args_updated(QString str);
+	void export_mesh(const QString& filename);
+	void export_mesh_from_file_dialog();
+
+private:
+	QAction* export_mesh_action_;
+	ExportDialog* export_dialog_;
+	ExportParams export_params_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
+#endif // SCHNAPPS_PLUGIN_EXPORT_H_
