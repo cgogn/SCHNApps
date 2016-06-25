@@ -25,7 +25,7 @@
 #define SCHNAPPS_PLUGIN_EXPORT_H_
 
 #include <schnapps/core/plugin_processing.h>
-
+#include <schnapps/core/map_handler.h>
 // forward declaration of QAction
 class QAction;
 
@@ -38,8 +38,11 @@ class ExportDialog;
 struct ExportParams
 {
 	ExportParams();
+	void reset();
+
 	std::string map_name_;
 	std::string position_attribute_name_;
+	std::map<CellType, std::vector<std::string>> other_exported_attributes_;
 	std::string output_;
 	bool binary_;
 	bool compress_;

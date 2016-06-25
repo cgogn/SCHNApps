@@ -53,6 +53,8 @@ private slots:
 	void compress_option_changed(bool b);
 	void reinit();
 	void export_validated();
+	void vertex_attribute_changed(QListWidgetItem* item);
+	void cell_attribute_changed(QListWidgetItem* item);
 
 private:
 	SCHNApps* schnapps_;

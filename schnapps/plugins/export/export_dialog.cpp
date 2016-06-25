@@ -53,6 +53,9 @@ ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
 	connect(this->buttonBox,SIGNAL(rejected()), this, SLOT(reinit()));
 	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(export_validated()));
 
+	connect(this->listWidgetCellAttributes,SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cell_attribute_changed(QListWidgetItem*)));
+	connect(this->listWidgetVertexAttributes, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(vertex_attribute_changed(QListWidgetItem*)));
+
 	this->checkBoxBinary->setChecked(p->export_params_.binary_);
 	this->checkBoxCompress->setChecked(p->export_params_.compress_);
 
@@ -62,13 +65,27 @@ void ExportDialog::selected_map_changed(QString map_name)
 {
 	this->comboBoxPositionSelection->clear();
 	this->comboBoxPositionSelection->addItem("-select attribute-");
+	this->listWidgetVertexAttributes->clear();
+	this->listWidgetCellAttributes->clear();
 
 	if (MapHandlerGen* mhg = schnapps_->get_map(map_name))
 	{
 		plugin_->export_params_.map_name_ = map_name.toStdString();
 		const auto& vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
 		for (const auto& att_name : vert_att_cont.names())
+		{
 			this->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
+			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), this->listWidgetVertexAttributes);
+			item->setCheckState(Qt::Unchecked);
+		}
+
+		const CellType cell_type = mhg->dimension() == 2u ? CellType::Face_Cell : CellType::Volume_Cell;
+		const auto& cell_att_cont = mhg->const_attribute_container(cell_type);
+		for (const auto& att_name : cell_att_cont.names())
+		{
+			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), this->listWidgetCellAttributes);
+			item->setCheckState(Qt::Unchecked);
+		}
 	} else {
 		this->comboBoxPositionSelection->clear();
 		this->comboBoxPositionSelection->addItem("-select attribute-");
@@ -79,7 +96,19 @@ void ExportDialog::selected_map_changed(QString map_name)
 void ExportDialog::position_att_changed(QString pos_name)
 {
 	if (!pos_name.isEmpty())
+	{
 		plugin_->export_params_.position_attribute_name_= pos_name.toStdString();
+		for (int i = 0; i < this->listWidgetVertexAttributes->count(); ++i)
+		{
+			QListWidgetItem* item = this->listWidgetVertexAttributes->item(i);
+			if (item->text() == pos_name)
+			{
+				item->setCheckState(Qt::Unchecked);
+				item->setHidden(true);
+			} else
+				item->setHidden(false);
+		}
+	}
 }
 
 void ExportDialog::output_file_changed(QString output)
@@ -123,7 +152,7 @@ void ExportDialog::compress_option_changed(bool b)
 void ExportDialog::reinit()
 {
 	ExportParams& p = plugin_->export_params_;
-	p = ExportParams();
+	p.reset();
 	this->checkBoxBinary->setChecked(p.binary_);
 	this->checkBoxCompress->setChecked(p.compress_);
 	this->comboBoxMapSelection->setCurrentIndex(0);
@@ -136,6 +165,39 @@ void ExportDialog::export_validated()
 {
 	plugin_->export_mesh();
 	reinit();
+}
+
+void ExportDialog::vertex_attribute_changed(QListWidgetItem* item)
+{
+	auto& vertex_atts = plugin_->export_params_.other_exported_attributes_[CellType::Vertex_Cell];
+	auto it = std::find(vertex_atts.begin(), vertex_atts.end(), item->text().toStdString());
+	if (item->checkState() == Qt::Checked)
+	{
+		if (it == vertex_atts.end())
+			vertex_atts.push_back(item->text().toStdString());
+	} else {
+		if (it != vertex_atts.end())
+			vertex_atts.erase(it);
+	}
+}
+
+void ExportDialog::cell_attribute_changed(QListWidgetItem* item)
+{
+	MapHandlerGen* mhg = schnapps_->get_map(QString::fromStdString(plugin_->export_params_.map_name_));
+	if (!mhg)
+		return;
+	const CellType cell_type = mhg->dimension() == 2u ? CellType::Face_Cell : CellType::Volume_Cell;
+	auto& cell_atts = plugin_->export_params_.other_exported_attributes_[cell_type];
+	auto it = std::find(cell_atts.begin(), cell_atts.end(), item->text().toStdString());
+
+	if (item->checkState() == Qt::Checked)
+	{
+		if (it == cell_atts.end())
+			cell_atts.push_back(item->text().toStdString());
+	} else {
+		if (it != cell_atts.end())
+			cell_atts.erase(it);
+	}
 }
 
 } // namespace schnapps
