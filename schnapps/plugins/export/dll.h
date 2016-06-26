@@ -22,70 +22,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EXPORT_H_
-#define SCHNAPPS_PLUGIN_EXPORT_H_
+#ifndef SCHNAPPS_PLUGIN_EXPORT_DLL_H_
+#define SCHNAPPS_PLUGIN_EXPORT_DLL_H_
 
-#include "dll.h"
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/core/map_handler.h>
 
-// forward declaration of QAction
-class QAction;
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_EXPORT_API
+#if defined SCHNAPPS_PLUGIN_EXPORT_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_EXPORT_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_EXPORT_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_EXPORT_API
+#endif
 
-namespace schnapps
-{
-
-class MapHandlerGen;
-
-namespace plugin_export
-{
-
-class ExportDialog;
-
-struct ExportParams
-{
-	ExportParams();
-	void reset();
-
-	std::string map_name_;
-	std::string position_attribute_name_;
-	std::map<CellType, std::vector<std::string>> other_exported_attributes_;
-	std::string output_;
-	bool binary_;
-	bool compress_;
-};
-
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class SCHNAPPS_PLUGIN_EXPORT_API Plugin_Export : public PluginProcessing
-{
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
-
-	friend class ExportDialog;
-
-public:
-	Plugin_Export();
-	~Plugin_Export() override;
-	void export_mesh();
-
-private:
-	bool enable() override;
-	void disable() override;
-
-public slots:
-	void export_mesh(const QString& filename);
-	void export_mesh_from_file_dialog();
-
-private:
-	QAction* export_mesh_action_;
-	ExportDialog* export_dialog_;
-	ExportParams export_params_;
-};
-
-} // namespace plugin_export
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_EXPORT_H_
+#endif // SCHNAPPS_PLUGIN_EXPORT_DLL_H_

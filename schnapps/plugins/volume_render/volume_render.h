@@ -26,6 +26,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
 
+#include "dll.h"
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 
@@ -34,8 +35,6 @@
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
-#include <cgogn/rendering/shaders/shader_explode_volumes.h>
-#include <cgogn/rendering/shaders/shader_explode_volumes_line.h>
 #include <cgogn/rendering/volume_drawer.h>
 
 #include <QAction>
@@ -51,7 +50,7 @@ namespace plugin_volume_render
 {
 
 
-struct MapParameters
+struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 {
 	friend class Plugin_VolumeRender;
 
@@ -183,7 +182,7 @@ private:
 /**
 * @brief Plugin for surface rendering
 */
-class Plugin_VolumeRender : public PluginInteraction
+class SCHNAPPS_PLUGIN_VOLUME_RENDER_API Plugin_VolumeRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

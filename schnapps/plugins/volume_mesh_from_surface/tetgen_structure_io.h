@@ -25,7 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H
 
-#include <memory>
+#include "dll.h"
 #include <schnapps/core/map_handler.h>
 #include <tetgen/tetgen.h>
 #include <cgogn/io/volume_import.h>
@@ -37,7 +37,7 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-class TetgenStructureVolumeImport : public cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>
+class SCHNAPPS_PLUGIN_VMFS_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>
 {
 public:
 	using Inherit = cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>;
@@ -56,7 +56,7 @@ private:
 	tetgenio* volume_;
 };
 
-std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
 
 } // namespace plugin_vmfs
 } // namespace schnapps

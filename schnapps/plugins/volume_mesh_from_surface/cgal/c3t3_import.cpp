@@ -22,6 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
+
 #include "c3t3_import.h"
 #include "cgogn_surface_to_cgal_polyhedron.h"
 
@@ -68,7 +70,7 @@ bool C3T3VolumeImport::import_file_impl(const std::string&)
 	return true;
 }
 
-void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
+SCHNAPPS_PLUGIN_VMFS_API void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 {
 	if (!map_out)
 		return;
@@ -78,7 +80,7 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 	volume_import.create_map(*map_out->get_map());
 }
 
-void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map)
+SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map)
 {
 	using namespace CGAL::parameters;
 

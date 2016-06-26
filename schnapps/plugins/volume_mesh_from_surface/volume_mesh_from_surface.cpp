@@ -22,6 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
+
 #include <volume_mesh_from_surface.h>
 #include <tetgen_structure_io.h>
 #include <schnapps/core/schnapps.h>

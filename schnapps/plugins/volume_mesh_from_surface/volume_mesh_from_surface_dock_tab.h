@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
 
+#include "dll.h"
 #include <schnapps/core/types.h>
 #include <ui_volume_mesh_from_surface.h>
 
@@ -39,7 +40,7 @@ namespace plugin_vmfs
 class Plugin_VolumeMeshFromSurface;
 struct MapParameters;
 
-class VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
+class SCHNAPPS_PLUGIN_VMFS_API VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
 {
 	Q_OBJECT
 

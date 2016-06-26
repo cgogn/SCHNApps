@@ -22,6 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
+
 #include "cgogn_surface_to_cgal_polyhedron.h"
 
 #include <CGAL/Polyhedron_incremental_builder_3.h>
@@ -77,7 +79,7 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 	map_->remove_attribute(id_attribute);
 }
 
-std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name)
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name)
 {
 	if (!mh)
 		return nullptr;

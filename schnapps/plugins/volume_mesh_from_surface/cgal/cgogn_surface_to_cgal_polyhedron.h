@@ -25,6 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
 
+#include "dll.h"
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
 #include "types.h"
@@ -35,7 +36,7 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-class PolyhedronBuilder : public CGAL::Modifier_base<HalfedgeDS> {
+class SCHNAPPS_PLUGIN_VMFS_API PolyhedronBuilder : public CGAL::Modifier_base<HalfedgeDS> {
 public:
 
 	using Vertex = typename HalfedgeDS::Vertex;
@@ -48,7 +49,7 @@ private:
 	std::string pos_att_name_;
 };
 
-std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name);
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name);
 
 } // namespace plugin_vmfs
 } // namespace schnapps

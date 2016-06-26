@@ -25,6 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H
 
+#include "dll.h"
 #include "types.h"
 #include <schnapps/core/map_handler.h>
 
@@ -50,7 +51,7 @@ using Criteria		= CGAL::Mesh_criteria_3<Triangulation>;
 using C3T3			= CGAL::Mesh_complex_3_in_triangulation_3<Triangulation>;
 
 
-class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits>
+class SCHNAPPS_PLUGIN_VMFS_API C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits>
 {
 public:
 	using Inherit = VolumeImport<CMap3::MapTraits>;
@@ -62,10 +63,10 @@ public:
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(C3T3VolumeImport);
 
 	template<typename T>
-	using ChunkArray = typename Inherit::template ChunkArray<T>;
+	using ChunkArray = Inherit::ChunkArray<T>;
 
-	using Triangulation = typename C3T3::Triangulation;
-	using Vertex_handle = typename Triangulation::Vertex_handle;
+	using Triangulation = C3T3::Triangulation;
+	using Vertex_handle = Triangulation::Vertex_handle;
 
 protected:
 	virtual bool import_file_impl(const std::string& /*filename*/) override;
@@ -73,8 +74,8 @@ private:
 	const C3T3& cpx_;
 };
 
-void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out);
-void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map);
+SCHNAPPS_PLUGIN_VMFS_API void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out);
+SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map);
 
 } // namespace plugin_vmfs
 } // namespace schnapps

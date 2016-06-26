@@ -26,6 +26,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 
+#include "dll.h"
 #include <ui_volume_render.h>
 
 #include <QColorDialog>
@@ -42,7 +43,7 @@ namespace plugin_volume_render
 class Plugin_VolumeRender;
 struct MapParameters;
 
-class VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
+class SCHNAPPS_PLUGIN_VOLUME_RENDER_API VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
 {
 	Q_OBJECT
 
