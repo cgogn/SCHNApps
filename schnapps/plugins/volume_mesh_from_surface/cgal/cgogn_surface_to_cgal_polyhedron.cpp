@@ -30,6 +30,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 PolyhedronBuilder::PolyhedronBuilder(MapHandler<CMap2>* mh, std::string position_att_name) :
 	map_(mh),
 	pos_att_name_(std::move(position_att_name))
@@ -84,5 +87,5 @@ std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::s
 	return poly;
 }
 
-
+} // namespace plugin_vmfs
 } // namespace schnapps

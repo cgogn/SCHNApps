@@ -35,6 +35,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 MapParameters::MapParameters() :
 	tetgen_command_line("-pO"),
 	cell_size_(8),
@@ -112,6 +115,5 @@ void Plugin_VolumeMeshFromSurface::tetgen_args_updated(QString str)
 	this->tetgen_args = std::move(str);
 }
 
-
-
+} // namespace plugin_vmfs
 } // namespace schnapps

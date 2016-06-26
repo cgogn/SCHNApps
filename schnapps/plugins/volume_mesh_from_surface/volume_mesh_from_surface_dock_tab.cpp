@@ -30,6 +30,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 VolumeMeshFromSurface_DockTab::VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p) :
 	schnapps_(s),
 	plugin_(p),
@@ -236,4 +239,5 @@ void VolumeMeshFromSurface_DockTab::update_map_parameters(MapHandlerGen* map, co
 	updating_ui_ = false;
 }
 
+} // namespace plugin_vmfs
 } // namespace schnapps

@@ -27,6 +27,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos)
 {
 	using Vertex = typename CMap2::Vertex;
@@ -126,4 +129,5 @@ bool TetgenStructureVolumeImport::import_file_impl(const std::string&)
 	return true;
 }
 
+} // namespace plugin_vmfs
 } // namespace schnapps

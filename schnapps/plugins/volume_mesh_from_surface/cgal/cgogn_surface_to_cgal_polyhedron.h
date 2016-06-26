@@ -32,6 +32,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 class PolyhedronBuilder : public CGAL::Modifier_base<HalfedgeDS> {
 public:
 
@@ -47,6 +50,7 @@ private:
 
 std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name);
 
+} // namespace plugin_vmfs
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H

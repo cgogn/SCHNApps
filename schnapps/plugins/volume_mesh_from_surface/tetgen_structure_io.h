@@ -34,6 +34,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 class TetgenStructureVolumeImport : public cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>
 {
 public:
@@ -55,6 +58,7 @@ private:
 
 std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
 
+} // namespace plugin_vmfs
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TETGEN_STRUCTURE_IO_H

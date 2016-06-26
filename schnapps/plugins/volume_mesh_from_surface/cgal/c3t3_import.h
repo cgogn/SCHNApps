@@ -38,6 +38,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 // forward declaration of MapParameters
 class MapParameters;
 
@@ -73,6 +76,7 @@ private:
 void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out);
 void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map);
 
+} // namespace plugin_vmfs
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H

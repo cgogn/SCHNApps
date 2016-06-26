@@ -32,6 +32,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 class Plugin_VolumeMeshFromSurface;
 
 struct MapParameters
@@ -96,6 +99,7 @@ public slots:
 	void tetgen_args_updated(QString str);
 };
 
+} // namespace plugin_vmfs
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_

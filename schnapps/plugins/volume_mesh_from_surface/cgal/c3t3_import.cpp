@@ -32,6 +32,9 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 bool C3T3VolumeImport::import_file_impl(const std::string&)
 {
 	const Triangulation& triangulation = cpx_.triangulation();
@@ -136,4 +139,5 @@ void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface
 	}
 }
 
+} // namespace plugin_vmfs
 } // namespace schnapps

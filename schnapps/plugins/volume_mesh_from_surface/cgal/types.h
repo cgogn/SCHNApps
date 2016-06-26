@@ -33,10 +33,14 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
 using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
 using HalfedgeDS = Polyhedron::HalfedgeDS;
 
+} // namespace plugin_vmfs
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H

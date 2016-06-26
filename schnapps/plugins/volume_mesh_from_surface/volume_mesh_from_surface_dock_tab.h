@@ -32,8 +32,11 @@ namespace schnapps
 
 class SCHNApps;
 class MapHandlerGen;
-class Plugin_VolumeMeshFromSurface;
 
+namespace plugin_vmfs
+{
+
+class Plugin_VolumeMeshFromSurface;
 struct MapParameters;
 
 class VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
@@ -83,6 +86,7 @@ private:
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
+} // namespace plugin_vmfs
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
