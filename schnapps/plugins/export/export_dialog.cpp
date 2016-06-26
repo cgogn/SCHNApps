@@ -31,6 +31,9 @@
 namespace schnapps
 {
 
+namespace plugin_export
+{
+
 ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
 	schnapps_(s),
 	plugin_(p),
@@ -200,4 +203,5 @@ void ExportDialog::cell_attribute_changed(QListWidgetItem* item)
 	}
 }
 
+} // namespace plugin_export
 } // namespace schnapps

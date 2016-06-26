@@ -29,10 +29,13 @@
 namespace schnapps
 {
 
-class Plugin_Export;
 class SCHNApps;
 class MapHandlerGen;
 
+namespace plugin_export
+{
+
+class Plugin_Export;
 
 class ExportDialog : public QDialog, public Ui::MapExport
 {
@@ -62,6 +65,7 @@ private:
 	bool updating_ui_;
 };
 
+} // namespace plugin_export
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_

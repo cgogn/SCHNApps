@@ -26,6 +26,7 @@
 
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
+
 // forward declaration of QAction
 class QAction;
 
@@ -33,6 +34,10 @@ namespace schnapps
 {
 
 class MapHandlerGen;
+
+namespace plugin_export
+{
+
 class ExportDialog;
 
 struct ExportParams
@@ -78,6 +83,7 @@ private:
 	ExportParams export_params_;
 };
 
+} // namespace plugin_export
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_EXPORT_H_

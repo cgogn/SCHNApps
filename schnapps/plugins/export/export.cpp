@@ -36,6 +36,9 @@
 namespace schnapps
 {
 
+namespace plugin_export
+{
+
 ExportParams::ExportParams() :
 	map_name_(),
 	position_attribute_name_(),
@@ -129,16 +132,10 @@ void Plugin_Export::export_mesh(const QString& filename)
 
 void Plugin_Export::export_mesh_from_file_dialog()
 {
-//	QString filename = QFileDialog::getSaveFileName(nullptr, "Export mesh", schnapps_->get_app_path(), "Surface Mesh Files (*.ply *.off *.stl *.vtk *.vtp *.obj); Surface Mesh Files (*.vtk *.vtu *.tet *.nas)");
-//	export_mesh(filename);
-//	QInputDialog
 	export_dialog_->show();
 }
 
-
-
-
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
-
+} // namespace plugin_export
 } // namespace schnapps
