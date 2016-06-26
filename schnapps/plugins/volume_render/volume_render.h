@@ -47,6 +47,10 @@ namespace schnapps
 class MapHandlerGen;
 class Plugin_VolumeRender;
 
+namespace plugin_volume_render
+{
+
+
 struct MapParameters
 {
 	friend class Plugin_VolumeRender;
@@ -237,6 +241,8 @@ private:
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
+} // namespace plugin_volume_render
 } // namespace schnapps
+
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_H_

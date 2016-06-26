@@ -33,6 +33,9 @@
 namespace schnapps
 {
 
+namespace plugin_volume_render
+{
+
 VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) :
 	schnapps_(s),
 	plugin_(p),
@@ -283,10 +286,6 @@ void VolumeRender_DockTab::color_selected()
 	}
 }
 
-
-
-
-
 void VolumeRender_DockTab::add_position_vbo(QString name)
 {
 	updating_ui_ = true;
@@ -325,6 +324,9 @@ void VolumeRender_DockTab::remove_color_vbo(QString name)
 
 void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
+	if (!map)
+		return;
+
 	updating_ui_ = true;
 
 	combo_positionVBO->clear();
@@ -371,4 +373,5 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 	updating_ui_ = false;
 }
 
+} // namespace plugin_volume_render
 } // namespace schnapps

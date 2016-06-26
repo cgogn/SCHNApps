@@ -35,6 +35,9 @@
 namespace schnapps
 {
 
+namespace plugin_volume_render
+{
+
 MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
@@ -210,4 +213,5 @@ void Plugin_VolumeRender::bb_changed()
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
+} // namespace plugin_volume_render
 } // namespace schnapps

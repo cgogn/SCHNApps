@@ -35,8 +35,11 @@ namespace schnapps
 
 class SCHNApps;
 class MapHandlerGen;
-class Plugin_VolumeRender;
 
+namespace plugin_volume_render
+{
+
+class Plugin_VolumeRender;
 struct MapParameters;
 
 class VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
@@ -90,6 +93,7 @@ private:
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
+} // namespace plugin_volume_render
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
