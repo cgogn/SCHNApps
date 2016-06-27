@@ -164,8 +164,8 @@ void ControlDock_MapTab::remove_current_map_clicked()
 {
 	if (!updating_ui_)
 	{
-//		if (selected_map_)
-//			schnapps_->remove_map(selected_map_->get_name());
+		if (selected_map_)
+			schnapps_->remove_map(selected_map_->get_name());
 	}
 }
 

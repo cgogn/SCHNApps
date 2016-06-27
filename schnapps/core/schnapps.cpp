@@ -340,12 +340,14 @@ void SCHNApps::remove_map(const QString &name)
 {
 	if (maps_.count(name) > 0ul)
 	{
-		auto map = std::move(maps_.at(name));
-		for (View* view : map->get_linked_views())
+		auto& map = maps_.at(name);
+		auto views = map->get_linked_views(); // do NOT use a ref-to-const here because the referenced list is modified in the following loop
+		for (View* view : views)
+		{
 			view->unlink_map(map.get());
-
-		maps_.erase(name);
+		}
 		emit(map_removed(map.get()));
+		maps_.erase(name);
 	}
 }
 
@@ -394,21 +396,13 @@ void SCHNApps::remove_view(const QString& name)
 		if (views_.size() > 1)
 		{
 			auto view = std::move(views_.at(name));
+			views_.erase(name);
 			if (view.get() == first_view_)
-			{
-				for (const auto& view_it : views_)
-				{
-					if (view_it.second.get() != view.get())
-					{
-						first_view_ = view_it.second.get();
-						break;
-					}
-				}
-			}
+				first_view_ = views_.begin()->second.get();
+
 			if (view.get() == selected_view_)
 				set_selected_view(first_view_);
 
-			views_.erase(name);
 			emit(view_removed(view.get()));
 		}
 	}

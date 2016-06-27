@@ -25,6 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
 
+#include "dll.h"
 #include <volume_mesh_from_surface_dock_tab.h>
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
@@ -32,9 +33,12 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 class Plugin_VolumeMeshFromSurface;
 
-struct MapParameters
+struct SCHNAPPS_PLUGIN_VMFS_API MapParameters
 {
 	friend class Plugin_VolumeMeshFromSurface;
 
@@ -66,7 +70,7 @@ struct MapParameters
 	MapParameters();
 };
 
-class Plugin_VolumeMeshFromSurface : public PluginProcessing
+class SCHNAPPS_PLUGIN_VMFS_API Plugin_VolumeMeshFromSurface : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -96,6 +100,7 @@ public slots:
 	void tetgen_args_updated(QString str);
 };
 
+} // namespace plugin_vmfs
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_

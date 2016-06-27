@@ -23,6 +23,8 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_VOLUME_RENDER_DLL_EXPORT
+
 #include <volume_render.h>
 
 #include <schnapps/core/schnapps.h>
@@ -33,6 +35,9 @@
 #include <cgogn/geometry/algos/selection.h>
 
 namespace schnapps
+{
+
+namespace plugin_volume_render
 {
 
 MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* map)
@@ -210,4 +215,5 @@ void Plugin_VolumeRender::bb_changed()
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
+} // namespace plugin_volume_render
 } // namespace schnapps

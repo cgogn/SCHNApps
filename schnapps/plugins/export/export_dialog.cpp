@@ -1,7 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Plugin Export                                                                *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,6 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_EXPORT_DLL_EXPORT
+
 #include "export_dialog.h"
 #include "export.h"
 #include <schnapps/core/schnapps.h>
@@ -29,6 +32,9 @@
 #include <QFileDialog>
 
 namespace schnapps
+{
+
+namespace plugin_export
 {
 
 ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
@@ -200,4 +206,5 @@ void ExportDialog::cell_attribute_changed(QListWidgetItem* item)
 	}
 }
 
+} // namespace plugin_export
 } // namespace schnapps

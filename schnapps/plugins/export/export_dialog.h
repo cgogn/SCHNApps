@@ -1,7 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Plugin Export                                                                *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -25,16 +26,20 @@
 #define SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 
 #include <ui_export_dialog.h>
+#include "dll.h"
 
 namespace schnapps
 {
 
-class Plugin_Export;
 class SCHNApps;
 class MapHandlerGen;
 
+namespace plugin_export
+{
 
-class ExportDialog : public QDialog, public Ui::MapExport
+class Plugin_Export;
+
+class SCHNAPPS_PLUGIN_EXPORT_API ExportDialog : public QDialog, public Ui::MapExport
 {
 	Q_OBJECT
 	friend class Plugin_Export;
@@ -62,6 +67,7 @@ private:
 	bool updating_ui_;
 };
 
+} // namespace plugin_export
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
