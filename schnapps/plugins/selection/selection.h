@@ -65,6 +65,10 @@ public:
 		selection_edge_vbo_(nullptr),
 		shader_bold_line_param_selected_edges_(nullptr),
 		selected_edges_vbo_(nullptr),
+		shader_simple_color_param_selection_face_(nullptr),
+		selection_face_vbo_(nullptr),
+		shader_simple_color_param_selected_faces_(nullptr),
+		selected_faces_vbo_(nullptr),
 		color_(220, 60, 60),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
@@ -97,6 +101,18 @@ public:
 		shader_bold_line_param_selected_edges_->color_ = color_;
 		shader_bold_line_param_selected_edges_->width_ = 2.0f;
 		shader_bold_line_param_selected_edges_->set_position_vbo(selected_edges_vbo_.get());
+
+		selection_face_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
+
+		shader_simple_color_param_selection_face_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+		shader_simple_color_param_selection_face_->color_ = QColor(60, 60, 220, 128);
+		shader_simple_color_param_selection_face_->set_position_vbo(selection_face_vbo_.get());
+
+		selected_faces_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
+
+		shader_simple_color_param_selected_faces_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+		shader_simple_color_param_selected_faces_->color_ = color_;
+		shader_simple_color_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
 	}
 
 	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
@@ -160,7 +176,7 @@ public slots:
 				case Vertex_Cell:
 				{
 					std::vector<VEC3> selected_points;
-					if (position_.is_valid() && cells_set_)
+					if (position_.is_valid())
 					{
 						CellsSet<CMap2, MapHandler<CMap2>::Vertex>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(cells_set_);
 						tcs->foreach_cell([&] (MapHandler<CMap2>::Vertex v)
@@ -174,7 +190,7 @@ public slots:
 				case Edge_Cell:
 				{
 					std::vector<VEC3> selected_segments;
-					if (position_.is_valid() && cells_set_)
+					if (position_.is_valid())
 					{
 						CellsSet<CMap2, MapHandler<CMap2>::Edge>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Edge>*>(cells_set_);
 						tcs->foreach_cell([&] (MapHandler<CMap2>::Edge e)
@@ -188,6 +204,21 @@ public slots:
 				}
 					break;
 				case Face_Cell:
+				{
+					std::vector<VEC3> selected_polygons;
+					if (position_.is_valid())
+					{
+						CellsSet<CMap2, MapHandler<CMap2>::Face>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Face>*>(cells_set_);
+						std::vector<uint32> ears;
+						tcs->foreach_cell([&] (MapHandler<CMap2>::Face f)
+						{
+							cgogn::geometry::append_ear_triangulation<VEC3>(*map_->get_map(), f, position_, ears);
+						});
+						for (uint32 i : ears)
+							selected_polygons.push_back(position_[i]);
+					}
+					cgogn::rendering::update_vbo(selected_polygons, selected_faces_vbo_.get());
+				}
 					break;
 				case Volume_Cell:
 					break;
@@ -216,6 +247,12 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderBoldLine::Param> shader_bold_line_param_selected_edges_;
 	std::unique_ptr<cgogn::rendering::VBO> selected_edges_vbo_;
 
+	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param> shader_simple_color_param_selection_face_;
+	std::unique_ptr<cgogn::rendering::VBO> selection_face_vbo_;
+
+	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param> shader_simple_color_param_selected_faces_;
+	std::unique_ptr<cgogn::rendering::VBO> selected_faces_vbo_;
+
 	QColor color_;
 	float32 vertex_scale_factor_;
 	float32 vertex_base_size_;
@@ -223,6 +260,7 @@ private:
 	bool selecting_;
 	MapHandler<CMap2>::Vertex selecting_vertex_;
 	MapHandler<CMap2>::Edge selecting_edge_;
+	MapHandler<CMap2>::Face selecting_face_;
 
 	CellsSetGen* cells_set_;
 

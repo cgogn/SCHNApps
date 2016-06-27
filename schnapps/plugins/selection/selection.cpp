@@ -108,6 +108,18 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 					}
 					break;
 				case Face_Cell:
+					if (p.cells_set_->get_nb_cells() > 0)
+					{
+						p.shader_simple_color_param_selected_faces_->bind(proj, mv);
+						ogl->glDrawArrays(GL_TRIANGLES, 0, p.cells_set_->get_nb_cells() * 3);
+						p.shader_simple_color_param_selected_faces_->release();
+					}
+					if (p.selecting_ && p.selecting_face_.is_valid())
+					{
+						p.shader_simple_color_param_selection_face_->bind(proj, mv);
+						ogl->glDrawArrays(GL_TRIANGLES, 0, 3);
+						p.shader_simple_color_param_selection_face_->release();
+					}
 					break;
 				case Volume_Cell:
 					break;
@@ -202,6 +214,24 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 					}
 					break;
 				case Face_Cell:
+					if (p.selecting_face_.is_valid())
+					{
+						CellsSet<CMap2, MapHandler<CMap2>::Face>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Face>*>(p.cells_set_);
+						switch (p.selection_method_)
+						{
+							case MapParameters::SingleCell:
+								if(event->button() == Qt::LeftButton)
+									tcs->select(p.selecting_face_);
+								else if(event->button() == Qt::RightButton)
+									tcs->unselect(p.selecting_face_);
+								p.update_selected_cells_rendering();
+								break;
+							case MapParameters::WithinSphere:
+								break;
+							case MapParameters::NormalAngle:
+								break;
+						}
+					}
 					break;
 				case Volume_Cell:
 					break;
@@ -266,6 +296,22 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 				}
 					break;
 				case Face_Cell:
+				{
+					std::vector<MapHandler<CMap2>::Face> picked;
+					if (cgogn::geometry::picking<VEC3>(*map2, p.get_position_attribute(), A, B, picked))
+					{
+						if (!p.selecting_face_.is_valid() || (p.selecting_face_.is_valid() && !map2->same_cell(picked[0], p.selecting_face_)))
+						{
+							p.selecting_face_ = picked[0];
+							std::vector<VEC3> selection_polygon;
+							std::vector<uint32> ears;
+							cgogn::geometry::append_ear_triangulation<VEC3>(*map2, p.selecting_face_, p.get_position_attribute(), ears);
+							for (uint32 i : ears)
+								selection_polygon.push_back(p.get_position_attribute()[i]);
+							cgogn::rendering::update_vbo(selection_polygon, p.selection_face_vbo_.get());
+						}
+					}
+				}
 					break;
 				case Volume_Cell:
 					break;
