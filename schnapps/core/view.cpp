@@ -253,7 +253,6 @@ void View::link_map(MapHandlerGen* map)
 
 		emit(map_linked(map));
 
-		connect(map, SIGNAL(selected_cells_changed(CellsSetGen*)), this, SLOT(update()));
 		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if (map->is_selected_map())
@@ -285,7 +284,6 @@ void View::unlink_map(MapHandlerGen* map)
 
 		emit(map_unlinked(map));
 
-		disconnect(map, SIGNAL(selected_cells_changed(CellsSetGen*)), this, SLOT(update()));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if (map->is_selected_map())

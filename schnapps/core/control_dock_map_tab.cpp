@@ -211,7 +211,7 @@ void ControlDock_MapTab::add_cells_set()
 		if (selected_map_)
 		{
 			CellType ct = get_current_cell_type();
-			QString set_name = QString::fromStdString(cgogn::orbit_name(selected_map_->orbit(ct))) + QString("_set_") + QString::number(CellsSetGen::cells_set_count_);
+			QString set_name = QString::fromStdString(cell_type_name(ct)) + QString("_set_") + QString::number(CellsSetGen::cells_set_count_);
 			selected_map_->add_cells_set(ct, set_name);
 		}
 	}

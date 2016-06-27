@@ -224,7 +224,7 @@ public:
 
 private slots:
 
-	void selected_cells_changed();
+//	void selected_cells_changed();
 
 	/*********************************************************
 	 * MANAGE LINKED VIEWS
@@ -263,7 +263,7 @@ signals:
 	void vbo_added(cgogn::rendering::VBO*);
 	void vbo_removed(cgogn::rendering::VBO*);
 
-	void selected_cells_changed(CellsSetGen*);
+//	void selected_cells_changed(CellsSetGen*);
 
 	void attribute_added(cgogn::Orbit, const QString&);
 	void attribute_removed(cgogn::Orbit, const QString&);
@@ -704,25 +704,24 @@ protected:
 		switch (ct)
 		{
 			case Dart_Cell:
-				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, CDart>>(*get_map(), name)));
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, CDart>>(*this, name)));
 				break;
 			case Vertex_Cell:
-				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(*get_map(), name)));
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(*this, name)));
 				break;
 			case Edge_Cell:
-				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(*get_map(), name)));
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(*this, name)));
 				break;
 			case Face_Cell:
-				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(*get_map(), name)));
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(*this, name)));
 				break;
 			case Volume_Cell:
-				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(*get_map(), name)));
+				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(*this, name)));
 				break;
 		}
 
 		CellsSetGen* cells_set = this->cells_sets_[ct].at(name).get();
 		emit(cells_set_added(ct, name));
-		connect(cells_set, SIGNAL(selected_cells_changed()), this, SLOT(selected_cells_changed()));
 		connect(this, SIGNAL(connectivity_changed()), cells_set, SLOT(rebuild()));
 		return cells_set;
 	}

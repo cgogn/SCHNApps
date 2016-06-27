@@ -27,8 +27,11 @@
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
+#include <schnapps/core/view.h>
 
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
+#include <cgogn/rendering/shaders/shader_bold_line.h>
+#include <cgogn/rendering/shaders/shader_simple_color.h>
 
 #include <selection_dock_tab.h>
 
@@ -58,6 +61,10 @@ public:
 		selection_sphere_vbo_(nullptr),
 		shader_point_sprite_param_selected_vertices_(nullptr),
 		selected_vertices_vbo_(nullptr),
+		shader_bold_line_param_selection_edge_(nullptr),
+		selection_edge_vbo_(nullptr),
+		shader_bold_line_param_selected_edges_(nullptr),
+		selected_edges_vbo_(nullptr),
 		color_(220, 60, 60),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
@@ -76,6 +83,20 @@ public:
 		shader_point_sprite_param_selected_vertices_ = cgogn::rendering::ShaderPointSprite::generate_param();
 		shader_point_sprite_param_selected_vertices_->color_ = color_;
 		shader_point_sprite_param_selected_vertices_->set_position_vbo(selected_vertices_vbo_.get());
+
+		selection_edge_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
+
+		shader_bold_line_param_selection_edge_ = cgogn::rendering::ShaderBoldLine::generate_param();
+		shader_bold_line_param_selection_edge_->color_ = QColor(60, 60, 220, 128);
+		shader_bold_line_param_selection_edge_->width_ = 2.0f;
+		shader_bold_line_param_selection_edge_->set_position_vbo(selection_edge_vbo_.get());
+
+		selected_edges_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
+
+		shader_bold_line_param_selected_edges_ = cgogn::rendering::ShaderBoldLine::generate_param();
+		shader_bold_line_param_selected_edges_->color_ = color_;
+		shader_bold_line_param_selected_edges_->width_ = 2.0f;
+		shader_bold_line_param_selected_edges_->set_position_vbo(selected_edges_vbo_.get());
 	}
 
 	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
@@ -115,29 +136,66 @@ public:
 		shader_point_sprite_param_selected_vertices_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
-	CellsSet<CMap2, MapHandler<CMap2>::Vertex>* get_cells_set() const { return cells_set_; }
-	void set_cells_set(CellsSet<CMap2, MapHandler<CMap2>::Vertex>* cells_set)
+	CellsSetGen* get_cells_set() const { return cells_set_; }
+	void set_cells_set(CellsSetGen* cs)
 	{
 		if (cells_set_)
 			disconnect(cells_set_, SIGNAL(selected_cells_changed()), this, SLOT(update_selected_cells_rendering()));
-		cells_set_ = cells_set;
+		cells_set_ = cs;
 		if (cells_set_)
 			connect(cells_set_, SIGNAL(selected_cells_changed()), this, SLOT(update_selected_cells_rendering()));
+		update_selected_cells_rendering();
 	}
 
 public slots:
 
 	void update_selected_cells_rendering()
 	{
-		std::vector<VEC3> selected_points;
-		if (position_.is_valid() && cells_set_)
+		if (cells_set_)
 		{
-			cells_set_->foreach_cell([&] (MapHandler<CMap2>::Vertex v)
+			switch (cells_set_->get_cell_type())
 			{
-				selected_points.push_back(position_[v]);
-			});
+				case Dart_Cell:
+					break;
+				case Vertex_Cell:
+				{
+					std::vector<VEC3> selected_points;
+					if (position_.is_valid() && cells_set_)
+					{
+						CellsSet<CMap2, MapHandler<CMap2>::Vertex>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(cells_set_);
+						tcs->foreach_cell([&] (MapHandler<CMap2>::Vertex v)
+						{
+							selected_points.push_back(position_[v]);
+						});
+					}
+					cgogn::rendering::update_vbo(selected_points, selected_vertices_vbo_.get());
+				}
+					break;
+				case Edge_Cell:
+				{
+					std::vector<VEC3> selected_segments;
+					if (position_.is_valid() && cells_set_)
+					{
+						CellsSet<CMap2, MapHandler<CMap2>::Edge>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Edge>*>(cells_set_);
+						tcs->foreach_cell([&] (MapHandler<CMap2>::Edge e)
+						{
+							std::pair<MapHandler<CMap2>::Vertex, MapHandler<CMap2>::Vertex> vertices = map_->get_map()->vertices(e);
+							selected_segments.push_back(position_[vertices.first]);
+							selected_segments.push_back(position_[vertices.second]);
+						});
+					}
+					cgogn::rendering::update_vbo(selected_segments, selected_edges_vbo_.get());
+				}
+					break;
+				case Face_Cell:
+					break;
+				case Volume_Cell:
+					break;
+			}
+
+			for (View* view : map_->get_linked_views())
+				view->update();
 		}
-		cgogn::rendering::update_vbo(selected_points, selected_vertices_vbo_.get());
 	}
 
 private:
@@ -152,14 +210,21 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_selected_vertices_;
 	std::unique_ptr<cgogn::rendering::VBO> selected_vertices_vbo_;
 
+	std::unique_ptr<cgogn::rendering::ShaderBoldLine::Param> shader_bold_line_param_selection_edge_;
+	std::unique_ptr<cgogn::rendering::VBO> selection_edge_vbo_;
+
+	std::unique_ptr<cgogn::rendering::ShaderBoldLine::Param> shader_bold_line_param_selected_edges_;
+	std::unique_ptr<cgogn::rendering::VBO> selected_edges_vbo_;
+
 	QColor color_;
 	float32 vertex_scale_factor_;
 	float32 vertex_base_size_;
 
 	bool selecting_;
 	MapHandler<CMap2>::Vertex selecting_vertex_;
+	MapHandler<CMap2>::Edge selecting_edge_;
 
-	CellsSet<CMap2, MapHandler<CMap2>::Vertex>* cells_set_;
+	CellsSetGen* cells_set_;
 
 public:
 

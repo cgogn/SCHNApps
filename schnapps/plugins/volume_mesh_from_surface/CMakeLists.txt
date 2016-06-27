@@ -1,7 +1,7 @@
 add_subdirectory(tetgen)
 
 project(plugin_volume_mesh_from_surface
-	LANGUAGES CXX
+	LANGUAGES C CXX
 )
 
 find_package(cgogn_core REQUIRED)

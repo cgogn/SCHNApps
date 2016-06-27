@@ -237,12 +237,6 @@ void MapHandlerGen::update_mutually_exclusive_cells_sets(CellType ct)
 	});
 }
 
-void MapHandlerGen::selected_cells_changed()
-{
-	CellsSetGen* cs = static_cast<CellsSetGen*>(QObject::sender());
-	emit(selected_cells_changed(cs));
-}
-
 /*********************************************************
  * MANAGE LINKED VIEWS
  *********************************************************/
@@ -284,12 +278,6 @@ void MapHandlerGen::notify_connectivity_change()
 	render_.set_primitive_dirty(cgogn::rendering::LINES);
 	render_.set_primitive_dirty(cgogn::rendering::TRIANGLES);
 	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
-
-//	for(unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
-//	{
-//		foreach (CellSelectorGen* cs, m_cellSelectors[orbit])
-//			cs->rebuild();
-//	}
 
 	emit(connectivity_changed());
 

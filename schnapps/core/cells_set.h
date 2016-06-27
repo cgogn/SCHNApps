@@ -42,7 +42,7 @@ class SCHNAPPS_CORE_API CellsSetGen : public QObject
 
 public:
 
-	// counter for easy cells set unique naming
+	// counter for cells set unique naming
 	static uint32 cells_set_count_;
 
 	/**
@@ -55,6 +55,10 @@ public:
 	~CellsSetGen();
 
 	inline const QString& get_name() { return name_; }
+
+	virtual CellType get_cell_type() const = 0;
+
+	virtual std::size_t get_nb_cells() const = 0;
 
 	inline void set_mutually_exclusive(bool b) { mutually_exclusive_ = b; }
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
@@ -77,12 +81,13 @@ protected:
 		selection_changed_ = false;
 	}
 
-	// cells set name
 	QString name_;
 	bool mutually_exclusive_;
 	bool selection_changed_;
 };
 
+template <typename MAP_TYPE>
+class MapHandler;
 
 template <typename MAP, typename CELL>
 class CellsSet : public CellsSetGen
@@ -92,14 +97,21 @@ public:
 	using Inherit = CellsSetGen;
 	using Self = CellsSet<MAP, CELL>;
 
-	CellsSet(MAP& m, const QString& name) :
+	CellsSet(MapHandler<MAP>& m, const QString& name) :
 		Inherit(name),
 		map_(m),
-		marker_(map_)
+		marker_(*map_.get_map())
 	{}
 
 	~CellsSet()
 	{}
+
+	inline CellType get_cell_type() const override;
+
+	inline std::size_t get_nb_cells() const override
+	{
+		return cells_.size();
+	}
 
 	inline void select(CELL c, bool emit_signal = true)
 	{
@@ -135,12 +147,12 @@ public:
 	{
 		if(marker_.is_marked(c))
 		{
-			uint32 emb = map_.embedding(c);
+			uint32 emb = map_.get_map()->embedding(c);
 			bool found = false;
 			std::size_t i;
 			for (i = 0; i < cells_.size() && !found; ++i)
 			{
-				if(map_.embedding(cells_[i]) == emb)
+				if(map_.get_map()->embedding(cells_[i]) == emb)
 					found = true ;
 			}
 			if (found)
@@ -177,24 +189,10 @@ public:
 		}
 	}
 
-	inline void rebuild() override
-	{
-		cells_.clear();
-		map_.foreach_cell([&] (CELL c)
-		{
-			if(marker_.is_marked(c))
-				cells_.push_back(c);
-		});
-		emit(selected_cells_changed());
-	}
-
-	inline std::size_t get_nb_cells() const
-	{
-		return cells_.size();
-	}
+	inline void rebuild() override;
 
 	template <typename FUNC>
-	void foreach_cell(const FUNC& f)
+	inline void foreach_cell(const FUNC& f)
 	{
 		static_assert(check_func_parameter_type(FUNC, CELL), "Wrong function parameter type");
 		for (const CELL& cell : cells_)
@@ -203,11 +201,36 @@ public:
 
 protected:
 
-	MAP& map_;
+	MapHandler<MAP>& map_;
 	typename MAP::template CellMarker<CELL::ORBIT> marker_;
 	std::vector<CELL> cells_;
 	std::vector<Self*> mutually_exclusive_sets_;
 };
+
+} // namespace schnapps
+
+#include <schnapps/core/map_handler.h>
+
+namespace schnapps
+{
+
+template <typename MAP, typename CELL>
+inline CellType CellsSet<MAP, CELL>::get_cell_type() const
+{
+	return map_.cell_type(CELL::ORBIT);
+}
+
+template <typename MAP, typename CELL>
+inline void CellsSet<MAP, CELL>::rebuild()
+{
+	cells_.clear();
+	map_.get_map()->foreach_cell([&] (CELL c)
+	{
+		if(marker_.is_marked(c))
+			cells_.push_back(c);
+	});
+	emit(selected_cells_changed());
+}
 
 } // namespace schnapps
 

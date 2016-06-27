@@ -53,6 +53,21 @@ enum CellType : uint16
 
 static const std::size_t NB_CELL_TYPES = CellType::Volume_Cell + 1;
 
+inline std::string cell_type_name(CellType ct)
+{
+	switch (ct)
+	{
+		case Dart_Cell: return "Dart"; break;
+		case Vertex_Cell: return "Vertex"; break;
+		case Edge_Cell: return "Edge"; break;
+		case Face_Cell: return "Face"; break;
+		case Volume_Cell: return "Volume"; break;
+	}
+#ifdef NDEBUG
+	return "UNKNOWN";  // little trick to  avoid warning on VS
+#endif
+}
+
 using VEC4F = Eigen::Vector4f;
 using VEC4D = Eigen::Vector4d;
 using VEC3F = Eigen::Vector3f;
