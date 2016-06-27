@@ -386,11 +386,6 @@ void Plugin_Selection::selected_map_attribute_changed(cgogn::Orbit orbit, const 
 				}
 			}
 		}
-
-		dock_tab_->selected_map_attribute_removed(orbit, name);
-
-		for (View* view : map->get_linked_views())
-			view->update();
 	}
 }
 

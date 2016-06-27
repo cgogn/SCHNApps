@@ -318,7 +318,6 @@ private slots:
 	// slots called from MapHandlerGen signals
 	void selected_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
 	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
-	void selected_map_connectivity_changed();
 	void selected_map_bb_changed();
 
 private:
