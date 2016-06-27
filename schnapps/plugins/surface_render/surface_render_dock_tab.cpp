@@ -44,7 +44,6 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 	connect(combo_colorVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(color_vbo_changed(int)));
 	connect(check_renderVertices, SIGNAL(toggled(bool)), this, SLOT(render_vertices_changed(bool)));
 	connect(slider_verticesScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertices_scale_factor_changed(int)));
-	connect(slider_verticesScaleFactor, SIGNAL(sliderPressed()), this, SLOT(vertices_scale_factor_pressed()));
 	connect(check_renderEdges, SIGNAL(toggled(bool)), this, SLOT(render_edges_changed(bool)));
 	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(render_faces_changed(bool)));
 	connect(group_faceShading, SIGNAL(buttonClicked(QAbstractButton*)), this, SLOT(face_style_changed(QAbstractButton*)));
@@ -73,7 +72,6 @@ void SurfaceRender_DockTab::position_vbo_changed(int index)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
 			view->update();
 		}
@@ -124,21 +122,6 @@ void SurfaceRender_DockTab::render_vertices_changed(bool b)
 				p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 
 			p.render_vertices_ = b;
-			view->update();
-		}
-	}
-}
-
-void SurfaceRender_DockTab::vertices_scale_factor_pressed()
-{
-	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 			view->update();
 		}
 	}

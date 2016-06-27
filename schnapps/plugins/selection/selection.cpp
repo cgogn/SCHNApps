@@ -36,9 +36,17 @@ Plugin_Selection::Plugin_Selection()
 MapParameters& Plugin_Selection::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
-	MapParameters& p = parameter_set_[view][map];
-	p.map_ = static_cast<MapHandler<CMap2>*>(map);
-	return p;
+
+	auto& view_param_set = parameter_set_[view];
+	if (view_param_set.count(map) == 0)
+	{
+		MapParameters& p = view_param_set[map];
+		p.map_ = static_cast<MapHandler<CMap2>*>(map);
+		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
+		return p;
+	}
+	else
+		return view_param_set[map];
 }
 
 bool Plugin_Selection::enable()
@@ -343,7 +351,6 @@ void Plugin_Selection::selected_map_changed(MapHandlerGen* old, MapHandlerGen* c
 		disconnect(old, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), dock_tab_.get(), SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
 		disconnect(old, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_changed(cgogn::Orbit, const QString&)));
 		disconnect(old, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
-		disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 		disconnect(old, SIGNAL(bb_changed()), this, SLOT(selected_map_bb_changed()));
 	}
 	if (cur)
@@ -352,7 +359,6 @@ void Plugin_Selection::selected_map_changed(MapHandlerGen* old, MapHandlerGen* c
 		connect(cur, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), dock_tab_.get(), SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
 		connect(cur, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_changed(cgogn::Orbit, const QString&)));
 		connect(cur, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
-		connect(cur, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 		connect(cur, SIGNAL(bb_changed()), this, SLOT(selected_map_bb_changed()));
 
 		View* view = schnapps_->get_selected_view();
@@ -415,9 +421,10 @@ void Plugin_Selection::selected_map_attribute_removed(cgogn::Orbit orbit, const 
 	}
 }
 
-void Plugin_Selection::selected_map_connectivity_changed()
+void Plugin_Selection::selected_map_bb_changed()
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	uint32 nbe = map->nb_cells(Edge_Cell);
 
 	for (auto& it : parameter_set_)
 	{
@@ -425,18 +432,9 @@ void Plugin_Selection::selected_map_connectivity_changed()
 		if (view_param_set.count(map) > 0ul)
 		{
 			MapParameters& p = view_param_set[map];
-			if (p.get_position_attribute().is_valid())
-				p.update_selected_cells_rendering();
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
 		}
 	}
-}
-
-void Plugin_Selection::selected_map_bb_changed()
-{
-	View* view = schnapps_->get_selected_view();
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
-	MapParameters& p = get_parameters(view, map);
-	p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 }
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

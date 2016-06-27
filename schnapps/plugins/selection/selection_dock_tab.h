@@ -56,7 +56,6 @@ private slots:
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
 	void vertices_scale_factor_changed(int i);
-	void vertices_scale_factor_pressed();
 	void color_changed(int i);
 	void clear_clicked();
 

@@ -36,7 +36,16 @@ namespace schnapps
 MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
-	return parameter_set_[view][map];
+
+	auto& view_param_set = parameter_set_[view];
+	if (view_param_set.count(map) == 0)
+	{
+		MapParameters& p = view_param_set[map];
+		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
+		return p;
+	}
+	else
+		return view_param_set[map];
 }
 
 bool Plugin_SurfaceRender::enable()
@@ -245,6 +254,7 @@ void Plugin_SurfaceRender::vbo_removed(cgogn::rendering::VBO* vbo)
 void Plugin_SurfaceRender::bb_changed()
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	uint32 nbe = map->nb_cells(Edge_Cell);
 
 	for (auto& it : parameter_set_)
 	{
@@ -252,7 +262,7 @@ void Plugin_SurfaceRender::bb_changed()
 		if (view_param_set.count(map) > 0ul)
 		{
 			MapParameters& p = view_param_set[map];
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
 		}
 	}
 }

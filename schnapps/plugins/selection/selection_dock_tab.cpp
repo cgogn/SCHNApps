@@ -47,7 +47,6 @@ Selection_DockTab::Selection_DockTab(SCHNApps* s, Plugin_Selection* p) :
 	connect(combo_cellType, SIGNAL(currentIndexChanged(int)), this, SLOT(cell_type_changed(int)));
 	connect(combo_cellsSet, SIGNAL(currentIndexChanged(int)), this, SLOT(cells_set_changed(int)));
 	connect(slider_verticesScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertices_scale_factor_changed(int)));
-	connect(slider_verticesScaleFactor, SIGNAL(sliderPressed()), this, SLOT(vertices_scale_factor_pressed()));
 	connect(combo_color, SIGNAL(currentIndexChanged(int)), this, SLOT(color_changed(int)));
 	connect(button_clear, SIGNAL(clicked()), this, SLOT(clear_clicked()));
 }
@@ -233,22 +232,6 @@ void Selection_DockTab::vertices_scale_factor_changed(int i)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_vertex_scale_factor(i / 50.0);
-			for (View* view : map->get_linked_views())
-				view->update();
-		}
-	}
-}
-
-void Selection_DockTab::vertices_scale_factor_pressed()
-{
-	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 			for (View* view : map->get_linked_views())
 				view->update();
 		}

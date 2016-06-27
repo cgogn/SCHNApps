@@ -190,7 +190,7 @@
    <item row="7" column="0" colspan="2">
     <widget class="QPushButton" name="button_clear">
      <property name="text">
-      <string>Clear current selection</string>
+      <string>Clear selection</string>
      </property>
     </widget>
    </item>
@@ -204,7 +204,7 @@
    <item row="9" column="0" colspan="2">
     <widget class="QLabel" name="label_4">
      <property name="text">
-      <string>Selected vertice size</string>
+      <string>Selected vertices size :</string>
      </property>
     </widget>
    </item>
@@ -224,7 +224,7 @@
    <item row="11" column="0" colspan="2">
     <widget class="QLabel" name="label_5">
      <property name="text">
-      <string>Selected vertices color</string>
+      <string>Selected cells color :</string>
      </property>
     </widget>
    </item>

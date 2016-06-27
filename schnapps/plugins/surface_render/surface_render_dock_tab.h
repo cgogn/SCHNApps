@@ -69,7 +69,6 @@ private slots:
 	void color_vbo_changed(int index);
 	void render_vertices_changed(bool b);
 	void vertices_scale_factor_changed(int i);
-	void vertices_scale_factor_pressed();
 	void render_edges_changed(bool b);
 	void render_faces_changed(bool b);
 	void face_style_changed(QAbstractButton* b);
