@@ -404,6 +404,9 @@ void SurfaceRender_DockTab::remove_color_vbo(QString name)
 
 void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
+	if (!map)
+		return;
+
 	updating_ui_ = true;
 
 	combo_positionVBO->clear();

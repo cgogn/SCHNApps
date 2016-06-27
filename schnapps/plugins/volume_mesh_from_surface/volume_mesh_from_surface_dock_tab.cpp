@@ -22,12 +22,17 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
+
 #include <volume_mesh_from_surface.h>
 #include <volume_mesh_from_surface_dock_tab.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
 namespace schnapps
+{
+
+namespace plugin_vmfs
 {
 
 VolumeMeshFromSurface_DockTab::VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p) :
@@ -236,4 +241,5 @@ void VolumeMeshFromSurface_DockTab::update_map_parameters(MapHandlerGen* map, co
 	updating_ui_ = false;
 }
 
+} // namespace plugin_vmfs
 } // namespace schnapps

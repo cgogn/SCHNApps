@@ -22,6 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
+
 #include <volume_mesh_from_surface.h>
 #include <tetgen_structure_io.h>
 #include <schnapps/core/schnapps.h>
@@ -35,8 +37,11 @@
 namespace schnapps
 {
 
+namespace plugin_vmfs
+{
+
 MapParameters::MapParameters() :
-	tetgen_command_line("-pO"),
+	tetgen_command_line("-pqY"),
 	cell_size_(8),
 	cell_radius_edge_ratio_(3),
 	facet_angle_(30),
@@ -112,6 +117,5 @@ void Plugin_VolumeMeshFromSurface::tetgen_args_updated(QString str)
 	this->tetgen_args = std::move(str);
 }
 
-
-
+} // namespace plugin_vmfs
 } // namespace schnapps

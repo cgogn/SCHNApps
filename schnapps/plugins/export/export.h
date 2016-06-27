@@ -1,7 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Plugin Export                                                                *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -24,8 +25,10 @@
 #ifndef SCHNAPPS_PLUGIN_EXPORT_H_
 #define SCHNAPPS_PLUGIN_EXPORT_H_
 
+#include "dll.h"
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
+
 // forward declaration of QAction
 class QAction;
 
@@ -33,6 +36,10 @@ namespace schnapps
 {
 
 class MapHandlerGen;
+
+namespace plugin_export
+{
+
 class ExportDialog;
 
 struct ExportParams
@@ -51,7 +58,7 @@ struct ExportParams
 /**
 * @brief Plugin for CGoGN mesh import
 */
-class Plugin_Export : public PluginProcessing
+class SCHNAPPS_PLUGIN_EXPORT_API Plugin_Export : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -78,6 +85,7 @@ private:
 	ExportParams export_params_;
 };
 
+} // namespace plugin_export
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_EXPORT_H_

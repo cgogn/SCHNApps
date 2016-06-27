@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
 * Plugin Volume Mesh From Surface                                              *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
@@ -22,25 +22,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
+#ifndef SCHNAPPS_PLUGIN_VMFS_DLL_H_
+#define SCHNAPPS_PLUGIN_VMFS_DLL_H_
 
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Polyhedron_3.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Polyhedral_mesh_domain_3.h>
 
-namespace schnapps
-{
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_VMFS_API
+#if defined SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_VMFS_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_VMFS_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_VMFS_API
+#endif
 
-namespace plugin_vmfs
-{
-
-using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
-using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
-using HalfedgeDS = Polyhedron::HalfedgeDS;
-
-} // namespace plugin_vmfs
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
+#endif // SCHNAPPS_PLUGIN_VMFS_DLL_H_

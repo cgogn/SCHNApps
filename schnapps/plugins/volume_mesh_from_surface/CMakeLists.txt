@@ -16,6 +16,7 @@ if(CGAL_FOUND)
 endif(CGAL_FOUND)
 
 set(HEADER_FILES
+	dll.h
 	tetgen_structure_io.h
 	volume_mesh_from_surface.h
 	volume_mesh_from_surface_dock_tab.h

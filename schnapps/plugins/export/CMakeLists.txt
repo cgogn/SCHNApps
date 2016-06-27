@@ -7,6 +7,7 @@ find_package(cgogn_io REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 set(HEADER_FILES
+	dll.h
 	export.h
 	export_dialog.h
 )

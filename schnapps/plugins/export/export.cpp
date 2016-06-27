@@ -1,7 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Plugin Export                                                                *
+* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,6 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_PLUGIN_EXPORT_DLL_EXPORT
+
 #include <export.h>
 
 #include <schnapps/core/schnapps.h>
@@ -34,6 +37,9 @@
 #include <QAction>
 
 namespace schnapps
+{
+
+namespace plugin_export
 {
 
 ExportParams::ExportParams() :
@@ -129,16 +135,10 @@ void Plugin_Export::export_mesh(const QString& filename)
 
 void Plugin_Export::export_mesh_from_file_dialog()
 {
-//	QString filename = QFileDialog::getSaveFileName(nullptr, "Export mesh", schnapps_->get_app_path(), "Surface Mesh Files (*.ply *.off *.stl *.vtk *.vtp *.obj); Surface Mesh Files (*.vtk *.vtu *.tet *.nas)");
-//	export_mesh(filename);
-//	QInputDialog
 	export_dialog_->show();
 }
 
-
-
-
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
-
+} // namespace plugin_export
 } // namespace schnapps
