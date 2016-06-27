@@ -65,27 +65,40 @@ MapParameters::MapParameters() :
 
 bool Plugin_VolumeMeshFromSurface::enable()
 {
-	dock_tab_ = cgogn::make_unique<VolumeMeshFromSurface_DockTab>(this->schnapps_, this);
-	schnapps_->add_plugin_dock_tab(this, dock_tab_.get(), "Volume Mesh From Surface");
+	if (!dialog_)
+		dialog_ = cgogn::make_unique<VolumeMeshFromSurfaceDialog>(schnapps_, this);
+
+	gen_mesh_action_ = schnapps_->add_menu_action("Export;Tetrahedralize", "Tetrahedralize");
+	connect(gen_mesh_action_, SIGNAL(triggered()), dialog_.get(), SLOT(show_export_dialog()));
+
+	schnapps_->foreach_map([&](MapHandlerGen* mhg)
+	{
+		dialog_->map_added(mhg);
+	});
+
 	return true;
 }
 
 void Plugin_VolumeMeshFromSurface::disable()
 {
-	schnapps_->remove_plugin_dock_tab(this, dock_tab_.get());
-	dock_tab_.reset();
+	schnapps_->remove_menu_action(gen_mesh_action_);
 }
 
 void Plugin_VolumeMeshFromSurface::selected_map_changed(MapHandlerGen*, MapHandlerGen* curr)
 {
-	const MapParameters& p = parameter_set_[curr];
-	dock_tab_->update_map_parameters(curr, p);
+	if (curr)
+	{
+		const MapParameters& p = parameter_set_[curr];
+		dialog_->update_map_parameters(curr, p);
+		selected_map_ = curr->get_name();
+	} else
+		selected_map_ = QString();
 }
 
 void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 {
-	using namespace CGAL::parameters;
-	MapHandler2* handler_map2 = dynamic_cast<MapHandler2*>(schnapps_->get_selected_map());
+	MapHandlerGen* mhg = schnapps_->get_map(selected_map_);
+	MapHandler2* handler_map2 = dynamic_cast<MapHandler2*>(mhg);
 	if (handler_map2)
 	{
 		Map2* map = handler_map2->get_map();
@@ -105,16 +118,25 @@ void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 {
 #ifdef PLUGIN_VMFS_WITH_CGAL
-	const MapParameters& param = this->parameter_set_[schnapps_->get_selected_map()];
-	MapHandler2* mh2 = dynamic_cast<MapHandler2*>(schnapps_->get_selected_map());
-	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
-	tetrahedralize(param, mh2, "position", mh3);
+	MapHandlerGen* mhg = schnapps_->get_map(selected_map_);
+	if (mhg)
+	{
+		const MapParameters& param = this->parameter_set_[mhg];
+		MapHandler2* mh2 = dynamic_cast<MapHandler2*>(mhg);
+		MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
+		tetrahedralize(param, mh2, "position", mh3);
+	}
 #endif // PLUGIN_VMFS_WITH_CGAL
 }
 
 void Plugin_VolumeMeshFromSurface::tetgen_args_updated(QString str)
 {
 	this->tetgen_args = std::move(str);
+}
+
+void Plugin_VolumeMeshFromSurface::remove_map(MapHandlerGen* mhg)
+{
+	this->parameter_set_.erase(mhg);
 }
 
 } // namespace plugin_vmfs

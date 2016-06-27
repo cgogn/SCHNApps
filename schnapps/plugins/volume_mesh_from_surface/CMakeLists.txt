@@ -19,13 +19,13 @@ set(HEADER_FILES
 	dll.h
 	tetgen_structure_io.h
 	volume_mesh_from_surface.h
-	volume_mesh_from_surface_dock_tab.h
+	volume_mesh_from_surface_dialog.h
 )
 
 set(SOURCE_FILES
 	tetgen_structure_io.cpp
 	volume_mesh_from_surface.cpp
-	volume_mesh_from_surface_dock_tab.cpp
+	volume_mesh_from_surface_dialog.cpp
 )
 
 if(CGAL_FOUND)

@@ -21,12 +21,14 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DIALOG_H_
+#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DIALOG_H_
 
 #include "dll.h"
 #include <schnapps/core/types.h>
-#include <ui_volume_mesh_from_surface.h>
+#include <ui_cgal_export.h>
+#include <ui_tetgen_export.h>
+#include <ui_export_dialog.h>
 
 namespace schnapps
 {
@@ -40,7 +42,16 @@ namespace plugin_vmfs
 class Plugin_VolumeMeshFromSurface;
 struct MapParameters;
 
-class SCHNAPPS_PLUGIN_VMFS_API VolumeMeshFromSurface_DockTab : public QWidget, public Ui::VolumeMeshFromSurface_TabWidget
+class SCHNAPPS_PLUGIN_VMFS_API ExportDialog : public QDialog, public Ui::Dialog_export
+{};
+
+class SCHNAPPS_PLUGIN_VMFS_API ExportTetgenDialog : public QDialog, public Ui::Dialog_tetgen
+{};
+
+class SCHNAPPS_PLUGIN_VMFS_API ExportCGALDialog : public QDialog, public Ui::Dialog_cgal
+{};
+
+class SCHNAPPS_PLUGIN_VMFS_API VolumeMeshFromSurfaceDialog : QObject
 {
 	Q_OBJECT
 
@@ -48,7 +59,7 @@ class SCHNAPPS_PLUGIN_VMFS_API VolumeMeshFromSurface_DockTab : public QWidget, p
 
 public:
 
-	VolumeMeshFromSurface_DockTab(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
+	VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
 
 private:
 
@@ -56,9 +67,11 @@ private:
 	Plugin_VolumeMeshFromSurface* plugin_;
 
 	bool updating_ui_;
+public slots:
+	void show_export_dialog();
 
 private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+	void selected_map_changed(QString map_name);
 
 	void cell_size_changed(double cs);
 	void cell_radius_edge_ratio_changed(double ratio);
@@ -83,11 +96,17 @@ private slots:
 	void exuder_changed(bool b);
 	void exuder_sliver_changed(double sb);
 
+	void map_added(MapHandlerGen* mhg);
+	void map_removed(MapHandlerGen* mhg);
 private:
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+
+	std::unique_ptr<ExportCGALDialog> cgal_dialog_;
+	std::unique_ptr<ExportTetgenDialog> tetgen_dialog_;
+	std::unique_ptr<ExportDialog> export_dialog_;
 };
 
 } // namespace plugin_vmfs
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DIALOG_H_

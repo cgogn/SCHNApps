@@ -26,7 +26,7 @@
 #define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
 
 #include "dll.h"
-#include <volume_mesh_from_surface_dock_tab.h>
+#include <volume_mesh_from_surface_dialog.h>
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
 
@@ -76,7 +76,7 @@ class SCHNAPPS_PLUGIN_VMFS_API Plugin_VolumeMeshFromSurface : public PluginProce
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
-	friend class VolumeMeshFromSurface_DockTab;
+	friend class VolumeMeshFromSurfaceDialog;
 public:
 	using Map2 = schnapps::CMap2;
 	using Map3 = schnapps::CMap3;
@@ -87,9 +87,11 @@ private:
 	virtual bool enable() override;
 	virtual void disable() override;
 
+	QAction* gen_mesh_action_;
 	std::map<MapHandlerGen*, MapParameters> parameter_set_;
-	std::unique_ptr<VolumeMeshFromSurface_DockTab> dock_tab_;
+	std::unique_ptr<VolumeMeshFromSurfaceDialog> dialog_;
 	QString	tetgen_args;
+	QString selected_map_;
 
 private slots:
 	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
@@ -98,6 +100,7 @@ public slots:
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
 	void tetgen_args_updated(QString str);
+	void remove_map(MapHandlerGen*);
 };
 
 } // namespace plugin_vmfs
