@@ -216,6 +216,7 @@ public slots:
 						});
 						for (uint32 i : ears)
 							selected_polygons.push_back(position_[i]);
+						selected_faces_size_ = selected_polygons.size();
 					}
 					cgogn::rendering::update_vbo(selected_polygons, selected_faces_vbo_.get());
 				}
@@ -261,6 +262,8 @@ private:
 	MapHandler<CMap2>::Vertex selecting_vertex_;
 	MapHandler<CMap2>::Edge selecting_edge_;
 	MapHandler<CMap2>::Face selecting_face_;
+	std::size_t selecting_face_size_;
+	std::size_t selected_faces_size_;
 
 	CellsSetGen* cells_set_;
 

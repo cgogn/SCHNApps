@@ -111,13 +111,13 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 					if (p.cells_set_->get_nb_cells() > 0)
 					{
 						p.shader_simple_color_param_selected_faces_->bind(proj, mv);
-						ogl->glDrawArrays(GL_TRIANGLES, 0, p.cells_set_->get_nb_cells() * 3);
+						ogl->glDrawArrays(GL_TRIANGLES, 0, p.selected_faces_size_);
 						p.shader_simple_color_param_selected_faces_->release();
 					}
 					if (p.selecting_ && p.selecting_face_.is_valid())
 					{
 						p.shader_simple_color_param_selection_face_->bind(proj, mv);
-						ogl->glDrawArrays(GL_TRIANGLES, 0, 3);
+						ogl->glDrawArrays(GL_TRIANGLES, 0, p.selecting_face_size_);
 						p.shader_simple_color_param_selection_face_->release();
 					}
 					break;
@@ -308,6 +308,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 							cgogn::geometry::append_ear_triangulation<VEC3>(*map2, p.selecting_face_, p.get_position_attribute(), ears);
 							for (uint32 i : ears)
 								selection_polygon.push_back(p.get_position_attribute()[i]);
+							p.selecting_face_size_ = selection_polygon.size();
 							cgogn::rendering::update_vbo(selection_polygon, p.selection_face_vbo_.get());
 						}
 					}
