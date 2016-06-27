@@ -41,7 +41,7 @@ namespace plugin_vmfs
 {
 
 MapParameters::MapParameters() :
-	tetgen_command_line("-pO"),
+	tetgen_command_line("-pqY"),
 	cell_size_(8),
 	cell_radius_edge_ratio_(3),
 	facet_angle_(30),
