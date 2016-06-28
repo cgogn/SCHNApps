@@ -46,6 +46,8 @@ namespace schnapps
 namespace plugin_image
 {
 
+class Image_DockTab;
+
 class Image3DBase
 {
 public:
@@ -78,13 +80,16 @@ class Plugin_Image : public PluginInteraction
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
+public:
+	using image_type = Image3D<>;
+	using image_ptr = std::unique_ptr<image_type>;
 
-	// Plugin interface
+	Plugin_Image();
+
 private:
 	bool enable() override;
 	void disable() override;
 
-	// PluginInteraction interface
 private:
 	void draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
@@ -101,10 +106,15 @@ private:
 
 private slots:
 	void import_image_dialog();
+	void image_removed();
+
+signals:
+	void image_added(QString im_path);
 
 private:
-	std::list<std::unique_ptr<Image3D<>>> images_;
+	std::list<image_ptr> images_;
 	QAction* import_image_action_;
+	Image_DockTab*	dock_tab_;
 };
 
 } // namespace plugin_image

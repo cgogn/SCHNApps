@@ -25,12 +25,29 @@
 #define SCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT
 
 #include "image_dock_tab.h"
+#include <image.h>
+#include <schnapps/core/schnapps.h>
 
 namespace schnapps
 {
 
 namespace plugin_image
 {
+
+Image_DockTab::Image_DockTab(SCHNApps* s, Plugin_Image* p) :
+	schnapps_(s),
+	plugin_(p),
+	updating_ui_(false)
+{
+	setupUi(this);
+
+	connect(p,&Plugin_Image::image_added, [=](const QString& im_path) {
+		new QListWidgetItem(im_path, this->listWidget_images);
+	});
+
+	connect(this->pushButton_remove, SIGNAL(pressed()), p, SLOT(image_removed()));
+
+}
 
 } // namespace schnapps
 } // namespace plugin_image

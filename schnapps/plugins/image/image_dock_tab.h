@@ -25,13 +25,32 @@
 #ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 
-#include "image.h"
+#include <ui_image.h>
 
 namespace schnapps
 {
 
+class SCHNApps;
+
 namespace plugin_image
 {
+
+class Plugin_Image;
+
+class Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
+{
+	Q_OBJECT
+
+	friend class Plugin_Image;
+
+public:
+	Image_DockTab(SCHNApps* s, Plugin_Image* p);
+
+private:
+	SCHNApps* schnapps_;
+	Plugin_Image* plugin_;
+	bool updating_ui_;
+};
 
 } // namespace schnapps
 } // namespace plugin_image
