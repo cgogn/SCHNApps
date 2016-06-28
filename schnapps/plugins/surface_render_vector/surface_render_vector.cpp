@@ -152,30 +152,21 @@ void Plugin_SurfaceRenderVector::vbo_removed(cgogn::rendering::VBO* vbo)
 		}
 	}
 
-	std::set<View*> views_to_update;
-
 	for (auto& it : parameter_set_)
 	{
-		View* view = it.first;
 		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
 		if (view_param_set.count(map) > 0)
 		{
 			MapParameters& map_param = view_param_set[map];
 			if (map_param.get_position_vbo() == vbo)
-			{
 				map_param.set_position_vbo(nullptr);
-				if (view->is_linked_to_map(map)) views_to_update.insert(view);
-			}
 			if (map_param.get_vector_vbo_index(vbo) >= 0)
-			{
 				map_param.remove_vector_vbo(vbo);
-				if (view->is_linked_to_map(map)) views_to_update.insert(view);
-			}
 		}
 	}
 
-	for (View* v : views_to_update)
-		v->update();
+	for (View* view : map->get_linked_views())
+		view->update();
 }
 
 void Plugin_SurfaceRenderVector::bb_changed()

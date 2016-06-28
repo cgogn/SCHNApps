@@ -100,7 +100,7 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_camera(const FUNC& f)
+	void foreach_camera(const FUNC& f) const
 	{
 		static_assert(check_func_parameter_type(FUNC, Camera*), "Wrong function parameter type");
 		for (const auto& camera_it : cameras_)
@@ -143,7 +143,7 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_plugin(const FUNC& f)
+	void foreach_plugin(const FUNC& f) const
 	{
 		static_assert(check_func_parameter_type(FUNC, Plugin*), "Wrong function parameter type");
 		for (const auto& plugin_it : plugins_)
@@ -195,7 +195,7 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_map(const FUNC& f)
+	void foreach_map(const FUNC& f) const
 	{
 		static_assert(check_func_parameter_type(FUNC, MapHandlerGen*), "Wrong function parameter type");
 		for (const auto& map_it : maps_)
@@ -272,7 +272,7 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_view(const FUNC& f)
+	void foreach_view(const FUNC& f) const
 	{
 		static_assert(check_func_parameter_type(FUNC, View*), "Wrong function parameter type");
 		for (const auto& view_it : views_)

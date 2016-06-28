@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_CAMERA_H_
 
 #include <schnapps/core/dll.h>
+#include <schnapps/core/types.h>
 
 #include <QOGLViewer/camera.h>
 #include <QOGLViewer/manipulatedCameraFrame.h>
@@ -39,8 +40,6 @@ class View;
 * @brief The camera class inherits from [qoglviewer::Camera] (http://libqglviewer.com/refManual/classqglviewer_1_1Camera.html)
 * A camera object is generated with each new view
 * Cameras can be shared among views.
-*
-* Python callable slots are tagged with [PYTHON]
 */
 class SCHNAPPS_CORE_API Camera : public qoglviewer::Camera
 {
@@ -51,7 +50,7 @@ class SCHNAPPS_CORE_API Camera : public qoglviewer::Camera
 public:
 
 	// camera counter for easy camera unique naming
-	static unsigned int camera_count_;
+	static uint32 camera_count_;
 
 	/**
 	 * @brief Camera constructor

@@ -132,7 +132,7 @@ void Plugin_SurfaceRenderScalar::vbo_added(cgogn::rendering::VBO* vbo)
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
-	if (map == schnapps_->get_selected_map())
+	if (map->is_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
 			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
@@ -145,7 +145,7 @@ void Plugin_SurfaceRenderScalar::vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
 
-	if (map == schnapps_->get_selected_map())
+	if (map->is_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
 			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->name()));
@@ -153,27 +153,18 @@ void Plugin_SurfaceRenderScalar::vbo_removed(cgogn::rendering::VBO* vbo)
 			dock_tab_->remove_scalar_vbo(QString::fromStdString(vbo->name()));
 	}
 
-	std::set<View*> views_to_update;
-
 	for (auto& it : parameter_set_)
 	{
-		View* view = it.first;
 		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
 		MapParameters& map_param = view_param_set[map];
 		if (map_param.get_position_vbo() == vbo)
-		{
 			map_param.set_position_vbo(nullptr);
-			if (view->is_linked_to_map(map)) views_to_update.insert(view);
-		}
 		if (map_param.get_scalar_vbo() == vbo)
-		{
 			map_param.set_scalar_vbo(nullptr);
-			if (view->is_linked_to_map(map)) views_to_update.insert(view);
-		}
 	}
 
-	for (View* v : views_to_update)
-		v->update();
+	for (View* view : map->get_linked_views())
+		view->update();
 }
 
 void Plugin_SurfaceRenderScalar::bb_changed()

@@ -27,12 +27,46 @@
 #include <cgogn/core/utils/numerics.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 
+#include <cgogn/core/cmap/map_base.h>
+#include <cgogn/core/cmap/cmap2.h>
+#include <cgogn/core/cmap/cmap3.h>
+
 #include <Eigen/Dense>
 
 namespace schnapps
 {
 
 using namespace cgogn::numerics;
+
+using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
+using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
+using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
+
+enum CellType : uint16
+{
+	Dart_Cell = 0,
+	Vertex_Cell,
+	Edge_Cell,
+	Face_Cell,
+	Volume_Cell
+};
+
+static const std::size_t NB_CELL_TYPES = CellType::Volume_Cell + 1;
+
+inline std::string cell_type_name(CellType ct)
+{
+	switch (ct)
+	{
+		case Dart_Cell: return "Dart"; break;
+		case Vertex_Cell: return "Vertex"; break;
+		case Edge_Cell: return "Edge"; break;
+		case Face_Cell: return "Face"; break;
+		case Volume_Cell: return "Volume"; break;
+	}
+#ifdef NDEBUG
+	return "UNKNOWN";  // little trick to  avoid warning on VS
+#endif
+}
 
 using VEC4F = Eigen::Vector4f;
 using VEC4D = Eigen::Vector4d;
