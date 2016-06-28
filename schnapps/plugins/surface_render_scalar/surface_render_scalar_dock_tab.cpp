@@ -154,14 +154,14 @@ void SurfaceRenderScalar_DockTab::nb_iso_levels_changed(int i)
 
 
 
-void SurfaceRenderScalar_DockTab::add_position_vbo(QString name)
+void SurfaceRenderScalar_DockTab::add_position_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	combo_positionVBO->addItem(name);
 	updating_ui_ = false;
 }
 
-void SurfaceRenderScalar_DockTab::remove_position_vbo(QString name)
+void SurfaceRenderScalar_DockTab::remove_position_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	int curIndex = combo_positionVBO->currentIndex();
@@ -172,14 +172,14 @@ void SurfaceRenderScalar_DockTab::remove_position_vbo(QString name)
 	updating_ui_ = false;
 }
 
-void SurfaceRenderScalar_DockTab::add_scalar_vbo(QString name)
+void SurfaceRenderScalar_DockTab::add_scalar_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	list_scalarVBO->addItem(name);
 	updating_ui_ = false;
 }
 
-void SurfaceRenderScalar_DockTab::remove_scalar_vbo(QString name)
+void SurfaceRenderScalar_DockTab::remove_scalar_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	QList<QListWidgetItem*> vbo = list_scalarVBO->findItems(name, Qt::MatchExactly);

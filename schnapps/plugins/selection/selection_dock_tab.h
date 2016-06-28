@@ -21,79 +21,57 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
 
-#include <ui_surface_render.h>
-
-#include <QColorDialog>
+#include <ui_selection.h>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
-class Plugin_SurfaceRender;
+class Plugin_Selection;
 
 struct MapParameters;
 
-class SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
+class Selection_DockTab : public QWidget, public Ui::Selection_TabWidget
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRender;
+	friend class Plugin_Selection;
 
 public:
 
-	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_SurfaceRender* plugin_;
-
-	QColorDialog* color_dial_;
-	int current_color_dial_;
-
-	QColor vertex_color_;
-	QColor edge_color_;
-	QColor front_color_;
-	QColor back_color_;
-
-	bool updating_ui_;
+	Selection_DockTab(SCHNApps* s, Plugin_Selection* p);
 
 private slots:
 
-	void position_vbo_changed(int index);
-	void normal_vbo_changed(int index);
-	void color_vbo_changed(int index);
-	void render_vertices_changed(bool b);
+	void position_attribute_changed(int index);
+	void normal_attribute_changed(int index);
+	void selection_method_changed(int index);
+	void cell_type_changed(int index);
+	void cells_set_changed(int index);
+	void selected_map_cells_set_added(CellType ct, const QString& name);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
 	void vertices_scale_factor_changed(int i);
-	void render_edges_changed(bool b);
-	void render_faces_changed(bool b);
-	void face_style_changed(QAbstractButton* b);
-	void render_boundary_changed(bool b);
-	void render_backface_changed(bool b);
-
-	void vertex_color_clicked();
-	void edge_color_clicked();
-	void front_color_clicked();
-	void back_color_clicked();
-	void both_color_clicked();
-	void color_selected();
+	void color_changed(int i);
+	void clear_clicked();
 
 private:
 
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_normal_vbo(QString name);
-	void remove_normal_vbo(QString name);
-	void add_color_vbo(QString name);
-	void remove_color_vbo(QString name);
-
+	void set_current_cells_set(CellsSetGen* cs);
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+
+	SCHNApps* schnapps_;
+	Plugin_Selection* plugin_;
+
+	bool updating_ui_;
+
+	CellsSetGen* current_cells_set_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_

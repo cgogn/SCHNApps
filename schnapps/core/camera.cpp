@@ -28,7 +28,7 @@
 namespace schnapps
 {
 
-unsigned int Camera::camera_count_ = 0;
+uint32 Camera::camera_count_ = 0;
 
 Camera::Camera(const QString& name, SCHNApps* schnapps) :
 	name_(name),
@@ -139,7 +139,7 @@ void Camera::fit_to_views_bb()
 				qoglviewer::Vec minbb;
 				qoglviewer::Vec maxbb;
 				v->get_bb(minbb, maxbb);
-				for (unsigned int dim = 0; dim < 3; ++dim)
+				for (uint32 dim = 0; dim < 3; ++dim)
 				{
 					if (minbb[dim] < bb_min[dim])
 						bb_min[dim] = minbb[dim];

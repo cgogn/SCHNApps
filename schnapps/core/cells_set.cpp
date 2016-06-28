@@ -21,79 +21,23 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
-
-#include <ui_surface_render.h>
-
-#include <QColorDialog>
+#include <schnapps/core/cells_set.h>
+#include <schnapps/core/schnapps.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
-class Plugin_SurfaceRender;
+uint32 CellsSetGen::cells_set_count_ = 0;
 
-struct MapParameters;
-
-class SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
+CellsSetGen::CellsSetGen(const QString& name) :
+	name_(name),
+	mutually_exclusive_(false),
+	selection_changed_(false)
 {
-	Q_OBJECT
+	++cells_set_count_;
+}
 
-	friend class Plugin_SurfaceRender;
-
-public:
-
-	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_SurfaceRender* plugin_;
-
-	QColorDialog* color_dial_;
-	int current_color_dial_;
-
-	QColor vertex_color_;
-	QColor edge_color_;
-	QColor front_color_;
-	QColor back_color_;
-
-	bool updating_ui_;
-
-private slots:
-
-	void position_vbo_changed(int index);
-	void normal_vbo_changed(int index);
-	void color_vbo_changed(int index);
-	void render_vertices_changed(bool b);
-	void vertices_scale_factor_changed(int i);
-	void render_edges_changed(bool b);
-	void render_faces_changed(bool b);
-	void face_style_changed(QAbstractButton* b);
-	void render_boundary_changed(bool b);
-	void render_backface_changed(bool b);
-
-	void vertex_color_clicked();
-	void edge_color_clicked();
-	void front_color_clicked();
-	void back_color_clicked();
-	void both_color_clicked();
-	void color_selected();
-
-private:
-
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_normal_vbo(QString name);
-	void remove_normal_vbo(QString name);
-	void add_color_vbo(QString name);
-	void remove_color_vbo(QString name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
-};
+CellsSetGen::~CellsSetGen()
+{}
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_

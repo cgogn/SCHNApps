@@ -63,10 +63,10 @@ private slots:
 
 private:
 
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_scalar_vbo(QString name);
-	void remove_scalar_vbo(QString name);
+	void add_position_vbo(const QString& name);
+	void remove_position_vbo(const QString& name);
+	void add_scalar_vbo(const QString& name);
+	void remove_scalar_vbo(const QString& name);
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };

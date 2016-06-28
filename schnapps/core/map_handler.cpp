@@ -212,6 +212,32 @@ void MapHandlerGen::delete_vbo(const QString &name)
 }
 
 /*********************************************************
+ * MANAGE CELLS SETS
+ *********************************************************/
+
+CellsSetGen* MapHandlerGen::get_cells_set(CellType ct, const QString& name)
+{
+	if (cells_sets_[ct].count(name) > 0ul)
+		return cells_sets_[ct].at(name).get();
+	else
+		return nullptr;
+}
+
+void MapHandlerGen::update_mutually_exclusive_cells_sets(CellType ct)
+{
+	std::vector<CellsSetGen*> mex;
+	foreach_cells_set(ct, [&] (CellsSetGen* cs)
+	{
+		if (cs->is_mutually_exclusive())
+			mex.push_back(cs);
+	});
+	foreach_cells_set(ct, [&] (CellsSetGen* cs)
+	{
+		cs->set_mutually_exclusive_sets(mex);
+	});
+}
+
+/*********************************************************
  * MANAGE LINKED VIEWS
  *********************************************************/
 
@@ -251,13 +277,7 @@ void MapHandlerGen::notify_connectivity_change()
 	render_.set_primitive_dirty(cgogn::rendering::POINTS);
 	render_.set_primitive_dirty(cgogn::rendering::LINES);
 	render_.set_primitive_dirty(cgogn::rendering::TRIANGLES);
-//	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
-
-//	for(unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
-//	{
-//		foreach (CellSelectorGen* cs, m_cellSelectors[orbit])
-//			cs->rebuild();
-//	}
+	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
 
 	emit(connectivity_changed());
 
