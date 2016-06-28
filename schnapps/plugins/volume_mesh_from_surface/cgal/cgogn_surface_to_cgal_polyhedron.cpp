@@ -47,7 +47,11 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 
 	const auto pos_att = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>(QString::fromStdString(pos_att_name_));
 	if (!pos_att.is_valid())
+	{
+		cgogn_log_info("PolyhedronBuilder") << "The position attribute has to be of type VEC3.";
 		return;
+	}
+
 
 	uint32 id{0u};
 	auto id_attribute = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("ids_polyhedron_builder");

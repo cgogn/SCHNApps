@@ -93,9 +93,6 @@ private:
 	QString	tetgen_args;
 	QString selected_map_;
 
-private slots:
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
-
 public slots:
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
