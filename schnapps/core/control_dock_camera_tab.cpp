@@ -49,6 +49,9 @@ ControlDock_CameraTab::ControlDock_CameraTab(SCHNApps* s) :
 	// connect SCHNApps signals
 	connect(schnapps_, SIGNAL(camera_added(Camera*)), this, SLOT(camera_added(Camera*)));
 	connect(schnapps_, SIGNAL(camera_removed(Camera*)), this, SLOT(camera_removed(Camera*)));
+
+	check_drawCamera->setDisabled(true);
+	check_drawCameraPath->setDisabled(true);
 }
 
 void ControlDock_CameraTab::add_camera_button_clicked()
@@ -83,6 +86,9 @@ void ControlDock_CameraTab::selected_camera_changed()
 		else
 			selected_camera_ = nullptr;
 
+		check_drawCamera->setDisabled(selected_camera_ == nullptr);
+		check_drawCameraPath->setDisabled(selected_camera_ == nullptr);
+
 		update_selected_camera_info();
 	}
 }
@@ -100,13 +106,13 @@ void ControlDock_CameraTab::camera_projection_changed(QAbstractButton* b)
 
 void ControlDock_CameraTab::camera_draw_clicked(bool b)
 {
-	if (!updating_ui_)
+	if (!updating_ui_ && selected_camera_)
 		selected_camera_->set_draw(b);
 }
 
 void ControlDock_CameraTab::camera_draw_path_clicked(bool b)
 {
-	if (!updating_ui_)
+	if (!updating_ui_&& selected_camera_)
 		selected_camera_->set_draw_path(b);
 }
 
@@ -173,6 +179,9 @@ void ControlDock_CameraTab::selected_camera_draw_path_changed(bool b)
 
 void ControlDock_CameraTab::update_selected_camera_info()
 {
+	if (!selected_camera_)
+		return;
+
 	updating_ui_ = true;
 
 	if (selected_camera_->get_projection_type() == qoglviewer::Camera::PERSPECTIVE)
