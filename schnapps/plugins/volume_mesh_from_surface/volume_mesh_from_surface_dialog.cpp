@@ -98,13 +98,13 @@ void VolumeMeshFromSurfaceDialog::show_export_dialog()
 
 void VolumeMeshFromSurfaceDialog::map_added(MapHandlerGen* mhg)
 {
-	if (mhg)
+	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
 		this->export_dialog_->comboBoxMapSelection->addItem(mhg->get_name());
 }
 
 void VolumeMeshFromSurfaceDialog::map_removed(MapHandlerGen* mhg)
 {
-	if (mhg)
+	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
 	{
 		this->export_dialog_->comboBoxMapSelection->removeItem(this->export_dialog_->comboBoxMapSelection->findText(mhg->get_name()));
 		plugin_->remove_map(mhg);
@@ -115,16 +115,26 @@ void VolumeMeshFromSurfaceDialog::map_removed(MapHandlerGen* mhg)
 void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 {
 	MapHandlerGen* mhg = schnapps_->get_map(map_name);
-	plugin_->selected_map_changed(nullptr, mhg);
+
 	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
 	{
+		const MapParameters& p = plugin_->parameter_set_[mhg];
+		update_map_parameters(mhg, p);
+		plugin_->selected_map_ = mhg->get_name();
 		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(false);
 		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(false);
+
+		this->export_dialog_->comboBoxPositionSelection->clear();
+		const auto& vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
+		for (const auto& att_name : vert_att_cont.names())
+			this->export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
+
 	} else {
+		plugin_->selected_map_ = QString();
 		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
 		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(true);
 	}
-	update_map_parameters(mhg, plugin_->parameter_set_[mhg]);
+
 }
 
 void VolumeMeshFromSurfaceDialog::cell_size_changed(double cs)
@@ -159,7 +169,6 @@ void VolumeMeshFromSurfaceDialog::odt_changed(bool b)
 	this->cgal_dialog_->spinBox_ODTMaxIter->setDisabled(!b);
 	this->cgal_dialog_->checkBox_FreezeODT->setDisabled(!b);
 	this->cgal_dialog_->doubleSpinBox_8OdtFreeze->setDisabled(!b);
-
 }
 
 void VolumeMeshFromSurfaceDialog::odt_freeze_changed(bool b)

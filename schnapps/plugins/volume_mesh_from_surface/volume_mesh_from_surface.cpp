@@ -84,17 +84,6 @@ void Plugin_VolumeMeshFromSurface::disable()
 	schnapps_->remove_menu_action(gen_mesh_action_);
 }
 
-void Plugin_VolumeMeshFromSurface::selected_map_changed(MapHandlerGen*, MapHandlerGen* curr)
-{
-	if (curr)
-	{
-		const MapParameters& p = parameter_set_[curr];
-		dialog_->update_map_parameters(curr, p);
-		selected_map_ = curr->get_name();
-	} else
-		selected_map_ = QString();
-}
-
 void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 {
 	MapHandlerGen* mhg = schnapps_->get_map(selected_map_);
@@ -102,7 +91,15 @@ void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 	if (handler_map2)
 	{
 		Map2* map = handler_map2->get_map();
-		auto tetgen_input = export_tetgen(*map, map->template get_attribute<VEC3, Map2::Vertex::ORBIT>("position"));
+		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
+		auto position_att = map->template get_attribute<VEC3, Map2::Vertex::ORBIT>(position_att_name);
+
+		if (!position_att.is_valid())
+		{
+			cgogn_log_info("Plugin_VolumeMeshFromSurface") << "The position attribute has to be of type VEC3.";
+			return;
+		}
+		auto tetgen_input = export_tetgen(*map, position_att);
 		tetgenio tetgen_output;
 
 		tetrahedralize(this->tetgen_args.toStdString().c_str(), tetgen_input.get(), &tetgen_output);
@@ -124,7 +121,8 @@ void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 		const MapParameters& param = this->parameter_set_[mhg];
 		MapHandler2* mh2 = dynamic_cast<MapHandler2*>(mhg);
 		MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
-		tetrahedralize(param, mh2, "position", mh3);
+		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
+		tetrahedralize(param, mh2, position_att_name, mh3);
 	}
 #endif // PLUGIN_VMFS_WITH_CGAL
 }
