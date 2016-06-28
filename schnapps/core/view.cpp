@@ -39,7 +39,7 @@ namespace schnapps
 
 using Vec3 = Eigen::Vector3d;
 
-unsigned int View::view_count_ = 0;
+uint32 View::view_count_ = 0;
 
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
@@ -253,7 +253,6 @@ void View::link_map(MapHandlerGen* map)
 
 		emit(map_linked(map));
 
-		connect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
 		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if (map->is_selected_map())
@@ -285,7 +284,6 @@ void View::unlink_map(MapHandlerGen* map)
 
 		emit(map_unlinked(map));
 
-		disconnect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if (map->is_selected_map())
@@ -675,7 +673,7 @@ void View::update_bb()
 			{
 				if (initialized)
 				{
-					for (unsigned int dim = 0; dim < 3; ++dim)
+					for (uint32 dim = 0; dim < 3; ++dim)
 					{
 						if (minbb[dim] < bb_min_[dim])
 							bb_min_[dim] = minbb[dim];
@@ -685,7 +683,7 @@ void View::update_bb()
 				}
 				else
 				{
-					for (unsigned int dim = 0; dim < 3; ++dim)
+					for (uint32 dim = 0; dim < 3; ++dim)
 					{
 						bb_min_[dim] = minbb[dim];
 						bb_max_[dim] = maxbb[dim];

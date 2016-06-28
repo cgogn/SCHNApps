@@ -32,8 +32,6 @@
 
 #include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>
 
-#include <QAction>
-
 namespace schnapps
 {
 
