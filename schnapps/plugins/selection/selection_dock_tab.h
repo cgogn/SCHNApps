@@ -53,8 +53,8 @@ private slots:
 	void cell_type_changed(int index);
 	void cells_set_changed(int index);
 	void selected_map_cells_set_added(CellType ct, const QString& name);
-	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
-	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
+	void selected_map_vertex_attribute_added(const QString& name);
+	void selected_map_vertex_attribute_removed(const QString& name);
 	void vertices_scale_factor_changed(int i);
 	void color_changed(int i);
 	void clear_clicked();

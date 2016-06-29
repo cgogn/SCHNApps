@@ -420,23 +420,23 @@ void SCHNApps::set_selected_view(View* view)
 {
 	int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
 
-	if (selected_view_)
-	{
-		for (PluginInteraction* p : selected_view_->get_linked_plugins())
-			disable_plugin_tab_widgets(p);
-		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
-	}
+//	if (selected_view_)
+//	{
+//		for (PluginInteraction* p : selected_view_->get_linked_plugins())
+//			disable_plugin_tab_widgets(p);
+//		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
+//		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
+//	}
 
 	View* old_selected = selected_view_;
 	selected_view_ = view;
 	if (old_selected)
 		old_selected->hide_dialogs();
 
-	for (PluginInteraction* p : selected_view_->get_linked_plugins())
-		enable_plugin_tab_widgets(p);
-	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
+//	for (PluginInteraction* p : selected_view_->get_linked_plugins())
+//		enable_plugin_tab_widgets(p);
+//	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
+//	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
 
 	window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
 
