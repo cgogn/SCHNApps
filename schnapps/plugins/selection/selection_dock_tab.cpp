@@ -103,7 +103,7 @@ void Selection_DockTab::selection_method_changed(int index)
 					break;
 				case MapParameters::WithinSphere:
 					spin_angle_radius->setVisible(true);
-	//				spin_angle_radius->setValue(plugin_->m_selectionRadiusBase * plugin_->m_selectionRadiusCoeff);
+					spin_angle_radius->setValue(p.get_vertex_base_size() * 10.0f * p.get_selection_radius_scale_factor_());
 					label_angle_radius->setText(QString("Radius:"));
 					break;
 				case MapParameters::NormalAngle:
@@ -329,7 +329,7 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 			break;
 		case MapParameters::WithinSphere:
 			spin_angle_radius->setVisible(true);
-//			spin_angle_radius->setValue(plugin_->m_selectionRadiusBase * plugin_->m_selectionRadiusCoeff);
+			spin_angle_radius->setValue(p.get_vertex_base_size() * 10.0f * p.get_selection_radius_scale_factor_());
 			label_angle_radius->setText(QString("Radius:"));
 			break;
 		case MapParameters::NormalAngle:
