@@ -138,10 +138,10 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 								{
 									p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_;
 									p.shader_point_sprite_param_selection_sphere_->bind(proj, mv);
-			//						ogl->glEnable(GL_BLEND);
-			//						ogl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+									ogl->glEnable(GL_BLEND);
+									ogl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 									ogl->glDrawArrays(GL_POINTS, 0, 1);
-			//						ogl->glDisable(GL_BLEND);
+									ogl->glDisable(GL_BLEND);
 									p.shader_point_sprite_param_selection_sphere_->release();
 								}
 								break;
@@ -173,10 +173,10 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 								{
 									p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_;
 									p.shader_point_sprite_param_selection_sphere_->bind(proj, mv);
-			//						ogl->glEnable(GL_BLEND);
-			//						ogl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+									ogl->glEnable(GL_BLEND);
+									ogl->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 									ogl->glDrawArrays(GL_POINTS, 0, 1);
-			//						ogl->glDisable(GL_BLEND);
+									ogl->glDisable(GL_BLEND);
 									p.shader_point_sprite_param_selection_sphere_->release();
 								}
 								break;
