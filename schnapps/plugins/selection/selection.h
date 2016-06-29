@@ -306,19 +306,23 @@ private:
 	void mouseMove(View*, QMouseEvent*) override;
 	void wheelEvent(View*, QWheelEvent*) override;
 
-	inline void view_linked(View*) override {}
-	inline void view_unlinked(View*) override {}
+	void view_linked(View*) override;
+	void view_unlinked(View*) override;
 
 private slots:
 
-	// slots called from SCHNApps signals
-	void selected_view_changed(View*, View*);
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+	// slots called from View signals
+	void map_linked(MapHandlerGen* map);
+	void map_unlinked(MapHandlerGen* map);
 
 	// slots called from MapHandlerGen signals
-	void selected_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
-	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
-	void selected_map_bb_changed();
+	void linked_map_cells_set_added(CellType ct, const QString& name);
+	void linked_map_attribute_added(cgogn::Orbit orbit, const QString& name);
+	void linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
+	void linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
+	void linked_map_bb_changed();
+
+	void update_dock_tab();
 
 private:
 
