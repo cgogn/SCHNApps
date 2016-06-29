@@ -154,7 +154,7 @@ public:
 
 	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
 
-private slots:
+public slots:
 
 	void enable_plugin_tab_widgets(PluginInteraction* plugin);
 
@@ -163,8 +163,6 @@ private slots:
 	/*********************************************************
 	 * MANAGE MAPS
 	 *********************************************************/
-
-public slots:
 
 	/**
 	* @brief add a new empty map

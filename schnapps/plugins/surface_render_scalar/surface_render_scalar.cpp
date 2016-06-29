@@ -36,9 +36,16 @@ namespace schnapps
 MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
-	MapParameters& p = parameter_set_[view][map];
-	p.map_ = static_cast<MapHandler<CMap2>*>(map);
-	return p;
+
+	auto& view_param_set = parameter_set_[view];
+	if (view_param_set.count(map) == 0)
+	{
+		MapParameters& p = view_param_set[map];
+		p.map_ = static_cast<MapHandler<CMap2>*>(map);
+		return p;
+	}
+	else
+		return view_param_set[map];
 }
 
 bool Plugin_SurfaceRenderScalar::enable()
@@ -55,7 +62,7 @@ bool Plugin_SurfaceRenderScalar::enable()
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map)
+	if (map && map->dimension() == 2)
 	{
 		View* view = schnapps_->get_selected_view();
 		const MapParameters& p = get_parameters(view, map);
@@ -82,45 +89,67 @@ void Plugin_SurfaceRenderScalar::disable()
 void Plugin_SurfaceRenderScalar::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
 	view->makeCurrent();
-	const MapParameters& p = get_parameters(view, map);
 
-	if (p.get_position_vbo() && p.get_scalar_vbo())
+	if (map->dimension() == 2)
 	{
-		glEnable(GL_POLYGON_OFFSET_FILL);
-		glPolygonOffset(1.0f, 1.0f);
-		p.shader_scalar_per_vertex_param_->bind(proj, mv);
-		map->draw(cgogn::rendering::TRIANGLES);
-		p.shader_scalar_per_vertex_param_->release();
-		glDisable(GL_POLYGON_OFFSET_FILL);
+		const MapParameters& p = get_parameters(view, map);
+
+		if (p.get_position_vbo() && p.get_scalar_vbo())
+		{
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(1.0f, 1.0f);
+			p.shader_scalar_per_vertex_param_->bind(proj, mv);
+			map->draw(cgogn::rendering::TRIANGLES);
+			p.shader_scalar_per_vertex_param_->release();
+			glDisable(GL_POLYGON_OFFSET_FILL);
+		}
 	}
 }
 
 void Plugin_SurfaceRenderScalar::selected_view_changed(View* old, View* cur)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	const MapParameters& p = get_parameters(cur, map);
-	dock_tab_->update_map_parameters(map, p);
+	if (map->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		const MapParameters& p = get_parameters(cur, map);
+		dock_tab_->update_map_parameters(map, p);
+	}
+	else
+		schnapps_->disable_plugin_tab_widgets(this);
 }
 
 void Plugin_SurfaceRenderScalar::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
-	View* view = schnapps_->get_selected_view();
-	const MapParameters& p = get_parameters(view, cur);
-	dock_tab_->update_map_parameters(cur, p);
+	if (cur->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		View* view = schnapps_->get_selected_view();
+		const MapParameters& p = get_parameters(view, cur);
+		dock_tab_->update_map_parameters(cur, p);
+	}
+	else
+		schnapps_->disable_plugin_tab_widgets(this);
 }
 
 void Plugin_SurfaceRenderScalar::map_added(MapHandlerGen *map)
 {
-	connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
-	connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
-	connect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	if (map->dimension() == 2)
+	{
+		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
+		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
+		connect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	}
 }
 
 void Plugin_SurfaceRenderScalar::map_removed(MapHandlerGen *map)
 {
-	disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
-	disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
-	disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	if (map->dimension() == 2)
+	{
+		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	}
 }
 
 void Plugin_SurfaceRenderScalar::schnapps_closing()

@@ -52,7 +52,7 @@ bool Plugin_SurfaceRenderVector::enable()
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map)
+	if (map && map->dimension() == 2)
 	{
 		View* view = schnapps_->get_selected_view();
 		const MapParameters& p = get_parameters(view, map);
@@ -79,15 +79,19 @@ void Plugin_SurfaceRenderVector::disable()
 void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
 	view->makeCurrent();
-	const MapParameters& p = get_parameters(view, map);
 
-	if (p.get_position_vbo())
+	if (map->dimension() == 2)
 	{
-		for (auto& param : p.get_shader_params())
+		const MapParameters& p = get_parameters(view, map);
+
+		if (p.get_position_vbo())
 		{
-			param->bind(proj, mv);
-			map->draw(cgogn::rendering::POINTS);
-			param->release();
+			for (auto& param : p.get_shader_params())
+			{
+				param->bind(proj, mv);
+				map->draw(cgogn::rendering::POINTS);
+				param->release();
+			}
 		}
 	}
 }
@@ -95,29 +99,47 @@ void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const 
 void Plugin_SurfaceRenderVector::selected_view_changed(View* old, View* cur)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	const MapParameters& p = get_parameters(cur, map);
-	dock_tab_->update_map_parameters(map, p);
+	if (map->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		const MapParameters& p = get_parameters(cur, map);
+		dock_tab_->update_map_parameters(map, p);
+	}
+	else
+		schnapps_->disable_plugin_tab_widgets(this);
 }
 
 void Plugin_SurfaceRenderVector::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
-	View* view = schnapps_->get_selected_view();
-	const MapParameters& p = get_parameters(view, cur);
-	dock_tab_->update_map_parameters(cur, p);
+	if (cur->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		View* view = schnapps_->get_selected_view();
+		const MapParameters& p = get_parameters(view, cur);
+		dock_tab_->update_map_parameters(cur, p);
+	}
+	else
+		schnapps_->disable_plugin_tab_widgets(this);
 }
 
 void Plugin_SurfaceRenderVector::map_added(MapHandlerGen *map)
 {
-	connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
-	connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
-	connect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	if (map->dimension() == 2)
+	{
+		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
+		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
+		connect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	}
 }
 
 void Plugin_SurfaceRenderVector::map_removed(MapHandlerGen *map)
 {
-	disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
-	disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
-	disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	if (map->dimension() == 2)
+	{
+		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	}
 }
 
 void Plugin_SurfaceRenderVector::schnapps_closing()
@@ -178,9 +200,9 @@ void Plugin_SurfaceRenderVector::bb_changed()
 		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
 		if (view_param_set.count(map) > 0)
 		{
-			MapParameters& map_param = view_param_set[map];
-			for (uint32 i = 0, size = map_param.vector_scale_factor_list_.size(); i < size; ++i)
-				map_param.set_vector_scale_factor(i, map_param.vector_scale_factor_list_[i]);
+			MapParameters& p = view_param_set[map];
+			for (uint32 i = 0, size = p.vector_scale_factor_list_.size(); i < size; ++i)
+				p.set_vector_scale_factor(i, p.vector_scale_factor_list_[i]);
 		}
 	}
 }

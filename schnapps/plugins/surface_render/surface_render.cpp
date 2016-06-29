@@ -62,7 +62,7 @@ bool Plugin_SurfaceRender::enable()
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map)
+	if (map && map->dimension() == 2)
 	{
 		View* view = schnapps_->get_selected_view();
 		const MapParameters& p = get_parameters(view, map);
@@ -89,83 +89,87 @@ void Plugin_SurfaceRender::disable()
 void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
 	view->makeCurrent();
-	const MapParameters& p = get_parameters(view, map);
 
-	if (p.render_faces_)
+	if (map->dimension() == 2)
 	{
-		glEnable(GL_POLYGON_OFFSET_FILL);
-		glPolygonOffset(1.0f, 1.0f);
-		if (p.get_position_vbo())
+		const MapParameters& p = get_parameters(view, map);
+
+		if (p.render_faces_)
 		{
-			if (p.get_color_vbo())
+			glEnable(GL_POLYGON_OFFSET_FILL);
+			glPolygonOffset(1.0f, 1.0f);
+			if (p.get_position_vbo())
 			{
-				switch (p.face_style_)
+				if (p.get_color_vbo())
 				{
-					case MapParameters::FaceShadingStyle::FLAT:
-						p.shader_flat_color_param_->bind(proj, mv);
-						map->draw(cgogn::rendering::TRIANGLES);
-						p.shader_flat_color_param_->release();
-						break;
-					case MapParameters::FaceShadingStyle::PHONG:
-						if (p.get_normal_vbo())
-						{
-							p.shader_phong_color_param_->bind(proj, mv);
+					switch (p.face_style_)
+					{
+						case MapParameters::FaceShadingStyle::FLAT:
+							p.shader_flat_color_param_->bind(proj, mv);
 							map->draw(cgogn::rendering::TRIANGLES);
-							p.shader_phong_color_param_->release();
-						}
-						break;
+							p.shader_flat_color_param_->release();
+							break;
+						case MapParameters::FaceShadingStyle::PHONG:
+							if (p.get_normal_vbo())
+							{
+								p.shader_phong_color_param_->bind(proj, mv);
+								map->draw(cgogn::rendering::TRIANGLES);
+								p.shader_phong_color_param_->release();
+							}
+							break;
+					}
+				}
+				else
+				{
+					switch (p.face_style_)
+					{
+						case MapParameters::FaceShadingStyle::FLAT:
+							p.shader_flat_param_->bind(proj, mv);
+							map->draw(cgogn::rendering::TRIANGLES);
+							p.shader_flat_param_->release();
+							break;
+						case MapParameters::FaceShadingStyle::PHONG:
+							if (p.get_normal_vbo())
+							{
+								p.shader_phong_param_->bind(proj, mv);
+								map->draw(cgogn::rendering::TRIANGLES);
+								p.shader_phong_param_->release();
+							}
+							break;
+					}
 				}
 			}
-			else
+			glDisable(GL_POLYGON_OFFSET_FILL);
+		}
+
+		if (p.render_edges_)
+		{
+			if (p.get_position_vbo())
 			{
-				switch (p.face_style_)
-				{
-					case MapParameters::FaceShadingStyle::FLAT:
-						p.shader_flat_param_->bind(proj, mv);
-						map->draw(cgogn::rendering::TRIANGLES);
-						p.shader_flat_param_->release();
-						break;
-					case MapParameters::FaceShadingStyle::PHONG:
-						if (p.get_normal_vbo())
-						{
-							p.shader_phong_param_->bind(proj, mv);
-							map->draw(cgogn::rendering::TRIANGLES);
-							p.shader_phong_param_->release();
-						}
-						break;
-				}
+				p.shader_simple_color_param_->bind(proj, mv);
+				map->draw(cgogn::rendering::LINES);
+				p.shader_simple_color_param_->release();
 			}
 		}
-		glDisable(GL_POLYGON_OFFSET_FILL);
-	}
 
-	if (p.render_edges_)
-	{
-		if (p.get_position_vbo())
+		if (p.render_vertices_)
 		{
-			p.shader_simple_color_param_->bind(proj, mv);
-			map->draw(cgogn::rendering::LINES);
-			p.shader_simple_color_param_->release();
+			if (p.get_position_vbo())
+			{
+				p.shader_point_sprite_param_->bind(proj, mv);
+				map->draw(cgogn::rendering::POINTS);
+				p.shader_point_sprite_param_->release();
+			}
 		}
-	}
 
-	if (p.render_vertices_)
-	{
-		if (p.get_position_vbo())
+		if (p.render_boundary_)
 		{
-			p.shader_point_sprite_param_->bind(proj, mv);
-			map->draw(cgogn::rendering::POINTS);
-			p.shader_point_sprite_param_->release();
-		}
-	}
-
-	if (p.render_boundary_)
-	{
-		if (p.get_position_vbo())
-		{
-			p.shader_simple_color_param_boundary_->bind(proj, mv);
-			map->draw(cgogn::rendering::BOUNDARY);
-			p.shader_simple_color_param_boundary_->release();
+			if (p.get_position_vbo())
+			{
+				p.shader_simple_color_param_boundary_->bind(proj, mv);
+				map->draw(cgogn::rendering::BOUNDARY);
+				p.shader_simple_color_param_boundary_->release();
+			}
 		}
 	}
 }
@@ -173,29 +177,47 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 void Plugin_SurfaceRender::selected_view_changed(View* old, View* cur)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	const MapParameters& p = get_parameters(cur, map);
-	dock_tab_->update_map_parameters(map, p);
+	if (map->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		const MapParameters& p = get_parameters(cur, map);
+		dock_tab_->update_map_parameters(map, p);
+	}
+	else
+		schnapps_->disable_plugin_tab_widgets(this);
 }
 
 void Plugin_SurfaceRender::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
-	View* view = schnapps_->get_selected_view();
-	const MapParameters& p = get_parameters(view, cur);
-	dock_tab_->update_map_parameters(cur, p);
+	if (cur->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		View* view = schnapps_->get_selected_view();
+		const MapParameters& p = get_parameters(view, cur);
+		dock_tab_->update_map_parameters(cur, p);
+	}
+	else
+		schnapps_->disable_plugin_tab_widgets(this);
 }
 
 void Plugin_SurfaceRender::map_added(MapHandlerGen *map)
 {
-	connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
-	connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
-	connect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	if (map->dimension() == 2)
+	{
+		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
+		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
+		connect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	}
 }
 
 void Plugin_SurfaceRender::map_removed(MapHandlerGen *map)
 {
-	disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
-	disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
-	disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	if (map->dimension() == 2)
+	{
+		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+	}
 }
 
 void Plugin_SurfaceRender::schnapps_closing()
