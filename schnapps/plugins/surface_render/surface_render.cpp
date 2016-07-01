@@ -173,12 +173,16 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 void Plugin_SurfaceRender::selected_view_changed(View* old, View* cur)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
+	if (!map)
+		return;
 	const MapParameters& p = get_parameters(cur, map);
 	dock_tab_->update_map_parameters(map, p);
 }
 
 void Plugin_SurfaceRender::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
+	if (!cur)
+		return;
 	View* view = schnapps_->get_selected_view();
 	const MapParameters& p = get_parameters(view, cur);
 	dock_tab_->update_map_parameters(cur, p);
