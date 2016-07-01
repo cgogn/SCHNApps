@@ -23,10 +23,8 @@
 
 #include <surface_render.h>
 
-#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/geometry/algos/selection.h>
 
@@ -283,10 +281,8 @@ void Plugin_SurfaceRender::update_dock_tab()
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_SurfaceRender::set_render_vertices(const QString& view_name, const QString& map_name, bool b)
+void Plugin_SurfaceRender::set_render_vertices(View* view, MapHandlerGen* map, bool b)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -297,10 +293,8 @@ void Plugin_SurfaceRender::set_render_vertices(const QString& view_name, const Q
 	}
 }
 
-void Plugin_SurfaceRender::set_render_edges(const QString& view_name, const QString& map_name, bool b)
+void Plugin_SurfaceRender::set_render_edges(View* view, MapHandlerGen* map, bool b)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -311,10 +305,8 @@ void Plugin_SurfaceRender::set_render_edges(const QString& view_name, const QStr
 	}
 }
 
-void Plugin_SurfaceRender::set_render_faces(const QString& view_name, const QString& map_name, bool b)
+void Plugin_SurfaceRender::set_render_faces(View* view, MapHandlerGen* map, bool b)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -325,10 +317,8 @@ void Plugin_SurfaceRender::set_render_faces(const QString& view_name, const QStr
 	}
 }
 
-void Plugin_SurfaceRender::set_render_boundary(const QString& view_name, const QString& map_name, bool b)
+void Plugin_SurfaceRender::set_render_boundary(View* view, MapHandlerGen* map, bool b)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -339,10 +329,8 @@ void Plugin_SurfaceRender::set_render_boundary(const QString& view_name, const Q
 	}
 }
 
-void Plugin_SurfaceRender::set_face_style(const QString& view_name, const QString& map_name, MapParameters::FaceShadingStyle s)
+void Plugin_SurfaceRender::set_face_style(View* view, MapHandlerGen* map, MapParameters::FaceShadingStyle s)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -353,52 +341,44 @@ void Plugin_SurfaceRender::set_face_style(const QString& view_name, const QStrin
 	}
 }
 
-void Plugin_SurfaceRender::set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+void Plugin_SurfaceRender::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		p.set_position_vbo(map->get_vbo(vbo_name));
+		p.set_position_vbo(vbo);
 		if (view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRender::set_normal_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+void Plugin_SurfaceRender::set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		p.set_normal_vbo(map->get_vbo(vbo_name));
+		p.set_normal_vbo(vbo);
 		if (view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRender::set_color_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+void Plugin_SurfaceRender::set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		p.set_color_vbo(map->get_vbo(vbo_name));
+		p.set_color_vbo(vbo);
 		if (view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRender::set_vertex_color(const QString& view_name, const QString& map_name, const QColor& color)
+void Plugin_SurfaceRender::set_vertex_color(View* view, MapHandlerGen* map, const QColor& color)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -409,10 +389,8 @@ void Plugin_SurfaceRender::set_vertex_color(const QString& view_name, const QStr
 	}
 }
 
-void Plugin_SurfaceRender::set_edge_color(const QString& view_name, const QString& map_name, const QColor& color)
+void Plugin_SurfaceRender::set_edge_color(View* view, MapHandlerGen* map, const QColor& color)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -423,10 +401,8 @@ void Plugin_SurfaceRender::set_edge_color(const QString& view_name, const QStrin
 	}
 }
 
-void Plugin_SurfaceRender::set_front_color(const QString& view_name, const QString& map_name, const QColor& color)
+void Plugin_SurfaceRender::set_front_color(View* view, MapHandlerGen* map, const QColor& color)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -437,10 +413,8 @@ void Plugin_SurfaceRender::set_front_color(const QString& view_name, const QStri
 	}
 }
 
-void Plugin_SurfaceRender::set_back_color(const QString& view_name, const QString& map_name, const QColor& color)
+void Plugin_SurfaceRender::set_back_color(View* view, MapHandlerGen* map, const QColor& color)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -451,10 +425,8 @@ void Plugin_SurfaceRender::set_back_color(const QString& view_name, const QStrin
 	}
 }
 
-void Plugin_SurfaceRender::set_vertex_scale_factor(const QString& view_name, const QString& map_name, float32 sf)
+void Plugin_SurfaceRender::set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);

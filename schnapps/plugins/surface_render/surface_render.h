@@ -24,6 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/map_handler.h>
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 
@@ -40,7 +42,6 @@
 namespace schnapps
 {
 
-class MapHandlerGen;
 class Plugin_SurfaceRender;
 
 struct MapParameters
@@ -284,19 +285,89 @@ private slots:
 
 public slots:
 
-	void set_render_vertices(const QString& view_name, const QString& map_name, bool b);
-	void set_render_edges(const QString& view_name, const QString& map_name, bool b);
-	void set_render_faces(const QString& view_name, const QString& map_name, bool b);
-	void set_render_boundary(const QString& view_name, const QString& map_name, bool b);
-	void set_face_style(const QString& view_name, const QString& map_name, MapParameters::FaceShadingStyle s);
-	void set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name);
-	void set_normal_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name);
-	void set_color_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name);
-	void set_vertex_color(const QString& view_name, const QString& map_name, const QColor& color);
-	void set_edge_color(const QString& view_name, const QString& map_name, const QColor& color);
-	void set_front_color(const QString& view_name, const QString& map_name, const QColor& color);
-	void set_back_color(const QString& view_name, const QString& map_name, const QColor& color);
-	void set_vertex_scale_factor(const QString& view_name, const QString& map_name, float32 sf);
+	void set_render_vertices(View* view, MapHandlerGen* map, bool b);
+	inline void set_render_vertices(const QString& view_name, const QString& map_name, bool b)
+	{
+		set_render_vertices(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
+	}
+
+	void set_render_edges(View* view, MapHandlerGen* map, bool b);
+	inline void set_render_edges(const QString& view_name, const QString& map_name, bool b)
+	{
+		set_render_edges(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
+	}
+
+	void set_render_faces(View* view, MapHandlerGen* map, bool b);
+	inline void set_render_faces(const QString& view_name, const QString& map_name, bool b)
+	{
+		set_render_faces(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
+	}
+
+	void set_render_boundary(View* view, MapHandlerGen* map, bool b);
+	inline void set_render_boundary(const QString& view_name, const QString& map_name, bool b)
+	{
+		set_render_boundary(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
+	}
+
+	void set_face_style(View* view, MapHandlerGen* map, MapParameters::FaceShadingStyle s);
+	inline void set_face_style(const QString& view_name, const QString& map_name, MapParameters::FaceShadingStyle s)
+	{
+		set_face_style(schnapps_->get_view(view_name), schnapps_->get_map(map_name), s);
+	}
+
+	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_position_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
+
+	void set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void set_normal_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_normal_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
+
+	void set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void set_color_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_color_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
+
+	void set_vertex_color(View* view, MapHandlerGen* map, const QColor& color);
+	inline void set_vertex_color(const QString& view_name, const QString& map_name, const QColor& color)
+	{
+		set_vertex_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
+	}
+
+	void set_edge_color(View* view, MapHandlerGen* map, const QColor& color);
+	inline void set_edge_color(const QString& view_name, const QString& map_name, const QColor& color)
+	{
+		set_edge_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
+	}
+
+	void set_front_color(View* view, MapHandlerGen* map, const QColor& color);
+	inline void set_front_color(const QString& view_name, const QString& map_name, const QColor& color)
+	{
+		set_front_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
+	}
+
+	void set_back_color(View* view, MapHandlerGen* map, const QColor& color);
+	inline void set_back_color(const QString& view_name, const QString& map_name, const QColor& color)
+	{
+		set_back_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
+	}
+
+	void set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf);
+	void set_vertex_scale_factor(const QString& view_name, const QString& map_name, float32 sf)
+	{
+		set_vertex_scale_factor(schnapps_->get_view(view_name), schnapps_->get_map(map_name), sf);
+	}
 
 private:
 
