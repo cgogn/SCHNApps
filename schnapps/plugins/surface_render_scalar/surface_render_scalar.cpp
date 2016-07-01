@@ -23,7 +23,6 @@
 
 #include <surface_render_scalar.h>
 
-#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
@@ -195,38 +194,32 @@ void Plugin_SurfaceRenderScalar::update_dock_tab()
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_SurfaceRenderScalar::set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+void Plugin_SurfaceRenderScalar::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		p.set_position_vbo(map->get_vbo(vbo_name));
+		p.set_position_vbo(vbo);
 		if (view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_scalar_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+void Plugin_SurfaceRenderScalar::set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		p.set_scalar_vbo(map->get_vbo(vbo_name));
+		p.set_scalar_vbo(vbo);
 		if (view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_color_map(const QString& view_name, const QString& map_name, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm)
+void Plugin_SurfaceRenderScalar::set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -237,10 +230,8 @@ void Plugin_SurfaceRenderScalar::set_color_map(const QString& view_name, const Q
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_expansion(const QString& view_name, const QString& map_name, int32 e)
+void Plugin_SurfaceRenderScalar::set_expansion(View* view, MapHandlerGen* map, int32 e)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -251,10 +242,8 @@ void Plugin_SurfaceRenderScalar::set_expansion(const QString& view_name, const Q
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_show_iso_lines(const QString& view_name, const QString& map_name, bool b)
+void Plugin_SurfaceRenderScalar::set_show_iso_lines(View* view, MapHandlerGen* map, bool b)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
@@ -265,10 +254,8 @@ void Plugin_SurfaceRenderScalar::set_show_iso_lines(const QString& view_name, co
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_nb_iso_levels(const QString& view_name, const QString& map_name, int32 n)
+void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n)
 {
-	View* view = schnapps_->get_view(view_name);
-	MapHandlerGen* map = schnapps_->get_map(map_name);
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);

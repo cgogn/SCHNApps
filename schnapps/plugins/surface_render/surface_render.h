@@ -24,10 +24,10 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/map_handler.h>
 
 #include <surface_render_dock_tab.h>
 
