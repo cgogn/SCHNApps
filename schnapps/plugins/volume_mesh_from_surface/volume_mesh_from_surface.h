@@ -28,14 +28,18 @@
 #include "dll.h"
 #include <volume_mesh_from_surface_dialog.h>
 #include <schnapps/core/plugin_processing.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
+class MapHandlerGen;
+template<typename>
+class MapHandler;
+
 namespace plugin_image
 {
 class Plugin_Image;
+class Image3D;
 } // namespace plugin_image
 
 namespace plugin_vmfs
@@ -90,6 +94,10 @@ public:
 
 	Plugin_VolumeMeshFromSurface();
 
+	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const std::string& tetgen_args);
+	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const MeshGeneratorParameters& params);
+	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const MeshGeneratorParameters& params);
+
 private:
 	virtual bool enable() override;
 	virtual void disable() override;
@@ -102,6 +110,7 @@ private:
 public slots:
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
+	void plugin_enabled(Plugin*);
 };
 
 } // namespace plugin_vmfs

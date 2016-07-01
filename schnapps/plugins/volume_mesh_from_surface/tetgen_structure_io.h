@@ -27,10 +27,14 @@
 
 #include "dll.h"
 #include <schnapps/core/map_handler.h>
-#include <tetgen/tetgen.h>
 #include <cgogn/io/volume_import.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 
+
+namespace tetgen
+{
+class tetgenio;
+}
 namespace schnapps
 {
 

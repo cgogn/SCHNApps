@@ -89,12 +89,6 @@ VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_Vol
 
 	connect(this->export_dialog_->comboBox_images, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_image_changed(QString)));
 
-	if (plugin_->plugin_image_)
-	{
-		connect(plugin_->plugin_image_, SIGNAL(image_added(QString)), this, SLOT(image_added(QString)));
-		connect(plugin_->plugin_image_, SIGNAL(image_removed(QString)), this, SLOT(image_removed(QString)));
-	}
-
 	update_mesh_generatuion_ui();
 
 	this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);

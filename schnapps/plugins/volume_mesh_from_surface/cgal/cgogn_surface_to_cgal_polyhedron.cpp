@@ -35,23 +35,15 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-PolyhedronBuilder::PolyhedronBuilder(MapHandler<CMap2>* mh, std::string position_att_name) :
+PolyhedronBuilder::PolyhedronBuilder(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute) :
 	map_(mh),
-	pos_att_name_(std::move(position_att_name))
+	position_attribute_(position_attribute)
 {}
 
 void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 {
-	if (!map_)
+	if (!map_ || !position_attribute_.is_valid())
 		return;
-
-	const auto pos_att = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>(QString::fromStdString(pos_att_name_));
-	if (!pos_att.is_valid())
-	{
-		cgogn_log_info("PolyhedronBuilder") << "The position attribute has to be of type VEC3.";
-		return;
-	}
-
 
 	uint32 id{0u};
 	auto id_attribute = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("ids_polyhedron_builder");
@@ -64,7 +56,7 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 
 	cmap2.foreach_cell([&](CMap2::Vertex v)
 	{
-		const auto& P = pos_att[v];
+		const auto& P = position_attribute_[v];
 		B.add_vertex((Point(P[0], P[1], P[2])));
 	});
 
@@ -83,12 +75,12 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 	map_->remove_attribute(id_attribute);
 }
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name)
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute)
 {
-	if (!mh)
+	if (!mh || !position_attribute.is_valid())
 		return nullptr;
 	auto poly = cgogn::make_unique<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>>();
-	PolyhedronBuilder builder(mh, position_att_name);
+	PolyhedronBuilder builder(mh, position_attribute);
 	poly->delegate(builder);
 	return poly;
 }

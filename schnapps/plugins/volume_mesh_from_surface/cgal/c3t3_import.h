@@ -115,7 +115,7 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 }
 
 
-SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map);
+SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map);
 SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map);
 
 template<typename Domain_>

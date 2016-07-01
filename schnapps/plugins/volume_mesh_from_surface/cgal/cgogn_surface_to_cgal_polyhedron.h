@@ -45,14 +45,14 @@ public:
 	using Vertex = typename HalfedgeDS::Vertex;
 	using Point = typename Vertex::Point ;
 
-	PolyhedronBuilder(MapHandler<CMap2>* mh, std::string position_att_name);
+	PolyhedronBuilder(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 	void operator()( HalfedgeDS& hds);
 private:
 	MapHandler<CMap2>* map_;
-	std::string pos_att_name_;
+	const CMap2::VertexAttribute<VEC3> position_attribute_;
 };
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name);
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 
 } // namespace plugin_vmfs
 } // namespace schnapps

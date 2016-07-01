@@ -36,7 +36,7 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map)
+SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map)
 {
 
 	using Kernel		= CGAL::Exact_predicates_inexact_constructions_kernel;
@@ -47,10 +47,10 @@ SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& para
 	using C3T3			= CGAL::Mesh_complex_3_in_triangulation_3<Triangulation>;
 	using namespace CGAL::parameters;
 
-	if (!input_surface_map || !output_volume_map || pos_att_name.empty())
+	if (!input_surface_map || !output_volume_map || !position_attribute.is_valid())
 		return;
 
-	auto poly = build_polyhedron(input_surface_map, pos_att_name);
+	auto poly = build_polyhedron(input_surface_map, position_attribute);
 	if (poly)
 	{
 
