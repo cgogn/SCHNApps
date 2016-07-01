@@ -85,11 +85,14 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 
 		if (p.render_faces_)
 		{
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonOffset(1.0f, 1.0f);
-			if (p.volume_drawer_rend_)
-				p.volume_drawer_rend_->draw_faces(proj, mv, view);
-			glDisable(GL_POLYGON_OFFSET_FILL);
+			if (p.get_position_vbo())
+			{
+				glEnable(GL_POLYGON_OFFSET_FILL);
+				glPolygonOffset(1.0f, 1.0f);
+				if (p.volume_drawer_rend_)
+					p.volume_drawer_rend_->draw_faces(proj, mv, view);
+				glDisable(GL_POLYGON_OFFSET_FILL);
+			}
 		}
 
 		if (p.render_edges_)
