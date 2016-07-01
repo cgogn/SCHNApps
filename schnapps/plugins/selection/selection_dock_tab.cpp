@@ -103,7 +103,7 @@ void Selection_DockTab::selection_method_changed(int index)
 					break;
 				case MapParameters::WithinSphere:
 					spin_angle_radius->setVisible(true);
-	//				spin_angle_radius->setValue(plugin_->m_selectionRadiusBase * plugin_->m_selectionRadiusCoeff);
+					spin_angle_radius->setValue(p.get_vertex_base_size() * 10.0f * p.get_selection_radius_scale_factor_());
 					label_angle_radius->setText(QString("Radius:"));
 					break;
 				case MapParameters::NormalAngle:
@@ -177,49 +177,42 @@ void Selection_DockTab::selected_map_cells_set_added(CellType ct, const QString&
 	updating_ui_ = false;
 }
 
-void Selection_DockTab::selected_map_attribute_added(cgogn::Orbit orbit, const QString& name)
+void Selection_DockTab::selected_map_vertex_attribute_added(const QString& name)
 {
+	updating_ui_ = true;
+
+	QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map->cell_type(orbit) == Vertex_Cell)
+	const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>& container = map->const_attribute_container(Vertex_Cell);
+	QString attribute_type_name = QString::fromStdString(container.get_chunk_array(name.toStdString())->type_name());
+
+	if (attribute_type_name == vec3_type_name)
 	{
-		updating_ui_ = true;
-
-		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
-
-		const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>& container = map->const_attribute_container(Vertex_Cell);
-		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(name.toStdString())->type_name());
-
-		if (attribute_type_name == vec3_type_name)
-		{
-			combo_positionAttribute->addItem(name);
-			combo_normalAttribute->addItem(name);
-		}
-
-		updating_ui_ = false;
+		combo_positionAttribute->addItem(name);
+		combo_normalAttribute->addItem(name);
 	}
+
+	updating_ui_ = false;
 }
 
-void Selection_DockTab::selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
+void Selection_DockTab::selected_map_vertex_attribute_removed(const QString& name)
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map->cell_type(orbit) == Vertex_Cell)
-	{
-		updating_ui_ = true;
+	updating_ui_ = true;
 
-		int curIndex = combo_positionAttribute->currentIndex();
-		int index = combo_positionAttribute->findText(name, Qt::MatchExactly);
-		if (curIndex == index)
-			combo_positionAttribute->setCurrentIndex(0);
-		combo_positionAttribute->removeItem(index);
+	int curIndex = combo_positionAttribute->currentIndex();
+	int index = combo_positionAttribute->findText(name, Qt::MatchExactly);
+	if (curIndex == index)
+		combo_positionAttribute->setCurrentIndex(0);
+	combo_positionAttribute->removeItem(index);
 
-		curIndex = combo_normalAttribute->currentIndex();
-		index = combo_normalAttribute->findText(name, Qt::MatchExactly);
-		if (curIndex == index)
-			combo_normalAttribute->setCurrentIndex(0);
-		combo_normalAttribute->removeItem(index);
+	curIndex = combo_normalAttribute->currentIndex();
+	index = combo_normalAttribute->findText(name, Qt::MatchExactly);
+	if (curIndex == index)
+		combo_normalAttribute->setCurrentIndex(0);
+	combo_normalAttribute->removeItem(index);
 
-		updating_ui_ = false;
-	}
+	updating_ui_ = false;
 }
 
 void Selection_DockTab::vertices_scale_factor_changed(int i)
@@ -336,7 +329,7 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 			break;
 		case MapParameters::WithinSphere:
 			spin_angle_radius->setVisible(true);
-//			spin_angle_radius->setValue(plugin_->m_selectionRadiusBase * plugin_->m_selectionRadiusCoeff);
+			spin_angle_radius->setValue(p.get_vertex_base_size() * 10.0f * p.get_selection_radius_scale_factor_());
 			label_angle_radius->setText(QString("Radius:"));
 			break;
 		case MapParameters::NormalAngle:

@@ -149,6 +149,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	}
 
 private:
+
 	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
 
@@ -173,10 +174,6 @@ public:
 	bool render_edges_;
 	bool render_faces_;
 	bool render_boundary_;
-
-private:
-
-
 };
 
 /**
@@ -213,22 +210,21 @@ private:
 	inline void mouseMove(View*, QMouseEvent*) override {}
 	inline void wheelEvent(View*, QWheelEvent*) override {}
 
-	inline void view_linked(View*) override {}
-	inline void view_unlinked(View*) override {}
+	void view_linked(View*) override;
+	void view_unlinked(View*) override;
 
 private slots:
 
-	// slots called from SCHNApps signals
-	void selected_view_changed(View*, View*);
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
-	void schnapps_closing();
+	// slots called from View signals
+	void map_linked(MapHandlerGen* map);
+	void map_unlinked(MapHandlerGen* map);
 
 	// slots called from MapHandler signals
-	void vbo_added(cgogn::rendering::VBO* vbo);
-	void vbo_removed(cgogn::rendering::VBO* vbo);
-	void bb_changed();
+	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
+	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
+	void linked_map_bb_changed();
+
+	void update_dock_tab();
 
 public slots:
 

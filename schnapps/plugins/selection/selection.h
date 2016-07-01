@@ -72,6 +72,7 @@ public:
 		color_(220, 60, 60),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
+		selection_radius_scale_factor_(1.0f),
 		selecting_(false),
 		cells_set_(nullptr),
 		selection_method_(SingleCell)
@@ -152,6 +153,8 @@ public:
 		shader_point_sprite_param_selected_vertices_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
+	float32 get_selection_radius_scale_factor_() const { return selection_radius_scale_factor_; }
+
 	CellsSetGen* get_cells_set() const { return cells_set_; }
 	void set_cells_set(CellsSetGen* cs)
 	{
@@ -216,7 +219,7 @@ public slots:
 						});
 						for (uint32 i : ears)
 							selected_polygons.push_back(position_[i]);
-						selected_faces_size_ = selected_polygons.size();
+						selected_faces_nb_indices_ = selected_polygons.size();
 					}
 					cgogn::rendering::update_vbo(selected_polygons, selected_faces_vbo_.get());
 				}
@@ -257,13 +260,14 @@ private:
 	QColor color_;
 	float32 vertex_scale_factor_;
 	float32 vertex_base_size_;
+	float32 selection_radius_scale_factor_;
 
 	bool selecting_;
 	MapHandler<CMap2>::Vertex selecting_vertex_;
 	MapHandler<CMap2>::Edge selecting_edge_;
 	MapHandler<CMap2>::Face selecting_face_;
-	std::size_t selecting_face_size_;
-	std::size_t selected_faces_size_;
+	std::size_t selecting_face_nb_indices_;
+	std::size_t selected_faces_nb_indices_;
 
 	CellsSetGen* cells_set_;
 
@@ -306,19 +310,23 @@ private:
 	void mouseMove(View*, QMouseEvent*) override;
 	void wheelEvent(View*, QWheelEvent*) override;
 
-	inline void view_linked(View*) override {}
-	inline void view_unlinked(View*) override {}
+	void view_linked(View*) override;
+	void view_unlinked(View*) override;
 
 private slots:
 
-	// slots called from SCHNApps signals
-	void selected_view_changed(View*, View*);
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
+	// slots called from View signals
+	void map_linked(MapHandlerGen* map);
+	void map_unlinked(MapHandlerGen* map);
 
 	// slots called from MapHandlerGen signals
-	void selected_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
-	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
-	void selected_map_bb_changed();
+	void linked_map_cells_set_added(CellType ct, const QString& name);
+	void linked_map_attribute_added(cgogn::Orbit orbit, const QString& name);
+	void linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
+	void linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
+	void linked_map_bb_changed();
+
+	void update_dock_tab();
 
 private:
 
