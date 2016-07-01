@@ -17,7 +17,6 @@ endif(CGAL_FOUND)
 
 set(HEADER_FILES
 	dll.h
-	cimg/CImg.h
 	image.h
 	image_dock_tab.h
 	cgal/cgal_image.h
@@ -44,7 +43,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC "-Dcimg_display=0")
+#target_compile_definitions(${PROJECT_NAME} PUBLIC "-Dcimg_display=0")
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core

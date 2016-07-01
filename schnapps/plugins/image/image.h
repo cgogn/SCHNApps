@@ -33,13 +33,6 @@
 #include <cgogn/io/data_io.h>
 #include <schnapps/core/plugin_interaction.h>
 #include <QAction>
-#include "cimg/CImg.h"
-
-//namespace cimg_library
-//{
-//	template<class>
-//	class CImg;
-//} // namespace cimg_library
 
 namespace schnapps
 {
