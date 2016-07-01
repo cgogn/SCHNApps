@@ -75,6 +75,7 @@ Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
 bool Plugin_VolumeMeshFromSurface::enable()
 {
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
+	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
 
 	if (!dialog_)
 		dialog_ = cgogn::make_unique<VolumeMeshFromSurfaceDialog>(schnapps_, this);
@@ -209,10 +210,25 @@ void Plugin_VolumeMeshFromSurface::plugin_enabled(Plugin* plugin)
 				connect(plugin_image_, SIGNAL(image_removed(QString)), dialog_.get(), SLOT(image_removed(QString)));
 		}
 	}
-
-
 }
 
+void Plugin_VolumeMeshFromSurface::plugin_disabled(Plugin* plugin)
+{
+	if (plugin_image_)
+	{
+		if (plugin_image_ == plugin)
+		{
+				disconnect(plugin_image_, SIGNAL(image_added(QString)), dialog_.get(), SLOT(image_added(QString)));
+				disconnect(plugin_image_, SIGNAL(image_removed(QString)), dialog_.get(), SLOT(image_removed(QString)));
+				plugin_image_ = nullptr;
+
+				for(int i = 1, size = dialog_->export_dialog_->comboBox_images->count(); i < size; ++i)
+				{
+					dialog_->export_dialog_->comboBox_images->removeItem(i);
+				}
+		}
+	}
+}
 
 
 } // namespace plugin_vmfs

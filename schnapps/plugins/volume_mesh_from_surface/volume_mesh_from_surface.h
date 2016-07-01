@@ -111,6 +111,7 @@ public slots:
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
 	void plugin_enabled(Plugin*);
+	void plugin_disabled(Plugin*);
 };
 
 } // namespace plugin_vmfs
