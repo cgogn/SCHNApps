@@ -117,10 +117,6 @@ void SurfaceRender_DockTab::render_vertices_changed(bool b)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-
-			if (b)
-				p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
-
 			p.render_vertices_ = b;
 			view->update();
 		}
