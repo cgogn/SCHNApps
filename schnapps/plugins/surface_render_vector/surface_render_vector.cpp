@@ -197,6 +197,88 @@ void Plugin_SurfaceRenderVector::update_dock_tab()
 		schnapps_->disable_plugin_tab_widgets(this);
 }
 
+/******************************************************************************/
+/*                             PUBLIC INTERFACE                               */
+/******************************************************************************/
+
+void Plugin_SurfaceRenderVector::set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_position_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderVector::add_vector_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.add_vector_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderVector::remove_vector_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.remove_vector_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderVector::set_vector_scale_factor(const QString& view_name, const QString& map_name, const QString& vector_vbo_name, float32 sf)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		int32 index = p.get_vector_vbo_index(map->get_vbo(vector_vbo_name));
+		if (index >= 0)
+		{
+			p.set_vector_scale_factor(index, sf);
+			if (view->is_selected_view() && map->is_selected_map())
+				dock_tab_->update_map_parameters(map, p);
+			view->update();
+		}
+	}
+}
+
+void Plugin_SurfaceRenderVector::set_vector_color(const QString& view_name, const QString& map_name, const QString& vector_vbo_name, const QColor& color)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		int32 index = p.get_vector_vbo_index(map->get_vbo(vector_vbo_name));
+		if (index >= 0)
+		{
+			p.set_vector_color(index, color);
+			if (view->is_selected_view() && map->is_selected_map())
+				dock_tab_->update_map_parameters(map, p);
+			view->update();
+		}
+	}
+}
+
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
 } // namespace schnapps
