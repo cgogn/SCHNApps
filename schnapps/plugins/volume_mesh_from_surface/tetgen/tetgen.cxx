@@ -34,6 +34,9 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
+namespace tetgen
+{
+
 bool tetgenio::load_node_call(FILE* infile, int markers, int uvflag,
 							  char* infilename)
 {
@@ -31242,6 +31245,8 @@ void tetrahedralize(const char *switches, tetgenio *in, tetgenio *out,
 
 #endif // not TETLIBRARY
 }
+
+} // namespace tetgen
 
 ////                                                                       ////
 ////                                                                       ////

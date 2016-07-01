@@ -83,11 +83,11 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 	map_->remove_attribute(id_attribute);
 }
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name)
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name)
 {
 	if (!mh)
 		return nullptr;
-	auto poly = cgogn::make_unique<Polyhedron>();
+	auto poly = cgogn::make_unique<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>>();
 	PolyhedronBuilder builder(mh, position_att_name);
 	poly->delegate(builder);
 	return poly;

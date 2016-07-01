@@ -28,7 +28,8 @@
 #include "dll.h"
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
-#include "types.h"
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
 
 namespace schnapps
 {
@@ -36,9 +37,11 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-class SCHNAPPS_PLUGIN_VMFS_API PolyhedronBuilder : public CGAL::Modifier_base<HalfedgeDS> {
+class SCHNAPPS_PLUGIN_VMFS_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS> {
 public:
-
+	using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
+	using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
+	using HalfedgeDS = Polyhedron::HalfedgeDS;
 	using Vertex = typename HalfedgeDS::Vertex;
 	using Point = typename Vertex::Point ;
 
@@ -49,7 +52,7 @@ private:
 	std::string pos_att_name_;
 };
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<Polyhedron> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name);
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const std::string& position_att_name);
 
 } // namespace plugin_vmfs
 } // namespace schnapps

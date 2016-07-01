@@ -33,6 +33,7 @@
 #ifdef PLUGIN_VMFS_WITH_CGAL
 #include <cgal/c3t3_import.h>
 #endif // PLUGIN_VMFS_WITH_CGAL
+#include <image.h>
 
 namespace schnapps
 {
@@ -40,7 +41,7 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-MapParameters::MapParameters() :
+MeshGeneratorParameters::MeshGeneratorParameters() :
 	tetgen_command_line("-pqY"),
 	cell_size_(8),
 	cell_radius_edge_ratio_(3),
@@ -63,8 +64,21 @@ MapParameters::MapParameters() :
 	exuder_sliver_bound_(0)
 {}
 
+Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
+	gen_mesh_action_(nullptr),
+	plugin_image_(nullptr),
+	generation_parameters_(),
+	dialog_(nullptr)
+{}
+
 bool Plugin_VolumeMeshFromSurface::enable()
 {
+
+	Plugin* image_plugin_gen = schnapps_->enable_plugin("plugin_image_d");
+	if (!image_plugin_gen)
+		image_plugin_gen = schnapps_->enable_plugin("plugin_image");
+	plugin_image_ = dynamic_cast<plugin_image::Plugin_Image*>(image_plugin_gen);
+
 	if (!dialog_)
 		dialog_ = cgogn::make_unique<VolumeMeshFromSurfaceDialog>(schnapps_, this);
 
@@ -76,6 +90,15 @@ bool Plugin_VolumeMeshFromSurface::enable()
 		dialog_->map_added(mhg);
 	});
 
+	if (plugin_image_)
+	{
+		const auto& images = plugin_image_->get_images();
+		for (const auto& im : images)
+		{
+			dialog_->image_added(im.first);
+		}
+	}
+
 	return true;
 }
 
@@ -86,7 +109,7 @@ void Plugin_VolumeMeshFromSurface::disable()
 
 void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 {
-	MapHandlerGen* mhg = schnapps_->get_map(selected_map_);
+	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
 	MapHandler2* handler_map2 = dynamic_cast<MapHandler2*>(mhg);
 	if (handler_map2)
 	{
@@ -100,9 +123,9 @@ void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 			return;
 		}
 		auto tetgen_input = export_tetgen(*map, position_att);
-		tetgenio tetgen_output;
+		tetgen::tetgenio tetgen_output;
 
-		tetrahedralize(this->tetgen_args.toStdString().c_str(), tetgen_input.get(), &tetgen_output);
+		tetgen::tetrahedralize(generation_parameters_.tetgen_command_line.c_str(), tetgen_input.get(), &tetgen_output);
 
 		TetgenStructureVolumeImport tetgen_import(&tetgen_output);
 		tetgen_import.import_file("");
@@ -115,27 +138,34 @@ void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 {
 #ifdef PLUGIN_VMFS_WITH_CGAL
-	MapHandlerGen* mhg = schnapps_->get_map(selected_map_);
+	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
 	if (mhg)
 	{
-		const MapParameters& param = this->parameter_set_[mhg];
 		MapHandler2* mh2 = dynamic_cast<MapHandler2*>(mhg);
 		MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
 		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
-		tetrahedralize(param, mh2, position_att_name, mh3);
+		tetrahedralize(generation_parameters_, mh2, position_att_name, mh3);
+	} else {
+		if (dialog_->export_dialog_->comboBox_images->currentIndex() > 0)
+		{
+			const QString& im_path = dialog_->export_dialog_->comboBox_images->currentText();
+			if (plugin_image_)
+			{
+				plugin_image::Image3D const * im = plugin_image_->get_image(im_path);
+				if (im)
+				{
+					MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
+					tetrahedralize(generation_parameters_, im, mh3);
+				}
+
+			}
+			std::cerr << im_path.toStdString() << std::endl;
+		}
 	}
 #endif // PLUGIN_VMFS_WITH_CGAL
 }
 
-void Plugin_VolumeMeshFromSurface::tetgen_args_updated(QString str)
-{
-	this->tetgen_args = std::move(str);
-}
 
-void Plugin_VolumeMeshFromSurface::remove_map(MapHandlerGen* mhg)
-{
-	this->parameter_set_.erase(mhg);
-}
 
 } // namespace plugin_vmfs
 } // namespace schnapps

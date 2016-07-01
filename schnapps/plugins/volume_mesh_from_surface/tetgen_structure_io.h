@@ -45,6 +45,7 @@ public:
 	using Scalar = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
 	template <typename T>
 	using ChunkArray = typename Inherit::template ChunkArray<T>;
+	using tetgenio = tetgen::tetgenio;
 
 	explicit TetgenStructureVolumeImport(tetgenio * tetgen_output);
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
@@ -56,7 +57,7 @@ private:
 	tetgenio* volume_;
 };
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
 
 } // namespace plugin_vmfs
 } // namespace schnapps

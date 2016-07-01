@@ -28,6 +28,7 @@
 #include <volume_mesh_from_surface_dialog.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
+#include "image.h"
 
 namespace schnapps
 {
@@ -57,7 +58,7 @@ VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_Vol
 
 	connect(this->tetgen_dialog_->buttonBox,SIGNAL(accepted()), plugin_, SLOT(generate_button_tetgen_pressed()));
 	connect(this->cgal_dialog_->buttonBox, SIGNAL(accepted()), plugin_, SLOT(generate_button_cgal_pressed()));
-	connect(this->tetgen_dialog_->lineEdit_tetgen_args, SIGNAL(textChanged(QString)), plugin_, SLOT(tetgen_args_updated(QString)));
+	connect(this->tetgen_dialog_->lineEdit_tetgen_args, SIGNAL(textChanged(QString)), this, SLOT(tetgen_args_updated(QString)));
 
 	connect(this->cgal_dialog_->doubleSpinBox_CellSize, SIGNAL(valueChanged(double)), this, SLOT(cell_size_changed(double)));
 	connect(this->cgal_dialog_->doubleSpinBox_Radius, SIGNAL(valueChanged(double)), this, SLOT(cell_radius_edge_ratio_changed(double)));
@@ -86,6 +87,16 @@ VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_Vol
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
+	connect(this->export_dialog_->comboBox_images, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_image_changed(QString)));
+
+	if (plugin_->plugin_image_)
+	{
+		connect(plugin_->plugin_image_, SIGNAL(image_added(QString)), this, SLOT(image_added(QString)));
+		connect(plugin_->plugin_image_, SIGNAL(image_removed(QString)), this, SLOT(image_removed(QString)));
+	}
+
+	update_mesh_generatuion_ui();
+
 	this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
 	this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(true);
 
@@ -105,11 +116,22 @@ void VolumeMeshFromSurfaceDialog::map_added(MapHandlerGen* mhg)
 void VolumeMeshFromSurfaceDialog::map_removed(MapHandlerGen* mhg)
 {
 	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
-	{
 		this->export_dialog_->comboBoxMapSelection->removeItem(this->export_dialog_->comboBoxMapSelection->findText(mhg->get_name()));
-		plugin_->remove_map(mhg);
-	}
+}
 
+void VolumeMeshFromSurfaceDialog::image_added(QString im_path)
+{
+	this->export_dialog_->comboBox_images->addItem(im_path);
+}
+
+void VolumeMeshFromSurfaceDialog::image_removed(QString im_path)
+{
+	this->export_dialog_->comboBox_images->removeItem(this->export_dialog_->comboBox_images->findText(im_path));
+}
+
+QString VolumeMeshFromSurfaceDialog::get_selected_map() const
+{
+	return export_dialog_->comboBoxMapSelection->currentText();
 }
 
 void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
@@ -118,11 +140,10 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 
 	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
 	{
-		const MapParameters& p = plugin_->parameter_set_[mhg];
-		update_map_parameters(mhg, p);
-		plugin_->selected_map_ = mhg->get_name();
+		this->export_dialog_->comboBox_images->setCurrentIndex(0);
 		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(false);
 		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(false);
+
 
 		this->export_dialog_->comboBoxPositionSelection->clear();
 		const auto& vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
@@ -130,41 +151,50 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 			this->export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
 
 	} else {
-		plugin_->selected_map_ = QString();
 		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
 		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(true);
 	}
 
 }
 
+void VolumeMeshFromSurfaceDialog::selected_image_changed(QString /*image_name*/)
+{
+	this->export_dialog_->comboBoxMapSelection->setCurrentIndex(0);
+	if (this->export_dialog_->comboBox_images->currentIndex() >= 1)
+	{
+		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
+		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(false);
+	}
+}
+
 void VolumeMeshFromSurfaceDialog::cell_size_changed(double cs)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].cell_size_ = cs;
+	plugin_->generation_parameters_.cell_size_ = cs;
 }
 
 void VolumeMeshFromSurfaceDialog::cell_radius_edge_ratio_changed(double ratio)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].cell_radius_edge_ratio_ = ratio;
+	plugin_->generation_parameters_.cell_radius_edge_ratio_ = ratio;
 }
 
 void VolumeMeshFromSurfaceDialog::facet_angle_changed(double fa)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].facet_angle_ = fa;
+	plugin_->generation_parameters_.facet_angle_ = fa;
 }
 
 void VolumeMeshFromSurfaceDialog::facet_size_changed(double fs)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].facet_size_ = fs;
+	plugin_->generation_parameters_.facet_size_ = fs;
 }
 
 void VolumeMeshFromSurfaceDialog::facet_distance_changed(double fd)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].facet_distance_ = fd;
+	plugin_->generation_parameters_.facet_distance_ = fd;
 }
 
 void VolumeMeshFromSurfaceDialog::odt_changed(bool b)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].do_odt_ = b;
+	plugin_->generation_parameters_.do_odt_ = b;
 	this->cgal_dialog_->doubleSpinBox_OdtConvergence->setDisabled(!b);
 	this->cgal_dialog_->spinBox_ODTMaxIter->setDisabled(!b);
 	this->cgal_dialog_->checkBox_FreezeODT->setDisabled(!b);
@@ -173,28 +203,28 @@ void VolumeMeshFromSurfaceDialog::odt_changed(bool b)
 
 void VolumeMeshFromSurfaceDialog::odt_freeze_changed(bool b)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].do_odt_freeze_ = b;
+	plugin_->generation_parameters_.do_odt_freeze_ = b;
 	this->cgal_dialog_->doubleSpinBox_8OdtFreeze->setDisabled(!b);
 }
 
 void VolumeMeshFromSurfaceDialog::odt_max_iter_changed(int nb_it)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].odt_max_iter_ = nb_it;
+	plugin_->generation_parameters_.odt_max_iter_ = nb_it;
 }
 
 void VolumeMeshFromSurfaceDialog::odt_convergence_changed(double cv)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].odt_convergence_ = cv;
+	plugin_->generation_parameters_.odt_convergence_ = cv;
 }
 
 void VolumeMeshFromSurfaceDialog::odt_freeze_bound_changed(double fb)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].odt_freeze_bound_ = fb;
+	plugin_->generation_parameters_.odt_freeze_bound_ = fb;
 }
 
 void VolumeMeshFromSurfaceDialog::lloyd_changed(bool b)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].do_lloyd_ = b;
+	plugin_->generation_parameters_.do_lloyd_ = b;
 	this->cgal_dialog_->doubleSpinBox_FreezeBoundLLoyd->setDisabled(!b);
 	this->cgal_dialog_->doubleSpinBox_ConvergenceLloyd->setDisabled(!b);
 	this->cgal_dialog_->spinBoxMaxITLloyd->setDisabled(!b);
@@ -203,90 +233,97 @@ void VolumeMeshFromSurfaceDialog::lloyd_changed(bool b)
 
 void VolumeMeshFromSurfaceDialog::lloyd_freeze_changed(bool b)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].do_lloyd_freeze_ = b;
+	plugin_->generation_parameters_.do_lloyd_freeze_ = b;
 	this->cgal_dialog_->doubleSpinBox_FreezeBoundLLoyd->setDisabled(!b);
 }
 
 void VolumeMeshFromSurfaceDialog::lloyd_max_iter_changed(int nb_it)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].lloyd_max_iter_ = nb_it;
+	plugin_->generation_parameters_.lloyd_max_iter_ = nb_it;
 }
 
 void VolumeMeshFromSurfaceDialog::lloyd_convergence_changed(double cv)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].lloyd_convergence_ = cv;
+	plugin_->generation_parameters_.lloyd_convergence_ = cv;
 }
 
 void VolumeMeshFromSurfaceDialog::lloyd_freeze_bound_changed(double fb)
 {
-	plugin_->parameter_set_[schnapps_->get_selected_map()].lloyd_freeze_bound_ = fb;
+	plugin_->generation_parameters_.lloyd_freeze_bound_ = fb;
 }
 
 void VolumeMeshFromSurfaceDialog::perturber_changed(bool b)
 {
 	this->cgal_dialog_->doubleSpinBox_PerturberSliver->setDisabled(!b);
-	plugin_->parameter_set_[schnapps_->get_selected_map()].do_perturber_ = b;
+	plugin_->generation_parameters_.do_perturber_ = b;
 }
 
 void VolumeMeshFromSurfaceDialog::perturber_sliver_changed(double sb)
 {
-	this->cgal_dialog_->doubleSpinBox_PerturberSliver->setValue(sb);
+	plugin_->generation_parameters_.perturber_sliver_bound_ = sb;
 }
 
 void VolumeMeshFromSurfaceDialog::exuder_changed(bool b)
 {
 	this->cgal_dialog_->doubleSpinBox_ExuderSliver->setDisabled(!b);
-	plugin_->parameter_set_[schnapps_->get_selected_map()].do_exuder_ = b;
+	plugin_->generation_parameters_.do_exuder_ = b;
 }
 
 void VolumeMeshFromSurfaceDialog::exuder_sliver_changed(double sb)
 {
-	this->cgal_dialog_->doubleSpinBox_ExuderSliver->setValue(sb);
+	plugin_->generation_parameters_.exuder_sliver_bound_ = sb;
 }
 
-void VolumeMeshFromSurfaceDialog::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
+void VolumeMeshFromSurfaceDialog::tetgen_args_updated(QString str)
+{
+
+	plugin_->generation_parameters_.tetgen_command_line = str.toStdString();
+}
+
+void VolumeMeshFromSurfaceDialog::update_mesh_generatuion_ui()
 {
 	updating_ui_ = true;
-	if (map && dynamic_cast<MapHandler<CMap2>*>(map))
-	{
-		plugin_->tetgen_args_updated(QString::fromStdString(p.tetgen_command_line));
 
-		this->cgal_dialog_->doubleSpinBox_CellSize->setValue(p.cell_size_);
-		this->cgal_dialog_->doubleSpinBox_Radius->setValue(p.cell_radius_edge_ratio_);
-		this->cgal_dialog_->doubleSpinBoxFacetAngle->setValue(p.facet_angle_);
-		this->cgal_dialog_->doubleSpinBox_FacetSize->setValue(p.facet_size_);
-		this->cgal_dialog_->doubleSpinBox_3FacetDistance->setValue(p.facet_distance_);
+	const auto& p = plugin_->generation_parameters_;
+	this->tetgen_dialog_->lineEdit_tetgen_args->setText(QString::fromStdString(p.tetgen_command_line));
 
-		this->cgal_dialog_->checkBox_ODT->setChecked(p.do_odt_);
-		this->cgal_dialog_->checkBox_FreezeODT->setChecked(p.do_odt_freeze_);
-		this->cgal_dialog_->spinBox_ODTMaxIter->setValue(p.odt_max_iter_);
-		this->cgal_dialog_->doubleSpinBox_OdtConvergence->setValue(p.odt_convergence_);
-		this->cgal_dialog_->doubleSpinBox_8OdtFreeze->setValue(p.odt_freeze_bound_);
-		this->cgal_dialog_->doubleSpinBox_OdtConvergence->setDisabled(!p.do_odt_);
-		this->cgal_dialog_->spinBox_ODTMaxIter->setDisabled(!p.do_odt_);
-		this->cgal_dialog_->checkBox_FreezeODT->setDisabled(!p.do_odt_);
-		this->cgal_dialog_->checkBox_ODT->setDisabled(!p.do_odt_);
+	this->cgal_dialog_->doubleSpinBox_CellSize->setValue(p.cell_size_);
+	this->cgal_dialog_->doubleSpinBox_Radius->setValue(p.cell_radius_edge_ratio_);
+	this->cgal_dialog_->doubleSpinBoxFacetAngle->setValue(p.facet_angle_);
+	this->cgal_dialog_->doubleSpinBox_FacetSize->setValue(p.facet_size_);
+	this->cgal_dialog_->doubleSpinBox_3FacetDistance->setValue(p.facet_distance_);
 
-		this->cgal_dialog_->checkBoxLloyd->setChecked(p.do_lloyd_);
-		this->cgal_dialog_->checkBox_FreezeLloyd->setChecked(p.do_lloyd_freeze_);
-		this->cgal_dialog_->spinBoxMaxITLloyd->setValue(p.lloyd_max_iter_);
-		this->cgal_dialog_->doubleSpinBox_ConvergenceLloyd->setValue(p.lloyd_convergence_);
-		this->cgal_dialog_->doubleSpinBox_FreezeBoundLLoyd->setValue(p.lloyd_freeze_bound_);
-		this->cgal_dialog_->doubleSpinBox_FreezeBoundLLoyd->setDisabled(!p.do_lloyd_);
-		this->cgal_dialog_->doubleSpinBox_ConvergenceLloyd->setDisabled(!p.do_lloyd_);
-		this->cgal_dialog_->spinBoxMaxITLloyd->setDisabled(!p.do_lloyd_);
-		this->cgal_dialog_->checkBox_FreezeLloyd->setDisabled(!p.do_lloyd_);
+	this->cgal_dialog_->checkBox_ODT->setChecked(p.do_odt_);
+	this->cgal_dialog_->checkBox_FreezeODT->setChecked(p.do_odt_freeze_);
+	this->cgal_dialog_->spinBox_ODTMaxIter->setValue(p.odt_max_iter_);
+	this->cgal_dialog_->doubleSpinBox_OdtConvergence->setValue(p.odt_convergence_);
+	this->cgal_dialog_->doubleSpinBox_8OdtFreeze->setValue(p.odt_freeze_bound_);
+	this->cgal_dialog_->doubleSpinBox_OdtConvergence->setDisabled(!p.do_odt_);
+	this->cgal_dialog_->spinBox_ODTMaxIter->setDisabled(!p.do_odt_);
+	this->cgal_dialog_->checkBox_FreezeODT->setDisabled(!p.do_odt_);
+	this->cgal_dialog_->checkBox_ODT->setDisabled(!p.do_odt_);
 
-		this->cgal_dialog_->checkBox_Perturber->setChecked(p.do_perturber_);
-		this->cgal_dialog_->doubleSpinBox_PerturberSliver->setValue(p.perturber_sliver_bound_);
-		this->cgal_dialog_->doubleSpinBox_PerturberSliver->setDisabled(!p.do_perturber_);
+	this->cgal_dialog_->checkBoxLloyd->setChecked(p.do_lloyd_);
+	this->cgal_dialog_->checkBox_FreezeLloyd->setChecked(p.do_lloyd_freeze_);
+	this->cgal_dialog_->spinBoxMaxITLloyd->setValue(p.lloyd_max_iter_);
+	this->cgal_dialog_->doubleSpinBox_ConvergenceLloyd->setValue(p.lloyd_convergence_);
+	this->cgal_dialog_->doubleSpinBox_FreezeBoundLLoyd->setValue(p.lloyd_freeze_bound_);
+	this->cgal_dialog_->doubleSpinBox_FreezeBoundLLoyd->setDisabled(!p.do_lloyd_);
+	this->cgal_dialog_->doubleSpinBox_ConvergenceLloyd->setDisabled(!p.do_lloyd_);
+	this->cgal_dialog_->spinBoxMaxITLloyd->setDisabled(!p.do_lloyd_);
+	this->cgal_dialog_->checkBox_FreezeLloyd->setDisabled(!p.do_lloyd_);
 
-		this->cgal_dialog_->checkBox_5Exuder->setChecked(p.do_exuder_);
-		this->cgal_dialog_->doubleSpinBox_ExuderSliver->setValue(p.exuder_sliver_bound_);
-		this->cgal_dialog_->doubleSpinBox_ExuderSliver->setDisabled(!p.do_exuder_);
-	}
+	this->cgal_dialog_->checkBox_Perturber->setChecked(p.do_perturber_);
+	this->cgal_dialog_->doubleSpinBox_PerturberSliver->setValue(p.perturber_sliver_bound_);
+	this->cgal_dialog_->doubleSpinBox_PerturberSliver->setDisabled(!p.do_perturber_);
+
+	this->cgal_dialog_->checkBox_5Exuder->setChecked(p.do_exuder_);
+	this->cgal_dialog_->doubleSpinBox_ExuderSliver->setValue(p.exuder_sliver_bound_);
+	this->cgal_dialog_->doubleSpinBox_ExuderSliver->setDisabled(!p.do_exuder_);
+
 	updating_ui_ = false;
 }
+
 
 } // namespace plugin_vmfs
 } // namespace schnapps
