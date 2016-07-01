@@ -191,6 +191,94 @@ void Plugin_SurfaceRenderScalar::update_dock_tab()
 		schnapps_->disable_plugin_tab_widgets(this);
 }
 
+/******************************************************************************/
+/*                             PUBLIC INTERFACE                               */
+/******************************************************************************/
+
+void Plugin_SurfaceRenderScalar::set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_position_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_scalar_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_scalar_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_color_map(const QString& view_name, const QString& map_name, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_color_map(cm);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_expansion(const QString& view_name, const QString& map_name, int32 e)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_expansion(e);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_show_iso_lines(const QString& view_name, const QString& map_name, bool b)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_show_iso_lines(b);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_nb_iso_levels(const QString& view_name, const QString& map_name, int32 n)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_nb_iso_levels(n);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
 } // namespace schnapps

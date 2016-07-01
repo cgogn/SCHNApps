@@ -106,7 +106,7 @@ struct MapParameters
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
-		if (position_vbo_)
+		if (position_vbo_ && position_vbo_->vector_dimension() == 3)
 		{
 			shader_flat_param_->set_position_vbo(position_vbo_);
 			shader_flat_color_param_->set_position_vbo(position_vbo_);
@@ -116,28 +116,34 @@ struct MapParameters
 			shader_phong_color_param_->set_position_vbo(position_vbo_);
 			shader_point_sprite_param_->set_position_vbo(position_vbo_);
 		}
+		else
+			position_vbo_ = nullptr;
 	}
 
 	cgogn::rendering::VBO* get_normal_vbo() const { return normal_vbo_; }
 	void set_normal_vbo(cgogn::rendering::VBO* v)
 	{
 		normal_vbo_ = v;
-		if (normal_vbo_)
+		if (normal_vbo_ && normal_vbo_->vector_dimension() == 3)
 		{
 			shader_phong_param_->set_normal_vbo(normal_vbo_);
 			shader_phong_color_param_->set_normal_vbo(normal_vbo_);
 		}
+		else
+			normal_vbo_ = nullptr;
 	}
 
 	cgogn::rendering::VBO* get_color_vbo() const { return color_vbo_; }
 	void set_color_vbo(cgogn::rendering::VBO* v)
 	{
 		color_vbo_ = v;
-		if (color_vbo_)
+		if (color_vbo_ && color_vbo_->vector_dimension() == 3)
 		{
 			shader_flat_color_param_->set_color_vbo(color_vbo_);
 			shader_phong_color_param_->set_color_vbo(color_vbo_);
 		}
+		else
+			color_vbo_ = nullptr;
 	}
 
 	const QColor& get_vertex_color() const { return vertex_color_; }
@@ -278,7 +284,19 @@ private slots:
 
 public slots:
 
-
+	void set_render_vertices(const QString& view_name, const QString& map_name, bool b);
+	void set_render_edges(const QString& view_name, const QString& map_name, bool b);
+	void set_render_faces(const QString& view_name, const QString& map_name, bool b);
+	void set_render_boundary(const QString& view_name, const QString& map_name, bool b);
+	void set_face_style(const QString& view_name, const QString& map_name, MapParameters::FaceShadingStyle s);
+	void set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name);
+	void set_normal_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name);
+	void set_color_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name);
+	void set_vertex_color(const QString& view_name, const QString& map_name, const QColor& color);
+	void set_edge_color(const QString& view_name, const QString& map_name, const QColor& color);
+	void set_front_color(const QString& view_name, const QString& map_name, const QColor& color);
+	void set_back_color(const QString& view_name, const QString& map_name, const QColor& color);
+	void set_vertex_scale_factor(const QString& view_name, const QString& map_name, float32 sf);
 
 private:
 

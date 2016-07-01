@@ -279,6 +279,192 @@ void Plugin_SurfaceRender::update_dock_tab()
 		schnapps_->disable_plugin_tab_widgets(this);
 }
 
+/******************************************************************************/
+/*                             PUBLIC INTERFACE                               */
+/******************************************************************************/
+
+void Plugin_SurfaceRender::set_render_vertices(const QString& view_name, const QString& map_name, bool b)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_vertices_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_render_edges(const QString& view_name, const QString& map_name, bool b)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_edges_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_render_faces(const QString& view_name, const QString& map_name, bool b)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_faces_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_render_boundary(const QString& view_name, const QString& map_name, bool b)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_boundary_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_face_style(const QString& view_name, const QString& map_name, MapParameters::FaceShadingStyle s)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.face_style_ = s;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_position_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_normal_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_normal_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_color_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_color_vbo(map->get_vbo(vbo_name));
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_vertex_color(const QString& view_name, const QString& map_name, const QColor& color)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_vertex_color(color);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_edge_color(const QString& view_name, const QString& map_name, const QColor& color)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_edge_color(color);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_front_color(const QString& view_name, const QString& map_name, const QColor& color)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_front_color(color);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_back_color(const QString& view_name, const QString& map_name, const QColor& color)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_back_color(color);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_vertex_scale_factor(const QString& view_name, const QString& map_name, float32 sf)
+{
+	View* view = schnapps_->get_view(view_name);
+	MapHandlerGen* map = schnapps_->get_map(map_name);
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_vertex_scale_factor(sf);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
 } // namespace schnapps
