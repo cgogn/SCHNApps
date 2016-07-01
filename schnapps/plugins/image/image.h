@@ -30,6 +30,7 @@
 #include <cgogn/core/utils/logger.h>
 #include "dll.h"
 #include <cgogn/core/utils/unique_ptr.h>
+#include <cgogn/io/data_io.h>
 #include <schnapps/core/plugin_interaction.h>
 #include <QAction>
 #include "cimg/CImg.h"
@@ -46,33 +47,52 @@ namespace schnapps
 namespace plugin_image
 {
 
+using namespace cgogn::numerics;
 class Image_DockTab;
 
-class Image3DBase
+
+class Image3D
 {
 public:
-	virtual ~Image3DBase();
-};
+	using DataInputGen = cgogn::io::DataInputGen<cgogn::DefaultMapTraits::CHUNK_SIZE>;
+	template<typename T>
+	using DataInput = cgogn::io::DataInput<cgogn::DefaultMapTraits::CHUNK_SIZE, 1,T>;
+	using DataType = cgogn::io::DataType;
 
-template<typename T = std::float_t>
-class Image3D : public Image3DBase
-{
-public:
-	using Inherit = Image3DBase;
-	using value_type = T;
-	using Self = Image3D<value_type>;
-	using image_type = cimg_library::CImg<value_type>;
+	Image3D();
+	Image3D(const Image3D&) = delete;
+	Image3D(Image3D&& im);
+	Image3D& operator=(Image3D&& im);
+	Image3D& operator=(const Image3D&) = delete;
 
-	inline Image3D(const QString& im_path) : img_(im_path.toStdString().c_str())
-	{
-		cgogn_log_debug("Image3D") << "dim " <<img_.height() << " " << img_.width() << " " << img_.depth();
-	}
-	~Image3D() override {}
+	void const * data() const { return data_->data(); }
+	inline std::array<uint64, 3> const& get_image_dimensions() const { return image_dim_; }
+	inline std::array<float64, 3> const& get_origin() const { return origin_; }
+	inline std::array<float64, 3> const& get_voxel_dimensions() const { return voxel_dim_; }
+	inline std::array<float64, 3> const& get_translation() const { return translation_; }
+	inline std::array<float64, 3> const& get_rotation() const { return rotation_; }
+	inline uint8 get_nb_components() const { return nb_components_; }
+	inline bool is_little_endian() const { return little_endian_; }
+	inline std::size_t get_data_size() const { return data_size_;}
+	inline DataType get_data_type() const { return data_type_; }
+
+
+	static Image3D new_image_3d(const QString& image_path);
+private:
+	void import_inr(std::istream& inr_data);
 
 private:
-	image_type img_;
+	std::unique_ptr<DataInputGen> data_;
+	std::array<uint64, 3> image_dim_;
+	std::array<float64, 3> origin_;
+	std::array<float64, 3> voxel_dim_;
+	std::array<float64, 3> translation_;
+	std::array<float64, 3> rotation_;
+	uint8 nb_components_;
+	bool little_endian_;
+	std::size_t data_size_;
+	DataType data_type_;
 };
-
 
 class Plugin_Image : public PluginInteraction
 {
@@ -81,11 +101,10 @@ class Plugin_Image : public PluginInteraction
 	Q_INTERFACES(schnapps::Plugin)
 
 public:
-	using image_type = Image3D<>;
-	using image_ptr = std::unique_ptr<image_type>;
-
 	Plugin_Image();
 
+	std::list<std::pair<QString, Image3D>> const& get_images() const;
+	const Image3D* get_image(const QString& im_path);
 private:
 	bool enable() override;
 	void disable() override;
@@ -110,9 +129,10 @@ private slots:
 
 signals:
 	void image_added(QString im_path);
+	void image_removed(QString im_path);
 
 private:
-	std::list<image_ptr> images_;
+	std::list<std::pair<QString, Image3D>> images_;
 	QAction* import_image_action_;
 	Image_DockTab*	dock_tab_;
 };
