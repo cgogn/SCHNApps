@@ -3,7 +3,7 @@ project(plugin_image
 )
 
 find_package(cgogn_core REQUIRED)
-find_package(cgogn_rendering REQUIRED)
+find_package(cgogn_io REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
@@ -48,7 +48,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
-	${cgogn_rendering_LIBRARIES}
+	${cgogn_io_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
 	${CGAL_LIB}

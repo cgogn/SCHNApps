@@ -35,21 +35,20 @@ namespace plugin_image
 SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const Image3D& im)
 {
 	using DataType = cgogn::io::DataType;
-	_image* image = ::_initImage();
 
+	const auto& dims = im.get_image_dimensions();
+	const auto& voxel_dims = im.get_voxel_dimensions();
+
+	_image* image  =_createImage(dims[0], dims[1], dims[2],
+			im.get_nb_components(),
+			voxel_dims[0], voxel_dims[1], voxel_dims[2],
+			im.get_data_size(),
+			get_cgal_word_kind(im.get_data_type()),
+			get_cgal_sign(im.get_data_type()));
+
+	image->endianness = cgogn::internal::cgogn_is_little_endian? END_LITTLE : END_BIG;
 
 	image->vectMode = im.get_nb_components() == 1u ? VM_SCALAR : VM_NON_INTERLACED;
-	const auto& dims = im.get_image_dimensions();
-	image->xdim = dims[0];
-	image->ydim = dims[1];
-	image->zdim = dims[2];
-	image->vdim = im.get_nb_components();
-
-	const auto& voxel_dims = im.get_voxel_dimensions();
-	image->vx = voxel_dims[0];
-	image->vy = voxel_dims[1];
-	image->vz = voxel_dims[2];
-
 	const auto& trans = im.get_translation();
 	image->tx = trans[0];
 	image->ty = trans[1];
@@ -65,29 +64,34 @@ SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const Image3D& im)
 	image->cy = origin[1];
 	image->cz = origin[2];
 
-	image->endianness = cgogn::internal::cgogn_is_little_endian? END_LITTLE : END_BIG;
-	image->wdim = im.get_data_size();
 
-	switch(im.get_data_type()) {
-		case DataType::FLOAT:
-		case DataType::DOUBLE: image->wordKind = WK_FLOAT; break;
-		default:
-			image->wordKind = WK_FIXED; break;
-	}
-
-	switch(im.get_data_type()) {
-		case DataType::UINT8:
-		case DataType::UINT16:
-		case DataType::UINT32:
-		case DataType::UINT64: image->sign = SGN_UNSIGNED; break;
-		default:
-			image->sign = SGN_SIGNED; break;
-	}
-
-	image->data = ::ImageIO_alloc(dims[0]*dims[1]*dims[2]*image->wdim * image->vdim);
 	std::memcpy(image->data,im.data(), dims[0]*dims[1]*dims[2]*image->wdim * image->vdim);
 
 	return CGAL::Image_3(image);
+}
+
+SCHNAPPS_PLUGIN_IMAGE_API WORD_KIND get_cgal_word_kind(cgogn::io::DataType data_type)
+{
+	using DataType = cgogn::io::DataType;
+
+	if (data_type == DataType::FLOAT || data_type == DataType::DOUBLE)
+		return WK_FLOAT;
+	else
+		return WK_FIXED;
+}
+
+SCHNAPPS_PLUGIN_IMAGE_API SIGN get_cgal_sign(cgogn::io::DataType data_type)
+{
+	using DataType = cgogn::io::DataType;
+
+	switch(data_type) {
+		case DataType::UINT8:
+		case DataType::UINT16:
+		case DataType::UINT32:
+		case DataType::UINT64: return SGN_UNSIGNED;
+		default:
+			return SGN_SIGNED;
+	}
 }
 
 

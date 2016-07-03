@@ -33,7 +33,9 @@ namespace schnapps
 
 namespace plugin_image
 {
-	SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const schnapps::plugin_image::Image3D& im);
+	SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3	export_to_cgal_image(const schnapps::plugin_image::Image3D& im);
+	SCHNAPPS_PLUGIN_IMAGE_API WORD_KIND		get_cgal_word_kind(cgogn::io::DataType data_type);
+	SCHNAPPS_PLUGIN_IMAGE_API SIGN			get_cgal_sign(cgogn::io::DataType data_type);
 } // namespace plugin_image
 } // namespace schnapps
 
