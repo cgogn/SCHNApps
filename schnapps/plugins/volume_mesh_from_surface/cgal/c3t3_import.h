@@ -90,11 +90,11 @@ protected:
 		for (auto cit = cpx_.cells_in_complex_begin(), cend = cpx_.cells_in_complex_end(); cit != cend; ++cit)
 			this->add_tetra(*position, vertices_indices[cit->vertex(0)], vertices_indices[cit->vertex(1)], vertices_indices[cit->vertex(2)], vertices_indices[cit->vertex(3)], true);
 
-		ChunkArray<int32>* subdomain_indices = this->volume_attributes_container().template add_chunk_array<int32>("subdomain index");
+		ChunkArray<float32>* subdomain_indices = this->volume_attributes_container().template add_chunk_array<float32>("subdomain index");
 		for (auto cit = cpx_.cells_in_complex_begin(), cend = cpx_.cells_in_complex_end(); cit != cend; ++cit)
 		{
 			const uint32 id = this->volume_attributes_container().template insert_lines<1>();
-			subdomain_indices->operator [](id) = cpx_.subdomain_index(cit);
+			subdomain_indices->operator [](id) = float32(cpx_.subdomain_index(cit));
 		}
 
 		return true;
@@ -112,6 +112,7 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 	C3T3VolumeImport<C3T3> volume_import(c3t3_in);
 	volume_import.import_file("");
 	volume_import.create_map(*map_out->get_map());
+	map_out->attribute_added(C3T3VolumeImport<C3T3>::Volume::ORBIT, "subdomain index");
 }
 
 
