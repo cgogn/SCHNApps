@@ -26,6 +26,7 @@
 
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
+#include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
 #include <surface_render_vector_dock_tab.h>
@@ -60,9 +61,9 @@ struct MapParameters
 		}
 	}
 
-	int get_vector_vbo_index(cgogn::rendering::VBO* v) const
+	int32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
 	{
-		int index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
+		int32 index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
 		return index >= vector_vbo_list_.size() ? -1 : index;
 	}
 	void add_vector_vbo(cgogn::rendering::VBO* v)
@@ -83,7 +84,7 @@ struct MapParameters
 	}
 	void remove_vector_vbo(cgogn::rendering::VBO* v)
 	{
-		int idx = get_vector_vbo_index(v);
+		int32 idx = get_vector_vbo_index(v);
 		if (idx >= 0)
 		{
 			vector_vbo_list_[idx] = vector_vbo_list_.back();
@@ -97,15 +98,15 @@ struct MapParameters
 		}
 	}
 
-	float32 get_vector_scale_factor(int i) const { return vector_scale_factor_list_[i]; }
-	void set_vector_scale_factor(int i, float32 sf)
+	float32 get_vector_scale_factor(int32 i) const { return vector_scale_factor_list_[i]; }
+	void set_vector_scale_factor(int32 i, float32 sf)
 	{
 		vector_scale_factor_list_[i] = sf;
 		shader_vector_per_vertex_param_list_[i]->length_ = map_->get_bb_diagonal_size() / 100.0f * vector_scale_factor_list_[i];
 	}
 
-	const QColor& get_vector_color(int i) const { return vector_color_list_[i]; }
-	void set_vector_color(int i, const QColor& c)
+	const QColor& get_vector_color(int32 i) const { return vector_color_list_[i]; }
+	void set_vector_color(int32 i, const QColor& c)
 	{
 		vector_color_list_[i] = c;
 		shader_vector_per_vertex_param_list_[i]->color_ = vector_color_list_[i];
@@ -175,7 +176,45 @@ private slots:
 
 public slots:
 
+	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_position_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
 
+	void add_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void add_vector_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			add_vector_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
+
+	void remove_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void remove_vector_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			remove_vector_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
+
+	void set_vector_scale_factor(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vector_vbo, float32 sf);
+	void set_vector_scale_factor(const QString& view_name, const QString& map_name, const QString& vector_vbo_name, float32 sf)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_vector_scale_factor(schnapps_->get_view(view_name), map, map->get_vbo(vector_vbo_name), sf);
+	}
+
+	void set_vector_color(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vector_vbo, const QColor& color);
+	void set_vector_color(const QString& view_name, const QString& map_name, const QString& vector_vbo_name, const QColor& color)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_vector_color(schnapps_->get_view(view_name), map, map->get_vbo(vector_vbo_name), color);
+	}
 
 private:
 

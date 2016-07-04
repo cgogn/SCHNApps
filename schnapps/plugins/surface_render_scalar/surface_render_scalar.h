@@ -26,6 +26,7 @@
 
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
+#include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
 #include <surface_render_scalar_dock_tab.h>
@@ -62,15 +63,17 @@ struct MapParameters
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
-		if (position_vbo_)
+		if (position_vbo_ && position_vbo_->vector_dimension() == 3)
 			shader_scalar_per_vertex_param_->set_position_vbo(position_vbo_);
+		else
+			position_vbo_ = nullptr;
 	}
 
 	cgogn::rendering::VBO* get_scalar_vbo() const { return scalar_vbo_; }
 	void set_scalar_vbo(cgogn::rendering::VBO* v)
 	{
 		scalar_vbo_ = v;
-		if (scalar_vbo_)
+		if (scalar_vbo_ && scalar_vbo_->vector_dimension() == 1)
 		{
 			const typename MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
 			float32 scalar_min = std::numeric_limits<float>::max();
@@ -84,6 +87,8 @@ struct MapParameters
 			shader_scalar_per_vertex_param_->min_value_ = scalar_min;
 			shader_scalar_per_vertex_param_->max_value_ = scalar_max;
 		}
+		else
+			scalar_vbo_ = nullptr;
 	}
 
 	cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
@@ -181,7 +186,45 @@ private slots:
 
 public slots:
 
+	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_position_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
 
+	void set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
+	inline void set_scalar_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
+	{
+		MapHandlerGen* map = schnapps_->get_map(map_name);
+		if (map)
+			set_scalar_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
+	}
+
+	void set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm);
+	void set_color_map(const QString& view_name, const QString& map_name, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm)
+	{
+		set_color_map(schnapps_->get_view(view_name), schnapps_->get_map(map_name), cm);
+	}
+
+	void set_expansion(View* view, MapHandlerGen* map, int32 e);
+	void set_expansion(const QString& view_name, const QString& map_name, int32 e)
+	{
+		set_expansion(schnapps_->get_view(view_name), schnapps_->get_map(map_name), e);
+	}
+
+	void set_show_iso_lines(View* view, MapHandlerGen* map, bool b);
+	void set_show_iso_lines(const QString& view_name, const QString& map_name, bool b)
+	{
+		set_show_iso_lines(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
+	}
+
+	void set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n);
+	void set_nb_iso_levels(const QString& view_name, const QString& map_name, int32 n)
+	{
+		set_nb_iso_levels(schnapps_->get_view(view_name), schnapps_->get_map(map_name), n);
+	}
 
 private:
 

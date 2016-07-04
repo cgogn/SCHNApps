@@ -23,7 +23,6 @@
 
 #include <surface_render_scalar.h>
 
-#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
@@ -189,6 +188,82 @@ void Plugin_SurfaceRenderScalar::update_dock_tab()
 	}
 	else
 		schnapps_->disable_plugin_tab_widgets(this);
+}
+
+/******************************************************************************/
+/*                             PUBLIC INTERFACE                               */
+/******************************************************************************/
+
+void Plugin_SurfaceRenderScalar::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_position_vbo(vbo);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_scalar_vbo(vbo);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_color_map(cm);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_expansion(View* view, MapHandlerGen* map, int32 e)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_expansion(e);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_show_iso_lines(View* view, MapHandlerGen* map, bool b)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_show_iso_lines(b);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_nb_iso_levels(n);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
 }
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

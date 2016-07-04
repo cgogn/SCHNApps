@@ -27,10 +27,8 @@
 
 #include <volume_render.h>
 
-#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/geometry/algos/selection.h>
 
@@ -48,6 +46,7 @@ MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* ma
 	if (view_param_set.count(map) == 0)
 	{
 		MapParameters& p = view_param_set[map];
+		p.map_ = static_cast<MapHandler<CMap3>*>(map);
 		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 		return p;
 	}
@@ -86,11 +85,14 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 
 		if (p.render_faces_)
 		{
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonOffset(1.0f, 1.0f);
-			if (p.volume_drawer_rend_)
-				p.volume_drawer_rend_->draw_faces(proj, mv, view);
-			glDisable(GL_POLYGON_OFFSET_FILL);
+			if (p.get_position_vbo())
+			{
+				glEnable(GL_POLYGON_OFFSET_FILL);
+				glPolygonOffset(1.0f, 1.0f);
+				if (p.volume_drawer_rend_)
+					p.volume_drawer_rend_->draw_faces(proj, mv, view);
+				glDisable(GL_POLYGON_OFFSET_FILL);
+			}
 		}
 
 		if (p.render_edges_)
@@ -168,7 +170,6 @@ void Plugin_VolumeRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 		if (vbo->vector_dimension() == 3)
 		{
 			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
-			dock_tab_->add_color_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 }
@@ -182,7 +183,6 @@ void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 		if (vbo->vector_dimension() == 3)
 		{
 			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->name()));
-			dock_tab_->remove_color_vbo(QString::fromStdString(vbo->name()));
 		}
 	}
 
@@ -194,8 +194,6 @@ void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 			MapParameters& p = view_param_set[map];
 			if (p.get_position_vbo() == vbo)
 				p.set_position_vbo(nullptr);
-			if (p.get_color_vbo() == vbo)
-				p.set_color_vbo(nullptr);
 		}
 	}
 
@@ -231,6 +229,130 @@ void Plugin_VolumeRender::update_dock_tab()
 	}
 	else
 		schnapps_->disable_plugin_tab_widgets(this);
+}
+
+/******************************************************************************/
+/*                             PUBLIC INTERFACE                               */
+/******************************************************************************/
+
+void Plugin_VolumeRender::set_render_vertices(View* view, MapHandlerGen* map, bool b)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_vertices_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_render_edges(View* view, MapHandlerGen* map, bool b)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_edges_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_render_faces(View* view, MapHandlerGen* map, bool b)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_faces_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_render_boundary(View* view, MapHandlerGen* map, bool b)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.render_boundary_ = b;
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_position_vbo(vbo);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_vertex_color(View* view, MapHandlerGen* map, const QColor& color)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_vertex_color(color);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_edge_color(View* view, MapHandlerGen* map, const QColor& color)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_edge_color(color);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_face_color(View* view, MapHandlerGen* map, const QColor& color)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_face_color(color);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_vertex_scale_factor(sf);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_volume_explode_factor(View* view, MapHandlerGen* map, float32 vef)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_volume_explode_factor(vef);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
 }
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
