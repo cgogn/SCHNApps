@@ -70,10 +70,8 @@ private:
 private slots:
 
 	void position_vbo_changed(int index);
-	void color_vbo_changed(int index);
 	void render_vertices_changed(bool b);
 	void vertices_scale_factor_changed(int i);
-	void vertices_scale_factor_pressed();
 	void render_edges_changed(bool b);
 	void render_faces_changed(bool b);
 	void render_boundary_changed(bool b);
@@ -88,8 +86,6 @@ private:
 
 	void add_position_vbo(QString name);
 	void remove_position_vbo(QString name);
-	void add_color_vbo(QString name);
-	void remove_color_vbo(QString name);
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };

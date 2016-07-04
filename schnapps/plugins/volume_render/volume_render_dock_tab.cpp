@@ -47,10 +47,8 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	setupUi(this);
 
 	connect(combo_positionVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(position_vbo_changed(int)));
-	connect(combo_colorVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(color_vbo_changed(int)));
 	connect(check_renderVertices, SIGNAL(toggled(bool)), this, SLOT(render_vertices_changed(bool)));
 	connect(slider_verticesScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertices_scale_factor_changed(int)));
-	connect(slider_verticesScaleFactor, SIGNAL(sliderPressed()), this, SLOT(vertices_scale_factor_pressed()));
 	connect(check_renderEdges, SIGNAL(toggled(bool)), this, SLOT(render_edges_changed(bool)));
 	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(render_faces_changed(bool)));
 	connect(check_renderBoundary, SIGNAL(toggled(bool)), this, SLOT(render_boundary_changed(bool)));
@@ -77,35 +75,7 @@ void VolumeRender_DockTab::position_vbo_changed(int index)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(CellType::Edge_Cell))));
 			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
-			MapHandler<CMap3>* mh3 = dynamic_cast<MapHandler<CMap3>*>(map);
-			if (mh3)
-			{
-				auto pos_attr = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(combo_positionVBO->currentText());
-				if (pos_attr.is_valid())
-				{
-					p.get_volume_drawer()->update_face<VEC3>(*mh3->get_map(),pos_attr);
-					p.get_volume_drawer()->update_edge<VEC3>(*mh3->get_map(),pos_attr);
-				}
-
-			}
-
-			view->update();
-		}
-	}
-}
-
-void VolumeRender_DockTab::color_vbo_changed(int index)
-{
-	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_color_vbo(map->get_vbo(combo_colorVBO->currentText()));
 			view->update();
 		}
 	}
@@ -120,26 +90,7 @@ void VolumeRender_DockTab::render_vertices_changed(bool b)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-
-			if (b)
-				p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(CellType::Edge_Cell))));
-
 			p.render_vertices_ = b;
-			view->update();
-		}
-	}
-}
-
-void VolumeRender_DockTab::vertices_scale_factor_pressed()
-{
-	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(CellType::Edge_Cell))));
 			view->update();
 		}
 	}
@@ -306,24 +257,6 @@ void VolumeRender_DockTab::remove_position_vbo(QString name)
 	updating_ui_ = false;
 }
 
-void VolumeRender_DockTab::add_color_vbo(QString name)
-{
-	updating_ui_ = true;
-	combo_colorVBO->addItem(name);
-	updating_ui_ = false;
-}
-
-void VolumeRender_DockTab::remove_color_vbo(QString name)
-{
-	updating_ui_ = true;
-	int curIndex = combo_colorVBO->currentIndex();
-	int index = combo_colorVBO->findText(name, Qt::MatchExactly);
-	if (curIndex == index)
-		combo_colorVBO->setCurrentIndex(0);
-	combo_colorVBO->removeItem(index);
-	updating_ui_ = false;
-}
-
 void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
 	if (!map)
@@ -333,9 +266,6 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 
 	combo_positionVBO->clear();
 	combo_positionVBO->addItem("- select VBO -");
-
-	combo_colorVBO->clear();
-	combo_colorVBO->addItem("- select VBO -");
 
 	unsigned int i = 1;
 	for (const auto& vbo_it : map->get_vbo_set())
@@ -347,10 +277,6 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 			if (vbo.get() == p.get_position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 
-			combo_colorVBO->addItem(QString::fromStdString(vbo->name()));
-			if (vbo.get() == p.get_color_vbo())
-				combo_colorVBO->setCurrentIndex(i);
-
 			++i;
 		}
 	}
@@ -361,7 +287,6 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 	check_renderFaces->setChecked(p.render_faces_);
 	check_renderBoundary->setChecked(p.render_boundary_);
 	sliderExplodeVolumes->setValue(std::round(100.0f*p.get_volume_explode_factor()));
-
 
 	vertex_color_ = p.get_vertex_color();
 	vertexColorButton->setStyleSheet("QPushButton { background-color:" + vertex_color_.name() + " }");
