@@ -52,14 +52,14 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(check_renderEdges, SIGNAL(toggled(bool)), this, SLOT(render_edges_changed(bool)));
 	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(render_faces_changed(bool)));
 	connect(check_renderBoundary, SIGNAL(toggled(bool)), this, SLOT(render_boundary_changed(bool)));
+	connect(sliderExplodeVolumes, SIGNAL(valueChanged(int)), this, SLOT(explode_volumes_changed(int)));
+	connect(check_clippingPlane, SIGNAL(toggled(bool)), this, SLOT(apply_clipping_plane_changed(bool)));
 
 	color_dial_ = new QColorDialog(face_color_, nullptr);
 	connect(vertexColorButton, SIGNAL(clicked()), this, SLOT(vertex_color_clicked()));
 	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
-
-	connect(sliderExplodeVolumes, SIGNAL(valueChanged(int)), this, SLOT(explode_volumes_changed(int)));
 }
 
 
@@ -168,6 +168,21 @@ void VolumeRender_DockTab::explode_volumes_changed(int fact)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_volume_explode_factor(float32(fact) / 100.0f);
+			view->update();
+		}
+	}
+}
+
+void VolumeRender_DockTab::apply_clipping_plane_changed(bool b)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_apply_clipping_plane(b);
 			view->update();
 		}
 	}

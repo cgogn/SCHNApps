@@ -75,7 +75,8 @@ private slots:
 	void render_edges_changed(bool b);
 	void render_faces_changed(bool b);
 	void render_boundary_changed(bool b);
-	void explode_volumes_changed(int);
+	void explode_volumes_changed(int i);
+	void apply_clipping_plane_changed(bool b);
 
 	void vertex_color_clicked();
 	void edge_color_clicked();

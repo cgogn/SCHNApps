@@ -48,6 +48,9 @@ MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* ma
 		MapParameters& p = view_param_set[map];
 		p.map_ = static_cast<MapHandler<CMap3>*>(map);
 		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
+		p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
+		p.frame_manip_->set_position(map->get_bb().max());
+		p.frame_manip_->z_plane_param(QColor(200,200,200), 0.0f, 0.0f, 3.0f);
 		return p;
 	}
 	else
@@ -113,6 +116,57 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 				map->draw(cgogn::rendering::POINTS);
 				p.shader_point_sprite_param_->release();
 			}
+		}
+
+		if (map->is_selected_map() && p.apply_clipping_plane_)
+			p.frame_manip_->draw(true, true, proj, mv, view);
+	}
+}
+
+void Plugin_VolumeRender::mousePress(View* view, QMouseEvent* event)
+{
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		const MapParameters& p = get_parameters(view, map);
+		if (p.apply_clipping_plane_ && event->modifiers() & Qt::ShiftModifier)
+		{
+			qoglviewer::Vec P = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 0.0), &map->get_frame());
+			qoglviewer::Vec Q = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 1.0), &map->get_frame());
+			VEC3 A(P.x, P.y, P.z);
+			VEC3 B(Q.x, Q.y, Q.z);
+			p.frame_manip_->pick(event->x(), event->y(), A, B);
+			view->update();
+		}
+	}
+}
+
+void Plugin_VolumeRender::mouseRelease(View* view, QMouseEvent* event)
+{
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		const MapParameters& p = get_parameters(view, map);
+		if (p.apply_clipping_plane_ && event->modifiers() & Qt::ShiftModifier)
+		{
+			p.frame_manip_->release();
+			view->update();
+		}
+	}
+}
+
+void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
+{
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		if (p.apply_clipping_plane_ && event->modifiers() & Qt::ShiftModifier)
+		{
+			bool local_manip = event->buttons() & Qt::LeftButton;
+			p.frame_manip_->drag(local_manip, event->x(), event->y());
+			p.set_apply_clipping_plane(true);
+			view->update();
 		}
 	}
 }
@@ -213,6 +267,7 @@ void Plugin_VolumeRender::linked_map_bb_changed()
 		{
 			MapParameters& p = view_param_set[map];
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
+			p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
 		}
 	}
 }
@@ -349,6 +404,18 @@ void Plugin_VolumeRender::set_volume_explode_factor(View* view, MapHandlerGen* m
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_volume_explode_factor(vef);
+		if (view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_apply_clipping_plane(View* view, MapHandlerGen* map, bool b)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.apply_clipping_plane_ = b;
 		if (view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
