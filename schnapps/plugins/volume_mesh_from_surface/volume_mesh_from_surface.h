@@ -28,17 +28,26 @@
 #include "dll.h"
 #include <volume_mesh_from_surface_dialog.h>
 #include <schnapps/core/plugin_processing.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
+
+class MapHandlerGen;
+template<typename>
+class MapHandler;
+
+namespace plugin_image
+{
+class Plugin_Image;
+class Image3D;
+} // namespace plugin_image
 
 namespace plugin_vmfs
 {
 
 class Plugin_VolumeMeshFromSurface;
 
-struct SCHNAPPS_PLUGIN_VMFS_API MapParameters
+struct SCHNAPPS_PLUGIN_VMFS_API MeshGeneratorParameters
 {
 	friend class Plugin_VolumeMeshFromSurface;
 
@@ -67,7 +76,7 @@ struct SCHNAPPS_PLUGIN_VMFS_API MapParameters
 	bool do_exuder_;
 	float64 exuder_sliver_bound_;
 
-	MapParameters();
+	MeshGeneratorParameters();
 };
 
 class SCHNAPPS_PLUGIN_VMFS_API Plugin_VolumeMeshFromSurface : public PluginProcessing
@@ -83,21 +92,26 @@ public:
 	using MapHandler2 = schnapps::MapHandler<Map2>;
 	using MapHandler3 = schnapps::MapHandler<Map3>;
 
+	Plugin_VolumeMeshFromSurface();
+
+	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const std::string& tetgen_args);
+	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const MeshGeneratorParameters& params);
+	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const MeshGeneratorParameters& params);
+
 private:
 	virtual bool enable() override;
 	virtual void disable() override;
 
 	QAction* gen_mesh_action_;
-	std::map<MapHandlerGen*, MapParameters> parameter_set_;
+	plugin_image::Plugin_Image* plugin_image_;
+	MeshGeneratorParameters generation_parameters_;
 	std::unique_ptr<VolumeMeshFromSurfaceDialog> dialog_;
-	QString	tetgen_args;
-	QString selected_map_;
 
 public slots:
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
-	void tetgen_args_updated(QString str);
-	void remove_map(MapHandlerGen*);
+	void plugin_enabled(Plugin*);
+	void plugin_disabled(Plugin*);
 };
 
 } // namespace plugin_vmfs

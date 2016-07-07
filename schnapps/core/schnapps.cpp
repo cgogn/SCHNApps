@@ -156,12 +156,19 @@ void SCHNApps::register_plugins_directory(const QString& path)
 #else
 			QString plugin_name = pfi.baseName().remove(0, 3);
 #endif
+			if (plugin_name.endsWith("_d"))
+				plugin_name = plugin_name.left(plugin_name.size() -2);
+			if(plugin_name.startsWith("plugin_",  Qt::CaseInsensitive))
+				plugin_name = plugin_name.right(plugin_name.size() - 7);
+
 			QString plugin_file_path = directory.absoluteFilePath(plugin_file);
 
 			if (available_plugins_.count(plugin_name) == 0ul)
 			{
 				available_plugins_.insert(std::make_pair(plugin_name, plugin_file_path));
 				emit(plugin_available_added(plugin_name));
+			} else {
+				std::cout << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded." << std::endl;
 			}
 		}
 	}

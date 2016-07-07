@@ -40,7 +40,7 @@ namespace plugin_vmfs
 {
 
 class Plugin_VolumeMeshFromSurface;
-struct MapParameters;
+struct MeshGeneratorParameters;
 
 class SCHNAPPS_PLUGIN_VMFS_API ExportDialog : public QDialog, public Ui::Dialog_export
 {};
@@ -72,6 +72,7 @@ public slots:
 
 private slots:
 	void selected_map_changed(QString map_name);
+	void selected_image_changed(QString image_name);
 
 	void cell_size_changed(double cs);
 	void cell_radius_edge_ratio_changed(double ratio);
@@ -98,12 +99,19 @@ private slots:
 
 	void map_added(MapHandlerGen* mhg);
 	void map_removed(MapHandlerGen* mhg);
+
+	void image_added(QString im_path);
+	void image_removed(QString im_path);
+	void tetgen_args_updated(QString str);
+
 private:
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+	QString get_selected_map() const ;
+	void update_mesh_generatuion_ui();
 
 	std::unique_ptr<ExportCGALDialog> cgal_dialog_;
 	std::unique_ptr<ExportTetgenDialog> tetgen_dialog_;
 	std::unique_ptr<ExportDialog> export_dialog_;
+
 };
 
 } // namespace plugin_vmfs

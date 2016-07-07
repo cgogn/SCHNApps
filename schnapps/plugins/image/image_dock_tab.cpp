@@ -1,7 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+* Plugin Image                                                                 *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,25 +22,32 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
+#define SCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT
 
-#include <CGAL/Simple_cartesian.h>
-#include <CGAL/Polyhedron_3.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Polyhedral_mesh_domain_3.h>
+#include "image_dock_tab.h"
+#include <image.h>
+#include <schnapps/core/schnapps.h>
 
 namespace schnapps
 {
 
-namespace plugin_vmfs
+namespace plugin_image
 {
 
-using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
-using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
-using HalfedgeDS = Polyhedron::HalfedgeDS;
+Image_DockTab::Image_DockTab(SCHNApps* s, Plugin_Image* p) :
+	schnapps_(s),
+	plugin_(p),
+	updating_ui_(false)
+{
+	setupUi(this);
 
-} // namespace plugin_vmfs
+	connect(p,&Plugin_Image::image_added, [=](const QString& im_path) {
+		new QListWidgetItem(im_path, this->listWidget_images);
+	});
+
+	connect(this->pushButton_remove, SIGNAL(pressed()), p, SLOT(image_removed()));
+
+}
+
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_TYPES_H
+} // namespace plugin_image

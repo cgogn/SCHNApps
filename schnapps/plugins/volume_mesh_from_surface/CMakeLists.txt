@@ -7,7 +7,7 @@ project(plugin_volume_mesh_from_surface
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(CGAL COMPONENTS Core ImageIO)
+find_package(CGAL COMPONENTS Core)
 if(CGAL_FOUND)
 	include(${CGAL_USE_FILE})
 	find_package(MPFR REQUIRED)
@@ -33,7 +33,6 @@ if(CGAL_FOUND)
 		${HEADER_FILES}
 		cgal/cgogn_surface_to_cgal_polyhedron.h
 		cgal/c3t3_import.h
-		cgal/types.h
 		)
 	set(SOURCE_FILES
 		${SOURCE_FILES}
@@ -58,6 +57,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
+	$<BUILD_INTERFACE:${CGAL_INCLUDE_DIRS}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -65,6 +65,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	tet
+	plugin_image
 	${CGAL_LIBRARIES}
 	${cgogn_core_LIBRARIES}
 	${cgogn_io_LIBRARIES}

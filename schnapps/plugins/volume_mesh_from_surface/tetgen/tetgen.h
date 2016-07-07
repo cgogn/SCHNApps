@@ -113,6 +113,9 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
+namespace tetgen
+{
+
 class tetgenio {
 
 public:
@@ -3331,6 +3334,7 @@ inline REAL tetgenmesh::norm2(REAL x, REAL y, REAL z)
   return (x) * (x) + (y) * (y) + (z) * (z);
 }
 
+} // namespace tetgen
 
 #endif // #ifndef tetgenH
 

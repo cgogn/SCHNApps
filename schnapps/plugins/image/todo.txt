@@ -1,0 +1,2 @@
+lire les vtk (structured_points)
+rendu des images avec des points (cf cgal)

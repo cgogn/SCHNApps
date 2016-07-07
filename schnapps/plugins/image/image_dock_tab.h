@@ -1,7 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+* Plugin Image                                                                 *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,39 +22,37 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 
-#include "dll.h"
-#include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Polyhedron_3.h>
+#include <ui_image.h>
 
 namespace schnapps
 {
 
-namespace plugin_vmfs
+class SCHNApps;
+
+namespace plugin_image
 {
 
-class SCHNAPPS_PLUGIN_VMFS_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS> {
-public:
-	using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
-	using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
-	using HalfedgeDS = Polyhedron::HalfedgeDS;
-	using Vertex = typename HalfedgeDS::Vertex;
-	using Point = typename Vertex::Point ;
+class Plugin_Image;
 
-	PolyhedronBuilder(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
-	void operator()( HalfedgeDS& hds);
+class Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
+{
+	Q_OBJECT
+
+	friend class Plugin_Image;
+
+public:
+	Image_DockTab(SCHNApps* s, Plugin_Image* p);
+
 private:
-	MapHandler<CMap2>* map_;
-	const CMap2::VertexAttribute<VEC3> position_attribute_;
+	SCHNApps* schnapps_;
+	Plugin_Image* plugin_;
+	bool updating_ui_;
 };
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
-
-} // namespace plugin_vmfs
 } // namespace schnapps
+} // namespace plugin_image
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#endif // SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_

@@ -26,10 +26,9 @@
 
 #include "c3t3_import.h"
 #include "cgogn_surface_to_cgal_polyhedron.h"
-
-#include <volume_mesh_from_surface.h>
-
-#include <CGAL/make_mesh_3.h>
+#include <cgal/cgal_image.h>
+#include <CGAL/Labeled_image_mesh_domain_3.h>
+#include <CGAL/Polyhedral_mesh_domain_3.h>
 
 namespace schnapps
 {
@@ -37,60 +36,25 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-bool C3T3VolumeImport::import_file_impl(const std::string&)
+SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map)
 {
-	const Triangulation& triangulation = cpx_.triangulation();
-	std::map<Vertex_handle, unsigned int> vertices_indices;
-	ChunkArray<VEC3>* position = this->template position_attribute<VEC3>();
 
-	const uint32 num_vertices = triangulation.number_of_vertices();
-	const uint32 num_cells = cpx_.number_of_cells_in_complex();
-
-	this->set_nb_volumes(num_cells);
-	this->set_nb_vertices(num_vertices);
-
-	for (auto vit = triangulation.finite_vertices_begin(), vend = triangulation.finite_vertices_end(); vit != vend; ++vit)
-	{
-		const auto& P = vit->point();
-		const uint32 id = this->insert_line_vertex_container();
-		vertices_indices[vit] = id;
-		position->operator [](id) = VEC3(SCALAR(P.x()), SCALAR(P.y()), SCALAR(P.z()));
-	}
-
-	for (auto cit = cpx_.cells_in_complex_begin(), cend = cpx_.cells_in_complex_end(); cit != cend; ++cit)
-		this->add_tetra(*position, vertices_indices[cit->vertex(0)], vertices_indices[cit->vertex(1)], vertices_indices[cit->vertex(2)], vertices_indices[cit->vertex(3)], true);
-
-	ChunkArray<int32>* subdomain_indices = this->volume_attributes_container().template add_chunk_array<int32>("subdomain index");
-	for (auto cit = cpx_.cells_in_complex_begin(), cend = cpx_.cells_in_complex_end(); cit != cend; ++cit)
-	{
-		const uint32 id = this->volume_attributes_container().template insert_lines<1>();
-		subdomain_indices->operator [](id) = cpx_.subdomain_index(cit);
-	}
-
-	return true;
-}
-
-SCHNAPPS_PLUGIN_VMFS_API void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
-{
-	if (!map_out)
-		return;
-
-	C3T3VolumeImport volume_import(c3t3_in);
-	volume_import.import_file("");
-	volume_import.create_map(*map_out->get_map());
-}
-
-SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MapParameters& param, MapHandler<CMap2>* input_surface_map, const std::string& pos_att_name, MapHandler<CMap3>* output_volume_map)
-{
+	using Kernel		= CGAL::Exact_predicates_inexact_constructions_kernel;
+	using Polyhedron	= CGAL::Polyhedron_3<Kernel>;
+	using Domain		= CGAL::Polyhedral_mesh_domain_3<Polyhedron, Kernel>;
+	using Triangulation	= CGAL::Mesh_triangulation_3<Domain>::type;
+	using Criteria		= CGAL::Mesh_criteria_3<Triangulation>;
+	using C3T3			= CGAL::Mesh_complex_3_in_triangulation_3<Triangulation>;
 	using namespace CGAL::parameters;
 
-	if (!input_surface_map || !output_volume_map || pos_att_name.empty())
+	if (!input_surface_map || !output_volume_map || !position_attribute.is_valid())
 		return;
 
-	auto poly = build_polyhedron(input_surface_map, pos_att_name);
+	auto poly = build_polyhedron(input_surface_map, position_attribute);
 	if (poly)
 	{
-		const Criteria criteria(
+
+		Criteria criteria(
 					cell_size = param.cell_size_,
 					facet_angle = param.facet_angle_,
 					facet_size =  param.facet_size_,
@@ -98,47 +62,41 @@ SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MapParameters& param, MapHand
 					cell_radius_edge_ratio = param.cell_radius_edge_ratio_);
 
 		Domain mesh_domain(*poly);
-		auto c3t3 = CGAL::make_mesh_3<C3T3>(mesh_domain, criteria, no_features(), no_perturb(), no_exude(), no_lloyd(), no_odt());
 
-		if (param.do_lloyd_)
-		{
-			CGAL::lloyd_optimize_mesh_3(c3t3,
-										mesh_domain,
-										time_limit = 0,
-										max_iteration_number = param.lloyd_max_iter_,
-										convergence = param.lloyd_convergence_,
-										freeze_bound = param.lloyd_freeze_bound_,
-										do_freeze = param.do_lloyd_freeze_);
-		}
-
-		if (param.do_odt_)
-		{
-			CGAL::odt_optimize_mesh_3(c3t3,
-										mesh_domain,
-										time_limit = 0,
-										max_iteration_number = param.odt_max_iter_,
-										convergence = param.odt_convergence_,
-										freeze_bound = param.odt_freeze_bound_,
-										do_freeze = param.do_odt_freeze_);
-		}
-
-		if (param.do_perturber_)
-		{
-			CGAL::perturb_mesh_3(c3t3,
-								mesh_domain,
-								time_limit = 0,
-								sliver_bound = param.perturber_sliver_bound_);
-		}
-
-		if (param.do_exuder_)
-		{
-			CGAL::exude_mesh_3(c3t3,
-								time_limit = 0,
-								sliver_bound = param.exuder_sliver_bound_);
-		}
-
-		import_c3t3(c3t3,output_volume_map);
+		tetrahedralize(param, mesh_domain, criteria, output_volume_map);
 	}
+}
+
+SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map)
+{
+	using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
+	using Mesh_domain = CGAL::Labeled_image_mesh_domain_3<CGAL::Image_3, Kernel, float32>;
+	using Tr = CGAL::Mesh_triangulation_3<Mesh_domain>::type;
+	using C3t3 = CGAL::Mesh_complex_3_in_triangulation_3<Tr>;
+	using Mesh_criteria = CGAL::Mesh_criteria_3<Tr>;
+	using namespace CGAL::parameters;
+
+	if (!im || !output_volume_map)
+		return;
+
+	if (im->get_data_type() != cgogn::io::DataType::FLOAT)
+	{
+		std::cerr << "Error : CGAL::Labeled_image_mesh_domain_3 requires labels to be of type float32." << std::endl;
+		return;
+	}
+
+	Mesh_criteria criteria(
+				cell_size = param.cell_size_,
+				facet_angle = param.facet_angle_,
+				facet_size =  param.facet_size_,
+				facet_distance= param.facet_distance_,
+				cell_radius_edge_ratio = param.cell_radius_edge_ratio_);
+
+	auto cgal_im = plugin_image::export_to_cgal_image(*im);
+
+	Mesh_domain domain(cgal_im);
+
+	tetrahedralize(param, domain, criteria, output_volume_map);
 }
 
 } // namespace plugin_vmfs

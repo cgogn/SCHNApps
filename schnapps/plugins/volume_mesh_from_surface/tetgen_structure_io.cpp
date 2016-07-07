@@ -25,6 +25,7 @@
 #define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
 
 #include <tetgen_structure_io.h>
+#include <tetgen/tetgen.h>
 
 namespace schnapps
 {
@@ -32,10 +33,11 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos)
+SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos)
 {
 	using Vertex = typename CMap2::Vertex;
 	using Face = typename CMap2::Face;
+	using tetgenio = tetgen::tetgenio;
 	using TetgenReal = REAL;
 
 	map.compact_embedding(Vertex::ORBIT);
