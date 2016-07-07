@@ -32,9 +32,16 @@ namespace schnapps
 MapParameters& Plugin_SurfaceRenderVector::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
-	MapParameters& p = parameter_set_[view][map];
-	p.map_ = static_cast<MapHandler<CMap2>*>(map);
-	return p;
+
+	auto& view_param_set = parameter_set_[view];
+	if (view_param_set.count(map) == 0)
+	{
+		MapParameters& p = view_param_set[map];
+		p.map_ = static_cast<MapHandler<CMap2>*>(map);
+		return p;
+	}
+	else
+		return view_param_set[map];
 }
 
 bool Plugin_SurfaceRenderVector::enable()

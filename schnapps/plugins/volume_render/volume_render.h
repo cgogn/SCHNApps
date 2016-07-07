@@ -38,6 +38,7 @@
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/volume_drawer.h>
+#include <cgogn/rendering/frame_manipulator.h>
 
 #include <QAction>
 #include <map>
@@ -51,7 +52,6 @@ class Plugin_VolumeRender;
 namespace plugin_volume_render
 {
 
-
 struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 {
 	friend class Plugin_VolumeRender;
@@ -62,6 +62,10 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		position_vbo_(nullptr),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
+		volume_drawer_(nullptr),
+		volume_drawer_rend_(nullptr),
+		frame_manip_(nullptr),
+		apply_clipping_plane_(false),
 		render_vertices_(false),
 		render_edges_(false),
 		render_faces_(true),
@@ -81,10 +85,11 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
 		volume_drawer_rend_ = volume_drawer_->generate_renderer();
 		volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
+
+		frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
 	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
@@ -146,6 +151,23 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		volume_drawer_rend_->set_explode_volume(vef);
 	}
 
+	bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
+	void set_apply_clipping_plane(bool b)
+	{
+		apply_clipping_plane_ = b;
+		if (b)
+		{
+			VEC3 position;
+			VEC3 axis_z;
+			frame_manip_->get_position(position);
+			frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt, axis_z);
+			float32 d = -(position.dot(axis_z));
+			volume_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
+		}
+		else
+			volume_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
+	}
+
 private:
 
 	MapHandler<CMap3>* map_;
@@ -166,6 +188,9 @@ private:
 
 	std::unique_ptr<cgogn::rendering::VolumeDrawer> volume_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeDrawer::Renderer> volume_drawer_rend_;
+
+	std::unique_ptr<cgogn::rendering::FrameManipulator> frame_manip_;
+	bool apply_clipping_plane_;
 
 public:
 
@@ -204,9 +229,9 @@ private:
 
 	inline void keyPress(View*, QKeyEvent*) override {}
 	inline void keyRelease(View*, QKeyEvent*) override {}
-	inline void mousePress(View*, QMouseEvent*) override {}
-	inline void mouseRelease(View*, QMouseEvent*) override {}
-	inline void mouseMove(View*, QMouseEvent*) override {}
+	void mousePress(View*, QMouseEvent*) override;
+	void mouseRelease(View*, QMouseEvent*) override;
+	void mouseMove(View*, QMouseEvent*) override;
 	inline void wheelEvent(View*, QWheelEvent*) override {}
 
 	void view_linked(View*) override;
@@ -283,10 +308,16 @@ public slots:
 		set_vertex_scale_factor(schnapps_->get_view(view_name), schnapps_->get_map(map_name), sf);
 	}
 
-	void set_volume_explode_factor(View* view, MapHandlerGen* map, float32 sf);
+	void set_volume_explode_factor(View* view, MapHandlerGen* map, float32 vef);
 	void set_volume_explode_factor(const QString& view_name, const QString& map_name, float32 vef)
 	{
 		set_volume_explode_factor(schnapps_->get_view(view_name), schnapps_->get_map(map_name), vef);
+	}
+
+	void set_apply_clipping_plane(View* view, MapHandlerGen* map, bool b);
+	void set_apply_clipping_plane(const QString& view_name, const QString& map_name, bool b)
+	{
+		set_apply_clipping_plane(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
 	}
 
 private:

@@ -77,7 +77,7 @@ struct MapParameters
 			if (position_vbo_)
 				p->set_position_vbo(position_vbo_);
 			p->set_vector_vbo(vector_vbo_list_.back());
-			p->length_ = vector_scale_factor_list_.back();
+			p->length_ = map_->get_bb_diagonal_size() / 100.0f * vector_scale_factor_list_.back();
 			p->color_ = vector_color_list_.back();
 			shader_vector_per_vertex_param_list_.push_back(std::move(p));
 		}

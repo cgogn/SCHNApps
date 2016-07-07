@@ -120,6 +120,8 @@ public slots:
 	 * MANAGE BOUNDING BOX
 	 *********************************************************/
 
+	const cgogn::geometry::AABB<VEC3>& get_bb() { return bb_; }
+
 	/**
 	* @brief set if bounding box has to be drawn
 	* @param b yes or no

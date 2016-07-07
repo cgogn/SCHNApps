@@ -114,9 +114,9 @@ void Plugin_SurfaceRenderScalar::map_linked(MapHandlerGen *map)
 
 	if (map->dimension() == 2)
 	{
-		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()), Qt::UniqueConnection);
+		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
 	}
 }
 
@@ -126,9 +126,9 @@ void Plugin_SurfaceRenderScalar::map_unlinked(MapHandlerGen *map)
 
 	if (map->dimension() == 2)
 	{
-		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(vbo_added(cgogn::rendering::VBO*)));
-		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(vbo_removed(cgogn::rendering::VBO*)));
-		disconnect(map, SIGNAL(bb_changed()), this, SLOT(bb_changed()));
+		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
+		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 	}
 }
 
