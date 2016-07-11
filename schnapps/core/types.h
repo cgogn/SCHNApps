@@ -79,7 +79,7 @@ using VEC4 = VEC4D;
 using VEC3 = VEC3D;
 using VEC2 = VEC2D;
 
-using SCALAR = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
+using SCALAR = cgogn::geometry::vector_traits<VEC3>::Scalar;
 
 } // namespace schnapps
 

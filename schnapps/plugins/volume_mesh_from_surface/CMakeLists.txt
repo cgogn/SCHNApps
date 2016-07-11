@@ -52,6 +52,7 @@ if(CGAL_FOUND)
 endif(CGAL_FOUND)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_VMFS_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>

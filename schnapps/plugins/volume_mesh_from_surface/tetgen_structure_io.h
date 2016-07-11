@@ -46,7 +46,7 @@ class SCHNAPPS_PLUGIN_VMFS_API TetgenStructureVolumeImport : public cgogn::io::V
 public:
 	using Inherit = cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>;
 	using Self = TetgenStructureVolumeImport;
-	using Scalar = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
+	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
 	template <typename T>
 	using ChunkArray = typename Inherit::template ChunkArray<T>;
 	using tetgenio = tetgen::tetgenio;

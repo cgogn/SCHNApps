@@ -75,7 +75,7 @@ struct MapParameters
 		scalar_vbo_ = v;
 		if (scalar_vbo_ && scalar_vbo_->vector_dimension() == 1)
 		{
-			const typename MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
+			const MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
 			float32 scalar_min = std::numeric_limits<float>::max();
 			float32 scalar_max = std::numeric_limits<float>::min();
 			for (const SCALAR& s : attr)

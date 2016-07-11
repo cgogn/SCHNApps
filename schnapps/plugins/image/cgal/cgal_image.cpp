@@ -22,8 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT
-
 #include "cgal_image.h"
 
 namespace schnapps

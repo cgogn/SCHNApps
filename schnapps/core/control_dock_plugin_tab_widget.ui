@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>SCHNAPPS_CORE_API</exportmacro>
  <class>ControlDock_PluginTabWidget</class>
  <widget class="QWidget" name="ControlDock_PluginTabWidget">
   <property name="geometry">
