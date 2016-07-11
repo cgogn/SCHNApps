@@ -25,6 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 
+#include "dll.h"
 #include <ui_image.h>
 
 namespace schnapps

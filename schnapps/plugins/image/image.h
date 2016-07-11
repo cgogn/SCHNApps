@@ -45,7 +45,7 @@ using namespace cgogn::numerics;
 class Image_DockTab;
 
 
-class Image3D
+class SCHNAPPS_PLUGIN_IMAGE_API Image3D
 {
 public:
 	using DataInputGen = cgogn::io::DataInputGen<cgogn::DefaultMapTraits::CHUNK_SIZE>;
@@ -86,7 +86,7 @@ private:
 	uint32 nb_components_;
 };
 
-class Plugin_Image : public PluginInteraction
+class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

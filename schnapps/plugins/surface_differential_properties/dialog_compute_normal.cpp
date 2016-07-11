@@ -30,6 +30,8 @@
 
 namespace schnapps
 {
+namespace plugin_sdp
+{
 
 ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s) :
 	schnapps_(s),
@@ -131,4 +133,5 @@ void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, cons
 	}
 }
 
+} // namespace plugin_sdp
 } // namespace schnapps

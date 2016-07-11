@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_
 
+#include "dll.h"
 #include <ui_dialog_compute_curvature.h>
 
 #include <schnapps/core/map_handler.h>
@@ -33,9 +34,13 @@ namespace schnapps
 
 class SCHNApps;
 class MapHandlerGen;
+
+namespace plugin_sdp
+{
+
 class Plugin_SurfaceDifferentialProperties;
 
-class ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
+class SCHNAPPS_PLUGIN_SDP_API ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
 {
 	Q_OBJECT
 
@@ -57,6 +62,7 @@ private slots:
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 };
 
+} // namespace plugin_sdp
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_

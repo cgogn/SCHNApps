@@ -30,6 +30,8 @@
 
 namespace schnapps
 {
+namespace plugin_surface_render_vector
+{
 
 SurfaceRenderVector_DockTab::SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p) :
 	schnapps_(s),
@@ -248,4 +250,5 @@ void SurfaceRenderVector_DockTab::update_map_parameters(MapHandlerGen* map, cons
 	updating_ui_ = false;
 }
 
+} // namespace plugin_surface_render_vector
 } // namespace schnapps

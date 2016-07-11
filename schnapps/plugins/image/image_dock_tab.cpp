@@ -22,8 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT
-
 #include "image_dock_tab.h"
 #include <image.h>
 #include <schnapps/core/schnapps.h>

@@ -77,7 +77,11 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	set_selected_view(first_view_);
 	root_splitter_->addWidget(first_view_);
 
+#ifdef WIN32
+	register_plugins_directory(app_path);
+#else
 	register_plugins_directory(app_path + QString("/../lib"));
+#endif
 }
 
 SCHNApps::~SCHNApps()
@@ -130,15 +134,7 @@ Camera* SCHNApps::get_camera(const QString& name) const
 
 void SCHNApps::register_plugins_directory(const QString& path)
 {
-#ifdef WIN32
-#ifdef _DEBUG
-	QDir directory(path + QString("Debug/"));
-#else
-	QDir directory(path + QString("Release/"));
-#endif
-#else
-	QDir directory(path);
-#endif
+	QDir directory(QDir::cleanPath(path));
 	if (directory.exists())
 	{
 		QStringList filters;
@@ -148,7 +144,7 @@ void SCHNApps::register_plugins_directory(const QString& path)
 
 		QStringList plugin_files = directory.entryList(filters, QDir::Files);
 
-		for (QString plugin_file : plugin_files)
+		for (const QString& plugin_file : plugin_files)
 		{
 			QFileInfo pfi(plugin_file);
 #ifdef WIN32

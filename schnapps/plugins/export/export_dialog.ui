@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>SCHNAPPS_PLUGIN_EXPORT_API</exportmacro>
  <class>MapExport</class>
  <widget class="QDialog" name="MapExport">
   <property name="geometry">

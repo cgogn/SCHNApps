@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SELECTION_H_
 #define SCHNAPPS_PLUGIN_SELECTION_H_
 
+#include "dll.h"
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
@@ -38,9 +39,12 @@
 namespace schnapps
 {
 
+namespace plugin_selection
+{
+
 class Plugin_Selection;
 
-struct MapParameters : public QObject
+struct SCHNAPPS_PLUGIN_SELECTION_API MapParameters : public QObject
 {
 	Q_OBJECT
 
@@ -116,14 +120,14 @@ public:
 		shader_simple_color_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
 	}
 
-	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
+	const MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
 	QString get_position_attribute_name() const { return QString::fromStdString(position_.name()); }
 	void set_position_attribute(const QString& attribute_name)
 	{
 		position_ = map_->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name);
 	}
 
-	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_normal_attribute() const { return normal_; }
+	const MapHandler<CMap2>::VertexAttribute<VEC3>& get_normal_attribute() const { return normal_; }
 	QString get_normal_attribute_name() const { return QString::fromStdString(normal_.name()); }
 	void set_normal_attribute(const QString& attribute_name)
 	{
@@ -236,8 +240,8 @@ public slots:
 private:
 
 	MapHandler<CMap2>* map_;
-	typename MapHandler<CMap2>::VertexAttribute<VEC3> position_;
-	typename MapHandler<CMap2>::VertexAttribute<VEC3> normal_;
+	MapHandler<CMap2>::VertexAttribute<VEC3> position_;
+	MapHandler<CMap2>::VertexAttribute<VEC3> normal_;
 
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_selection_sphere_;
 	std::unique_ptr<cgogn::rendering::VBO> selection_sphere_vbo_;
@@ -279,7 +283,7 @@ public:
 /**
 * @brief Plugin for cells selection
 */
-class Plugin_Selection : public PluginInteraction
+class SCHNAPPS_PLUGIN_SELECTION_API Plugin_Selection : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -334,6 +338,7 @@ private:
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
+} // namespace plugin_selection
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SELECTION_H_

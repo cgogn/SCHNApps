@@ -8,6 +8,7 @@ find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
+	dll.h
 	schnapps_window.h
 	schnapps.h
 	camera.h
@@ -55,6 +56,7 @@ if(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PUBLIC "-std=c++11")
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_CORE_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${QOGLViewer_INCLUDE_DIRS}
@@ -70,6 +72,14 @@ target_link_libraries(${PROJECT_NAME}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
 )
+
+if(WIN32)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CGOGN_BUILD_PATH}/bin/$<CONFIGURATION>"
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+endif()
+
 
 install(DIRECTORY .
 	DESTINATION include/schnapps/core

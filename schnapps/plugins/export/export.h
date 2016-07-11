@@ -42,7 +42,7 @@ namespace plugin_export
 
 class ExportDialog;
 
-struct ExportParams
+struct SCHNAPPS_PLUGIN_EXPORT_API ExportParams
 {
 	ExportParams();
 	void reset();

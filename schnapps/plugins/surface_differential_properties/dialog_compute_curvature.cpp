@@ -29,6 +29,8 @@
 
 namespace schnapps
 {
+namespace plugin_sdp
+{
 
 ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s) :
 	schnapps_(s),
@@ -157,4 +159,5 @@ void ComputeCurvature_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, c
 	}
 }
 
+} // namespace plugin_sdp
 } // namespace schnapps

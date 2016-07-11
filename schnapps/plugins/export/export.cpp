@@ -22,8 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_EXPORT_DLL_EXPORT
-
 #include <export.h>
 
 #include <schnapps/core/schnapps.h>

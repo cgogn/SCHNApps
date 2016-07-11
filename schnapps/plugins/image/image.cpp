@@ -22,8 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT
-
 #include "image.h"
 #include <QFileDialog>
 #include <QFileInfo>
@@ -32,7 +30,6 @@
 #include <cgogn/io/c_locale.h>
 #include <cgogn/io/vtk_io.h>
 #include <cgogn/core/utils/string.h>
-#include <cgal/cgal_image.h>
 
 namespace schnapps
 {
@@ -218,8 +215,6 @@ Image3D Image3D::new_image_3d(const QString& image_path)
 				return res_img;
 
 		}
-
-		export_to_cgal_image(res_img);
 	}
 	return res_img;
 }

@@ -28,6 +28,8 @@
 
 namespace schnapps
 {
+namespace plugin_surface_render_vector
+{
 
 MapParameters& Plugin_SurfaceRenderVector::get_parameters(View* view, MapHandlerGen* map)
 {
@@ -277,4 +279,5 @@ void Plugin_SurfaceRenderVector::set_vector_color(View* view, MapHandlerGen* map
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
+} // namespace plugin_surface_render_vector
 } // namespace schnapps

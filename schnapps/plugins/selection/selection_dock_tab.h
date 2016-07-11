@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
 
+#include "dll.h"
 #include <ui_selection.h>
 #include <schnapps/core/map_handler.h>
 
@@ -31,11 +32,14 @@ namespace schnapps
 {
 
 class SCHNApps;
-class Plugin_Selection;
 
+namespace plugin_selection
+{
+
+class Plugin_Selection;
 struct MapParameters;
 
-class Selection_DockTab : public QWidget, public Ui::Selection_TabWidget
+class SCHNAPPS_PLUGIN_SELECTION_API Selection_DockTab : public QWidget, public Ui::Selection_TabWidget
 {
 	Q_OBJECT
 
@@ -72,6 +76,7 @@ private:
 	CellsSetGen* current_cells_set_;
 };
 
+} // namespace plugin_selection
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_

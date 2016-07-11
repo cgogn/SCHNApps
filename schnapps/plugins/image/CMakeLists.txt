@@ -19,14 +19,24 @@ set(HEADER_FILES
 	dll.h
 	image.h
 	image_dock_tab.h
-	cgal/cgal_image.h
+
 )
 
 set(SOURCE_FILES
 	image.cpp
 	image_dock_tab.cpp
-	cgal/cgal_image.cpp
 )
+
+if(CGAL_FOUND)
+	set(HEADER_FILES
+		${HEADER_FILES}
+		cgal/cgal_image.h
+		)
+	set(SOURCE_FILES
+		${SOURCE_FILES}
+		cgal/cgal_image.cpp
+		)
+endif(CGAL_FOUND)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -34,6 +44,10 @@ set(CMAKE_AUTOUIC ON)
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT")
+if(CGAL_FOUND)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DPLUGIN_IMAGE_WITH_CGAL")
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>

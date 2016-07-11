@@ -23,8 +23,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_VOLUME_RENDER_DLL_EXPORT
-
 #include <volume_render_dock_tab.h>
 #include <volume_render.h>
 

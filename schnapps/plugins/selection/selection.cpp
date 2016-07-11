@@ -30,6 +30,8 @@
 
 namespace schnapps
 {
+namespace plugin_selection
+{
 
 Plugin_Selection::Plugin_Selection()
 {}
@@ -656,4 +658,5 @@ void Plugin_Selection::update_dock_tab()
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
+} // namespace plugin_selection
 } // namespace schnapps

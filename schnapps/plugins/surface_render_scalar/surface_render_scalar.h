@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 
+#include "dll.h"
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
@@ -35,10 +36,12 @@
 
 namespace schnapps
 {
+namespace plugin_surface_render_scalar
+{
 
 class Plugin_SurfaceRenderScalar;
 
-struct MapParameters
+struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 {
 	friend class Plugin_SurfaceRenderScalar;
 
@@ -75,7 +78,7 @@ struct MapParameters
 		scalar_vbo_ = v;
 		if (scalar_vbo_ && scalar_vbo_->vector_dimension() == 1)
 		{
-			const typename MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
+			const MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
 			float32 scalar_min = std::numeric_limits<float>::max();
 			float32 scalar_max = std::numeric_limits<float>::min();
 			for (const SCALAR& s : attr)
@@ -137,7 +140,7 @@ private:
 /**
 * @brief Plugin that renders color-coded scalar values on surface vertices
 */
-class Plugin_SurfaceRenderScalar : public PluginInteraction
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API Plugin_SurfaceRenderScalar : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -232,6 +235,7 @@ private:
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
+} // namespace plugin_surface_render_scalar
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_

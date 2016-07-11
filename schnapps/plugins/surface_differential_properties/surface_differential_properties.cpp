@@ -33,6 +33,8 @@
 
 namespace schnapps
 {
+namespace plugin_sdp
+{
 
 bool Plugin_SurfaceDifferentialProperties::enable()
 {
@@ -354,4 +356,5 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
+} // namespace plugin_sdp
 } // namespace schnapps

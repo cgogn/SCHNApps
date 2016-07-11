@@ -22,8 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
-
 #include <volume_mesh_from_surface.h>
 #include <volume_mesh_from_surface_dialog.h>
 #include <schnapps/core/schnapps.h>
@@ -136,7 +134,9 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 	{
 		this->export_dialog_->comboBox_images->setCurrentIndex(0);
 		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(false);
+#ifdef PLUGIN_VMFS_WITH_CGAL
 		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(false);
+#endif
 
 
 		this->export_dialog_->comboBoxPositionSelection->clear();
@@ -157,7 +157,9 @@ void VolumeMeshFromSurfaceDialog::selected_image_changed(QString /*image_name*/)
 	if (this->export_dialog_->comboBox_images->currentIndex() >= 1)
 	{
 		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
+#ifdef PLUGIN_VMFS_WITH_CGAL
 		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(false);
+#endif
 	}
 }
 

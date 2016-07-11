@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>SCHNAPPS_PLUGIN_VOLUME_RENDER_API</exportmacro>
  <class>VolumeRender_TabWidget</class>
  <widget class="QWidget" name="VolumeRender_TabWidget">
   <property name="geometry">

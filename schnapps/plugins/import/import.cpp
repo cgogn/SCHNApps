@@ -33,6 +33,8 @@
 
 namespace schnapps
 {
+namespace plugin_import
+{
 
 bool Plugin_Import::enable()
 {
@@ -42,8 +44,8 @@ bool Plugin_Import::enable()
 	import_volume_mesh_action_ = schnapps_->add_menu_action("Import;Volume Mesh", "import volume mesh");
 	connect(import_volume_mesh_action_, SIGNAL(triggered()), this, SLOT(import_volume_mesh_from_file_dialog()));
 
-//	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
-//	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
+	//	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
+	//	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
 
 	return true;
 }
@@ -51,7 +53,7 @@ bool Plugin_Import::enable()
 void Plugin_Import::disable()
 {
 	schnapps_->remove_menu_action(import_surface_mesh_action_);
-//	schnapps_->remove_menu_action(import_2D_image_action_);
+	//	schnapps_->remove_menu_action(import_2D_image_action_);
 }
 
 MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filename)
@@ -67,16 +69,16 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 
 			cgogn::io::import_surface<VEC3>(*map, filename.toStdString());
 
-//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
-//			{
-//				AttributeContainer& cont = map->getAttributeContainer(orbit);
-//				std::vector<std::string> names;
-//				std::vector<std::string> types;
-//				cont.getAttributesNames(names);
-//				cont.getAttributesTypes(types);
-//				for(unsigned int i = 0; i < names.size(); ++i)
-//					mhg->registerAttribute(orbit, QString::fromStdString(names[i]), QString::fromStdString(types[i]));
-//			}
+			//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
+			//			{
+			//				AttributeContainer& cont = map->getAttributeContainer(orbit);
+			//				std::vector<std::string> names;
+			//				std::vector<std::string> types;
+			//				cont.getAttributesNames(names);
+			//				cont.getAttributesTypes(types);
+			//				for(unsigned int i = 0; i < names.size(); ++i)
+			//					mhg->registerAttribute(orbit, QString::fromStdString(names[i]), QString::fromStdString(types[i]));
+			//			}
 		}
 		return mhg;
 	}
@@ -88,7 +90,7 @@ void Plugin_Import::import_surface_mesh_from_file_dialog()
 {
 	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", schnapps_->get_app_path(), "Surface mesh Files (*.ply *.off *.stl *.trian *.vtk *.vtp *.obj)");
 	QStringList::Iterator it = filenames.begin();
-	while(it != filenames.end())
+	while (it != filenames.end())
 	{
 		import_surface_mesh_from_file(*it);
 		++it;
@@ -118,7 +120,7 @@ void Plugin_Import::import_volume_mesh_from_file_dialog()
 {
 	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", schnapps_->get_app_path(), "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
 	QStringList::Iterator it = filenames.begin();
-	while(it != filenames.end())
+	while (it != filenames.end())
 	{
 		import_volume_mesh_from_file(*it);
 		++it;
@@ -127,4 +129,5 @@ void Plugin_Import::import_volume_mesh_from_file_dialog()
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
+} // namespace plugin_import
 } // namespace schnapps

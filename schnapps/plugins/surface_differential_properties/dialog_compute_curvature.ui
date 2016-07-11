@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>SCHNAPPS_PLUGIN_SDP_API</exportmacro>
  <class>ComputeCurvature_Dialog</class>
  <widget class="QDialog" name="ComputeCurvature_Dialog">
   <property name="geometry">
