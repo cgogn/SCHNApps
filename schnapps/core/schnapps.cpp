@@ -163,7 +163,9 @@ void SCHNApps::register_plugins_directory(const QString& path)
 			{
 				available_plugins_.insert(std::make_pair(plugin_name, plugin_file_path));
 				emit(plugin_available_added(plugin_name));
-			} else {
+			}
+			else
+			{
 				std::cout << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded." << std::endl;
 			}
 		}

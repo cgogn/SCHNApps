@@ -101,7 +101,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 						{
 							case MapParameters::NormalAngle:
 							case MapParameters::SingleCell:
-								p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * p.vertex_scale_factor_;
+								p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * p.vertex_scale_factor_ * 1.01f;
 								break;
 							case MapParameters::WithinSphere:
 								p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_;
@@ -153,9 +153,9 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 				case Face_Cell:
 					if (p.cells_set_->get_nb_cells() > 0)
 					{
-						p.shader_simple_color_param_selected_faces_->bind(proj, mv);
+						p.shader_flat_param_selected_faces_->bind(proj, mv);
 						ogl->glDrawArrays(GL_TRIANGLES, 0, p.selected_faces_nb_indices_);
-						p.shader_simple_color_param_selected_faces_->release();
+						p.shader_flat_param_selected_faces_->release();
 					}
 					if (p.selecting_)
 					{
@@ -165,9 +165,11 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 							case MapParameters::SingleCell:
 								if (p.selecting_face_.is_valid())
 								{
+									ogl->glDisable(GL_DEPTH_TEST);
 									p.shader_simple_color_param_selection_face_->bind(proj, mv);
 									ogl->glDrawArrays(GL_TRIANGLES, 0, p.selecting_face_nb_indices_);
 									p.shader_simple_color_param_selection_face_->release();
+									ogl->glEnable(GL_DEPTH_TEST);
 								}
 								break;
 							case MapParameters::WithinSphere:
@@ -265,13 +267,10 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 									CMap2* map2 = static_cast<MapHandler<CMap2>*>(map)->get_map();
 									cgogn::geometry::Collector_WithinSphere<VEC3, CMap2> neighborhood(*map2, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
 									neighborhood.collect(p.selecting_vertex_);
-									neighborhood.foreach_cell([&] (CMap2::Vertex v)
-									{
-										if(event->button() == Qt::LeftButton)
-											tcs->select(v);
-										else if(event->button() == Qt::RightButton)
-											tcs->unselect(v);
-									});
+									if(event->button() == Qt::LeftButton)
+										tcs->select(neighborhood.cells<MapHandler<CMap2>::Vertex>());
+									if(event->button() == Qt::RightButton)
+										tcs->unselect(neighborhood.cells<MapHandler<CMap2>::Vertex>());
 								}
 							}
 								break;
@@ -452,8 +451,9 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 										std::vector<VEC3> selection_polygon;
 										std::vector<uint32> ears;
 										cgogn::geometry::append_ear_triangulation<VEC3>(*map2, p.selecting_face_, p.get_position_attribute(), ears);
+										VEC3 c = cgogn::geometry::centroid<VEC3>(*map2, p.selecting_face_, p.get_position_attribute());
 										for (uint32 i : ears)
-											selection_polygon.push_back(p.get_position_attribute()[i]);
+											selection_polygon.push_back(p.get_position_attribute()[i] * 0.9 + c * 0.1);
 										p.selecting_face_nb_indices_ = selection_polygon.size();
 										cgogn::rendering::update_vbo(selection_polygon, p.selection_face_vbo_.get());
 									}

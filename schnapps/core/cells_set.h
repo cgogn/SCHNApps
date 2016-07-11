@@ -118,7 +118,7 @@ public:
 		if (!marker_.is_marked(c))
 		{
 			marker_.mark(c);
-			cells_.push_back(c);
+			cells_.insert(std::make_pair(map_.get_map()->embedding(c), c));
 			if (this->mutually_exclusive_ && !mutually_exclusive_sets_.empty())
 			{
 				for (Self* cs : mutually_exclusive_sets_)
@@ -148,19 +148,12 @@ public:
 		if(marker_.is_marked(c))
 		{
 			uint32 emb = map_.get_map()->embedding(c);
-			bool found = false;
-			std::size_t i;
-			for (i = 0; i < cells_.size() && !found; ++i)
+			auto it = cells_.find(emb);
+			if (it != cells_.end())
 			{
-				if(map_.get_map()->embedding(cells_[i]) == emb)
-					found = true ;
-			}
-			if (found)
-			{
-				marker_.unmark(cells_[i-1]);
-				cells_[i-1] = cells_.back();
-				cells_.pop_back();
-				if(emit_signal)
+				marker_.unmark(it->second);
+				cells_.erase(it);
+				if (emit_signal)
 					emit(selected_cells_changed());
 				else
 					selection_changed_ = true;
@@ -180,7 +173,7 @@ public:
 		mutually_exclusive_sets_.clear();
 		for (Inherit* cs : mex)
 		{
-			if(cs != this)
+			if (cs != this)
 			{
 				Self* s = dynamic_cast<Self*>(cs);
 				if (s)
@@ -195,15 +188,15 @@ public:
 	inline void foreach_cell(const FUNC& f)
 	{
 		static_assert(check_func_parameter_type(FUNC, CELL), "Wrong function parameter type");
-		for (const CELL& cell : cells_)
-			f(cell);
+		for (const auto& cell : cells_)
+			f(cell.second);
 	}
 
 protected:
 
 	MapHandler<MAP>& map_;
 	typename MAP::template CellMarker<CELL::ORBIT> marker_;
-	std::vector<CELL> cells_;
+	std::map<uint32, CELL> cells_;
 	std::vector<Self*> mutually_exclusive_sets_;
 };
 
@@ -226,8 +219,8 @@ inline void CellsSet<MAP, CELL>::rebuild()
 	cells_.clear();
 	map_.get_map()->foreach_cell([&] (CELL c)
 	{
-		if(marker_.is_marked(c))
-			cells_.push_back(c);
+		if (marker_.is_marked(c))
+			cells_.insert(std::make_pair(map_.get_map()->embedding(c), c));
 	});
 	emit(selected_cells_changed());
 }
