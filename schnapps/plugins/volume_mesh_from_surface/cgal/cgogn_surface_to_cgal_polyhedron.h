@@ -42,8 +42,8 @@ public:
 	using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
 	using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
 	using HalfedgeDS = Polyhedron::HalfedgeDS;
-	using Vertex = typename HalfedgeDS::Vertex;
-	using Point = typename Vertex::Point ;
+	using Vertex = HalfedgeDS::Vertex;
+	using Point = Vertex::Point ;
 
 	PolyhedronBuilder(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 	void operator()( HalfedgeDS& hds);

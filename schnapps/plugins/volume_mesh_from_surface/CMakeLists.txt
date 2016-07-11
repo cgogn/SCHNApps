@@ -70,7 +70,7 @@ target_link_libraries(${PROJECT_NAME}
 	${CGAL_LIBRARIES}
 	${cgogn_core_LIBRARIES}
 	${cgogn_io_LIBRARIES}
-	${CGAL_LIB}
+	${CGAL_Core_LIBRARY}
 	${Boost_LIBRARIES}
 	${MPFR_LIBRARIES}
 	${GMP_LIBRARIES}

@@ -295,24 +295,24 @@ void Image3D::import_inr(std::istream& inr_data)
 
 	if (type == "unsigned fixed")
 		switch (data_size) {
-			case 1: data_ = cgogn::make_unique<DataInput<uint8, float32>>(); break;
-			case 2: data_ = cgogn::make_unique<DataInput<uint16, float32>>(); break;
-			case 4: data_ = cgogn::make_unique<DataInput<uint32, float32>>(); break;
-			case 8: data_ = cgogn::make_unique<DataInput<uint64, float32>>(); break;
+		case 1: data_ = cgogn::make_unique<DataInput<uint8, value_type>>(); break;
+		case 2: data_ = cgogn::make_unique<DataInput<uint16, value_type>>(); break;
+		case 4: data_ = cgogn::make_unique<DataInput<uint32, value_type>>(); break;
+		case 8: data_ = cgogn::make_unique<DataInput<uint64, value_type>>(); break;
 			default: break;
 		} else {
 		if (type == "signed fixed")
 			switch (data_size) {
-				case 1: data_ = cgogn::make_unique<DataInput<int8, float32>>(); break;
-				case 2: data_ = cgogn::make_unique<DataInput<int16, float32>>(); break;
-				case 4: data_ = cgogn::make_unique<DataInput<int32, float32>>(); break;
-				case 8: data_ = cgogn::make_unique<DataInput<int64, float32>>(); break;
+			case 1: data_ = cgogn::make_unique<DataInput<int8, value_type>>(); break;
+			case 2: data_ = cgogn::make_unique<DataInput<int16, value_type>>(); break;
+			case 4: data_ = cgogn::make_unique<DataInput<int32, value_type>>(); break;
+			case 8: data_ = cgogn::make_unique<DataInput<int64, value_type>>(); break;
 				default: break;
 			} else {
 			if (type == "float")
 				switch (data_size) {
-					case 4: data_ = cgogn::make_unique<DataInput<float32>>(); break;
-					case 8: data_ = cgogn::make_unique<DataInput<float64, float32>>(); break;
+				case 4: data_ = cgogn::make_unique<DataInput<float32, value_type>>(); break;
+				case 8: data_ = cgogn::make_unique<DataInput<float64, value_type>>(); break;
 					default: break;
 				}
 		}
@@ -408,7 +408,7 @@ void Image3D::import_vtk(std::istream& vtk_data)
 					if (to_upper(lookup_table) != "LOOKUP_TABLE")
 						vtk_data.seekg(pos_before_lookup_table); // if there wasn't a lookup table we go back and start reading the numerical values
 
-					data_ = DataInputGen::template newDataIO<1, float32>(att_type, nb_components_);
+					data_ = DataInputGen::template newDataIO<1, value_type>(att_type, nb_components_);
 					data_->read_n(vtk_data, nb_data, !ascii_file, true);
 					data_ = data_->simplify();
 				}

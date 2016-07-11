@@ -112,7 +112,7 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 	C3T3VolumeImport<C3T3> volume_import(c3t3_in);
 	volume_import.import_file("");
 	volume_import.create_map(*map_out->get_map());
-	map_out->attribute_added(C3T3VolumeImport<C3T3>::Volume::ORBIT, "subdomain index");
+	map_out->attribute_added(CMap3::Volume::ORBIT, "subdomain index");
 }
 
 

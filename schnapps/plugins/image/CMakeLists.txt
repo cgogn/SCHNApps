@@ -65,5 +65,5 @@ target_link_libraries(${PROJECT_NAME}
 	${cgogn_io_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
-	${CGAL_LIB}
+	${CGAL_ImageIO_LIBRARY}
 )

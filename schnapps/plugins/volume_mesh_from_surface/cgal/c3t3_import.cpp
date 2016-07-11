@@ -70,7 +70,11 @@ SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& para
 SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map)
 {
 	using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
-	using Mesh_domain = CGAL::Labeled_image_mesh_domain_3<CGAL::Image_3, Kernel, float32>;
+#if CGAL_VERSION_NR >= CGAL_VERSION_NUMBER(4,8,0)
+	using Mesh_domain = CGAL::Labeled_image_mesh_domain_3<CGAL::Image_3, Kernel, plugin_image::Image3D::value_type, float32>;
+#else
+	using Mesh_domain = CGAL::Labeled_image_mesh_domain_3<CGAL::Image_3, Kernel>;
+#endif
 	using Tr = CGAL::Mesh_triangulation_3<Mesh_domain>::type;
 	using C3t3 = CGAL::Mesh_complex_3_in_triangulation_3<Tr>;
 	using Mesh_criteria = CGAL::Mesh_criteria_3<Tr>;
@@ -79,11 +83,11 @@ SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& para
 	if (!im || !output_volume_map)
 		return;
 
-	if (im->get_data_type() != cgogn::io::DataType::FLOAT)
-	{
-		std::cerr << "Error : CGAL::Labeled_image_mesh_domain_3 requires labels to be of type float32." << std::endl;
-		return;
-	}
+	//if (im->get_data_type() != cgogn::io::DataType::FLOAT)
+	//{
+	//	std::cerr << "Error : CGAL::Labeled_image_mesh_domain_3 requires labels to be of type float32." << std::endl;
+	//	return;
+	//}
 
 	Mesh_criteria criteria(
 				cell_size = param.cell_size_,
