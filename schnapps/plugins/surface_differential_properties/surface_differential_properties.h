@@ -26,6 +26,7 @@
 
 #include <schnapps/core/plugin_processing.h>
 
+#include "dll.h"
 #include <dialog_compute_normal.h>
 #include <dialog_compute_curvature.h>
 
@@ -36,12 +37,14 @@ namespace schnapps
 
 class MapHandlerGen;
 
+namespace plugin_sdp
+{
 /**
  * @brief Plugin that manages the computation of differential properties
  * - Normals
  * - Curvatures
  */
-class Plugin_SurfaceDifferentialProperties: public PluginProcessing
+class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties: public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -167,6 +170,7 @@ private:
 	std::map<QString, ComputeCurvatureParameters> compute_curvature_last_parameters_;
 };
 
+} // namespace plugin_sdp
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_

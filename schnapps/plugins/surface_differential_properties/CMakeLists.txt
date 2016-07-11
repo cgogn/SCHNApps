@@ -8,6 +8,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
+	dll.h
 	surface_differential_properties.h
 	dialog_compute_normal.h
 	dialog_compute_curvature.h
@@ -25,6 +26,7 @@ set(CMAKE_AUTOUIC ON)
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SDP_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${QOGLViewer_INCLUDE_DIRS}

@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
 
+#include "dll.h"
 #include <ui_surface_render_vector.h>
 
 namespace schnapps
@@ -31,11 +32,15 @@ namespace schnapps
 
 class SCHNApps;
 class MapHandlerGen;
+
+namespace plugin_surface_render_vector
+{
+
 class Plugin_SurfaceRenderVector;
 
 struct MapParameters;
 
-class SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
 {
 	Q_OBJECT
 
@@ -70,6 +75,7 @@ private:
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
+} // namespace plugin_surface_render_vector
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API</exportmacro>
  <class>SurfaceRenderScalar_TabWidget</class>
  <widget class="QWidget" name="SurfaceRenderScalar_TabWidget">
   <property name="geometry">

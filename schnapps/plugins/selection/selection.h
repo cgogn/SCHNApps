@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SELECTION_H_
 #define SCHNAPPS_PLUGIN_SELECTION_H_
 
+#include "dll.h"
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
@@ -38,9 +39,12 @@
 namespace schnapps
 {
 
+namespace plugin_selection
+{
+
 class Plugin_Selection;
 
-struct MapParameters : public QObject
+struct SCHNAPPS_PLUGIN_SELECTION_API MapParameters : public QObject
 {
 	Q_OBJECT
 
@@ -279,7 +283,7 @@ public:
 /**
 * @brief Plugin for cells selection
 */
-class Plugin_Selection : public PluginInteraction
+class SCHNAPPS_PLUGIN_SELECTION_API Plugin_Selection : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -334,6 +338,7 @@ private:
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
+} // namespace plugin_selection
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SELECTION_H_

@@ -30,6 +30,8 @@
 
 namespace schnapps
 {
+namespace plugin_selection
+{
 
 Selection_DockTab::Selection_DockTab(SCHNApps* s, Plugin_Selection* p) :
 	schnapps_(s),
@@ -344,4 +346,5 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 	updating_ui_ = false;
 }
 
+} // namespace plugin_selection
 } // namespace schnapps

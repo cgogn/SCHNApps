@@ -1,7 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,62 +20,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DLL_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DLL_H_
 
-#include "dll.h"
-#include <ui_selection.h>
-#include <schnapps/core/map_handler.h>
 
-namespace schnapps
-{
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API
+#if defined SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API
+#endif
 
-class SCHNApps;
-
-namespace plugin_selection
-{
-
-class Plugin_Selection;
-struct MapParameters;
-
-class SCHNAPPS_PLUGIN_SELECTION_API Selection_DockTab : public QWidget, public Ui::Selection_TabWidget
-{
-	Q_OBJECT
-
-	friend class Plugin_Selection;
-
-public:
-
-	Selection_DockTab(SCHNApps* s, Plugin_Selection* p);
-
-private slots:
-
-	void position_attribute_changed(int index);
-	void normal_attribute_changed(int index);
-	void selection_method_changed(int index);
-	void cell_type_changed(int index);
-	void cells_set_changed(int index);
-	void selected_map_cells_set_added(CellType ct, const QString& name);
-	void selected_map_vertex_attribute_added(const QString& name);
-	void selected_map_vertex_attribute_removed(const QString& name);
-	void vertices_scale_factor_changed(int i);
-	void color_changed(int i);
-	void clear_clicked();
-
-private:
-
-	void set_current_cells_set(CellsSetGen* cs);
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
-
-	SCHNApps* schnapps_;
-	Plugin_Selection* plugin_;
-
-	bool updating_ui_;
-
-	CellsSetGen* current_cells_set_;
-};
-
-} // namespace plugin_selection
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DLL_H_

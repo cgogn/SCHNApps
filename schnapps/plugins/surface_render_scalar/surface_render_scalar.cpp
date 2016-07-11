@@ -31,6 +31,8 @@
 
 namespace schnapps
 {
+namespace plugin_surface_render_scalar
+{
 
 MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandlerGen* map)
 {
@@ -268,4 +270,5 @@ void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* ma
 
 Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
+} // namespace plugin_surface_render_scalar
 } // namespace schnapps

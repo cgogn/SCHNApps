@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 
+#include "dll.h"
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
@@ -37,16 +38,50 @@
 
 namespace schnapps
 {
+namespace plugin_surface_render_vector
+{
 
 class Plugin_SurfaceRenderVector;
 
-struct MapParameters
+struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 {
 	friend class Plugin_SurfaceRenderVector;
 
-	MapParameters() :
+	inline MapParameters() :
 		position_vbo_(nullptr)
 	{}
+
+	MapParameters(const MapParameters&) = delete;
+	MapParameters& operator=(const MapParameters&) = delete;
+
+	inline MapParameters(MapParameters&& param) : 
+		map_(param.map_),
+		shader_vector_per_vertex_param_list_(std::move(param.shader_vector_per_vertex_param_list_)),
+		position_vbo_(param.position_vbo_),
+		vector_vbo_list_(std::move(param.vector_vbo_list_)),
+		vector_scale_factor_list_(std::move(param.vector_scale_factor_list_)),
+		vector_color_list_(std::move(param.vector_color_list_))
+	{
+		param.map_ = nullptr;
+		param.position_vbo_ = nullptr;
+	}
+
+	MapParameters& operator=(MapParameters&& param)
+	{
+		if (this != &param)
+		{
+			map_ = param.map_;
+			shader_vector_per_vertex_param_list_ = std::move(param.shader_vector_per_vertex_param_list_);
+			position_vbo_ = param.position_vbo_;
+			vector_vbo_list_ = std::move(param.vector_vbo_list_);
+			vector_scale_factor_list_ = std::move(param.vector_scale_factor_list_);
+			vector_color_list_ = std::move(param.vector_color_list_);
+			param.map_ = nullptr;
+			param.position_vbo_ = nullptr;
+		}
+		return *this;
+	}
+
 
 	const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const { return shader_vector_per_vertex_param_list_; }
 
@@ -127,7 +162,7 @@ private:
 /**
 * @brief Plugin that renders vectors on surface vertices
 */
-class Plugin_SurfaceRenderVector : public PluginInteraction
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API Plugin_SurfaceRenderVector : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -222,6 +257,7 @@ private:
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
 
+} // namespace plugin_surface_render_vector
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
