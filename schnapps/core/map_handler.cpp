@@ -34,8 +34,8 @@ MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, std::uniqu
 	name_(name),
 	schnapps_(schnapps),
 	map_(std::move(map)),
-	show_bb_(true),
 	bb_diagonal_size_(.0f),
+	show_bb_(true),
 	bb_color_(Qt::green)
 {
 	connect(&frame_, SIGNAL(manipulated()), this, SLOT(frame_changed()));

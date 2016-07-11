@@ -29,6 +29,7 @@
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/view.h>
 
+#include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/shaders/shader_bold_line.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
@@ -67,9 +68,9 @@ public:
 		selected_edges_vbo_(nullptr),
 		shader_simple_color_param_selection_face_(nullptr),
 		selection_face_vbo_(nullptr),
-		shader_simple_color_param_selected_faces_(nullptr),
+		shader_flat_param_selected_faces_(nullptr),
 		selected_faces_vbo_(nullptr),
-		color_(220, 60, 60),
+		color_("red"),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
 		selection_radius_scale_factor_(1.0f),
@@ -93,7 +94,7 @@ public:
 
 		shader_bold_line_param_selection_edge_ = cgogn::rendering::ShaderBoldLine::generate_param();
 		shader_bold_line_param_selection_edge_->color_ = QColor(60, 60, 220, 128);
-		shader_bold_line_param_selection_edge_->width_ = 2.0f;
+		shader_bold_line_param_selection_edge_->width_ = 4.0f;
 		shader_bold_line_param_selection_edge_->set_position_vbo(selection_edge_vbo_.get());
 
 		selected_edges_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
@@ -111,9 +112,10 @@ public:
 
 		selected_faces_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
 
-		shader_simple_color_param_selected_faces_ = cgogn::rendering::ShaderSimpleColor::generate_param();
-		shader_simple_color_param_selected_faces_->color_ = color_;
-		shader_simple_color_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
+		shader_flat_param_selected_faces_ = cgogn::rendering::ShaderFlat::generate_param();
+		shader_flat_param_selected_faces_->front_color_ = color_;
+		shader_flat_param_selected_faces_->back_color_ = color_;
+		shader_flat_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
 	}
 
 	const typename MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
@@ -135,6 +137,9 @@ public:
 	{
 		color_ = c;
 		shader_point_sprite_param_selected_vertices_->color_ = color_;
+		shader_bold_line_param_selected_edges_->color_ = color_;
+		shader_flat_param_selected_faces_->front_color_ = color_;
+		shader_flat_param_selected_faces_->back_color_ = color_;
 	}
 
 	float32 get_vertex_base_size() const { return vertex_base_size_; }
@@ -254,7 +259,7 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param> shader_simple_color_param_selection_face_;
 	std::unique_ptr<cgogn::rendering::VBO> selection_face_vbo_;
 
-	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param> shader_simple_color_param_selected_faces_;
+	std::unique_ptr<cgogn::rendering::ShaderFlat::Param> shader_flat_param_selected_faces_;
 	std::unique_ptr<cgogn::rendering::VBO> selected_faces_vbo_;
 
 	QColor color_;

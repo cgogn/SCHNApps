@@ -65,18 +65,18 @@ struct MapParameters
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
 		color_vbo_(nullptr),
+		vertex_color_(190, 85, 168),
+		edge_color_(0, 0, 0),
+		front_color_(85, 168, 190),
+		back_color_(85, 168, 190),
+		render_back_faces_(true),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
 		render_vertices_(false),
 		render_edges_(false),
 		render_faces_(true),
-		render_back_faces_(true),
 		render_boundary_(false),
-		face_style_(FLAT),
-		vertex_color_(190, 85, 168),
-		edge_color_(0, 0, 0),
-		front_color_(85, 168, 190),
-		back_color_(85, 168, 190)
+		face_style_(FLAT)
 	{
 		shader_flat_param_ = cgogn::rendering::ShaderFlat::generate_param();
 		shader_flat_param_->front_color_ = front_color_;
