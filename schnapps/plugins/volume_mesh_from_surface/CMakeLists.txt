@@ -13,7 +13,6 @@ if(CGAL_FOUND)
 	find_package(MPFR REQUIRED)
 	find_package(GMP REQUIRED)
 	find_package(Boost REQUIRED)
-	message("tesaat ${CGAL_Core_LIBRARY}")
 endif(CGAL_FOUND)
 
 set(HEADER_FILES
