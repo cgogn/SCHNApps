@@ -34,6 +34,10 @@
 #include <cgogn/io/data_io.h>
 #include <schnapps/core/plugin_interaction.h>
 #include <QAction>
+#ifdef PLUGIN_IMAGE_WITH_CGAL
+#include <CGAL/config.h>
+#include <CGAL/version.h>
+#endif
 
 namespace schnapps
 {
@@ -52,6 +56,16 @@ public:
 	template<typename BUFFER_T, typename T = BUFFER_T>
 	using DataInput = cgogn::io::DataInput<cgogn::DefaultMapTraits::CHUNK_SIZE, 1, BUFFER_T, T>;
 	using DataType = cgogn::io::DataType;
+
+#ifdef PLUGIN_IMAGE_WITH_CGAL
+#if CGAL_VERSION_NR >= CGAL_VERSION_NUMBER(4,8,0)
+	using value_type = float32;
+#else
+	using value_type = unsigned char;
+#endif // CGAL_VERSION_NR >= CGAL_VERSION_NUMBER(4,8,0)
+#else
+	using value_type = float32;
+#endif // PLUGIN_IMAGE_WITH_CGAL
 
 	Image3D();
 	Image3D(const Image3D&) = delete;

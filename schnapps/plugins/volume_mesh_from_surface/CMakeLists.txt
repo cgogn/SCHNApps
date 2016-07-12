@@ -7,7 +7,7 @@ project(plugin_volume_mesh_from_surface
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(CGAL COMPONENTS Core)
+find_package(CGAL COMPONENTS Core ImageIO)
 if(CGAL_FOUND)
 	include(${CGAL_USE_FILE})
 	find_package(MPFR REQUIRED)
@@ -70,8 +70,15 @@ target_link_libraries(${PROJECT_NAME}
 	${CGAL_LIBRARIES}
 	${cgogn_core_LIBRARIES}
 	${cgogn_io_LIBRARIES}
-	${CGAL_LIB}
+	${CGAL_Core_LIBRARY}
 	${Boost_LIBRARIES}
 	${MPFR_LIBRARIES}
 	${GMP_LIBRARIES}
 )
+
+if(CGAL_FOUND AND WIN32)
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CGAL_INSTALL_PREFIX}/bin"
+        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+endif()
