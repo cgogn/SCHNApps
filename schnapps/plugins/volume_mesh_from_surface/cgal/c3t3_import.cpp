@@ -22,8 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
-
 #include "c3t3_import.h"
 #include "cgogn_surface_to_cgal_polyhedron.h"
 #include <cgal/cgal_image.h>

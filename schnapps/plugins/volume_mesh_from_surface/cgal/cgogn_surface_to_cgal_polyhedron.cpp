@@ -22,8 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#define SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
-
 #include "cgogn_surface_to_cgal_polyhedron.h"
 
 #include <CGAL/Polyhedron_incremental_builder_3.h>
