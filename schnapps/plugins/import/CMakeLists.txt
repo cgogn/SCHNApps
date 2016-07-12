@@ -18,8 +18,6 @@ set(SOURCE_FILES
 	import.cpp
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
-
 set(CMAKE_AUTOMOC ON)
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})

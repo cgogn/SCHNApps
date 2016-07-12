@@ -5,7 +5,7 @@ project(SCHNApps
 )
 
 #### Default build type
-if(NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 	set(CMAKE_BUILD_TYPE "Release")
 endif()
 
@@ -25,5 +25,11 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CGOGN_BUILD_PATH})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+
+include(${CGOGN_PATH}/cmake/utilities.cmake)
+
+if(MSVC)
+	add_flags(CMAKE_CXX_FLAGS "/bigobj")
+endif()
 
 add_subdirectory(${SCHNAPPS_SOURCE_DIR}/schnapps)
