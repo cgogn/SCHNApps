@@ -4,6 +4,8 @@ project(SCHNApps
 	LANGUAGES CXX
 )
 
+set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL "preserve cmake flags" FORCE)
+
 #### Default build type
 if(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 	set(CMAKE_BUILD_TYPE "Release")
