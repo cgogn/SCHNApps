@@ -274,7 +274,7 @@ void Plugin_VolumeRender::update_dock_tab()
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	View* view = schnapps_->get_selected_view();
-	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3 && map->get_bb().is_initialized())
 	{
 		schnapps_->enable_plugin_tab_widgets(this);
 		const MapParameters& p = get_parameters(view, map);

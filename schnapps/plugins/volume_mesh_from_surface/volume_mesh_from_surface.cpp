@@ -138,6 +138,8 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 
 	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("tetgen_export", 3));
 	tetgen_import.create_map(*handler_map3->get_map());
+	handler_map3->set_bb_vertex_attribute("position");
+	static_cast<MapHandlerGen*>(handler_map3)->create_vbo("position");
 
 	return handler_map3;
 }
@@ -150,6 +152,8 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 
 	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
 	tetrahedralize(params, mh2, position_att, mh3);
+	mh3->set_bb_vertex_attribute("position");
+	static_cast<MapHandlerGen*>(mh3)->create_vbo("position");
 	return mh3;
 #else
 	return nullptr;
@@ -163,6 +167,8 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 		return nullptr;
 	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_image_export", 3));
 	tetrahedralize(params, im, mh3);
+	mh3->set_bb_vertex_attribute("position");
+	static_cast<MapHandlerGen*>(mh3)->create_vbo("position");
 	return mh3;
 #else
 	return nullptr;

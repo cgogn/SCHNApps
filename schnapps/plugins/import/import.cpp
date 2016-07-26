@@ -68,7 +68,11 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 			CMap2* map = mh->get_map();
 
 			cgogn::io::import_surface<VEC3>(*map, filename.toStdString());
-
+			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
+			{
+				mh->set_bb_vertex_attribute("position");
+				mhg->create_vbo("position");
+			}
 			//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
 			//			{
 			//				AttributeContainer& cont = map->getAttributeContainer(orbit);
@@ -109,6 +113,12 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 			CMap3* map = mh->get_map();
 
 			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
+			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
+			{
+				mh->set_bb_vertex_attribute("position");
+				mhg->create_vbo("position");
+			}
+
 		}
 		return mhg;
 	}
