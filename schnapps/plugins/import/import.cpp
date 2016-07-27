@@ -137,7 +137,5 @@ void Plugin_Import::import_volume_mesh_from_file_dialog()
 	}
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-
 } // namespace plugin_import
 } // namespace schnapps

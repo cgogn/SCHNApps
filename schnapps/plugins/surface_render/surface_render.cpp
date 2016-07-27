@@ -439,6 +439,5 @@ void Plugin_SurfaceRender::set_vertex_scale_factor(View* view, MapHandlerGen* ma
 	}
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 } // namespace plugin_surface_render
 } // namespace schnapps

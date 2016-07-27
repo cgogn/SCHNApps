@@ -656,7 +656,5 @@ void Plugin_Selection::update_dock_tab()
 		schnapps_->disable_plugin_tab_widgets(this);
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-
 } // namespace plugin_selection
 } // namespace schnapps

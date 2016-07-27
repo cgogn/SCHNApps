@@ -420,8 +420,6 @@ void Plugin_VolumeRender::set_apply_clipping_plane(View* view, MapHandlerGen* ma
 	}
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-
 } // namespace plugin_volume_render
 
 } // namespace schnapps

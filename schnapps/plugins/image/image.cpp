@@ -151,8 +151,6 @@ void Plugin_Image::image_removed()
 	}
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-
 Image3D::Image3D() :
 	data_(nullptr),
 	image_dim_{},

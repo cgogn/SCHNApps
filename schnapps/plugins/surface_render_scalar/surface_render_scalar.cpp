@@ -268,7 +268,5 @@ void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* ma
 	}
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-
 } // namespace plugin_surface_render_scalar
 } // namespace schnapps

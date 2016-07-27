@@ -136,7 +136,5 @@ void Plugin_Export::export_mesh_from_file_dialog()
 	export_dialog_->show();
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-
 } // namespace plugin_export
 } // namespace schnapps
