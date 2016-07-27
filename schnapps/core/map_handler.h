@@ -474,6 +474,11 @@ private:
 
 public:
 
+	inline bool has_attribute(cgogn::Orbit orbit, const QString& att_name)
+	{
+		return get_map()->has_attribute(orbit, att_name.toStdString());
+	}
+
 	template <typename T, cgogn::Orbit ORBIT>
 	inline Attribute<T, ORBIT> add_attribute(const QString& attribute_name)
 	{
@@ -489,9 +494,20 @@ public:
 		if (ah.is_valid())
 		{
 			QString attribute_name = QString::fromStdString(ah.name());
-			return get_map()->remove_attribute(ah);
-			emit(attribute_removed(ORBIT, attribute_name));
+			const bool res =  get_map()->remove_attribute(ah);
+			if (res)
+				emit(attribute_removed(ORBIT, attribute_name));
+			return res;
 		}
+		return false;
+	}
+
+	inline bool remove_attribute(cgogn::Orbit orbit, const QString& att_name)
+	{
+		const bool res = get_map()->remove_attribute(orbit, att_name.toStdString());
+		if (res)
+			emit(attribute_removed(orbit, att_name));
+		return res;
 	}
 
 	template <typename T, cgogn::Orbit ORBIT>
