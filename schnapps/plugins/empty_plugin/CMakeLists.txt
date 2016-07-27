@@ -1,4 +1,4 @@
-project(empty_plugin
+project(plugin_empty_plugin
 	LANGUAGES CXX
 )
 
@@ -15,6 +15,7 @@ set(SOURCE_FILES
 )
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
