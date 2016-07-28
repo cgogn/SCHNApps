@@ -90,9 +90,10 @@ SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& 
 TetgenStructureVolumeImport::TetgenStructureVolumeImport(tetgenio* tetgen_output)
 {
 	volume_ = tetgen_output;
+	import_tetgen_structure();
 }
 
-bool TetgenStructureVolumeImport::import_file_impl(const std::string&)
+bool TetgenStructureVolumeImport::import_tetgen_structure()
 {
 	this->set_nb_vertices(volume_->numberofpoints);
 	this->set_nb_volumes(volume_->numberoftetrahedra);

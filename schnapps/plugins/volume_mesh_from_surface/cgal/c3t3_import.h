@@ -57,7 +57,9 @@ public:
 
 	inline C3T3VolumeImport(const C3T3& cpx) : Inherit(),
 		cpx_(cpx)
-	{}
+	{
+		import_c3t3();
+	}
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(C3T3VolumeImport);
 
 	template<typename T>
@@ -66,8 +68,7 @@ public:
 	using Triangulation = typename C3T3::Triangulation;
 	using Vertex_handle = typename Triangulation::Vertex_handle;
 
-protected:
-	virtual bool import_file_impl(const std::string& /*filename*/) override
+	void import_c3t3()
 	{
 		const Triangulation& triangulation = cpx_.triangulation();
 		std::map<Vertex_handle, unsigned int> vertices_indices;
@@ -96,8 +97,6 @@ protected:
 			const uint32 id = this->volume_attributes_container().template insert_lines<1>();
 			subdomain_indices->operator [](id) = float32(cpx_.subdomain_index(cit));
 		}
-
-		return true;
 	}
 private:
 	const C3T3& cpx_;
@@ -110,9 +109,11 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 		return;
 
 	C3T3VolumeImport<C3T3> volume_import(c3t3_in);
-	volume_import.import_file("");
 	volume_import.create_map(*map_out->get_map());
+	map_out->attribute_added(CMap3::Vertex::ORBIT, "position");
 	map_out->attribute_added(CMap3::Volume::ORBIT, "subdomain index");
+	map_out->set_bb_vertex_attribute("position");
+	static_cast<MapHandlerGen*>(map_out)->create_vbo("position");
 }
 
 

@@ -41,7 +41,7 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-class SCHNAPPS_PLUGIN_VMFS_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>
+class SCHNAPPS_PLUGIN_VMFS_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits>
 {
 public:
 	using Inherit = cgogn::io::VolumeImport<schnapps::CMap3::MapTraits>;
@@ -54,8 +54,7 @@ public:
 	explicit TetgenStructureVolumeImport(tetgenio * tetgen_output);
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
 
-protected:
-	virtual bool import_file_impl(const std::string& /*filename*/) override;
+	bool import_tetgen_structure();
 
 private:
 	tetgenio* volume_;
