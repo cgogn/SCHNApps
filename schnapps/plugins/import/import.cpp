@@ -53,6 +53,7 @@ bool Plugin_Import::enable()
 void Plugin_Import::disable()
 {
 	schnapps_->remove_menu_action(import_surface_mesh_action_);
+	schnapps_->remove_menu_action(import_volume_mesh_action_);
 	//	schnapps_->remove_menu_action(import_2D_image_action_);
 }
 
