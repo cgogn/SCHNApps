@@ -179,6 +179,28 @@ void Selection_DockTab::selected_map_cells_set_added(CellType ct, const QString&
 	updating_ui_ = false;
 }
 
+void Selection_DockTab::selected_map_cells_set_removed(CellType ct, const QString& name)
+{
+	updating_ui_ = true;
+
+	combo_cellsSet->removeItem(combo_cellsSet->findText(name));
+
+	if (MapHandlerGen* map = schnapps_->get_selected_map())
+	{
+		for (View* view : map->get_linked_views())
+		{
+			MapParameters& p = plugin_->get_parameters(view,map);
+			if (p.get_cells_set() && p.get_cells_set()->get_name() == name)
+			{
+				p.set_cells_set(nullptr);
+				view->update();
+			}
+		}
+	}
+
+	updating_ui_ = false;
+}
+
 void Selection_DockTab::selected_map_vertex_attribute_added(const QString& name)
 {
 	updating_ui_ = true;

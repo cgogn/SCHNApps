@@ -67,6 +67,7 @@ private slots:
 
 	void cells_set_check_state_changed(QListWidgetItem* item);
 	void add_cells_set();
+	void remove_cells_set();
 
 	// slots called from SCHNApps signals
 	void map_added(MapHandlerGen* m);
@@ -80,6 +81,7 @@ private slots:
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void selected_map_connectivity_changed();
 	void selected_map_cells_set_added(CellType ct, const QString& name);
+	void selected_map_cells_set_removed(CellType ct, const QString& name);
 
 private:
 

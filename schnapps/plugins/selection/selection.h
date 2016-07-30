@@ -190,7 +190,7 @@ public slots:
 					std::vector<VEC3> selected_points;
 					if (position_.is_valid())
 					{
-						CellsSet<CMap2, MapHandler<CMap2>::Vertex>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(cells_set_);
+						CMap2Handler::VertexSet* tcs = static_cast<CMap2Handler::VertexSet*>(cells_set_);
 						tcs->foreach_cell([&] (MapHandler<CMap2>::Vertex v)
 						{
 							selected_points.push_back(position_[v]);
@@ -204,7 +204,7 @@ public slots:
 					std::vector<VEC3> selected_segments;
 					if (position_.is_valid())
 					{
-						CellsSet<CMap2, MapHandler<CMap2>::Edge>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Edge>*>(cells_set_);
+						CMap2Handler::EdgeSet* tcs = static_cast<CMap2Handler::EdgeSet*>(cells_set_);
 						tcs->foreach_cell([&] (MapHandler<CMap2>::Edge e)
 						{
 							std::pair<MapHandler<CMap2>::Vertex, MapHandler<CMap2>::Vertex> vertices = map_->get_map()->vertices(e);
@@ -220,7 +220,7 @@ public slots:
 					std::vector<VEC3> selected_polygons;
 					if (position_.is_valid())
 					{
-						CellsSet<CMap2, MapHandler<CMap2>::Face>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Face>*>(cells_set_);
+						CMap2Handler::FaceSet* tcs = static_cast<CMap2Handler::FaceSet*>(cells_set_);
 						std::vector<uint32> ears;
 						tcs->foreach_cell([&] (MapHandler<CMap2>::Face f)
 						{
@@ -330,6 +330,7 @@ private slots:
 
 	// slots called from MapHandlerGen signals
 	void linked_map_cells_set_added(CellType ct, const QString& name);
+	void linked_map_cells_set_removed(CellType ct, const QString& name);
 	void linked_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
 	void linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name);

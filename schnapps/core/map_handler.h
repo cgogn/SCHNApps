@@ -209,6 +209,7 @@ public slots:
 	 *********************************************************/
 
 	virtual CellsSetGen* add_cells_set(CellType ct, const QString& name) = 0;
+	virtual void remove_cells_set(CellType ct, const QString& name) = 0;
 
 	CellsSetGen* get_cells_set(CellType ct, const QString& name);
 
@@ -272,6 +273,7 @@ signals:
 	void attribute_changed(cgogn::Orbit, const QString&);
 
 	void cells_set_added(CellType, const QString&);
+	void cells_set_removed(CellType, const QString&);
 
 	void connectivity_changed();
 
@@ -310,7 +312,7 @@ protected:
 	std::map<QString, std::unique_ptr<cgogn::rendering::VBO>> vbos_;
 
 	// CellsSets of the map
-	std::map<QString, std::unique_ptr<CellsSetGen>> cells_sets_[NB_CELL_TYPES];
+	std::array<std::map<QString, std::unique_ptr<CellsSetGen>>, NB_CELL_TYPES> cells_sets_;
 };
 
 
@@ -336,11 +338,19 @@ public:
 	using Face = typename MAP_TYPE::Face;
 	using Volume = typename MAP_TYPE::Volume;
 
+	template <typename CELL>
+	using CellSet = ::schnapps::CellsSet<MAP_TYPE, CELL>;
+	using DartSet	= CellSet<CDart>;
+	using VertexSet	= CellSet<Vertex>;
+	using EdgeSet	= CellSet<Edge>;
+	using FaceSet	= CellSet<Face>;
+	using VolumeSet	= CellSet<Volume>;
+
 	MapHandler(const QString& name, SCHNApps* s) :
 		MapHandlerGen(name, s, cgogn::make_unique<MAP_TYPE>())
 	{}
 
-	~MapHandler()
+	~MapHandler() override
 	{}
 
 	inline MAP_TYPE* get_map() const { return static_cast<MAP_TYPE*>(this->map_.get()); }
@@ -742,6 +752,17 @@ protected:
 		emit(cells_set_added(ct, name));
 		connect(this, SIGNAL(connectivity_changed()), cells_set, SLOT(rebuild()));
 		return cells_set;
+	}
+
+	void remove_cells_set(CellType ct, const QString& name) override
+	{
+		const auto cells_set_it = cells_sets_[ct].find(name);
+		if (cells_set_it == cells_sets_[ct].end())
+			return;
+		disconnect(this, SIGNAL(connectivity_changed()), cells_set_it->second.get(), SLOT(rebuild()));
+		auto tmp = std::move(cells_set_it->second); // the object shall not be destroyed before the signal 'cells_set_removed' is processed.
+		cells_sets_[ct].erase(cells_set_it);
+		emit(cells_set_removed(ct, name));
 	}
 
 private:

@@ -540,6 +540,7 @@ void Plugin_Selection::map_linked(MapHandlerGen* map)
 	if (map->dimension() == 2)
 	{
 		connect(map, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(linked_map_cells_set_added(CellType, const QString&)), Qt::UniqueConnection);
+		connect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
@@ -554,6 +555,7 @@ void Plugin_Selection::map_unlinked(MapHandlerGen* map)
 	if (map->dimension() == 2)
 	{
 		disconnect(map, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(linked_map_cells_set_added(CellType, const QString&)));
+		disconnect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)));
 		disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)));
 		disconnect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)));
@@ -567,6 +569,14 @@ void Plugin_Selection::linked_map_cells_set_added(CellType ct, const QString& na
 
 	if (map->is_selected_map())
 		dock_tab_->selected_map_cells_set_added(ct, name);
+}
+
+void Plugin_Selection::linked_map_cells_set_removed(CellType ct, const QString& name)
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+
+	if (map->is_selected_map())
+		dock_tab_->selected_map_cells_set_removed(ct, name);
 }
 
 void Plugin_Selection::linked_map_attribute_added(cgogn::Orbit orbit, const QString& name)

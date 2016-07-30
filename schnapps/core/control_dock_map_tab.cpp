@@ -48,23 +48,23 @@ ControlDock_MapTab::ControlDock_MapTab(SCHNApps* s) :
 
 	connect(list_dartSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_dartAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_dartRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
+	connect(button_dartRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
 	connect(list_vertexSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_vertexAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_vertexRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
+	connect(button_vertexRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
 	connect(list_edgeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_edgeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_edgeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
+	connect(button_edgeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
 	connect(list_faceSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_faceAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_faceRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
+	connect(button_faceRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
 	connect(list_volumeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_volumeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_volumeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_selector()));
+	connect(button_volumeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
 	// connect SCHNApps signals
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
@@ -114,6 +114,7 @@ void ControlDock_MapTab::selected_map_changed()
 			disconnect(old, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			disconnect(old, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 			disconnect(old, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+			disconnect(old, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
 		}
 
 		QList<QListWidgetItem*> items = list_maps->selectedItems();
@@ -129,6 +130,7 @@ void ControlDock_MapTab::selected_map_changed()
 			connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 			connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 			connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+			connect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
 		}
 		else
 			selected_map_ = nullptr;
@@ -217,6 +219,39 @@ void ControlDock_MapTab::add_cells_set()
 	}
 }
 
+#include <iostream>
+
+void ControlDock_MapTab::remove_cells_set()
+{
+	if (!updating_ui_)
+	{
+		if (selected_map_)
+		{
+			CellType ct = get_current_cell_type();
+			QListWidget* list_selectors = nullptr;
+			switch (ct) {
+				case CellType::Dart_Cell:
+					list_selectors = list_dartSelectors; break;
+				case CellType::Vertex_Cell:
+					list_selectors = list_vertexSelectors; break;
+				case CellType::Edge_Cell:
+					list_selectors = list_edgeSelectors; break;
+				case CellType::Face_Cell:
+					list_selectors = list_faceSelectors; break;
+				case CellType::Volume_Cell:
+					list_selectors = list_volumeSelectors; break;
+				default:
+					list_selectors = nullptr; break;
+			}
+			if (!list_selectors)
+				return;
+
+			for (const QListWidgetItem* item : list_selectors->selectedItems())
+				selected_map_->remove_cells_set(ct, item->text());
+		}
+	}
+}
+
 
 
 
@@ -299,8 +334,10 @@ void ControlDock_MapTab::selected_map_cells_set_added(CellType ct, const QString
 	update_selected_map_info();
 }
 
-
-
+void ControlDock_MapTab::selected_map_cells_set_removed(CellType ct, const QString& name)
+{
+	update_selected_map_info();
+}
 
 
 void ControlDock_MapTab::update_selected_map_info()

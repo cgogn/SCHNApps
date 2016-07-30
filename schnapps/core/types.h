@@ -81,6 +81,12 @@ using VEC2 = VEC2D;
 
 using SCALAR = cgogn::geometry::vector_traits<VEC3>::Scalar;
 
+template <typename MAP_TYPE>
+class MapHandler;
+
+using CMap2Handler = MapHandler<CMap2>;
+using CMap3Handler = MapHandler<CMap3>;
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_CORE_TYPES_H_
