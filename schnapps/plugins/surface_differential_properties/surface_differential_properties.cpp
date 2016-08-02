@@ -244,7 +244,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	{
 //		if there is another attribute with the same name but with a different type, we remove it.
 		if (mh->has_attribute(CMap2::Vertex::ORBIT, normal_attribute_name))
-			mh->remove_attribute(CMap2::Vertex::ORBIT, normal_attribute_name);
+			mh->remove_attribute(CellType::Vertex_Cell, normal_attribute_name);
 		normal = mh->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 	}
 

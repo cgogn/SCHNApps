@@ -68,6 +68,7 @@ private slots:
 	void cells_set_check_state_changed(QListWidgetItem* item);
 	void add_cells_set();
 	void remove_cells_set();
+	void remove_attribute();
 
 	// slots called from SCHNApps signals
 	void map_added(MapHandlerGen* m);

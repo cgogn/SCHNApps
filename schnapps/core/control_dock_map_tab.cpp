@@ -49,22 +49,27 @@ ControlDock_MapTab::ControlDock_MapTab(SCHNApps* s) :
 	connect(list_dartSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_dartAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 	connect(button_dartRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(button_dartRemoveAttribute, SIGNAL(clicked()), this, SLOT(remove_attribute()));
 
 	connect(list_vertexSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_vertexAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 	connect(button_vertexRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(button_vertexRemoveAttribute, SIGNAL(clicked()), this, SLOT(remove_attribute()));
 
 	connect(list_edgeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_edgeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 	connect(button_edgeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(button_edgeRemoveAttribute, SIGNAL(clicked()), this, SLOT(remove_attribute()));
 
 	connect(list_faceSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_faceAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 	connect(button_faceRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(button_faceRemoveAttribute, SIGNAL(clicked()), this, SLOT(remove_attribute()));
 
 	connect(list_volumeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_volumeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 	connect(button_volumeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(button_volumeRemoveAttribute, SIGNAL(clicked()), this, SLOT(remove_attribute()));
 
 	// connect SCHNApps signals
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
@@ -219,8 +224,6 @@ void ControlDock_MapTab::add_cells_set()
 	}
 }
 
-#include <iostream>
-
 void ControlDock_MapTab::remove_cells_set()
 {
 	if (!updating_ui_)
@@ -248,6 +251,37 @@ void ControlDock_MapTab::remove_cells_set()
 
 			for (const QListWidgetItem* item : list_selectors->selectedItems())
 				selected_map_->remove_cells_set(ct, item->text());
+		}
+	}
+}
+
+void ControlDock_MapTab::remove_attribute()
+{
+	if (!updating_ui_)
+	{
+		if (selected_map_)
+		{
+			CellType ct = get_current_cell_type();
+			QListWidget* list_attributes = nullptr;
+			switch (ct) {
+				case CellType::Dart_Cell:
+					list_attributes = list_dartAttributes; break;
+				case CellType::Vertex_Cell:
+					list_attributes = list_vertexAttributes; break;
+				case CellType::Edge_Cell:
+					list_attributes = list_edgeAttributes; break;
+				case CellType::Face_Cell:
+					list_attributes = list_faceAttributes; break;
+				case CellType::Volume_Cell:
+					list_attributes = list_volumeAttributes; break;
+				default:
+					list_attributes = nullptr; break;
+			}
+			if (!list_attributes)
+				return;
+
+			for (const QListWidgetItem* item : list_attributes->selectedItems())
+				selected_map_->remove_attribute(ct, item->text());
 		}
 	}
 }
@@ -377,12 +411,12 @@ void ControlDock_MapTab::update_selected_map_info()
 		{
 			const auto& container = selected_map_->const_attribute_container(Dart_Cell);
 			const std::vector<std::string>& names = container.names();
-			const std::vector<std::string>& type_names = container.type_names();
+//			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
 				QString name = QString::fromStdString(names[i]);
-				QString type = QString::fromStdString(type_names[i]);
-				list_dartAttributes->addItem(name + " (" + type + ")");
+//				QString type = QString::fromStdString(type_names[i]);
+				list_dartAttributes->addItem(name);
 			}
 		}
 
@@ -441,12 +475,12 @@ void ControlDock_MapTab::update_selected_map_info()
 		{
 			const auto& container = selected_map_->const_attribute_container(Edge_Cell);
 			const std::vector<std::string>& names = container.names();
-			const std::vector<std::string>& type_names = container.type_names();
+//			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
 				QString name = QString::fromStdString(names[i]);
-				QString type = QString::fromStdString(type_names[i]);
-				list_edgeAttributes->addItem(name + " (" + type + ")");
+//				QString type = QString::fromStdString(type_names[i]);
+				list_edgeAttributes->addItem(name /*+ " (" + type + ")"*/);
 			}
 		}
 
@@ -467,12 +501,12 @@ void ControlDock_MapTab::update_selected_map_info()
 		{
 			const auto& container = selected_map_->const_attribute_container(Face_Cell);
 			const std::vector<std::string>& names = container.names();
-			const std::vector<std::string>& type_names = container.type_names();
+//			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
 				QString name = QString::fromStdString(names[i]);
-				QString type = QString::fromStdString(type_names[i]);
-				list_faceAttributes->addItem(name + " (" + type + ")");
+//				QString type = QString::fromStdString(type_names[i]);
+				list_faceAttributes->addItem(name /*+ " (" + type + ")"*/);
 			}
 		}
 
@@ -493,12 +527,12 @@ void ControlDock_MapTab::update_selected_map_info()
 		{
 			const auto& container = selected_map_->const_attribute_container(Volume_Cell);
 			const std::vector<std::string>& names = container.names();
-			const std::vector<std::string>& type_names = container.type_names();
+//			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
 				QString name = QString::fromStdString(names[i]);
-				QString type = QString::fromStdString(type_names[i]);
-				list_volumeAttributes->addItem(name + " (" + type + ")");
+//				QString type = QString::fromStdString(type_names[i]);
+				list_volumeAttributes->addItem(name /*+ " (" + type + ")"*/);
 			}
 		}
 

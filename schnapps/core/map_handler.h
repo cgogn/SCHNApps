@@ -27,11 +27,12 @@
 #include <schnapps/core/dll.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/cells_set.h>
+#include <cgogn/core/cmap/cmap3.h>
+
+#include <cgogn/geometry/algos/bounding_box.h>
 
 #include <cgogn/rendering/shaders/vbo.h>
 #include <cgogn/rendering/map_render.h>
-
-#include <cgogn/geometry/algos/bounding_box.h>
 
 #include <QOGLViewer/manipulatedFrame.h>
 
@@ -252,6 +253,8 @@ public:
 
 	void notify_attribute_change(cgogn::Orbit, const QString&);
 	void notify_connectivity_change();
+
+	virtual bool remove_attribute(CellType ct, const QString& att_name) = 0;
 
 private:
 
@@ -512,11 +515,12 @@ public:
 		return false;
 	}
 
-	inline bool remove_attribute(cgogn::Orbit orbit, const QString& att_name)
+	virtual bool remove_attribute(CellType ct, const QString& att_name) override
 	{
-		const bool res = get_map()->remove_attribute(orbit, att_name.toStdString());
+		const auto orb = orbit(ct);
+		const bool res = get_map()->remove_attribute(orb, att_name.toStdString());
 		if (res)
-			emit(attribute_removed(orbit, att_name));
+			emit(attribute_removed(orb, att_name));
 		return res;
 	}
 

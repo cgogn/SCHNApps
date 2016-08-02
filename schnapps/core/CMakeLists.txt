@@ -41,6 +41,7 @@ set(SOURCE_FILES
 	control_dock_map_tab.cpp
 	color_combo_box.cpp
 	cells_set.cpp
+	types.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -75,9 +76,9 @@ target_link_libraries(${PROJECT_NAME}
 
 if(WIN32)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CGOGN_BUILD_PATH}/bin/$<CONFIGURATION>"
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CGOGN_BUILD_PATH}/bin/$<CONFIGURATION>"
+		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()
 
 
