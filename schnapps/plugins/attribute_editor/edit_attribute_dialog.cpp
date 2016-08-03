@@ -106,49 +106,44 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 		{
 			const auto& ca_cont = mhg->const_attribute_container(cell_t);
 			auto* ca = ca_cont.get_chunk_array(attribute_name.toStdString());
+			attribute_tableWidget->clearContents();
+			attribute_tableWidget->setColumnCount(0);
+			attribute_tableWidget->setRowCount(0);
 			if (ca)
 			{
-				const uint32 nb_cols = ca->nb_components() + 1u;
-
-				attribute_tableWidget->clearContents();
+				const uint32 nb_cols = ca->nb_components();
 				attribute_tableWidget->setColumnCount(int32(nb_cols));
-				attribute_tableWidget->setRowCount(0);
 
 				{
-					QTableWidgetItem *header_emb = new QTableWidgetItem;
-					header_emb->setText("embedding");
-					attribute_tableWidget->setHorizontalHeaderItem(0,header_emb);
-					for (int i =1; i < nb_cols; ++i)
+					for (int i =0; i < nb_cols; ++i)
 					{
 						if (!attribute_tableWidget->horizontalHeaderItem(i))
 						{
 							QTableWidgetItem *item = new QTableWidgetItem;
-							item->setText(QString::number(i-1));
+							item->setText(QString::number(i));
 							attribute_tableWidget->setHorizontalHeaderItem(i, item);
 						}
 					}
 				}
-
 
 				int r = 0;
 				mhg->foreach_cell(cell_t, [&](cgogn::Dart d)
 				{
 					int c = 0;
 					attribute_tableWidget->insertRow(r);
-					std::vector<QTableWidgetItem*> items(nb_cols);
+					std::vector<QTableWidgetItem*> items(nb_cols + 1);
 					for (auto& item : items)
 						item = new QTableWidgetItem;
 
 					const uint32 emb = mhg->embedding(d, cell_t);
 					items[0]->setText(QString::number(mhg->embedding(d, cell_t)));
-					items[0]->setFlags(Qt::NoItemFlags);
-					attribute_tableWidget->setItem(r,c++, items[0]);
+					attribute_tableWidget->setVerticalHeaderItem(r, items[0]);
 
 					std::stringstream sstream;
 					ca->export_element(emb, sstream, false, false);
 					std::string val;
 
-					for (uint32 i = 1u; i < nb_cols ; ++i)
+					for (uint32 i = 1u; i <= nb_cols ; ++i)
 					{
 						sstream >> val;
 						items[i]->setText(QString::fromStdString(val));
