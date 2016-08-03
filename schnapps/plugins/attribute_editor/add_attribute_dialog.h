@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
-#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
+#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
+#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
 
 #include <dll.h>
 #include <ui_add_attribute_dialog.h>
@@ -61,4 +61,4 @@ private:
 } // namespace plugin_attribute_editor
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
+#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H

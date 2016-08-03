@@ -1,7 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Attribute Editor                                                      *
+* Plugin ExtractSurface                                                        *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,61 +22,46 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <attribute_editor.h>
-#include <schnapps/core/schnapps.h>
-#include <QAction>
-#include <add_attribute_dialog.h>
-#include <edit_attribute_dialog.h>
+#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H
+#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H
+
+#include <dll.h>
+#include <ui_edit_attribute_dialog.h>
 
 namespace schnapps
 {
 
+class SCHNApps;
+class MapHandlerGen;
+
 namespace plugin_attribute_editor
 {
 
-AttributeEditorPlugin::AttributeEditorPlugin() :
-	add_attribute_action_(nullptr),
-	add_attribute_dialog_(nullptr),
-	edit_attribute_dialog_(nullptr)
-{}
+class AttributeEditorPlugin;
 
-AttributeEditorPlugin::~AttributeEditorPlugin()
+class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API EditAttributeDialog : public QDialog, public Ui::EditAttribute
 {
-	delete add_attribute_dialog_;
-	delete edit_attribute_dialog_;
-}
+	Q_OBJECT
+	friend class AttributeEditorPlugin;
 
-bool AttributeEditorPlugin::enable()
-{
-	if (!add_attribute_dialog_)
-		add_attribute_dialog_ = new AddAttributeDialog(schnapps_, this);
-	if (!edit_attribute_dialog_)
-		edit_attribute_dialog_ = new EditAttributeDialog(schnapps_, this);
+public:
+	EditAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p);
 
-	add_attribute_action_ = schnapps_->add_menu_action("Attribute;Add attribute", "Add attribute");
-	edit_attribute_action_ = schnapps_->add_menu_action("Attribute;Edit attribute", "Edit attribute");
-	connect(add_attribute_action_, SIGNAL(triggered()), this, SLOT(add_attribute_dialog()));
-	connect(edit_attribute_action_, SIGNAL(triggered()), this, SLOT(edit_attribute_dialog()));
-	return true;
-}
+private slots:
+	void map_added(MapHandlerGen*);
+	void map_removed(MapHandlerGen*);
+	void selected_map_changed(const QString&);
+	void orbit_changed(const QString&);
+	void attribute_changed(const QString&);
+	void edit_attribute_validated();
 
-void AttributeEditorPlugin::disable()
-{
-	disconnect(add_attribute_action_, SIGNAL(triggered()), this, SLOT(add_attribute_dialog()));
-	disconnect(edit_attribute_action_, SIGNAL(triggered()), this, SLOT(edit_attribute_dialog()));
-	schnapps_->remove_menu_action(add_attribute_action_);
-	schnapps_->remove_menu_action(edit_attribute_action_);
-}
-
-void AttributeEditorPlugin::add_attribute_dialog()
-{
-	add_attribute_dialog_->show();
-}
-
-void AttributeEditorPlugin::edit_attribute_dialog()
-{
-	edit_attribute_dialog_->show();
-}
+private:
+	SCHNApps* schnapps_;
+	AttributeEditorPlugin* plugin_;
+	bool updating_ui_;
+};
 
 } // namespace plugin_attribute_editor
 } // namespace schnapps
+
+#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H

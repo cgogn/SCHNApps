@@ -10,11 +10,13 @@ set(HEADER_FILES
 	attribute_editor.h
 	add_attribute_dialog.h
 	attribute_factory.h
+	edit_attribute_dialog.h
 )
 
 set(SOURCE_FILES
 	add_attribute_dialog.cpp
 	attribute_editor.cpp
+	edit_attribute_dialog.cpp
 )
 
 set(CMAKE_AUTOMOC ON)

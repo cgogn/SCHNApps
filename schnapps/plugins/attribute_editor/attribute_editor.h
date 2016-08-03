@@ -37,8 +37,8 @@ namespace schnapps
 namespace plugin_attribute_editor
 {
 
-
 class AddAttributeDialog;
+class EditAttributeDialog;
 
 class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AttributeEditorPlugin : public PluginProcessing
 {
@@ -61,10 +61,13 @@ private:
 	public slots:
 	private slots:
 	void add_attribute_dialog();
+	void edit_attribute_dialog();
 
 private:
 	QAction* add_attribute_action_;
+	QAction* edit_attribute_action_;
 	AddAttributeDialog* add_attribute_dialog_;
+	EditAttributeDialog* edit_attribute_dialog_;
 };
 
 } // namespace plugin_attribute_editor

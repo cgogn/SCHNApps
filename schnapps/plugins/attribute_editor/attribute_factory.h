@@ -90,6 +90,8 @@ private:
 		register_type<uint16>();
 		register_type<uint32>();
 		register_type<uint64>();
+		register_type<float32>();
+		register_type<float64>();
 		register_type<VEC2F>();
 		register_type<VEC2D>();
 		register_type<VEC3F>();
