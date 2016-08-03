@@ -109,9 +109,26 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 			if (ca)
 			{
 				const uint32 nb_cols = ca->nb_components() + 1u;
+
 				attribute_tableWidget->clearContents();
 				attribute_tableWidget->setColumnCount(int32(nb_cols));
 				attribute_tableWidget->setRowCount(0);
+
+				{
+					QTableWidgetItem *header_emb = new QTableWidgetItem;
+					header_emb->setText("embedding");
+					attribute_tableWidget->setHorizontalHeaderItem(0,header_emb);
+					for (int i =1; i < nb_cols; ++i)
+					{
+						if (!attribute_tableWidget->horizontalHeaderItem(i))
+						{
+							QTableWidgetItem *item = new QTableWidgetItem;
+							item->setText(QString::number(i-1));
+							attribute_tableWidget->setHorizontalHeaderItem(i, item);
+						}
+					}
+				}
+
 
 				int r = 0;
 				mhg->foreach_cell(cell_t, [&](cgogn::Dart d)
@@ -124,6 +141,7 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 
 					const uint32 emb = mhg->embedding(d, cell_t);
 					items[0]->setText(QString::number(mhg->embedding(d, cell_t)));
+					items[0]->setFlags(Qt::NoItemFlags);
 					attribute_tableWidget->setItem(r,c++, items[0]);
 
 					std::stringstream sstream;
