@@ -54,7 +54,7 @@ class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 	friend class View;
 
 public:
-
+	using ChunkArrayGen = cgogn::MapBaseData<cgogn::DefaultMapTraits>::ChunkArrayGen;
 	template<typename T>
 	using ChunkArray = cgogn::MapBaseData<cgogn::DefaultMapTraits>::ChunkArray<T>;
 	template<typename T>
@@ -93,6 +93,8 @@ public slots:
 	virtual const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const = 0;
 	virtual cgogn::Orbit orbit(CellType ct) const = 0;
 	virtual CellType cell_type(cgogn::Orbit orbit) const = 0;
+	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
+	virtual uint32 embedding(cgogn::Dart d,CellType ct) const = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -253,7 +255,7 @@ public:
 
 	void notify_attribute_change(cgogn::Orbit, const QString&);
 	void notify_connectivity_change();
-
+	virtual QStringList get_attribute_names(CellType ct) const = 0;
 	virtual bool remove_attribute(CellType ct, const QString& att_name) = 0;
 
 private:
@@ -420,6 +422,24 @@ public:
 		}
 	}
 
+	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const override
+	{
+		const cgogn::Orbit orb = orbit(ct);
+		switch (orb) {
+			case CDart::ORBIT: get_map()->foreach_cell([&](CDart d) { func(d.dart); }); break;
+			case Vertex::ORBIT: get_map()->foreach_cell([&](Vertex v) { func(v.dart); }); break;
+			case Edge::ORBIT: get_map()->foreach_cell([&](Edge e) { func(e.dart); }); break;
+			case Face::ORBIT: get_map()->foreach_cell([&](Face f) { func(f.dart); }); break;
+			case Volume::ORBIT: get_map()->foreach_cell([&](Volume w) { func(w.dart); }); break;
+			default: break;
+			}
+	}
+
+	virtual uint32 embedding(cgogn::Dart d,CellType ct) const override
+	{
+		return get_map()->embedding(d, orbit(ct));
+	}
+
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
 	 *********************************************************/
@@ -530,6 +550,17 @@ public:
 		return get_map()->template get_attribute<T, ORBIT>(attribute_name.toStdString());
 	}
 
+	virtual QStringList get_attribute_names(CellType ct) const override
+	{
+		const ChunkArrayContainer<uint32>& cont = const_attribute_container(ct);
+		const auto& names = cont.names();
+		QStringList res;
+		res.reserve(names.size());
+		for (const auto& name : names)
+			res.push_back(QString::fromStdString(name));
+		return res;
+	}
+
 protected:
 
 	/*********************************************************
@@ -544,10 +575,10 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
-			MapBaseData::ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
+			const ChunkArrayContainer<uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
+			ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
 
-			MapBaseData::ChunkArray<VEC4F>* ca4f = dynamic_cast<MapBaseData::ChunkArray<VEC4F>*>(cag);
+			ChunkArray<VEC4F>* ca4f = dynamic_cast<ChunkArray<VEC4F>*>(cag);
 			if (ca4f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -558,7 +589,7 @@ protected:
 				return vbo;
 			}
 
-			MapBaseData::ChunkArray<VEC4D>* ca4d = dynamic_cast<MapBaseData::ChunkArray<VEC4D>*>(cag);
+			ChunkArray<VEC4D>* ca4d = dynamic_cast<ChunkArray<VEC4D>*>(cag);
 			if (ca4d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -569,7 +600,7 @@ protected:
 				return vbo;
 			}
 
-			MapBaseData::ChunkArray<VEC3F>* ca3f = dynamic_cast<MapBaseData::ChunkArray<VEC3F>*>(cag);
+			ChunkArray<VEC3F>* ca3f = dynamic_cast<ChunkArray<VEC3F>*>(cag);
 			if (ca3f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -580,7 +611,7 @@ protected:
 				return vbo;
 			}
 
-			MapBaseData::ChunkArray<VEC3D>* ca3d = dynamic_cast<MapBaseData::ChunkArray<VEC3D>*>(cag);
+			ChunkArray<VEC3D>* ca3d = dynamic_cast<ChunkArray<VEC3D>*>(cag);
 			if (ca3d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -591,7 +622,7 @@ protected:
 				return vbo;
 			}
 
-			MapBaseData::ChunkArray<VEC2F>* ca2f = dynamic_cast<MapBaseData::ChunkArray<VEC2F>*>(cag);
+			ChunkArray<VEC2F>* ca2f = dynamic_cast<ChunkArray<VEC2F>*>(cag);
 			if (ca2f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -602,7 +633,7 @@ protected:
 				return vbo;
 			}
 
-			MapBaseData::ChunkArray<VEC2D>* ca2d = dynamic_cast<MapBaseData::ChunkArray<VEC2D>*>(cag);
+			ChunkArray<VEC2D>* ca2d = dynamic_cast<ChunkArray<VEC2D>*>(cag);
 			if (ca2d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -613,7 +644,7 @@ protected:
 				return vbo;
 			}
 
-			MapBaseData::ChunkArray<float32>* ca1f = dynamic_cast<MapBaseData::ChunkArray<float32>*>(cag);
+			ChunkArray<float32>* ca1f = dynamic_cast<ChunkArray<float32>*>(cag);
 			if (ca1f)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -624,7 +655,7 @@ protected:
 				return vbo;
 			}
 
-			MapBaseData::ChunkArray<float64>* ca1d = dynamic_cast<MapBaseData::ChunkArray<float64>*>(cag);
+			ChunkArray<float64>* ca1d = dynamic_cast<ChunkArray<float64>*>(cag);
 			if (ca1d)
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -647,10 +678,10 @@ protected:
 			MAP_TYPE* map = get_map();
 
 			const MAP_TYPE* cmap = map;
-			const MapBaseData::ChunkArrayContainer<cgogn::uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
-			MapBaseData::ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
+			const ChunkArrayContainer<uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
+			ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
 
-			MapBaseData::ChunkArray<VEC4F>* ca4f = dynamic_cast<MapBaseData::ChunkArray<VEC4F>*>(cag);
+			ChunkArray<VEC4F>* ca4f = dynamic_cast<ChunkArray<VEC4F>*>(cag);
 			if (ca4f)
 			{
 				vbo = this->vbos_.at(name).get();
@@ -659,7 +690,7 @@ protected:
 				return;
 			}
 
-			MapBaseData::ChunkArray<VEC4D>* ca4d = dynamic_cast<MapBaseData::ChunkArray<VEC4D>*>(cag);
+			ChunkArray<VEC4D>* ca4d = dynamic_cast<ChunkArray<VEC4D>*>(cag);
 			if (ca4f)
 			{
 				vbo = this->vbos_.at(name).get();
@@ -668,7 +699,7 @@ protected:
 				return;
 			}
 
-			MapBaseData::ChunkArray<VEC3F>* ca3f = dynamic_cast<MapBaseData::ChunkArray<VEC3F>*>(cag);
+			ChunkArray<VEC3F>* ca3f = dynamic_cast<ChunkArray<VEC3F>*>(cag);
 			if (ca3f)
 			{
 				vbo = this->vbos_.at(name).get();
@@ -677,7 +708,7 @@ protected:
 				return;
 			}
 
-			MapBaseData::ChunkArray<VEC3D>* ca3d = dynamic_cast<MapBaseData::ChunkArray<VEC3D>*>(cag);
+			ChunkArray<VEC3D>* ca3d = dynamic_cast<ChunkArray<VEC3D>*>(cag);
 			if (ca3d)
 			{
 				vbo = this->vbos_.at(name).get();
@@ -686,7 +717,7 @@ protected:
 				return;
 			}
 
-			MapBaseData::ChunkArray<VEC2F>* ca2f = dynamic_cast<MapBaseData::ChunkArray<VEC2F>*>(cag);
+			ChunkArray<VEC2F>* ca2f = dynamic_cast<ChunkArray<VEC2F>*>(cag);
 			if (ca2f)
 			{
 				vbo = this->vbos_.at(name).get();
@@ -695,7 +726,7 @@ protected:
 				return;
 			}
 
-			MapBaseData::ChunkArray<VEC2D>* ca2d = dynamic_cast<MapBaseData::ChunkArray<VEC2D>*>(cag);
+			ChunkArray<VEC2D>* ca2d = dynamic_cast<ChunkArray<VEC2D>*>(cag);
 			if (ca2d)
 			{
 				vbo = this->vbos_.at(name).get();
@@ -704,7 +735,7 @@ protected:
 				return;
 			}
 
-			MapBaseData::ChunkArray<float32>* ca1f = dynamic_cast<MapBaseData::ChunkArray<float32>*>(cag);
+			ChunkArray<float32>* ca1f = dynamic_cast<ChunkArray<float32>*>(cag);
 			if (ca1f)
 			{
 				vbo = this->vbos_.at(name).get();
@@ -713,7 +744,7 @@ protected:
 				return;
 			}
 
-			MapBaseData::ChunkArray<float64>* ca1d = dynamic_cast<MapBaseData::ChunkArray<float64>*>(cag);
+			ChunkArray<float64>* ca1d = dynamic_cast<ChunkArray<float64>*>(cag);
 			if (ca1d)
 			{
 				vbo = this->vbos_.at(name).get();
