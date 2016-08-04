@@ -94,6 +94,7 @@ public slots:
 	virtual cgogn::Orbit orbit(CellType ct) const = 0;
 	virtual CellType cell_type(cgogn::Orbit orbit) const = 0;
 	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
+	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const = 0;
 	virtual uint32 embedding(cgogn::Dart d,CellType ct) const = 0;
 
 	/*********************************************************
@@ -431,6 +432,19 @@ public:
 			case Edge::ORBIT: get_map()->foreach_cell([&](Edge e) { func(e.dart); }); break;
 			case Face::ORBIT: get_map()->foreach_cell([&](Face f) { func(f.dart); }); break;
 			case Volume::ORBIT: get_map()->foreach_cell([&](Volume w) { func(w.dart); }); break;
+			default: break;
+			}
+	}
+
+	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const override
+	{
+		const cgogn::Orbit orb = orbit(ct);
+		switch (orb) {
+			case CDart::ORBIT: get_map()->parallel_foreach_cell([&](CDart d, uint32 th) { func(d.dart, th); }); break;
+			case Vertex::ORBIT: get_map()->parallel_foreach_cell([&](Vertex v, uint32 th) { func(v.dart, th); }); break;
+			case Edge::ORBIT: get_map()->parallel_foreach_cell([&](Edge e, uint32 th) { func(e.dart, th); }); break;
+			case Face::ORBIT: get_map()->parallel_foreach_cell([&](Face f, uint32 th) { func(f.dart, th); }); break;
+			case Volume::ORBIT: get_map()->parallel_foreach_cell([&](Volume w, uint32 th) { func(w.dart, th); }); break;
 			default: break;
 			}
 	}
