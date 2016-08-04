@@ -21,6 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_CORE_MAPHANDLER_CPP_
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -29,6 +30,9 @@
 
 namespace schnapps
 {
+
+template class SCHNAPPS_CORE_API MapHandler<CMap2>;
+template class SCHNAPPS_CORE_API MapHandler<CMap3>;
 
 MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, std::unique_ptr<MapBaseData> map) :
 	name_(name),

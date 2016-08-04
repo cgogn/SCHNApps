@@ -805,6 +805,11 @@ private:
 	VertexAttribute<VEC3> bb_vertex_attribute_;
 };
 
+#ifndef SCHNAPPS_CORE_MAPHANDLER_CPP_
+extern template class SCHNAPPS_CORE_API MapHandler<CMap2>;
+extern template class SCHNAPPS_CORE_API MapHandler<CMap3>;
+#endif // SCHNAPPS_CORE_MAPHANDLER_CPP_
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_CORE_MAPHANDLER_H_
