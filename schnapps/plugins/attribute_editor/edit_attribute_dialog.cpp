@@ -47,13 +47,14 @@ EditAttributeDialog::EditAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p) 
 	connect(map_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(selected_map_changed(QString)));
 	connect(orbit_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(orbit_changed(QString)));
 	connect(name_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(attribute_changed(QString)));
+	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(edit_attribute_validated()));
 
 	schnapps_->foreach_map([&](MapHandlerGen* mhg)
 	{
 		map_added(mhg);
 	});
 
-//	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(add_attribute_validated()));
+
 }
 
 void EditAttributeDialog::map_added(MapHandlerGen* mhg)
@@ -114,18 +115,6 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 				const uint32 nb_cols = ca->nb_components();
 				attribute_tableWidget->setColumnCount(int32(nb_cols));
 
-				{
-					for (int i =0; i < nb_cols; ++i)
-					{
-						if (!attribute_tableWidget->horizontalHeaderItem(i))
-						{
-							QTableWidgetItem *item = new QTableWidgetItem;
-							item->setText(QString::number(i));
-							attribute_tableWidget->setHorizontalHeaderItem(i, item);
-						}
-					}
-				}
-
 				int r = 0;
 				mhg->foreach_cell(cell_t, [&](cgogn::Dart d)
 				{
@@ -136,7 +125,7 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 						item = new QTableWidgetItem;
 
 					const uint32 emb = mhg->embedding(d, cell_t);
-					items[0]->setText(QString::number(mhg->embedding(d, cell_t)));
+					items[0]->setText(QString::number(emb));
 					attribute_tableWidget->setVerticalHeaderItem(r, items[0]);
 
 					std::stringstream sstream;
@@ -158,7 +147,35 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 
 void EditAttributeDialog::edit_attribute_validated()
 {
+	MapHandlerGen* mhg = schnapps_->get_map(map_comboBox->currentText());
+	if (mhg)
+	{
+		CellType cell_t = cell_type(orbit_comboBox->currentText().toStdString());
+		if (cell_t != CellType::Unknown)
+		{
+			const QString& attribute_name = name_comboBox->currentText();
+			const auto& ca_cont = mhg->const_attribute_container(cell_t);
+			auto* ca = ca_cont.get_chunk_array(attribute_name.toStdString());
+			if (ca)
+			{
+				int32 r = 0, rend = attribute_tableWidget->rowCount();
+				const int32 nbc = attribute_tableWidget->columnCount();
 
+				for ( ; r < rend; ++r)
+				{
+					const uint32 emb = attribute_tableWidget->verticalHeaderItem(r)->text().toUInt();
+					std::stringstream sstream;
+					for (int32 c = 0; c < nbc; ++c)
+					{
+						sstream << attribute_tableWidget->item(r,c)->text().toStdString()  << " ";
+					}
+					ca->import_element(emb, sstream);
+				}
+
+				mhg->attribute_changed(mhg->orbit(cell_t), attribute_name);
+			}
+		}
+	}
 }
 
 
