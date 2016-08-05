@@ -63,6 +63,7 @@ public:
 	inline void set_mutually_exclusive(bool b) { mutually_exclusive_ = b; }
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
 	virtual void set_mutually_exclusive_sets(const std::vector<CellsSetGen*>& mex) = 0;
+	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
 
 private slots:
 
@@ -190,6 +191,12 @@ public:
 		static_assert(check_func_parameter_type(FUNC, CELL), "Wrong function parameter type");
 		for (const auto& cell : cells_)
 			f(cell.second);
+	}
+
+	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const override
+	{
+		for (const auto& cell : cells_)
+			func(cell.second.dart);
 	}
 
 protected:
