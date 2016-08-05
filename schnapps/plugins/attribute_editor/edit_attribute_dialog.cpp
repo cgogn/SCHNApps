@@ -46,8 +46,9 @@ EditAttributeDialog::EditAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p) 
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(map_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(selected_map_changed(QString)));
 	connect(orbit_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(orbit_changed(QString)));
-	connect(name_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(attribute_changed(QString)));
+	connect(att_name_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(attribute_changed(QString)));
 	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(edit_attribute_validated()));
+	connect(this->cellsSet_comboBox,SIGNAL(currentTextChanged(QString)), this, SLOT(cells_set_changed(QString)));
 
 	schnapps_->foreach_map([&](MapHandlerGen* mhg)
 	{
@@ -75,26 +76,24 @@ void EditAttributeDialog::map_removed(MapHandlerGen* mhg)
 
 void EditAttributeDialog::selected_map_changed(const QString& map_name)
 {
-	name_comboBox->clear();
-	name_comboBox->addItem("-select attribute-");
 	MapHandlerGen* mhg = schnapps_->get_map(map_name);
-	if (mhg)
-	{
-		const auto& att_names = mhg->get_attribute_names(cell_type(orbit_comboBox->currentText().toStdString()));
-		name_comboBox->addItems(att_names);
-	}
+	const CellType ct = cell_type(orbit_comboBox->currentText().toStdString());
+	update_attribute_list(mhg, ct);
+	update_cells_sets(mhg, ct);
 }
 
 void EditAttributeDialog::orbit_changed(const QString& orbit_name)
 {
-	name_comboBox->clear();
-	name_comboBox->addItem("-select attribute-");
+
 	MapHandlerGen* mhg = schnapps_->get_map(map_comboBox->currentText());
-	if (mhg)
-	{
-		const auto& att_names = mhg->get_attribute_names(cell_type(orbit_name.toStdString()));
-		name_comboBox->addItems(att_names);
-	}
+	const CellType ct = cell_type(orbit_name.toStdString());
+	update_attribute_list(mhg, ct);
+	update_cells_sets(mhg, ct);
+}
+
+void EditAttributeDialog::cells_set_changed(const QString& cells_set_name)
+{
+	attribute_changed(att_name_comboBox->currentText());
 }
 
 void EditAttributeDialog::attribute_changed(const QString& attribute_name)
@@ -116,7 +115,8 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 				attribute_tableWidget->setColumnCount(int32(nb_cols));
 
 				int r = 0;
-				mhg->foreach_cell(cell_t, [&](cgogn::Dart d)
+
+				auto func = [&](cgogn::Dart d)
 				{
 					int c = 0;
 					attribute_tableWidget->insertRow(r);
@@ -139,7 +139,13 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 						attribute_tableWidget->setItem(r,c++, items[i]);
 					}
 					++r;
-				});
+				};
+
+				CellsSetGen* csg = mhg->get_cells_set(cell_t, cellsSet_comboBox->currentText());
+				if (csg)
+					csg->foreach_cell(func);
+				else
+					mhg->foreach_cell(cell_t, func);
 			}
 		}
 	}
@@ -153,7 +159,7 @@ void EditAttributeDialog::edit_attribute_validated()
 		CellType cell_t = cell_type(orbit_comboBox->currentText().toStdString());
 		if (cell_t != CellType::Unknown)
 		{
-			const QString& attribute_name = name_comboBox->currentText();
+			const QString& attribute_name = att_name_comboBox->currentText();
 			const auto& ca_cont = mhg->const_attribute_container(cell_t);
 			auto* ca = ca_cont.get_chunk_array(attribute_name.toStdString());
 			if (ca)
@@ -175,6 +181,30 @@ void EditAttributeDialog::edit_attribute_validated()
 				mhg->attribute_changed(mhg->orbit(cell_t), attribute_name);
 			}
 		}
+	}
+}
+
+void EditAttributeDialog::update_cells_sets(MapHandlerGen* mhg, CellType ct)
+{
+	cellsSet_comboBox->clear();
+	cellsSet_comboBox->addItem("-select set-");
+	if (mhg && ct != CellType::Unknown)
+	{
+		mhg->foreach_cells_set(ct, [&](CellsSetGen* csg)
+		{
+			cellsSet_comboBox->addItem(csg->get_name());
+		});
+	}
+}
+
+void EditAttributeDialog::update_attribute_list(MapHandlerGen* mhg, CellType ct)
+{
+	att_name_comboBox->clear();
+	att_name_comboBox->addItem("-select attribute-");
+	if (mhg && ct != CellType::Unknown)
+	{
+		const auto& att_names = mhg->get_attribute_names(ct);
+		att_name_comboBox->addItems(att_names);
 	}
 }
 

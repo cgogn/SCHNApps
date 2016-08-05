@@ -27,6 +27,7 @@
 
 #include <dll.h>
 #include <ui_edit_attribute_dialog.h>
+#include <schnapps/core/types.h>
 
 namespace schnapps
 {
@@ -52,9 +53,13 @@ private slots:
 	void map_removed(MapHandlerGen*);
 	void selected_map_changed(const QString&);
 	void orbit_changed(const QString&);
+	void cells_set_changed(const QString&);
 	void attribute_changed(const QString&);
 	void edit_attribute_validated();
 
+private:
+	void update_cells_sets(MapHandlerGen*, CellType ct);
+	void update_attribute_list(MapHandlerGen*, CellType ct);
 private:
 	SCHNApps* schnapps_;
 	AttributeEditorPlugin* plugin_;
