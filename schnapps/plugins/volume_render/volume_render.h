@@ -103,6 +103,9 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		volume_explode_factor_ = vef;
 		volume_drawer_rend_->set_explode_volume(vef);
 		topo_drawer_->set_explode_volume(vef);
+		auto pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+		if (pos_attr.is_valid())
+			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
 	}
 
 	bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
