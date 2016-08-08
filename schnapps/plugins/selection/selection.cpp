@@ -451,7 +451,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								auto picked = get_picked_cells(map, CellType::Face_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
-									if (!p.selecting_face_.is_valid() || (!p.selecting_face_.is_nil() && !map->same_cell(picked[0],p.selecting_face_, CellType::Face_Cell)))
+									if (p.selecting_face_.is_nil() || (!p.selecting_face_.is_nil() && !map->same_cell(picked[0],p.selecting_face_, CellType::Face_Cell)))
 									{
 										p.selecting_face_ = picked[0];
 										std::vector<VEC3> selection_polygon;
@@ -480,7 +480,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
-									if (!p.selecting_vertex_.is_valid() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
+									if (p.selecting_vertex_.is_nil() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
 									{
 										p.selecting_vertex_ = picked[0];
 										std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
