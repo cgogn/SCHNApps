@@ -65,6 +65,11 @@ public:
 	virtual void set_mutually_exclusive_sets(const std::vector<CellsSetGen*>& mex) = 0;
 	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
 
+	virtual void select(cgogn::Dart d, bool emit_signal = true) = 0;
+	virtual void select(const std::vector<cgogn::Dart>& cells) = 0;
+	virtual void unselect(cgogn::Dart d, bool emit_signal = true) = 0;
+	virtual void unselect(const std::vector<cgogn::Dart>& cells) = 0;
+
 private slots:
 
 	virtual void rebuild() = 0;
@@ -97,6 +102,9 @@ public:
 
 	using Inherit = CellsSetGen;
 	using Self = CellsSet<MAP, CELL>;
+
+	using Inherit::select;
+	using Inherit::unselect;
 
 	CellsSet(MapHandler<MAP>& m, const QString& name) :
 		Inherit(name),
@@ -197,6 +205,26 @@ public:
 	{
 		for (const auto& cell : cells_)
 			func(cell.second.dart);
+	}
+
+	virtual void select(cgogn::Dart d, bool emit_signal) override
+	{
+		this->select(CELL(d), emit_signal);
+	}
+
+	virtual void select(const std::vector<cgogn::Dart>& cells) override
+	{
+		this->select(reinterpret_cast<const std::vector<CELL>&>(cells));
+	}
+
+	virtual void unselect(cgogn::Dart d, bool emit_signal) override
+	{
+		this->unselect(CELL(d), emit_signal);
+	}
+
+	virtual void unselect(const std::vector<cgogn::Dart>& cells) override
+	{
+		this->unselect(reinterpret_cast<const std::vector<CELL>&>(cells));
 	}
 
 protected:

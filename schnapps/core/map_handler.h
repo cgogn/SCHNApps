@@ -96,6 +96,8 @@ public slots:
 	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
 	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const = 0;
 	virtual uint32 embedding(cgogn::Dart d,CellType ct) const = 0;
+	virtual bool same_cell(cgogn::Dart d, cgogn::Dart e, CellType ct) const = 0;
+	virtual std::pair<cgogn::Dart, cgogn::Dart> vertices(cgogn::Dart edge) const = 0;
 
 	/*********************************************************
 	 * MANAGE FRAME
@@ -452,6 +454,27 @@ public:
 	virtual uint32 embedding(cgogn::Dart d,CellType ct) const override
 	{
 		return get_map()->embedding(d, orbit(ct));
+	}
+
+	virtual bool same_cell(cgogn::Dart d, cgogn::Dart e, CellType ct) const override
+	{
+		const cgogn::Orbit orb = orbit(ct);
+		const auto* map = get_map();
+		switch (orb) {
+			case CDart::ORBIT: return d == e;
+			case Vertex::ORBIT: return map->same_cell(Vertex(d), Vertex(e));
+			case Edge::ORBIT: return map->same_cell(Edge(d), Edge(e));
+			case Face::ORBIT: return map->same_cell(Face(d), Face(e));
+			case Volume::ORBIT: return map->same_cell(Volume(d), Volume(e));
+			default:
+				return false;
+			}
+	}
+
+	virtual std::pair<cgogn::Dart, cgogn::Dart> vertices(cgogn::Dart edge) const override
+	{
+		auto && p = get_map()->vertices(Edge(edge));
+		return std::make_pair(p.first.dart, p.second.dart);
 	}
 
 	/*********************************************************

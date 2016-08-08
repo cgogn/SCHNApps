@@ -298,12 +298,7 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 
 	QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(map);
-	if (!mh)
-		return;
-
-	const CMap2* map2 = mh->get_map();
-	const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+	const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>& container = map->const_attribute_container(CellType::Vertex_Cell);
 	const std::vector<std::string>& names = container.names();
 	const std::vector<std::string>& type_names = container.type_names();
 
