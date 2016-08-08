@@ -39,6 +39,7 @@
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/volume_drawer.h>
 #include <cgogn/rendering/frame_manipulator.h>
+#include <cgogn/rendering/topo_drawer.h>
 
 #include <QAction>
 #include <map>
@@ -56,58 +57,10 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 {
 	friend class Plugin_VolumeRender;
 
-	MapParameters() :
-		shader_simple_color_param_(nullptr),
-		shader_point_sprite_param_(nullptr),
-		position_vbo_(nullptr),
-		vertex_scale_factor_(1.0f),
-		vertex_base_size_(1.0f),
-		volume_drawer_(nullptr),
-		volume_drawer_rend_(nullptr),
-		frame_manip_(nullptr),
-		apply_clipping_plane_(false),
-		render_vertices_(false),
-		render_edges_(false),
-		render_faces_(true),
-		render_boundary_(false),
-		vertex_color_(190, 85, 168),
-		edge_color_(0, 0, 0),
-		face_color_(85, 168, 190),
-		volume_explode_factor_(0.8f)
-	{
-		shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
-		shader_simple_color_param_->color_ = edge_color_;
-
-		shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
-		shader_point_sprite_param_->color_ = vertex_color_;
-		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
-
-		volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
-		volume_drawer_rend_ = volume_drawer_->generate_renderer();
-		volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
-
-		frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
-	}
+	MapParameters();
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	void set_position_vbo(cgogn::rendering::VBO* v)
-	{
-		position_vbo_ = v;
-		if (position_vbo_ && position_vbo_->vector_dimension() == 3)
-		{
-			shader_simple_color_param_->set_position_vbo(position_vbo_);
-			shader_point_sprite_param_->set_position_vbo(position_vbo_);
-
-			auto pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
-			if (pos_attr.is_valid())
-			{
-				volume_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
-				volume_drawer_->update_edge<VEC3>(*map_->get_map(), pos_attr);
-			}
-		}
-		else
-			position_vbo_ = nullptr;
-	}
+	void set_position_vbo(cgogn::rendering::VBO* v);
 
 	const QColor& get_vertex_color() const { return vertex_color_; }
 	void set_vertex_color(const QColor& c)
@@ -149,6 +102,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	{
 		volume_explode_factor_ = vef;
 		volume_drawer_rend_->set_explode_volume(vef);
+		topo_drawer_->set_explode_volume(vef);
 	}
 
 	bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
@@ -163,9 +117,11 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 			frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt, axis_z);
 			float32 d = -(position.dot(axis_z));
 			volume_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
-		}
-		else
+			topo_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
+		} else {
 			volume_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
+			topo_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
+		}
 	}
 
 private:
@@ -189,6 +145,9 @@ private:
 	std::unique_ptr<cgogn::rendering::VolumeDrawer> volume_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeDrawer::Renderer> volume_drawer_rend_;
 
+	std::unique_ptr<cgogn::rendering::TopoDrawer> topo_drawer_;
+	std::unique_ptr<cgogn::rendering::TopoDrawer::Renderer> topo_drawer_rend_;
+
 	std::unique_ptr<cgogn::rendering::FrameManipulator> frame_manip_;
 	bool apply_clipping_plane_;
 
@@ -198,6 +157,7 @@ public:
 	bool render_edges_;
 	bool render_faces_;
 	bool render_boundary_;
+	bool render_topology_;
 };
 
 /**
