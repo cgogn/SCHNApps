@@ -95,7 +95,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 						ogl->glDrawArrays(GL_POINTS, 0, p.cells_set_->get_nb_cells());
 						p.shader_point_sprite_param_selected_vertices_->release();
 					}
-					if (p.selecting_ && p.selecting_vertex_.is_valid())
+					if (p.selecting_ && !p.selecting_vertex_.is_nil())
 					{
 						switch (p.selection_method_)
 						{
@@ -128,7 +128,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 						{
 							case MapParameters::NormalAngle:
 							case MapParameters::SingleCell:
-								if (p.selecting_edge_.is_valid())
+								if (!p.selecting_edge_.is_nil())
 								{
 									p.shader_bold_line_param_selection_edge_->bind(proj, mv);
 									ogl->glDrawArrays(GL_LINES, 0, 2);
@@ -136,7 +136,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 								}
 								break;
 							case MapParameters::WithinSphere:
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_;
 									p.shader_point_sprite_param_selection_sphere_->bind(proj, mv);
@@ -163,7 +163,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 						{
 							case MapParameters::NormalAngle:
 							case MapParameters::SingleCell:
-								if (p.selecting_face_.is_valid())
+								if (!p.selecting_face_.is_nil())
 								{
 									ogl->glDisable(GL_DEPTH_TEST);
 									p.shader_simple_color_param_selection_face_->bind(proj, mv);
@@ -173,7 +173,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 								}
 								break;
 							case MapParameters::WithinSphere:
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_;
 									p.shader_point_sprite_param_selection_sphere_->bind(proj, mv);
@@ -252,7 +252,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 						switch (p.selection_method_)
 						{
 							case MapParameters::SingleCell:
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									if(event->button() == Qt::LeftButton)
 										csg->select(p.selecting_vertex_);
@@ -262,7 +262,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 								}
 								break;
 							case MapParameters::WithinSphere: {
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
 									neighborhood->collect(p.selecting_vertex_);
@@ -282,7 +282,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 						switch (p.selection_method_)
 						{
 							case MapParameters::SingleCell:
-								if (p.selecting_edge_.is_valid())
+								if (!p.selecting_edge_.is_nil())
 								{
 									if(event->button() == Qt::LeftButton)
 										csg->select(p.selecting_edge_);
@@ -292,7 +292,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 								}
 								break;
 							case MapParameters::WithinSphere: {
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
 									if (neighborhood)
@@ -319,7 +319,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 						switch (p.selection_method_)
 						{
 							case MapParameters::SingleCell:
-								if (p.selecting_face_.is_valid())
+								if (!p.selecting_face_.is_nil())
 								{
 									if(event->button() == Qt::LeftButton)
 										csg->select(p.selecting_face_);
@@ -329,7 +329,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 								}
 								break;
 							case MapParameters::WithinSphere: {
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
 
@@ -392,7 +392,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 						auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
 						if (!picked.empty())
 						{
-							if (p.selecting_vertex_.is_nil() || (p.selecting_vertex_.is_valid() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
+							if (p.selecting_vertex_.is_nil() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
 							{
 								p.selecting_vertex_ = picked[0];
 								std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
@@ -411,7 +411,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								auto picked = get_picked_cells(map, CellType::Edge_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
-									if (p.selecting_edge_.is_nil() || (p.selecting_edge_.is_valid() && !map->same_cell(picked[0],p.selecting_edge_, CellType::Edge_Cell)))
+									if (p.selecting_edge_.is_nil() || (!p.selecting_edge_.is_nil() && !map->same_cell(picked[0],p.selecting_edge_, CellType::Edge_Cell)))
 									{
 										p.selecting_edge_ = picked[0];
 										auto vertices = map->vertices((p.selecting_edge_));
@@ -429,7 +429,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
-									if (p.selecting_vertex_.is_nil() || (p.selecting_vertex_.is_valid() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
+									if (p.selecting_vertex_.is_nil() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
 									{
 										p.selecting_vertex_ = picked[0];
 										std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
@@ -451,7 +451,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								auto picked = get_picked_cells(map, CellType::Face_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
-									if (!p.selecting_face_.is_valid() || (p.selecting_face_.is_valid() && !map->same_cell(picked[0],p.selecting_face_, CellType::Face_Cell)))
+									if (!p.selecting_face_.is_valid() || (!p.selecting_face_.is_nil() && !map->same_cell(picked[0],p.selecting_face_, CellType::Face_Cell)))
 									{
 										p.selecting_face_ = picked[0];
 										std::vector<VEC3> selection_polygon;
@@ -480,7 +480,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
-									if (!p.selecting_vertex_.is_valid() || (p.selecting_vertex_.is_valid() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
+									if (!p.selecting_vertex_.is_valid() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
 									{
 										p.selecting_vertex_ = picked[0];
 										std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
