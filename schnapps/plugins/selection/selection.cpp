@@ -79,6 +79,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 	{
 		view->makeCurrent();
 		QOpenGLFunctions* ogl = QOpenGLContext::currentContext()->functions();
+		QOpenGLFunctions_3_3_Core* ogl33 = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
 
 		const MapParameters& p = get_parameters(view, map);
 
@@ -188,6 +189,20 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 					}
 					break;
 				case Volume_Cell:
+					if (p.cells_set_->get_nb_cells() > 0)
+					{
+						p.drawer_rend_selected_volumes_->draw(proj, mv, ogl33);
+					}
+					if (p.selecting_)
+					{
+						switch (p.selection_method_)
+						{
+							case MapParameters::SingleCell:
+								if (!p.selecting_volume_.is_nil())
+									p.drawer_rend_selected_volumes_->draw(proj, mv, ogl33);
+								break;
+						}
+					}
 					break;
 			}
 		}
@@ -315,7 +330,8 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 						}
 					}
 						break;
-					case Face_Cell: {
+					case Face_Cell:
+					{
 						switch (p.selection_method_)
 						{
 							case MapParameters::SingleCell:
@@ -354,6 +370,21 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 					}
 						break;
 					case Volume_Cell:
+					{
+						switch (p.selection_method_)
+						{
+							case MapParameters::SingleCell:
+								if (!p.selecting_volume_.is_nil())
+								{
+									if(event->button() == Qt::LeftButton)
+										csg->select(p.selecting_volume_);
+									else if(event->button() == Qt::RightButton)
+										csg->unselect(p.selecting_volume_);
+									p.update_selected_cells_rendering();
+								}
+								break;
+						}
+					}
 						break;
 				}
 			}
@@ -425,7 +456,6 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 							}
 								break;
 							case MapParameters::WithinSphere: {
-//								std::vector<MapHandler<CMap2>::Vertex> picked;
 								auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
@@ -447,7 +477,8 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 						{
 							case MapParameters::NormalAngle:
 								break;
-							case MapParameters::SingleCell: {
+							case MapParameters::SingleCell:
+							{
 								auto picked = get_picked_cells(map, CellType::Face_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
@@ -476,7 +507,8 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								}
 							}
 								break;
-							case MapParameters::WithinSphere: {
+							case MapParameters::WithinSphere:
+							{
 								auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
@@ -493,6 +525,24 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 					}
 						break;
 					case Volume_Cell:
+						switch (p.selection_method_) {
+							case MapParameters::NormalAngle:
+								break;
+							case MapParameters::SingleCell:
+							{
+								auto picked = get_picked_cells(map, CellType::Volume_Cell, p.get_position_attribute(), A, B);
+								if (!picked.empty())
+								{
+									if (p.selecting_volume_.is_nil() || (!p.selecting_volume_.is_nil() && !map->same_cell(picked[0],p.selecting_volume_, CellType::Volume_Cell)))
+									{
+										p.selecting_volume_ = picked[0];
+									}
+								}
+								break;
+							}
+							default:
+								break;
+						}
 						break;
 				}
 
@@ -610,7 +660,7 @@ std::vector<cgogn::Dart> Plugin_Selection::get_picked_cells(MapHandlerGen* map, 
 	if (!pick_res)
 		return std::vector<cgogn::Dart>();
 	else
-	return res;
+		return res;
 }
 
 void Plugin_Selection::map_linked(MapHandlerGen* map)

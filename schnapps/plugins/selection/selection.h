@@ -124,6 +124,9 @@ public:
 		shader_flat_param_selected_faces_->front_color_ = color_;
 		shader_flat_param_selected_faces_->back_color_ = color_;
 		shader_flat_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
+
+		drawer_selected_volumes_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
+		drawer_rend_selected_volumes_ = drawer_selected_volumes_->generate_renderer();
 	}
 
 	const MapHandlerGen::Attribute_T<VEC3>& get_position_attribute() const { return *position_; }
@@ -253,6 +256,23 @@ public slots:
 				}
 					break;
 				case Volume_Cell:
+				{
+					if (map_->dimension() == 3)
+					{
+						CMap3* map3 = static_cast<CMap3Handler*>(map_)->get_map();
+						CMap3Handler::VertexAttribute<VEC3>* pos = static_cast<CMap3Handler::VertexAttribute<VEC3>*>(position_.get());
+						drawer_selected_volumes_->new_list();
+						drawer_selected_volumes_->line_width(2.0);
+						drawer_selected_volumes_->begin(GL_LINES);
+						drawer_selected_volumes_->color3f(1.0, 0.0, 0.0);
+						cells_set_->foreach_cell([&] (cgogn::Dart w)
+						{
+							cgogn::rendering::add_to_drawer<VEC3>(*map3, CMap3::Volume(w), *pos, drawer_selected_volumes_.get());
+						});
+						drawer_selected_volumes_->end();
+						drawer_selected_volumes_->end_list();
+					}
+				}
 					break;
 			}
 
@@ -266,9 +286,6 @@ private:
 	MapHandlerGen* map_;
 	std::unique_ptr<MapHandlerGen::Attribute_T<VEC3>> position_;
 	std::unique_ptr<MapHandlerGen::Attribute_T<VEC3>> normal_;
-//	MapHandler<CMap2>* map_;
-//	MapHandler<CMap2>::VertexAttribute<VEC3> position_;
-//	MapHandler<CMap2>::VertexAttribute<VEC3> normal_;
 
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_selection_sphere_;
 	std::unique_ptr<cgogn::rendering::VBO> selection_sphere_vbo_;
@@ -288,6 +305,9 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderFlat::Param> shader_flat_param_selected_faces_;
 	std::unique_ptr<cgogn::rendering::VBO> selected_faces_vbo_;
 
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer> drawer_selected_volumes_;
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer> drawer_rend_selected_volumes_;
+
 	QColor color_;
 	float32 vertex_scale_factor_;
 	float32 vertex_base_size_;
@@ -297,6 +317,8 @@ private:
 	cgogn::Dart selecting_vertex_;
 	cgogn::Dart selecting_edge_;
 	cgogn::Dart selecting_face_;
+	cgogn::Dart selecting_volume_;
+
 	std::size_t selecting_face_nb_indices_;
 	std::size_t selected_faces_nb_indices_;
 
