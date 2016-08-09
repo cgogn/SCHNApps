@@ -3,7 +3,7 @@ project(plugin_empty_plugin
 )
 
 find_package(cgogn_core REQUIRED)
-find_package(Qt5 COMPONENTS Core REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
 set(HEADER_FILES
 	dll.h
@@ -33,4 +33,5 @@ target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
 	${Qt5Core_LIBRARIES}
+	${Qt5Widgets_LIBRARIES}
 )
