@@ -202,6 +202,8 @@ void Plugin_VolumeRender::map_linked(MapHandlerGen* map)
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
+		connect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()), Qt::UniqueConnection);
+		connect(map, SIGNAL(attribute_changed(cgogn::Orbit,QString)), this, SLOT(linked_attribute_changed(cgogn::Orbit,QString)), Qt::UniqueConnection);
 	}
 }
 
@@ -214,6 +216,8 @@ void Plugin_VolumeRender::map_unlinked(MapHandlerGen* map)
 		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
+		disconnect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()));
+		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit,QString)), this, SLOT(linked_attribute_changed(cgogn::Orbit,QString)));
 	}
 }
 
@@ -270,6 +274,51 @@ void Plugin_VolumeRender::linked_map_bb_changed()
 			MapParameters& p = view_param_set[map];
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
 			p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
+		}
+	}
+}
+
+void Plugin_VolumeRender::linked_map_connectivity_changed()
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+
+	for (auto& it : parameter_set_)
+	{
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(map) > 0ul)
+		{
+			MapParameters& p = view_param_set[map];
+			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
+			map->update_vbo(QString::fromStdString(p.position_vbo_->name()));
+			auto pos_attr = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(p.position_vbo_->name()));
+			if (pos_attr.is_valid())
+			{
+				p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
+				p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
+				p.topo_drawer_->update<VEC3>(*mh3->get_map(),pos_attr);
+			}
+		}
+	}
+}
+
+void Plugin_VolumeRender::linked_attribute_changed(cgogn::Orbit, QString)
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+
+	for (auto& it : parameter_set_)
+	{
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(map) > 0ul)
+		{
+			MapParameters& p = view_param_set[map];
+			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
+			auto pos_attr = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(p.position_vbo_->name()));
+			if (pos_attr.is_valid())
+			{
+				p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
+				p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
+				p.topo_drawer_->update<VEC3>(*mh3->get_map(),pos_attr);
+			}
 		}
 	}
 }
