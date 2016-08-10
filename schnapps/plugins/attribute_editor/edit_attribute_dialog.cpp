@@ -48,14 +48,13 @@ EditAttributeDialog::EditAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p) 
 	connect(orbit_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(orbit_changed(QString)));
 	connect(att_name_comboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(attribute_changed(QString)));
 	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(edit_attribute_validated()));
+	connect(this->apply_button,SIGNAL(pressed()), this, SLOT(edit_attribute_validated()));
 	connect(this->cellsSet_comboBox,SIGNAL(currentTextChanged(QString)), this, SLOT(cells_set_changed(QString)));
 
 	schnapps_->foreach_map([&](MapHandlerGen* mhg)
 	{
 		map_added(mhg);
 	});
-
-
 }
 
 void EditAttributeDialog::map_added(MapHandlerGen* mhg)
@@ -172,13 +171,22 @@ void EditAttributeDialog::edit_attribute_validated()
 					const uint32 emb = attribute_tableWidget->verticalHeaderItem(r)->text().toUInt();
 					std::stringstream sstream;
 					for (int32 c = 0; c < nbc; ++c)
-					{
 						sstream << attribute_tableWidget->item(r,c)->text().toStdString()  << " ";
-					}
-					ca->import_element(emb, sstream);
-				}
 
-				mhg->attribute_changed(mhg->orbit(cell_t), attribute_name);
+					ca->import_element(emb, sstream);
+					{
+						sstream = std::stringstream();
+						ca->export_element(emb, sstream, false, false);
+						for (int32 c = 0; c < nbc; ++c)
+						{
+							std::string val;
+							sstream >> val;
+							attribute_tableWidget->item(r,c)->setText(QString::fromStdString(val));
+						}
+					}
+
+				}
+				mhg->notify_attribute_change(mhg->orbit(cell_t), attribute_name);
 			}
 		}
 	}
