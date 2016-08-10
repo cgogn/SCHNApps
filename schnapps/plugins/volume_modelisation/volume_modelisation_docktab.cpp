@@ -52,6 +52,21 @@ void VolumeModelisation_DockTab::update(MapHandlerGen* map)
 {
 	position_comboBox->clear();
 	position_comboBox->addItem("-select attribute-");
+	if (map)
+	{
+		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+		const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>& container = map->const_attribute_container(CellType::Vertex_Cell);
+		const std::vector<std::string>& names = container.names();
+		const std::vector<std::string>& type_names = container.type_names();
+
+		for (std::size_t j = 0u; j < names.size(); ++j)
+		{
+			QString name = QString::fromStdString(names[j]);
+			QString type = QString::fromStdString(type_names[j]);
+			if (type == vec3_type_name)
+				position_comboBox->addItem(name);
+		}
+	}
 
 	dartSet_comboBox->clear();
 	dartSet_comboBox->addItem("-select set-");

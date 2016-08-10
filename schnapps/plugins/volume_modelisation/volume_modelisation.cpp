@@ -27,6 +27,7 @@
 #include <schnapps/core/map_handler.h>
 
 #include <cgogn/core/cmap/cmap3.h>
+#include <cgogn/geometry/algos/centroid.h>
 #include <cgogn/modeling/algos/tetrahedralization.h>
 
 namespace schnapps
@@ -39,20 +40,28 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 {
 	operations_ = cgogn::make_unique<VolumeOperation>();
 
-	operations_->add_operation("Split 1 to 4",CellType::Volume_Cell, [=](MapHandlerGen* mhg, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Split 1 to 4",CellType::Volume_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3)
 		{
 			res.reserve(darts.size());
 			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			CMap3::VertexAttribute<VEC3>& pos3 = static_cast<CMap3::VertexAttribute<VEC3>&>(pos_attr);
 			for (auto d : darts)
-				res.push_back(cgogn::modeling::flip_14(*map3, CMap3::Volume(d)).dart);
+			{
+				const CMap3::Volume w(d);
+				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, w,pos3);
+				res.push_back(cgogn::modeling::flip_14(*map3, w).dart);
+				cgogn::Dart v(res.back());
+				if (!v.is_nil())
+					pos_attr[v] = std::move(inserted_vertex_pos);
+			}
 		}
 		return res;
 	});
 
-	operations_->add_operation("Delete edge",CellType::Edge_Cell, [=](MapHandlerGen* mhg, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Delete edge",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3)
@@ -65,17 +74,38 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 
-	operations_->add_operation("Merge volumes",CellType::Face_Cell, [=](MapHandlerGen* mhg, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Delete volume",CellType::Volume_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
-		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3)
 		{
-			res.reserve(darts.size());
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			for (auto d : darts)
+				map3->delete_volume(CMap3::Volume(d));
+		}
+		return std::vector<cgogn::Dart>();
+	});
+
+
+	operations_->add_operation("Unsew volumes",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		if (mhg && mhg->dimension() == 3)
+		{
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			for (auto d : darts)
+				map3->unsew_volumes(CMap3::Face(d));
+		}
+		return std::vector<cgogn::Dart>();
+	});
+
+	operations_->add_operation("Merge volumes",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		if (mhg && mhg->dimension() == 3)
+		{
 			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
 			for (auto d : darts)
 				map3->merge_incident_volumes(CMap3::Face(d));
 		}
-		return res;
+		return std::vector<cgogn::Dart>();
 	});
 
 }
@@ -101,10 +131,12 @@ void VolumeModelisationPlugin::disable()
 
 void VolumeModelisationPlugin::process_operation()
 {
+	static uint32 counter = 0u;
 	MapHandlerGen* mhg = schnapps_->get_selected_map();
 	if (mhg && mhg->dimension() == 3)
 	{
-		const Operator* op = operations_->get_operator(docktab_->operations_combobox->currentText().toStdString());
+		CMap3Handler* mh3 = static_cast<CMap3Handler*>(mhg);
+		const MapOperator* op = operations_->get_operator(docktab_->operations_combobox->currentText().toStdString());
 		if (!op)
 			return;
 
@@ -117,15 +149,16 @@ void VolumeModelisationPlugin::process_operation()
 		arg.reserve(csg->get_nb_cells());
 		csg->foreach_cell([&arg](cgogn::Dart d) { arg.push_back(d);});
 
-		std::vector<cgogn::Dart> res = op->func_(mhg, arg);
+		auto pos_attribute = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(docktab_->position_comboBox->currentText());
+		std::vector<cgogn::Dart> res = op->func_(mhg,pos_attribute, arg);
 		res.erase(std::remove(res.begin(), res.end(), cgogn::Dart()), res.end()); // clean NIL darts
 		if (!res.empty())
 		{
-			CellsSetGen* res_csg = mhg->add_cells_set(CellType::Dart_Cell, docktab_->operations_combobox->currentText());
+			CellsSetGen* res_csg = mhg->add_cells_set(CellType::Dart_Cell, docktab_->operations_combobox->currentText() + QString("__" + QString::number(counter++)));
 			res_csg->select(res);
 		}
 
-		emit(mhg->connectivity_changed());
+		mhg->notify_connectivity_change();
 	}
 }
 
@@ -136,11 +169,15 @@ void VolumeModelisationPlugin::current_map_changed(MapHandlerGen* prev, MapHandl
 	{
 		disconnect(prev, SIGNAL(cells_set_added(CellType,QString)), this, SLOT(current_cells_set_added(CellType,QString)));
 		disconnect(prev, SIGNAL(cells_set_removed(CellType,QString)), this, SLOT(current_cells_set_removed(CellType,QString)));
+		disconnect(next, SIGNAL(attribute_added(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_added(cgogn::Orbit,QString)));
+		disconnect(next, SIGNAL(attribute_removed(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_removed(cgogn::Orbit,QString)));
 	}
 	if (next)
 	{
 		connect(next, SIGNAL(cells_set_added(CellType,QString)), this, SLOT(current_cells_set_added(CellType,QString)));
 		connect(next, SIGNAL(cells_set_removed(CellType,QString)), this, SLOT(current_cells_set_removed(CellType,QString)));
+		connect(next, SIGNAL(attribute_added(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_added(cgogn::Orbit,QString)));
+		connect(next, SIGNAL(attribute_removed(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_removed(cgogn::Orbit,QString)));
 	}
 	update_dock_tab();
 }
@@ -155,6 +192,18 @@ void VolumeModelisationPlugin::current_cells_set_removed(CellType ct, const QStr
 {
 	QComboBox* cb = docktab_->get_cell_set_combo_box(ct);
 	cb->removeItem(cb->findText(name));
+}
+
+void VolumeModelisationPlugin::current_map_attribute_added(cgogn::Orbit orbit, const QString& name)
+{
+	if (orbit == CMap3::Vertex::ORBIT)
+		docktab_->position_comboBox->addItem(name);
+}
+
+void VolumeModelisationPlugin::current_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
+{
+	if (orbit == CMap3::Vertex::ORBIT)
+		docktab_->position_comboBox->removeItem(docktab_->position_comboBox->findText(name));
 }
 
 void VolumeModelisationPlugin::update_dock_tab()

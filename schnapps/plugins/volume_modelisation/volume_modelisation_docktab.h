@@ -49,6 +49,11 @@ class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API VolumeModelisation_DockTab final :
 public:
 	VolumeModelisation_DockTab(SCHNApps* s, VolumeModelisationPlugin* p);
 	~VolumeModelisation_DockTab() override;
+
+public slots:
+private slots:
+	void selected_map_vertex_attribute_added();
+	void selected_map_vertex_attribute_removed();
 private:
 	void update(MapHandlerGen* map);
 	QComboBox* get_cell_set_combo_box(CellType ct);

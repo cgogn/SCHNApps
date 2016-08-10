@@ -28,6 +28,8 @@
 #include <schnapps/core/plugin_interaction.h>
 #include <volume_modelisation_docktab.h>
 #include <volume_operation.h>
+
+#include <cgogn/core/basic/cell.h>
 #include <memory>
 
 namespace schnapps
@@ -58,6 +60,8 @@ private:
 	void current_map_changed(MapHandlerGen* prev, MapHandlerGen* next);
 	void current_cells_set_added(CellType ct, const QString& name);
 	void current_cells_set_removed(CellType ct, const QString& name);
+	void current_map_attribute_added(cgogn::Orbit orbit, const QString& name);
+	void current_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
 	void update_dock_tab();
 
 private:

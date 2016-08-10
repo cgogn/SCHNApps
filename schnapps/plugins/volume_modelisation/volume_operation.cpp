@@ -43,10 +43,10 @@ void VolumeOperation::add_operation(const std::string& op_name, CellType ct, Fun
 		cgogn_log_debug("VolumeOperation::add_operation") << "operation \"" << op_name << "\" already registered.";
 		return;
 	}
-	func_map_[op_name] = Operator(ct, std::move(func));
+	func_map_[op_name] = MapOperator(ct, std::move(func));
 }
 
-const Operator* VolumeOperation::get_operator(const std::string& op_name) const
+const MapOperator* VolumeOperation::get_operator(const std::string& op_name) const
 {
 	auto func_it = func_map_.find(op_name);
 	if (func_it == func_map_.end())

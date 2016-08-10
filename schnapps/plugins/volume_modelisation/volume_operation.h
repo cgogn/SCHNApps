@@ -36,6 +36,11 @@
 #include <functional>
 #include <vector>
 
+namespace cgogn
+{
+template <typename DATA_TRAITS, typename T>
+class Attribute_T;
+} // namespace cgogn
 
 namespace schnapps
 {
@@ -45,30 +50,31 @@ class MapHandlerGen;
 namespace plugin_volume_modelisation
 {
 
-class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API Operator final
+class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API MapOperator final
 {
 public:
 	using Dart = cgogn::Dart;
 	using FuncReturnType = std::vector<Dart>;
 	using FuncParamType = const std::vector<Dart>&;
-	using FuncType = std::function<FuncReturnType(MapHandlerGen*, FuncParamType)>;
+	using VEC3Attribute = cgogn::Attribute_T<cgogn::DefaultMapTraits, VEC3>;
+	using FuncType = std::function<FuncReturnType(MapHandlerGen*,VEC3Attribute&, FuncParamType)>;
 
-	inline Operator() CGOGN_NOEXCEPT :
+	inline MapOperator() CGOGN_NOEXCEPT :
 		cell_type_(CellType::Unknown),
 		func_()
 	{}
 
-	inline Operator(CellType ct, FuncType&& fn) :
+	inline MapOperator(CellType ct, FuncType&& fn) :
 		cell_type_(ct),
-		func_(std::forward<FuncType>(fn))
+		func_(std::move(fn))
 	{}
 
-	inline Operator(Operator&& op) CGOGN_NOEXCEPT:
+	inline MapOperator(MapOperator&& op) CGOGN_NOEXCEPT:
 		cell_type_(op.cell_type_),
 		func_(std::move(op.func_))
 	{}
 
-	inline Operator& operator=(Operator&& op) CGOGN_NOEXCEPT
+	inline MapOperator& operator=(MapOperator&& op) CGOGN_NOEXCEPT
 	{
 		if (this != &op)
 		{
@@ -85,18 +91,18 @@ public:
 class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API VolumeOperation final
 {
 public:
-	using FuncType = Operator::FuncType;
+	using FuncType = MapOperator::FuncType;
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(VolumeOperation);
 	inline VolumeOperation() {}
 
 	void add_operation(const std::string& op_name, CellType ct, FuncType&& func);
-	const Operator* get_operator(const std::string& op_name) const;
+	const MapOperator* get_operator(const std::string& op_name) const;
 
 	std::vector<std::string> get_operations() const;
 
 private:
-	std::unordered_map<std::string, Operator> func_map_;
+	std::unordered_map<std::string, MapOperator> func_map_;
 };
 
 } // namespace plugin_volume_modelisation
