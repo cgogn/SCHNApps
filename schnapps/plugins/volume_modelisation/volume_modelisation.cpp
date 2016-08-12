@@ -40,27 +40,6 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 {
 	operations_ = cgogn::make_unique<VolumeOperation>();
 
-	operations_->add_operation("Split 1 to 4",CellType::Volume_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
-	{
-		std::vector<cgogn::Dart> res;
-		if (mhg && mhg->dimension() == 3)
-		{
-			res.reserve(darts.size());
-			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
-			CMap3::VertexAttribute<VEC3>& pos3 = static_cast<CMap3::VertexAttribute<VEC3>&>(pos_attr);
-			for (auto d : darts)
-			{
-				const CMap3::Volume w(d);
-				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, w,pos3);
-				res.push_back(cgogn::modeling::flip_14(*map3, w).dart);
-				cgogn::Dart v(res.back());
-				if (!v.is_nil())
-					pos_attr[v] = std::move(inserted_vertex_pos);
-			}
-		}
-		return res;
-	});
-
 	operations_->add_operation("Delete edge",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
@@ -108,6 +87,109 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return std::vector<cgogn::Dart>();
 	});
 
+
+	operations_->add_operation("Split 1 to 4",CellType::Volume_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		std::vector<cgogn::Dart> res;
+		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
+		{
+			res.reserve(darts.size());
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			CMap3::VertexAttribute<VEC3>& pos3 = static_cast<CMap3::VertexAttribute<VEC3>&>(pos_attr);
+			for (auto d : darts)
+			{
+				const CMap3::Volume w(d);
+				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, w,pos3);
+				res.push_back(cgogn::modeling::flip_14(*map3, w).dart);
+				cgogn::Dart v(res.back());
+				if (!v.is_nil())
+					pos_attr[v] = std::move(inserted_vertex_pos);
+			}
+		}
+		return res;
+	});
+
+	operations_->add_operation("Split 1 to 3",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		std::vector<cgogn::Dart> res;
+		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
+		{
+			res.reserve(darts.size());
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			CMap3::VertexAttribute<VEC3>& pos3 = static_cast<CMap3::VertexAttribute<VEC3>&>(pos_attr);
+			for (auto d : darts)
+			{
+				const CMap3::Face f(d);
+				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, f,pos3);
+				res.push_back(cgogn::modeling::flip_13(*map3, f).dart);
+				cgogn::Dart v(res.back());
+				if (!v.is_nil())
+					pos_attr[v] = std::move(inserted_vertex_pos);
+			}
+		}
+		return res;
+	});
+
+	operations_->add_operation("Swap 2 to 3",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& , const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		std::vector<cgogn::Dart> res;
+		if (mhg && mhg->dimension() == 3)
+		{
+			res.reserve(darts.size());
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			for (auto d : darts)
+			{
+				const cgogn::Dart res_dart = cgogn::modeling::swap_23(*map3, CMap3::Face(d));
+				if (!res_dart.is_nil())
+					res.push_back(res_dart);
+			}
+		}
+		return res;
+	});
+
+	operations_->add_operation("Swap 3 to 2",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& , const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		std::vector<cgogn::Dart> res;
+		if (mhg && mhg->dimension() == 3)
+		{
+			res.reserve(darts.size());
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			for (auto d : darts)
+			{
+				const cgogn::Dart res_dart = cgogn::modeling::swap_32(*map3, CMap3::Edge(d));
+				if (!res_dart.is_nil())
+				{
+					res.push_back(res_dart);
+					return res;
+				}
+
+			}
+		}
+		return res;
+	});
+
+	operations_->add_operation("Edge bisection",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		std::vector<cgogn::Dart> res;
+		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
+		{
+			res.reserve(darts.size());
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			CMap3::VertexAttribute<VEC3>& pos3 = static_cast<CMap3::VertexAttribute<VEC3>&>(pos_attr);
+			for (auto d : darts)
+			{
+				const CMap3::Edge e(d);
+				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, e,pos3);
+				const cgogn::Dart res_dart = cgogn::modeling::edge_bisection(*map3, e);
+				if (!res_dart.is_nil())
+				{
+					res.push_back(res_dart);
+					pos_attr[res_dart] = std::move(inserted_vertex_pos);
+				}
+			}
+		}
+		return res;
+	});
 }
 
 VolumeModelisationPlugin::~VolumeModelisationPlugin()

@@ -80,8 +80,8 @@ void VolumeModelisation_DockTab::update(MapHandlerGen* map)
 	volumeSet_comboBox->addItem("-select set-");
 
 	operations_combobox->clear();
-	operations_combobox->addItem("-select set-");
-	auto&& op_names = plugin_->operations_->get_operations();
+	operations_combobox->addItem("-select operation-");
+	const auto& op_names = plugin_->operations_->get_operations();
 	for (const std::string& name : op_names)
 		operations_combobox->addItem(QString::fromStdString(name));
 
