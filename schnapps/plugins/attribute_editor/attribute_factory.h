@@ -81,6 +81,7 @@ public:
 private:
 	inline AttributeFactory()
 	{
+		register_type<cgogn::Dart>();
 		register_type<bool>();
 		register_type<int8>();
 		register_type<int16>();
@@ -120,6 +121,8 @@ private:
 				create_attribute<T, MAP_TYPE::Face::ORBIT>(mh, attribute_name); break;
 			case CellType::Volume_Cell:
 					create_attribute<T, MAP_TYPE::Volume::ORBIT>(mh, attribute_name); break;
+			default:
+				break;
 		}
 	}
 

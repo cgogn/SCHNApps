@@ -55,6 +55,7 @@ AddAttributeDialog::AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p)
 //	for (const auto& pair : AttributeFactory<CMap2>::get_instance().get_map())
 //		type_comboBox->addItem(QString::fromStdString(pair.first));
 
+	type_comboBox->addItem(QString::fromStdString(cgogn::name_of_type(cgogn::Dart())));
 	type_comboBox->addItem(QString::fromStdString(cgogn::name_of_type(bool())));
 	type_comboBox->addItem(QString::fromStdString(cgogn::name_of_type(int8())));
 	type_comboBox->addItem(QString::fromStdString(cgogn::name_of_type(int16())));
