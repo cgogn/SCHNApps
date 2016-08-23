@@ -274,6 +274,8 @@ public slots:
 					}
 				}
 					break;
+				default:
+					break;
 			}
 
 			for (View* view : map_->get_linked_views())

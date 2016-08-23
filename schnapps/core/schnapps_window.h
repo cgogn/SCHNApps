@@ -30,6 +30,7 @@
 
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/core/utils/assert.h>
+#include <cgogn/core/utils/type_traits.h>
 
 #include <QDockWidget>
 #include <QTabWidget>

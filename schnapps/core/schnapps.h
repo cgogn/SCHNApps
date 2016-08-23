@@ -102,7 +102,7 @@ public:
 	template <typename FUNC>
 	void foreach_camera(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, Camera*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, Camera*>::value, "Wrong function parameter type");
 		for (const auto& camera_it : cameras_)
 			f(camera_it.second.get());
 	}
@@ -145,7 +145,7 @@ public:
 	template <typename FUNC>
 	void foreach_plugin(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, Plugin*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, Plugin*>::value, "Wrong function parameter type");
 		for (const auto& plugin_it : plugins_)
 			f(plugin_it.second.get());
 	}
@@ -195,7 +195,7 @@ public:
 	template <typename FUNC>
 	void foreach_map(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, MapHandlerGen*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, MapHandlerGen*>::value, "Wrong function parameter type");
 		for (const auto& map_it : maps_)
 			f(map_it.second.get());
 	}
@@ -272,7 +272,7 @@ public:
 	template <typename FUNC>
 	void foreach_view(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, View*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, View*>::value, "Wrong function parameter type");
 		for (const auto& view_it : views_)
 			f(view_it.second.get());
 	}

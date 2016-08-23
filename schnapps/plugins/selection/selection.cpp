@@ -201,8 +201,12 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 								if (!p.selecting_volume_.is_nil())
 									p.drawer_rend_selected_volumes_->draw(proj, mv, ogl33);
 								break;
+							default:
+								break;
 						}
 					}
+					break;
+				default:
 					break;
 			}
 		}
@@ -383,8 +387,12 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 									p.update_selected_cells_rendering();
 								}
 								break;
+							default:
+								break;
 						}
 					}
+						break;
+					default:
 						break;
 				}
 			}
@@ -543,6 +551,8 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 							default:
 								break;
 						}
+						break;
+					default:
 						break;
 				}
 

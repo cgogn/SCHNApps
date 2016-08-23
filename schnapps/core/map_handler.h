@@ -224,7 +224,7 @@ public:
 	template <typename FUNC>
 	void foreach_cells_set(CellType ct, const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, CellsSetGen*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, CellsSetGen*>::value, "Wrong function parameter type");
 		for (const auto& cells_set_it : cells_sets_[ct])
 			f(cells_set_it.second.get());
 	}
@@ -374,6 +374,8 @@ public:
 			case CellType::Edge_Cell: return get_map()->template nb_cells<Edge::ORBIT>();
 			case CellType::Face_Cell: return get_map()->template nb_cells<Face::ORBIT>();
 			case CellType::Volume_Cell: return get_map()->template nb_cells<Volume::ORBIT>();
+			default:
+				return 0u;
 		}
 	}
 
@@ -386,6 +388,8 @@ public:
 			case CellType::Edge_Cell: return get_map()->is_embedded(Edge::ORBIT);
 			case CellType::Face_Cell: return get_map()->is_embedded(Face::ORBIT);
 			case CellType::Volume_Cell: return get_map()->is_embedded(Volume::ORBIT);
+			default:
+				return false;
 		}
 	}
 
@@ -398,6 +402,9 @@ public:
 			case CellType::Edge_Cell: return get_map()->const_attribute_container(Edge::ORBIT);
 			case CellType::Face_Cell: return get_map()->const_attribute_container(Face::ORBIT);
 			case CellType::Volume_Cell: return get_map()->const_attribute_container(Volume::ORBIT);
+			default:
+				cgogn_assert_not_reached("const_attribute_container(CellType::Unknown) has undefined behaviour.");
+				return get_map()->const_attribute_container(CDart::ORBIT);
 		}
 	}
 
@@ -410,6 +417,9 @@ public:
 			case CellType::Edge_Cell: return Edge::ORBIT;
 			case CellType::Face_Cell: return Face::ORBIT;
 			case CellType::Volume_Cell: return Volume::ORBIT;
+			default:
+				cgogn_assert_not_reached("orbit(CellType::Unknown) has undefined behaviour.");
+				return CDart::ORBIT;
 		}
 	}
 
@@ -422,6 +432,8 @@ public:
 			case Edge::ORBIT: return CellType::Edge_Cell;
 			case Face::ORBIT: return CellType::Face_Cell;
 			case Volume::ORBIT: return CellType::Volume_Cell;
+			default:
+				return CellType::Unknown;
 		}
 	}
 
@@ -817,6 +829,8 @@ protected:
 				break;
 			case Volume_Cell:
 				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(*this, name)));
+				break;
+			default:
 				break;
 		}
 

@@ -196,7 +196,7 @@ public:
 	template <typename FUNC>
 	inline void foreach_cell(const FUNC& f)
 	{
-		static_assert(check_func_parameter_type(FUNC, CELL), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, CELL>::value, "Wrong function parameter type");
 		for (const auto& cell : cells_)
 			f(cell.second);
 	}
