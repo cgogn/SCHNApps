@@ -104,6 +104,8 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 		if (cell_t != CellType::Unknown)
 		{
 			const auto& ca_cont = mhg->const_attribute_container(cell_t);
+			if (!ca_cont.has_array(attribute_name.toStdString()))
+				return;
 			auto* ca = ca_cont.get_chunk_array(attribute_name.toStdString());
 			attribute_tableWidget->clearContents();
 			attribute_tableWidget->setColumnCount(0);
