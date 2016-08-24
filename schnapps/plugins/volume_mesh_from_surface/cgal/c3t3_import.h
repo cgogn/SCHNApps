@@ -74,11 +74,8 @@ public:
 		std::map<Vertex_handle, unsigned int> vertices_indices;
 		ChunkArray<VEC3>* position = this->template position_attribute<VEC3>();
 
-		const uint32 num_vertices = triangulation.number_of_vertices();
 		const uint32 num_cells = cpx_.number_of_cells_in_complex();
-
-		this->set_nb_volumes(num_cells);
-		this->set_nb_vertices(num_vertices);
+		this->reserve(num_cells);
 
 		for (auto vit = triangulation.finite_vertices_begin(), vend = triangulation.finite_vertices_end(); vit != vend; ++vit)
 		{

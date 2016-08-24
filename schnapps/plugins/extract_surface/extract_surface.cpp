@@ -91,8 +91,6 @@ void Plugin_ExtractSurface::extract_surface(MapHandlerGen* in_map3, MapHandlerGe
 		}
 	});
 
-	si.set_nb_vertices(old_new_id_map.size());
-
 	std::vector<uint32> vert_ids;
 	map3.foreach_cell([&](CMap3::Face f)
 	{
