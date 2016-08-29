@@ -69,7 +69,11 @@ public:
 
 	~MapHandlerGen();
 
-public slots:
+public:
+
+	/**********************************************************
+	 * BASIC FUNCTIONS                                        *
+	 *********************************************************/
 
 	/**
 	 * @brief get the name of MapHandlerGen object
@@ -87,33 +91,30 @@ public slots:
 
 	bool is_selected_map() const;
 
-	inline const ChunkArrayContainer<uint8>& topology_container() const
-	{
-		return map_->topology_container();
-	}
-
-	inline QStringList get_topology_relations_names() const
-	{
-		QStringList res;
-		for (const auto& str : this->topology_container().names())
-			res.append(QString::fromStdString(str));
-		return res;
-	}
-
 	virtual uint8 dimension() const = 0;
-	virtual uint32 nb_cells(CellType ct) const = 0;
-	virtual bool is_embedded(CellType ct) const = 0;
-	virtual const ChunkArrayContainer<uint32>* const_attribute_container(CellType ct) const = 0;
-	virtual cgogn::Orbit orbit(CellType ct) const = 0;
+
 	virtual CellType cell_type(cgogn::Orbit orbit) const = 0;
-	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
-	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const = 0;
-	virtual uint32 embedding(cgogn::Dart d,CellType ct) const = 0;
+
+	virtual cgogn::Orbit orbit(CellType ct) const = 0;
+
+	virtual uint32 nb_cells(CellType ct) const = 0;
+
 	virtual bool same_cell(cgogn::Dart d, cgogn::Dart e, CellType ct) const = 0;
+
 	virtual std::pair<cgogn::Dart, cgogn::Dart> vertices(cgogn::Dart edge) const = 0;
 
-	/*********************************************************
-	 * MANAGE FRAME
+	/**************************************************************************
+	 * Generic map traversal                                                  *
+	 * Use these functions only when you don't know the exact type of the map *
+	 * to avoid the extra cost of std::function                               *
+	 *************************************************************************/
+
+	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
+
+	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const = 0;
+
+	/**********************************************************
+	 * MANAGE FRAME                                           *
 	 *********************************************************/
 
 	// get the frame associated to the map
@@ -127,16 +128,16 @@ private slots:
 	void frame_changed();
 
 	/*********************************************************
-	 * MANAGE TRANSFORMATION MATRIX
-	 *********************************************************/
+	 * MANAGE TRANSFORMATION MATRIX                          *
+	 ********************************************************/
 
 public slots:
 
 	// get the frame associated to the map
 	inline const QMatrix4x4& get_transformation_matrix() const { return transformation_matrix_; }
 
-	/*********************************************************
-	 * MANAGE BOUNDING BOX
+	/**********************************************************
+	 * MANAGE BOUNDING BOX                                    *
 	 *********************************************************/
 
 	const cgogn::geometry::AABB<VEC3>& get_bb() { return bb_; }
@@ -195,16 +196,16 @@ protected:
 	void update_bb_drawer();
 	virtual void compute_bb() = 0;
 
-	/*********************************************************
-	 * MANAGE DRAWING
+	/**********************************************************
+	 * MANAGE DRAWING                                         *
 	 *********************************************************/
 
 public:
 
 	virtual void draw(cgogn::rendering::DrawingType primitive) = 0;
 
-	/*********************************************************
-	 * MANAGE VBOs
+	/**********************************************************
+	 * MANAGE VBOs                                            *
 	 *********************************************************/
 
 	/**
@@ -223,8 +224,8 @@ public slots:
 
 	inline const std::map<QString, std::unique_ptr<cgogn::rendering::VBO>>& get_vbo_set() const { return vbos_; }
 
-	/*********************************************************
-	 * MANAGE CELLS SETS
+	/**********************************************************
+	 * MANAGE CELLS SETS                                      *
 	 *********************************************************/
 
 	virtual CellsSetGen* add_cells_set(CellType ct, const QString& name) = 0;
@@ -248,8 +249,8 @@ private slots:
 
 //	void selected_cells_changed();
 
-	/*********************************************************
-	 * MANAGE LINKED VIEWS
+	/**********************************************************
+	 * MANAGE LINKED VIEWS                                    *
 	 *********************************************************/
 
 public slots:
@@ -265,13 +266,34 @@ public slots:
 
 public:
 
-	/*********************************************************
-	 * MANAGE ATTRIBUTES & CONNECTIVITY
+	/**********************************************************
+	 * MANAGE ATTRIBUTES & CONNECTIVITY                       *
 	 *********************************************************/
 
+	virtual bool is_embedded(CellType ct) const = 0;
+	virtual uint32 embedding(cgogn::Dart d,CellType ct) const = 0;
+
+	virtual const ChunkArrayContainer<uint32>* const_attribute_container(CellType ct) const = 0;
+
+	inline const ChunkArrayContainer<uint8>& topology_container() const
+	{
+		return map_->topology_container();
+	}
+
+	inline QStringList get_topology_relations_names() const
+	{
+		QStringList res;
+		for (const auto& str : this->topology_container().names())
+			res.append(QString::fromStdString(str));
+		return res;
+	}
+
 	void notify_attribute_change(cgogn::Orbit, const QString&);
+
 	void notify_connectivity_change();
+
 	virtual QStringList get_attribute_names(CellType ct) const = 0;
+
 	virtual bool remove_attribute(CellType ct, const QString& att_name) = 0;
 
 private:
@@ -449,7 +471,7 @@ public:
 			default:
 			{
 				cgogn_log_warning("MapHandler") << "The orbit \"" << cgogn::orbit_name(orbit) << "\" is not handled.";
-				return CellType::Invalid_Cell;
+				return CellType::Unknown;
 			}
 		}
 	}

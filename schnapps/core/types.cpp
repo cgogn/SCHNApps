@@ -25,6 +25,8 @@
 #include <functional>
 #include <unordered_map>
 
+#include <cgogn/core/utils/logger.h>
+
 namespace schnapps
 {
 
@@ -61,7 +63,7 @@ SCHNAPPS_CORE_API CellType cell_type(const std::string& name)
 	else
 	{
 		cgogn_log_warning("cell_type") << "There is no CellType named \"" << name << "\".";
-		return CellType::Invalid_Cell;
+		return CellType::Unknown;
 	}
 
 }
