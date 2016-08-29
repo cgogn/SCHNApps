@@ -140,8 +140,8 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 
 
 		this->export_dialog_->comboBoxPositionSelection->clear();
-		const auto& vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
-		for (const auto& att_name : vert_att_cont.names())
+		const auto* vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
+		for (const auto& att_name : vert_att_cont->names())
 			this->export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
 
 	} else {

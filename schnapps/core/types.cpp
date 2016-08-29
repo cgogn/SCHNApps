@@ -52,15 +52,18 @@ SCHNAPPS_CORE_API CellType cell_type(const std::string& name)
 	{cell_type_name(CellType::Vertex_Cell), [&]() { return CellType::Vertex_Cell; }},
 	{cell_type_name(CellType::Edge_Cell), [&]() { return CellType::Edge_Cell; }},
 	{cell_type_name(CellType::Face_Cell), [&]() { return CellType::Face_Cell; }},
-	{cell_type_name(CellType::Volume_Cell), [&]() { return CellType::Volume_Cell; }},
-	{cell_type_name(CellType::Unknown), [&]() { return CellType::Unknown; }}
+	{cell_type_name(CellType::Volume_Cell), [&]() { return CellType::Volume_Cell; }}
 	};
 
 	auto it = map.find(name);
 	if (it != map.end())
 		return (it->second)();
 	else
-		return CellType::Unknown;
+	{
+		cgogn_log_warning("cell_type") << "There is no CellType named \"" << name << "\".";
+		return CellType::Invalid_Cell;
+	}
+
 }
 } // namespace schnapps
 

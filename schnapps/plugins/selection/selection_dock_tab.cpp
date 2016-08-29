@@ -208,8 +208,8 @@ void Selection_DockTab::selected_map_vertex_attribute_added(const QString& name)
 	QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>& container = map->const_attribute_container(Vertex_Cell);
-	QString attribute_type_name = QString::fromStdString(container.get_chunk_array(name.toStdString())->type_name());
+	const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>* container = map->const_attribute_container(Vertex_Cell);
+	QString attribute_type_name = QString::fromStdString(container->get_chunk_array(name.toStdString())->type_name());
 
 	if (attribute_type_name == vec3_type_name)
 	{
@@ -298,9 +298,9 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 
 	QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-	const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>& container = map->const_attribute_container(CellType::Vertex_Cell);
-	const std::vector<std::string>& names = container.names();
-	const std::vector<std::string>& type_names = container.type_names();
+	const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>* container = map->const_attribute_container(CellType::Vertex_Cell);
+	const std::vector<std::string>& names = container->names();
+	const std::vector<std::string>& type_names = container->type_names();
 
 	unsigned int i = 1;
 	for (std::size_t j = 0u; j < names.size(); ++j)

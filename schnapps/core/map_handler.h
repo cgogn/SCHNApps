@@ -81,16 +81,29 @@ public slots:
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	inline SCHNApps* get_schnapps() const { return schnapps_; }
+	inline const SCHNApps* get_schnapps() const { return schnapps_; }
 
 	inline const MapBaseData* get_map() const { return map_.get(); }
 
 	bool is_selected_map() const;
 
+	inline const ChunkArrayContainer<uint8>& topology_container() const
+	{
+		return map_->topology_container();
+	}
+
+	inline QStringList get_topology_relations_names() const
+	{
+		QStringList res;
+		for (const auto& str : this->topology_container().names())
+			res.append(QString::fromStdString(str));
+		return res;
+	}
+
 	virtual uint8 dimension() const = 0;
 	virtual uint32 nb_cells(CellType ct) const = 0;
 	virtual bool is_embedded(CellType ct) const = 0;
-	virtual const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const = 0;
+	virtual const ChunkArrayContainer<uint32>* const_attribute_container(CellType ct) const = 0;
 	virtual cgogn::Orbit orbit(CellType ct) const = 0;
 	virtual CellType cell_type(cgogn::Orbit orbit) const = 0;
 	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
@@ -329,6 +342,7 @@ class MapHandler : public MapHandlerGen
 {
 public:
 
+	using ConcreteMap = typename MAP_TYPE::ConcreteMap;
 	template <typename T, cgogn::Orbit ORBIT>
 	using Attribute = typename MAP_TYPE::template Attribute<T, ORBIT>;
 	template <typename T>
@@ -363,7 +377,7 @@ public:
 
 	inline MAP_TYPE* get_map() const { return static_cast<MAP_TYPE*>(this->map_.get()); }
 
-	uint8 dimension() const override { return MAP_TYPE::DIMENSION; }
+	uint8 dimension() const override { return ConcreteMap::DIMENSION; }
 
 	uint32 nb_cells(CellType ct) const override
 	{
@@ -393,18 +407,18 @@ public:
 		}
 	}
 
-	const ChunkArrayContainer<uint32>& const_attribute_container(CellType ct) const override
+	const ChunkArrayContainer<uint32>* const_attribute_container(CellType ct) const override
 	{
 		switch (ct)
 		{
-			case CellType::Dart_Cell: return get_map()->const_attribute_container(CDart::ORBIT);
-			case CellType::Vertex_Cell: return get_map()->const_attribute_container(Vertex::ORBIT);
-			case CellType::Edge_Cell: return get_map()->const_attribute_container(Edge::ORBIT);
-			case CellType::Face_Cell: return get_map()->const_attribute_container(Face::ORBIT);
-			case CellType::Volume_Cell: return get_map()->const_attribute_container(Volume::ORBIT);
+			case CellType::Dart_Cell: return &(get_map()->const_attribute_container(CDart::ORBIT));
+			case CellType::Vertex_Cell: return &(get_map()->const_attribute_container(Vertex::ORBIT));
+			case CellType::Edge_Cell: return &(get_map()->const_attribute_container(Edge::ORBIT));
+			case CellType::Face_Cell: return &(get_map()->const_attribute_container(Face::ORBIT));
+			case CellType::Volume_Cell: return &(get_map()->const_attribute_container(Volume::ORBIT));
 			default:
-				cgogn_assert_not_reached("const_attribute_container(CellType::Unknown) has undefined behaviour.");
-				return get_map()->const_attribute_container(CDart::ORBIT);
+				cgogn_log_warning("MapHandler::const_attribute_container") << "Invalid CellType \"" << cell_type_name(ct) << "\".";
+				return nullptr;
 		}
 	}
 
@@ -418,7 +432,7 @@ public:
 			case CellType::Face_Cell: return Face::ORBIT;
 			case CellType::Volume_Cell: return Volume::ORBIT;
 			default:
-				cgogn_assert_not_reached("orbit(CellType::Unknown) has undefined behaviour.");
+				cgogn_log_warning("MapHandler::orbit") << "Invalid CellType \"" << cell_type_name(ct) << "\".";
 				return CDart::ORBIT;
 		}
 	}
@@ -433,7 +447,10 @@ public:
 			case Face::ORBIT: return CellType::Face_Cell;
 			case Volume::ORBIT: return CellType::Volume_Cell;
 			default:
-				return CellType::Unknown;
+			{
+				cgogn_log_warning("MapHandler") << "The orbit \"" << cgogn::orbit_name(orbit) << "\" is not handled.";
+				return CellType::Invalid_Cell;
+			}
 		}
 	}
 
@@ -601,9 +618,12 @@ public:
 
 	virtual QStringList get_attribute_names(CellType ct) const override
 	{
-		const ChunkArrayContainer<uint32>& cont = const_attribute_container(ct);
-		const auto& names = cont.names();
 		QStringList res;
+		const ChunkArrayContainer<uint32>* cont = const_attribute_container(ct);
+		if (!cont)
+			return res;
+
+		const auto& names = cont->names();
 		res.reserve(names.size());
 		for (const auto& name : names)
 			res.push_back(QString::fromStdString(name));

@@ -409,8 +409,8 @@ void ControlDock_MapTab::update_selected_map_info()
 
 		if (selected_map_->is_embedded(Dart_Cell))
 		{
-			const auto& container = selected_map_->const_attribute_container(Dart_Cell);
-			const std::vector<std::string>& names = container.names();
+			const auto* container = selected_map_->const_attribute_container(Dart_Cell);
+			const std::vector<std::string>& names = container->names();
 //			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
@@ -435,9 +435,9 @@ void ControlDock_MapTab::update_selected_map_info()
 
 		if (selected_map_->is_embedded(Vertex_Cell))
 		{
-			const auto& container = selected_map_->const_attribute_container(Vertex_Cell);
-			const std::vector<std::string>& names = container.names();
-			const std::vector<std::string>& type_names = container.type_names();
+			const auto* container = selected_map_->const_attribute_container(Vertex_Cell);
+			const std::vector<std::string>& names = container->names();
+			const std::vector<std::string>& type_names = container->type_names();
 			unsigned int bb_index = 1;
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
@@ -473,8 +473,8 @@ void ControlDock_MapTab::update_selected_map_info()
 
 		if (selected_map_->is_embedded(Edge_Cell))
 		{
-			const auto& container = selected_map_->const_attribute_container(Edge_Cell);
-			const std::vector<std::string>& names = container.names();
+			const auto* container = selected_map_->const_attribute_container(Edge_Cell);
+			const std::vector<std::string>& names = container->names();
 //			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
@@ -499,8 +499,8 @@ void ControlDock_MapTab::update_selected_map_info()
 
 		if (selected_map_->is_embedded(Face_Cell))
 		{
-			const auto& container = selected_map_->const_attribute_container(Face_Cell);
-			const std::vector<std::string>& names = container.names();
+			const auto* container = selected_map_->const_attribute_container(Face_Cell);
+			const std::vector<std::string>& names = container->names();
 //			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{
@@ -525,8 +525,8 @@ void ControlDock_MapTab::update_selected_map_info()
 
 		if (selected_map_->is_embedded(Volume_Cell))
 		{
-			const auto& container = selected_map_->const_attribute_container(Volume_Cell);
-			const std::vector<std::string>& names = container.names();
+			const auto* container = selected_map_->const_attribute_container(Volume_Cell);
+			const std::vector<std::string>& names = container->names();
 //			const std::vector<std::string>& type_names = container.type_names();
 			for (std::size_t i = 0u; i < names.size(); ++i)
 			{

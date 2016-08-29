@@ -103,10 +103,10 @@ void EditAttributeDialog::attribute_changed(const QString& attribute_name)
 		CellType cell_t = cell_type(orbit_comboBox->currentText().toStdString());
 		if (cell_t != CellType::Unknown)
 		{
-			const auto& ca_cont = mhg->const_attribute_container(cell_t);
-			if (!ca_cont.has_array(attribute_name.toStdString()))
+			const auto* ca_cont = mhg->const_attribute_container(cell_t);
+			if (!ca_cont || !ca_cont->has_array(attribute_name.toStdString()))
 				return;
-			auto* ca = ca_cont.get_chunk_array(attribute_name.toStdString());
+			auto* ca = ca_cont->get_chunk_array(attribute_name.toStdString());
 			attribute_tableWidget->clearContents();
 			attribute_tableWidget->setColumnCount(0);
 			attribute_tableWidget->setRowCount(0);
@@ -161,8 +161,8 @@ void EditAttributeDialog::edit_attribute_validated()
 		if (cell_t != CellType::Unknown)
 		{
 			const QString& attribute_name = att_name_comboBox->currentText();
-			const auto& ca_cont = mhg->const_attribute_container(cell_t);
-			auto* ca = ca_cont.get_chunk_array(attribute_name.toStdString());
+			const auto* ca_cont = mhg->const_attribute_container(cell_t);
+			auto* ca = ca_cont->get_chunk_array(attribute_name.toStdString());
 			if (ca)
 			{
 				int32 r = 0, rend = attribute_tableWidget->rowCount();
