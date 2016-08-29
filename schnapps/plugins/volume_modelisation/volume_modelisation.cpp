@@ -158,11 +158,25 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 			{
 				const cgogn::Dart res_dart = cgogn::modeling::swap_32(*map3, CMap3::Edge(d));
 				if (!res_dart.is_nil())
-				{
 					res.push_back(res_dart);
-					return res;
-				}
+			}
+		}
+		return res;
+	});
 
+	operations_->add_operation("SwapGen32",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	{
+		std::vector<cgogn::Dart> res;
+		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
+		{
+			res.reserve(darts.size());
+			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
+			CMap3::VertexAttribute<VEC3>& pos3 = static_cast<CMap3::VertexAttribute<VEC3>&>(pos_attr);
+			for (auto d : darts)
+			{
+				const cgogn::Dart res_dart = cgogn::modeling::swap_gen_32(*map3, CMap3::Edge(d));
+				if (!res_dart.is_nil())
+					res.push_back(res_dart);
 			}
 		}
 		return res;
