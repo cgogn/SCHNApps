@@ -162,7 +162,8 @@ void EditAttributeDialog::edit_attribute_validated()
 		{
 			const QString& attribute_name = att_name_comboBox->currentText();
 			const auto* ca_cont = mhg->const_attribute_container(cell_t);
-			auto* ca = ca_cont->get_chunk_array(attribute_name.toStdString());
+			// TODO Avoid this const_cast !! E.S.
+			auto* ca = const_cast<MapHandlerGen::ChunkArrayGen*>(ca_cont->get_chunk_array(attribute_name.toStdString()));
 			if (ca)
 			{
 				int32 r = 0, rend = attribute_tableWidget->rowCount();

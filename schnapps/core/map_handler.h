@@ -650,96 +650,85 @@ protected:
 		cgogn::rendering::VBO* vbo = this->get_vbo(name);
 		if (!vbo)
 		{
-			MAP_TYPE* map = get_map();
+			const MAP_TYPE* cmap = get_map();
 
-			const MAP_TYPE* cmap = map;
-			const ChunkArrayContainer<uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
-			ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
-
-			ChunkArray<VEC4F>* ca4f = dynamic_cast<ChunkArray<VEC4F>*>(cag);
-			if (ca4f)
+			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
+			if (va4f.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC4F> va(map, ca4f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va4f, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			ChunkArray<VEC4D>* ca4d = dynamic_cast<ChunkArray<VEC4D>*>(cag);
-			if (ca4d)
+			const VertexAttribute<VEC4D> va4d = cmap->template get_attribute<VEC4D, Vertex::ORBIT>(name.toStdString());
+			if (va4d.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC4D> va(map, ca4d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va4d, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			ChunkArray<VEC3F>* ca3f = dynamic_cast<ChunkArray<VEC3F>*>(cag);
-			if (ca3f)
+			const VertexAttribute<VEC3F> va3f = cmap->template get_attribute<VEC3F, Vertex::ORBIT>(name.toStdString());
+			if (va3f.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC3F> va(map, ca3f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va3f, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			ChunkArray<VEC3D>* ca3d = dynamic_cast<ChunkArray<VEC3D>*>(cag);
-			if (ca3d)
+			const VertexAttribute<VEC3D> va3d = cmap->template get_attribute<VEC3D, Vertex::ORBIT>(name.toStdString());
+			if (va3d.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC3D> va(map, ca3d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va3d, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			ChunkArray<VEC2F>* ca2f = dynamic_cast<ChunkArray<VEC2F>*>(cag);
-			if (ca2f)
+
+			const VertexAttribute<VEC2F> va2f = cmap->template get_attribute<VEC2F, Vertex::ORBIT>(name.toStdString());
+			if (va2f.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC2F> va(map, ca2f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va2f, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			ChunkArray<VEC2D>* ca2d = dynamic_cast<ChunkArray<VEC2D>*>(cag);
-			if (ca2d)
+			const VertexAttribute<VEC2D> va2d = cmap->template get_attribute<VEC2D, Vertex::ORBIT>(name.toStdString());
+			if (va2d.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC2D> va(map, ca2d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va2d, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			ChunkArray<float32>* ca1f = dynamic_cast<ChunkArray<float32>*>(cag);
-			if (ca1f)
+			const VertexAttribute<float32> vaf32 = cmap->template get_attribute<float32, Vertex::ORBIT>(name.toStdString());
+			if (vaf32.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<float32> va(map, ca1f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(vaf32, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			ChunkArray<float64>* ca1d = dynamic_cast<ChunkArray<float64>*>(cag);
-			if (ca1d)
+			const VertexAttribute<float64> vaf64 = cmap->template get_attribute<float64, Vertex::ORBIT>(name.toStdString());
+			if (vaf64.is_valid())
 			{
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<float64> va(map, ca1d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(vaf64, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
@@ -753,81 +742,69 @@ protected:
 		cgogn::rendering::VBO* vbo = get_vbo(name);
 		if (vbo)
 		{
-			MAP_TYPE* map = get_map();
+			const MAP_TYPE* cmap = get_map();
 
-			const MAP_TYPE* cmap = map;
-			const ChunkArrayContainer<uint32>& vcont = cmap->template const_attribute_container<Vertex::ORBIT>();
-			ChunkArrayGen* cag = vcont.get_chunk_array(name.toStdString());
-
-			ChunkArray<VEC4F>* ca4f = dynamic_cast<ChunkArray<VEC4F>*>(cag);
-			if (ca4f)
+			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
+			if (va4f.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC4F> va(map, ca4f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va4f, vbo);
 				return;
 			}
 
-			ChunkArray<VEC4D>* ca4d = dynamic_cast<ChunkArray<VEC4D>*>(cag);
-			if (ca4f)
+			const VertexAttribute<VEC4D> va4d = cmap->template get_attribute<VEC4D, Vertex::ORBIT>(name.toStdString());
+			if (va4d.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC4D> va(map, ca4d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va4d, vbo);
 				return;
 			}
 
-			ChunkArray<VEC3F>* ca3f = dynamic_cast<ChunkArray<VEC3F>*>(cag);
-			if (ca3f)
+			const VertexAttribute<VEC3F> va3f = cmap->template get_attribute<VEC3F, Vertex::ORBIT>(name.toStdString());
+			if (va3f.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC3F> va(map, ca3f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va3f, vbo);
 				return;
 			}
 
-			ChunkArray<VEC3D>* ca3d = dynamic_cast<ChunkArray<VEC3D>*>(cag);
-			if (ca3d)
+			const VertexAttribute<VEC3D> va3d = cmap->template get_attribute<VEC3D, Vertex::ORBIT>(name.toStdString());
+			if (va3d.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC3D> va(map, ca3d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va3d, vbo);
 				return;
 			}
 
-			ChunkArray<VEC2F>* ca2f = dynamic_cast<ChunkArray<VEC2F>*>(cag);
-			if (ca2f)
+			const VertexAttribute<VEC2F> va2f = cmap->template get_attribute<VEC2F, Vertex::ORBIT>(name.toStdString());
+			if (va2f.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC2F> va(map, ca2f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va2f, vbo);
 				return;
 			}
 
-			ChunkArray<VEC2D>* ca2d = dynamic_cast<ChunkArray<VEC2D>*>(cag);
-			if (ca2d)
+			const VertexAttribute<VEC2D> va2d = cmap->template get_attribute<VEC2D, Vertex::ORBIT>(name.toStdString());
+			if (va2d.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<VEC2D> va(map, ca2d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(va2d, vbo);
 				return;
 			}
 
-			ChunkArray<float32>* ca1f = dynamic_cast<ChunkArray<float32>*>(cag);
-			if (ca1f)
+			const VertexAttribute<float32> vaf32 = cmap->template get_attribute<float32, Vertex::ORBIT>(name.toStdString());
+			if (vaf32.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<float32> va(map, ca1f);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(vaf32, vbo);
 				return;
 			}
 
-			ChunkArray<float64>* ca1d = dynamic_cast<ChunkArray<float64>*>(cag);
-			if (ca1d)
+			const VertexAttribute<float64> vaf64 = cmap->template get_attribute<float64, Vertex::ORBIT>(name.toStdString());
+			if (vaf64.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				VertexAttribute<float64> va(map, ca1d);
-				cgogn::rendering::update_vbo(va, vbo);
+				cgogn::rendering::update_vbo(vaf64, vbo);
 				return;
 			}
 		}
