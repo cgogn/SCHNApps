@@ -275,19 +275,6 @@ public:
 
 	virtual const ChunkArrayContainer<uint32>* const_attribute_container(CellType ct) const = 0;
 
-	inline const ChunkArrayContainer<uint8>& topology_container() const
-	{
-		return map_->topology_container();
-	}
-
-	inline QStringList get_topology_relations_names() const
-	{
-		QStringList res;
-		for (const auto& str : this->topology_container().names())
-			res.append(QString::fromStdString(str));
-		return res;
-	}
-
 	void notify_attribute_change(cgogn::Orbit, const QString&);
 
 	void notify_connectivity_change();
