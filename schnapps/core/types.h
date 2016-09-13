@@ -24,14 +24,28 @@
 #ifndef SCHNAPPS_CORE_TYPES_H_
 #define SCHNAPPS_CORE_TYPES_H_
 
+#include "dll.h"
 #include <cgogn/core/utils/numerics.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 
-#include <cgogn/core/cmap/map_base.h>
-#include <cgogn/core/cmap/cmap2.h>
-#include <cgogn/core/cmap/cmap3.h>
+namespace cgogn
+{
+struct DefaultMapTraits;
 
-#include <Eigen/Dense>
+template <typename MAP_TRAITS>
+class MapBaseData;
+
+template <typename MAP_TRAITS, typename MAP_TYPE>
+class CMap2_T;
+template <typename MAP_TRAITS>
+struct CMap2Type;
+
+template <typename MAP_TRAITS, typename MAP_TYPE>
+class CMap3_T;
+template <typename MAP_TRAITS>
+struct CMap3Type;
+
+}
 
 namespace schnapps
 {
@@ -39,8 +53,8 @@ namespace schnapps
 using namespace cgogn::numerics;
 
 using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
-using CMap2 = cgogn::CMap2<cgogn::DefaultMapTraits>;
-using CMap3 = cgogn::CMap3<cgogn::DefaultMapTraits>;
+using CMap2 = cgogn::CMap2_T<cgogn::DefaultMapTraits, cgogn::CMap2Type<cgogn::DefaultMapTraits>>;
+using CMap3 = cgogn::CMap3_T<cgogn::DefaultMapTraits, cgogn::CMap3Type<cgogn::DefaultMapTraits>>;
 
 enum CellType : uint16
 {
@@ -48,25 +62,14 @@ enum CellType : uint16
 	Vertex_Cell,
 	Edge_Cell,
 	Face_Cell,
-	Volume_Cell
+	Volume_Cell,
+	Unknown
 };
 
 static const std::size_t NB_CELL_TYPES = CellType::Volume_Cell + 1;
 
-inline std::string cell_type_name(CellType ct)
-{
-	switch (ct)
-	{
-		case Dart_Cell: return "Dart"; break;
-		case Vertex_Cell: return "Vertex"; break;
-		case Edge_Cell: return "Edge"; break;
-		case Face_Cell: return "Face"; break;
-		case Volume_Cell: return "Volume"; break;
-	}
-#ifdef NDEBUG
-	return "UNKNOWN";  // little trick to  avoid warning on VS
-#endif
-}
+SCHNAPPS_CORE_API std::string cell_type_name(CellType ct);
+SCHNAPPS_CORE_API CellType cell_type(const std::string& name);
 
 using VEC4F = Eigen::Vector4f;
 using VEC4D = Eigen::Vector4d;
@@ -79,7 +82,24 @@ using VEC4 = VEC4D;
 using VEC3 = VEC3D;
 using VEC2 = VEC2D;
 
+using MAT2F = Eigen::Matrix2f;
+using MAT2D = Eigen::Matrix2d;
+using MAT3F = Eigen::Matrix3f;
+using MAT3D = Eigen::Matrix3d;
+using MAT4F = Eigen::Matrix4f;
+using MAT4D = Eigen::Matrix4d;
+
+using MAT22 = MAT2D;
+using MAT33 = MAT3D;
+using MAT44 = MAT4D;
+
 using SCALAR = cgogn::geometry::vector_traits<VEC3>::Scalar;
+
+template <typename MAP_TYPE>
+class MapHandler;
+
+using CMap2Handler = MapHandler<CMap2>;
+using CMap3Handler = MapHandler<CMap3>;
 
 } // namespace schnapps
 

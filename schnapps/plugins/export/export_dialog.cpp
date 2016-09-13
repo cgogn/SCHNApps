@@ -75,8 +75,8 @@ void ExportDialog::selected_map_changed(QString map_name)
 	if (MapHandlerGen* mhg = schnapps_->get_map(map_name))
 	{
 		plugin_->export_params_.map_name_ = map_name.toStdString();
-		const auto& vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
-		for (const auto& att_name : vert_att_cont.names())
+		const auto* vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
+		for (const auto& att_name : vert_att_cont->names())
 		{
 			this->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
 			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), this->listWidgetVertexAttributes);
@@ -84,8 +84,8 @@ void ExportDialog::selected_map_changed(QString map_name)
 		}
 
 		const CellType cell_type = mhg->dimension() == 2u ? CellType::Face_Cell : CellType::Volume_Cell;
-		const auto& cell_att_cont = mhg->const_attribute_container(cell_type);
-		for (const auto& att_name : cell_att_cont.names())
+		const auto* cell_att_cont = mhg->const_attribute_container(cell_type);
+		for (const auto& att_name : cell_att_cont->names())
 		{
 			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), this->listWidgetCellAttributes);
 			item->setCheckState(Qt::Unchecked);

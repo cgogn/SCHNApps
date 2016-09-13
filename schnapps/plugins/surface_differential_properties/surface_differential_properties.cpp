@@ -241,7 +241,12 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 
 	CMap2::VertexAttribute<VEC3> normal = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 	if (!normal.is_valid())
+	{
+//		if there is another attribute with the same name but with a different type, we remove it.
+		if (mh->has_attribute(CMap2::Vertex::ORBIT, normal_attribute_name))
+			mh->remove_attribute(CellType::Vertex_Cell, normal_attribute_name);
 		normal = mh->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
+	}
 
 	cgogn::geometry::compute_normal<VEC3>(*mh->get_map(), position, normal);
 
@@ -353,8 +358,6 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 		mh->notify_attribute_change(CMap2::Vertex::ORBIT, "kgaussian");
 	}
 }
-
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
 } // namespace plugin_sdp
 } // namespace schnapps

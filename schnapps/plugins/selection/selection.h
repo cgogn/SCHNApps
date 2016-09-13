@@ -30,10 +30,12 @@
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/view.h>
 
+#include <cgogn/geometry/algos/selection.h>
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/shaders/shader_bold_line.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
+
 
 #include <selection_dock_tab.h>
 
@@ -62,6 +64,8 @@ public:
 
 	MapParameters() :
 		map_(nullptr),
+		position_(cgogn::make_unique<MapHandlerGen::Attribute_T<VEC3>>()),
+		normal_(cgogn::make_unique<MapHandlerGen::Attribute_T<VEC3>>()),
 		shader_point_sprite_param_selection_sphere_(nullptr),
 		selection_sphere_vbo_(nullptr),
 		shader_point_sprite_param_selected_vertices_(nullptr),
@@ -120,20 +124,29 @@ public:
 		shader_flat_param_selected_faces_->front_color_ = color_;
 		shader_flat_param_selected_faces_->back_color_ = color_;
 		shader_flat_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
+
+		drawer_selected_volumes_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
+		drawer_rend_selected_volumes_ = drawer_selected_volumes_->generate_renderer();
 	}
 
-	const MapHandler<CMap2>::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
-	QString get_position_attribute_name() const { return QString::fromStdString(position_.name()); }
+	const MapHandlerGen::Attribute_T<VEC3>& get_position_attribute() const { return *position_; }
+	QString get_position_attribute_name() const { return QString::fromStdString(position_->name()); }
 	void set_position_attribute(const QString& attribute_name)
 	{
-		position_ = map_->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name);
+		if (map_->dimension() == 2)
+			position_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name));
+		else
+			position_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap3>::Vertex::ORBIT>(attribute_name));
 	}
 
-	const MapHandler<CMap2>::VertexAttribute<VEC3>& get_normal_attribute() const { return normal_; }
-	QString get_normal_attribute_name() const { return QString::fromStdString(normal_.name()); }
+	const MapHandlerGen::Attribute_T<VEC3>& get_normal_attribute() const { return *normal_; }
+	QString get_normal_attribute_name() const { return QString::fromStdString(normal_->name()); }
 	void set_normal_attribute(const QString& attribute_name)
 	{
-		normal_ = map_->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name);
+		if (map_->dimension() == 2)
+			normal_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name));
+		else
+			normal_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap3>::Vertex::ORBIT>(attribute_name));
 	}
 
 	const QColor& get_color() const { return color_; }
@@ -188,12 +201,11 @@ public slots:
 				case Vertex_Cell:
 				{
 					std::vector<VEC3> selected_points;
-					if (position_.is_valid())
+					if (position_->is_valid())
 					{
-						CellsSet<CMap2, MapHandler<CMap2>::Vertex>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(cells_set_);
-						tcs->foreach_cell([&] (MapHandler<CMap2>::Vertex v)
+						cells_set_->foreach_cell([&] (cgogn::Dart v)
 						{
-							selected_points.push_back(position_[v]);
+							selected_points.push_back(position_->operator[](v));
 						});
 					}
 					cgogn::rendering::update_vbo(selected_points, selected_vertices_vbo_.get());
@@ -202,14 +214,13 @@ public slots:
 				case Edge_Cell:
 				{
 					std::vector<VEC3> selected_segments;
-					if (position_.is_valid())
+					if (position_->is_valid())
 					{
-						CellsSet<CMap2, MapHandler<CMap2>::Edge>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Edge>*>(cells_set_);
-						tcs->foreach_cell([&] (MapHandler<CMap2>::Edge e)
+						cells_set_->foreach_cell([&] (cgogn::Dart e)
 						{
-							std::pair<MapHandler<CMap2>::Vertex, MapHandler<CMap2>::Vertex> vertices = map_->get_map()->vertices(e);
-							selected_segments.push_back(position_[vertices.first]);
-							selected_segments.push_back(position_[vertices.second]);
+							auto vertices = map_->vertices(e);
+							selected_segments.push_back(position_->operator[](vertices.first));
+							selected_segments.push_back(position_->operator[](vertices.second));
 						});
 					}
 					cgogn::rendering::update_vbo(selected_segments, selected_edges_vbo_.get());
@@ -218,22 +229,52 @@ public slots:
 				case Face_Cell:
 				{
 					std::vector<VEC3> selected_polygons;
-					if (position_.is_valid())
+					if (position_->is_valid())
 					{
-						CellsSet<CMap2, MapHandler<CMap2>::Face>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Face>*>(cells_set_);
 						std::vector<uint32> ears;
-						tcs->foreach_cell([&] (MapHandler<CMap2>::Face f)
-						{
-							cgogn::geometry::append_ear_triangulation<VEC3>(*map_->get_map(), f, position_, ears);
-						});
+						if (map_->dimension() == 2) {
+							CMap2* map2 = dynamic_cast<CMap2Handler*>(map_)->get_map();
+							CMap2Handler::VertexAttribute<VEC3>* pos = dynamic_cast<CMap2Handler::VertexAttribute<VEC3>*>(position_.get());
+							cells_set_->foreach_cell([&] (cgogn::Dart f)
+							{
+								cgogn::geometry::append_ear_triangulation<VEC3>(*map2, CMap2::Face(f), *pos, ears);
+							});
+						} else {
+							CMap3* map3 = dynamic_cast<CMap3Handler*>(map_)->get_map();
+							CMap3Handler::VertexAttribute<VEC3>* pos = dynamic_cast<CMap3Handler::VertexAttribute<VEC3>*>(position_.get());
+							cells_set_->foreach_cell([&] (cgogn::Dart f)
+							{
+								cgogn::geometry::append_ear_triangulation<VEC3>(*map3, CMap3::Face(f), *pos, ears);
+							});
+						}
+
 						for (uint32 i : ears)
-							selected_polygons.push_back(position_[i]);
+							selected_polygons.push_back(position_->operator[](i));
 						selected_faces_nb_indices_ = selected_polygons.size();
 					}
 					cgogn::rendering::update_vbo(selected_polygons, selected_faces_vbo_.get());
 				}
 					break;
 				case Volume_Cell:
+				{
+					if (map_->dimension() == 3)
+					{
+						CMap3* map3 = static_cast<CMap3Handler*>(map_)->get_map();
+						CMap3Handler::VertexAttribute<VEC3>* pos = static_cast<CMap3Handler::VertexAttribute<VEC3>*>(position_.get());
+						drawer_selected_volumes_->new_list();
+						drawer_selected_volumes_->line_width(2.0);
+						drawer_selected_volumes_->begin(GL_LINES);
+						drawer_selected_volumes_->color3f(1.0, 0.0, 0.0);
+						cells_set_->foreach_cell([&] (cgogn::Dart w)
+						{
+							cgogn::rendering::add_to_drawer<VEC3>(*map3, CMap3::Volume(w), *pos, drawer_selected_volumes_.get());
+						});
+						drawer_selected_volumes_->end();
+						drawer_selected_volumes_->end_list();
+					}
+				}
+					break;
+				default:
 					break;
 			}
 
@@ -244,9 +285,9 @@ public slots:
 
 private:
 
-	MapHandler<CMap2>* map_;
-	MapHandler<CMap2>::VertexAttribute<VEC3> position_;
-	MapHandler<CMap2>::VertexAttribute<VEC3> normal_;
+	MapHandlerGen* map_;
+	std::unique_ptr<MapHandlerGen::Attribute_T<VEC3>> position_;
+	std::unique_ptr<MapHandlerGen::Attribute_T<VEC3>> normal_;
 
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_selection_sphere_;
 	std::unique_ptr<cgogn::rendering::VBO> selection_sphere_vbo_;
@@ -266,15 +307,20 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderFlat::Param> shader_flat_param_selected_faces_;
 	std::unique_ptr<cgogn::rendering::VBO> selected_faces_vbo_;
 
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer> drawer_selected_volumes_;
+	std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer> drawer_rend_selected_volumes_;
+
 	QColor color_;
 	float32 vertex_scale_factor_;
 	float32 vertex_base_size_;
 	float32 selection_radius_scale_factor_;
 
 	bool selecting_;
-	MapHandler<CMap2>::Vertex selecting_vertex_;
-	MapHandler<CMap2>::Edge selecting_edge_;
-	MapHandler<CMap2>::Face selecting_face_;
+	cgogn::Dart selecting_vertex_;
+	cgogn::Dart selecting_edge_;
+	cgogn::Dart selecting_face_;
+	cgogn::Dart selecting_volume_;
+
 	std::size_t selecting_face_nb_indices_;
 	std::size_t selected_faces_nb_indices_;
 
@@ -297,6 +343,14 @@ class SCHNAPPS_PLUGIN_SELECTION_API Plugin_Selection : public PluginInteraction
 	friend class Selection_DockTab;
 
 public:
+	using Vertex2 = CMap2::Vertex;
+	using Edge2 = CMap2::Edge;
+	using Face2 = CMap2::Face;
+	using Vertex3 = CMap3::Vertex;
+	using Edge3 = CMap3::Edge;
+	using Face3 = CMap3::Face;
+	using Volume = CMap3::Volume;
+	using CollectorGen = cgogn::geometry::CollectorGen<VEC3>;
 
 	Plugin_Selection();
 
@@ -322,6 +376,9 @@ private:
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
 
+	std::unique_ptr<CollectorGen> collector_within_sphere(MapHandlerGen* map, float64 radius, const MapHandlerGen::Attribute_T<VEC3>& position_att);
+	std::vector<cgogn::Dart> get_picked_cells(MapHandlerGen* map, CellType ct, const MapHandlerGen::Attribute_T<VEC3>& position_att, VEC3& A, VEC3& B);
+
 private slots:
 
 	// slots called from View signals
@@ -330,6 +387,7 @@ private slots:
 
 	// slots called from MapHandlerGen signals
 	void linked_map_cells_set_added(CellType ct, const QString& name);
+	void linked_map_cells_set_removed(CellType ct, const QString& name);
 	void linked_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
 	void linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name);

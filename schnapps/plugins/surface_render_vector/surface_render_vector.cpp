@@ -277,7 +277,5 @@ void Plugin_SurfaceRenderVector::set_vector_color(View* view, MapHandlerGen* map
 	}
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-
 } // namespace plugin_surface_render_vector
 } // namespace schnapps

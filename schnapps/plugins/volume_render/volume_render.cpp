@@ -116,6 +116,10 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 			}
 		}
 
+		if (p.render_topology_)
+			if (p.topo_drawer_rend_)
+				p.topo_drawer_rend_->draw(proj,mv,view);
+
 		if (map->is_selected_map() && p.apply_clipping_plane_)
 			p.frame_manip_->draw(true, true, proj, mv, view);
 	}
@@ -198,6 +202,8 @@ void Plugin_VolumeRender::map_linked(MapHandlerGen* map)
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
+		connect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()), Qt::UniqueConnection);
+		connect(map, SIGNAL(attribute_changed(cgogn::Orbit,QString)), this, SLOT(linked_attribute_changed(cgogn::Orbit,QString)), Qt::UniqueConnection);
 	}
 }
 
@@ -210,6 +216,8 @@ void Plugin_VolumeRender::map_unlinked(MapHandlerGen* map)
 		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
+		disconnect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()));
+		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit,QString)), this, SLOT(linked_attribute_changed(cgogn::Orbit,QString)));
 	}
 }
 
@@ -270,11 +278,56 @@ void Plugin_VolumeRender::linked_map_bb_changed()
 	}
 }
 
+void Plugin_VolumeRender::linked_map_connectivity_changed()
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+
+	for (auto& it : parameter_set_)
+	{
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(map) > 0ul)
+		{
+			MapParameters& p = view_param_set[map];
+			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
+			map->update_vbo(QString::fromStdString(p.position_vbo_->name()));
+			auto pos_attr = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(p.position_vbo_->name()));
+			if (pos_attr.is_valid())
+			{
+				p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
+				p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
+				p.topo_drawer_->update<VEC3>(*mh3->get_map(),pos_attr);
+			}
+		}
+	}
+}
+
+void Plugin_VolumeRender::linked_attribute_changed(cgogn::Orbit, QString)
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+
+	for (auto& it : parameter_set_)
+	{
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(map) > 0ul)
+		{
+			MapParameters& p = view_param_set[map];
+			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
+			auto pos_attr = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(p.position_vbo_->name()));
+			if (pos_attr.is_valid())
+			{
+				p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
+				p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
+				p.topo_drawer_->update<VEC3>(*mh3->get_map(),pos_attr);
+			}
+		}
+	}
+}
+
 void Plugin_VolumeRender::update_dock_tab()
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	View* view = schnapps_->get_selected_view();
-	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3 && map->get_bb().is_initialized())
 	{
 		schnapps_->enable_plugin_tab_widgets(this);
 		const MapParameters& p = get_parameters(view, map);
@@ -420,7 +473,65 @@ void Plugin_VolumeRender::set_apply_clipping_plane(View* view, MapHandlerGen* ma
 	}
 }
 
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+MapParameters::MapParameters() :
+	shader_simple_color_param_(nullptr),
+	shader_point_sprite_param_(nullptr),
+	position_vbo_(nullptr),
+	vertex_scale_factor_(1.0f),
+	vertex_base_size_(1.0f),
+	volume_drawer_(nullptr),
+	volume_drawer_rend_(nullptr),
+	topo_drawer_(nullptr),
+	topo_drawer_rend_(nullptr),
+	frame_manip_(nullptr),
+	apply_clipping_plane_(false),
+	render_vertices_(false),
+	render_edges_(false),
+	render_faces_(true),
+	render_boundary_(false),
+	render_topology_(false),
+	vertex_color_(190, 85, 168),
+	edge_color_(0, 0, 0),
+	face_color_(85, 168, 190),
+	volume_explode_factor_(0.8f)
+{
+	shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+	shader_simple_color_param_->color_ = edge_color_;
+
+	shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
+	shader_point_sprite_param_->color_ = vertex_color_;
+	shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+
+	volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
+	volume_drawer_rend_ = volume_drawer_->generate_renderer();
+	volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
+
+	topo_drawer_ =  cgogn::make_unique<cgogn::rendering::TopoDrawer>();
+	topo_drawer_rend_ = topo_drawer_->generate_renderer();
+	topo_drawer_->set_explode_volume(volume_explode_factor_);
+
+	frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
+}
+
+void MapParameters::set_position_vbo(cgogn::rendering::VBO* v)
+{
+	position_vbo_ = v;
+	if (position_vbo_ && position_vbo_->vector_dimension() == 3)
+	{
+		shader_simple_color_param_->set_position_vbo(position_vbo_);
+		shader_point_sprite_param_->set_position_vbo(position_vbo_);
+
+		auto pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+		if (pos_attr.is_valid())
+		{
+			volume_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
+			volume_drawer_->update_edge<VEC3>(*map_->get_map(), pos_attr);
+			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
+		}
+	}
+	else
+		position_vbo_ = nullptr;
+}
 
 } // namespace plugin_volume_render
 

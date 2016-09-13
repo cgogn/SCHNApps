@@ -53,6 +53,7 @@ bool Plugin_Import::enable()
 void Plugin_Import::disable()
 {
 	schnapps_->remove_menu_action(import_surface_mesh_action_);
+	schnapps_->remove_menu_action(import_volume_mesh_action_);
 	//	schnapps_->remove_menu_action(import_2D_image_action_);
 }
 
@@ -68,7 +69,11 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 			CMap2* map = mh->get_map();
 
 			cgogn::io::import_surface<VEC3>(*map, filename.toStdString());
-
+			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
+			{
+				mh->set_bb_vertex_attribute("position");
+				mhg->create_vbo("position");
+			}
 			//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
 			//			{
 			//				AttributeContainer& cont = map->getAttributeContainer(orbit);
@@ -109,6 +114,12 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 			CMap3* map = mh->get_map();
 
 			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
+			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
+			{
+				mh->set_bb_vertex_attribute("position");
+				mhg->create_vbo("position");
+			}
+
 		}
 		return mhg;
 	}
@@ -126,8 +137,6 @@ void Plugin_Import::import_volume_mesh_from_file_dialog()
 		++it;
 	}
 }
-
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
 } // namespace plugin_import
 } // namespace schnapps

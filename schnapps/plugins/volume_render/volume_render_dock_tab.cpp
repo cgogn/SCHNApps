@@ -52,6 +52,7 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(check_renderBoundary, SIGNAL(toggled(bool)), this, SLOT(render_boundary_changed(bool)));
 	connect(sliderExplodeVolumes, SIGNAL(valueChanged(int)), this, SLOT(explode_volumes_changed(int)));
 	connect(check_clippingPlane, SIGNAL(toggled(bool)), this, SLOT(apply_clipping_plane_changed(bool)));
+	connect(topologyRender_checkBox, SIGNAL(toggled(bool)), this, SLOT(render_topology_changed(bool)));
 
 	color_dial_ = new QColorDialog(face_color_, nullptr);
 	connect(vertexColorButton, SIGNAL(clicked()), this, SLOT(vertex_color_clicked()));
@@ -186,6 +187,21 @@ void VolumeRender_DockTab::apply_clipping_plane_changed(bool b)
 	}
 }
 
+void VolumeRender_DockTab::render_topology_changed(bool b)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.render_topology_ = b;
+			view->update();
+		}
+	}
+}
+
 void VolumeRender_DockTab::vertex_color_clicked()
 {
 	current_color_dial_ = 1;
@@ -300,6 +316,7 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 	check_renderFaces->setChecked(p.render_faces_);
 	check_renderBoundary->setChecked(p.render_boundary_);
 	sliderExplodeVolumes->setValue(std::round(100.0f*p.get_volume_explode_factor()));
+	topologyRender_checkBox->setChecked(p.render_topology_);
 
 	vertex_color_ = p.get_vertex_color();
 	vertexColorButton->setStyleSheet("QPushButton { background-color:" + vertex_color_.name() + " }");

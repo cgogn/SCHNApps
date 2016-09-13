@@ -78,7 +78,7 @@ target_link_libraries(${PROJECT_NAME}
 
 if(CGAL_FOUND AND WIN32)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CGAL_INSTALL_PREFIX}/bin"
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CGAL_INSTALL_PREFIX}/bin"
+		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()

@@ -134,10 +134,13 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	tetgen::tetrahedralize(tetgen_args.c_str(), tetgen_input.get(), &tetgen_output);
 
 	TetgenStructureVolumeImport tetgen_import(&tetgen_output);
-	tetgen_import.import_file("");
 
 	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("tetgen_export", 3));
 	tetgen_import.create_map(*handler_map3->get_map());
+
+	handler_map3->attribute_added(CMap3::Vertex::ORBIT, "position");
+	handler_map3->set_bb_vertex_attribute("position");
+	static_cast<MapHandlerGen*>(handler_map3)->create_vbo("position");
 
 	return handler_map3;
 }

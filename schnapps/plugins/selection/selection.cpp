@@ -44,7 +44,7 @@ MapParameters& Plugin_Selection::get_parameters(View* view, MapHandlerGen* map)
 	if (view_param_set.count(map) == 0)
 	{
 		MapParameters& p = view_param_set[map];
-		p.map_ = static_cast<MapHandler<CMap2>*>(map);
+		p.map_ = map;
 		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 		return p;
 	}
@@ -75,10 +75,11 @@ void Plugin_Selection::disable()
 
 void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	if (map->dimension() == 2 && map->is_selected_map())
+	if (map && view && /*map->dimension() == 2 && */ map->is_selected_map())
 	{
 		view->makeCurrent();
 		QOpenGLFunctions* ogl = QOpenGLContext::currentContext()->functions();
+		QOpenGLFunctions_3_3_Core* ogl33 = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
 
 		const MapParameters& p = get_parameters(view, map);
 
@@ -95,7 +96,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 						ogl->glDrawArrays(GL_POINTS, 0, p.cells_set_->get_nb_cells());
 						p.shader_point_sprite_param_selected_vertices_->release();
 					}
-					if (p.selecting_ && p.selecting_vertex_.is_valid())
+					if (p.selecting_ && !p.selecting_vertex_.is_nil())
 					{
 						switch (p.selection_method_)
 						{
@@ -128,7 +129,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 						{
 							case MapParameters::NormalAngle:
 							case MapParameters::SingleCell:
-								if (p.selecting_edge_.is_valid())
+								if (!p.selecting_edge_.is_nil())
 								{
 									p.shader_bold_line_param_selection_edge_->bind(proj, mv);
 									ogl->glDrawArrays(GL_LINES, 0, 2);
@@ -136,7 +137,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 								}
 								break;
 							case MapParameters::WithinSphere:
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_;
 									p.shader_point_sprite_param_selection_sphere_->bind(proj, mv);
@@ -163,7 +164,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 						{
 							case MapParameters::NormalAngle:
 							case MapParameters::SingleCell:
-								if (p.selecting_face_.is_valid())
+								if (!p.selecting_face_.is_nil())
 								{
 									ogl->glDisable(GL_DEPTH_TEST);
 									p.shader_simple_color_param_selection_face_->bind(proj, mv);
@@ -173,7 +174,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 								}
 								break;
 							case MapParameters::WithinSphere:
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									p.shader_point_sprite_param_selection_sphere_->size_ = p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_;
 									p.shader_point_sprite_param_selection_sphere_->bind(proj, mv);
@@ -188,6 +189,24 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 					}
 					break;
 				case Volume_Cell:
+					if (p.cells_set_->get_nb_cells() > 0)
+					{
+						p.drawer_rend_selected_volumes_->draw(proj, mv, ogl33);
+					}
+					if (p.selecting_)
+					{
+						switch (p.selection_method_)
+						{
+							case MapParameters::SingleCell:
+								if (!p.selecting_volume_.is_nil())
+									p.drawer_rend_selected_volumes_->draw(proj, mv, ogl33);
+								break;
+							default:
+								break;
+						}
+					}
+					break;
+				default:
 					break;
 			}
 		}
@@ -197,7 +216,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 void Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
 	{
 		if (event->key() == Qt::Key_Shift)
 		{
@@ -219,7 +238,7 @@ void Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 void Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
 	{
 		if (event->key() == Qt::Key_Shift)
 		{
@@ -236,41 +255,40 @@ void Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
 	{
 		MapParameters& p = get_parameters(view, map);
 		if (p.selecting_ && (event->button() == Qt::LeftButton || event->button() == Qt::RightButton))
 		{
 			if (p.get_position_attribute().is_valid() && p.cells_set_)
 			{
+				CellsSetGen* csg = p.cells_set_;
 				switch (p.cells_set_->get_cell_type())
 				{
 					case Dart_Cell:
 						break;
 					case Vertex_Cell: {
-						CellsSet<CMap2, MapHandler<CMap2>::Vertex>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Vertex>*>(p.cells_set_);
 						switch (p.selection_method_)
 						{
 							case MapParameters::SingleCell:
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
 									if(event->button() == Qt::LeftButton)
-										tcs->select(p.selecting_vertex_);
+										csg->select(p.selecting_vertex_);
 									else if(event->button() == Qt::RightButton)
-										tcs->unselect(p.selecting_vertex_);
+										csg->unselect(p.selecting_vertex_);
 									p.update_selected_cells_rendering();
 								}
 								break;
 							case MapParameters::WithinSphere: {
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
-									CMap2* map2 = static_cast<MapHandler<CMap2>*>(map)->get_map();
-									cgogn::geometry::Collector_WithinSphere<VEC3, CMap2> neighborhood(*map2, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
-									neighborhood.collect(p.selecting_vertex_);
+									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
+									neighborhood->collect(p.selecting_vertex_);
 									if(event->button() == Qt::LeftButton)
-										tcs->select(neighborhood.cells<MapHandler<CMap2>::Vertex>());
+										csg->select(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
 									if(event->button() == Qt::RightButton)
-										tcs->unselect(neighborhood.cells<MapHandler<CMap2>::Vertex>());
+										csg->unselect(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
 								}
 							}
 								break;
@@ -280,32 +298,34 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 					}
 						break;
 					case Edge_Cell: {
-						CellsSet<CMap2, MapHandler<CMap2>::Edge>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Edge>*>(p.cells_set_);
 						switch (p.selection_method_)
 						{
 							case MapParameters::SingleCell:
-								if (p.selecting_edge_.is_valid())
+								if (!p.selecting_edge_.is_nil())
 								{
 									if(event->button() == Qt::LeftButton)
-										tcs->select(p.selecting_edge_);
+										csg->select(p.selecting_edge_);
 									else if(event->button() == Qt::RightButton)
-										tcs->unselect(p.selecting_edge_);
+										csg->unselect(p.selecting_edge_);
 									p.update_selected_cells_rendering();
 								}
 								break;
 							case MapParameters::WithinSphere: {
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
-									CMap2* map2 = static_cast<MapHandler<CMap2>*>(map)->get_map();
-									cgogn::geometry::Collector_WithinSphere<VEC3, CMap2> neighborhood(*map2, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
-									neighborhood.collect(p.selecting_vertex_);
-									neighborhood.foreach_cell([&] (CMap2::Edge e)
+									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
+									if (neighborhood)
 									{
-										if(event->button() == Qt::LeftButton)
-											tcs->select(e);
-										else if(event->button() == Qt::RightButton)
-											tcs->unselect(e);
-									});
+										neighborhood->collect(p.selecting_vertex_);
+										const auto& cells = neighborhood->cells(map->orbit(CellType::Edge_Cell));
+										for(auto e : cells)
+										{
+											if(event->button() == Qt::LeftButton)
+												csg->select(e);
+											else if(event->button() == Qt::RightButton)
+												csg->unselect(e);
+										}
+									}
 								}
 							}
 								break;
@@ -314,33 +334,37 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 						}
 					}
 						break;
-					case Face_Cell: {
-						CellsSet<CMap2, MapHandler<CMap2>::Face>* tcs = static_cast<CellsSet<CMap2, MapHandler<CMap2>::Face>*>(p.cells_set_);
+					case Face_Cell:
+					{
 						switch (p.selection_method_)
 						{
 							case MapParameters::SingleCell:
-								if (p.selecting_face_.is_valid())
+								if (!p.selecting_face_.is_nil())
 								{
 									if(event->button() == Qt::LeftButton)
-										tcs->select(p.selecting_face_);
+										csg->select(p.selecting_face_);
 									else if(event->button() == Qt::RightButton)
-										tcs->unselect(p.selecting_face_);
+										csg->unselect(p.selecting_face_);
 									p.update_selected_cells_rendering();
 								}
 								break;
 							case MapParameters::WithinSphere: {
-								if (p.selecting_vertex_.is_valid())
+								if (!p.selecting_vertex_.is_nil())
 								{
-									CMap2* map2 = static_cast<MapHandler<CMap2>*>(map)->get_map();
-									cgogn::geometry::Collector_WithinSphere<VEC3, CMap2> neighborhood(*map2, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
-									neighborhood.collect(p.selecting_vertex_);
-									neighborhood.foreach_cell([&] (CMap2::Face f)
+									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
+
+									if (neighborhood)
 									{
-										if(event->button() == Qt::LeftButton)
-											tcs->select(f);
-										else if(event->button() == Qt::RightButton)
-											tcs->unselect(f);
-									});
+										neighborhood->collect(p.selecting_vertex_);
+										const auto& cells = neighborhood->cells(map->orbit(CellType::Face_Cell));
+										for(auto f : cells)
+										{
+											if(event->button() == Qt::LeftButton)
+												csg->select(f);
+											else if(event->button() == Qt::RightButton)
+												csg->unselect(f);
+										}
+									}
 								}
 							}
 								break;
@@ -350,6 +374,25 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 					}
 						break;
 					case Volume_Cell:
+					{
+						switch (p.selection_method_)
+						{
+							case MapParameters::SingleCell:
+								if (!p.selecting_volume_.is_nil())
+								{
+									if(event->button() == Qt::LeftButton)
+										csg->select(p.selecting_volume_);
+									else if(event->button() == Qt::RightButton)
+										csg->unselect(p.selecting_volume_);
+									p.update_selected_cells_rendering();
+								}
+								break;
+							default:
+								break;
+						}
+					}
+						break;
+					default:
 						break;
 				}
 			}
@@ -360,7 +403,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
 	{
 		MapParameters& p = get_parameters(view, map);
 		if (p.selecting_)
@@ -376,7 +419,8 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 				VEC3 A(P.x, P.y, P.z);
 				VEC3 B(Q.x, Q.y, Q.z);
 
-				CMap2* map2 = static_cast<MapHandler<CMap2>*>(map)->get_map();
+				CMap2* map2 = map->dimension() == 2 ? static_cast<MapHandler<CMap2>*>(map)->get_map() : nullptr;
+				CMap3* map3 = map->dimension() == 3 ? static_cast<MapHandler<CMap3>*>(map)->get_map() : nullptr;
 
 				switch(p.cells_set_->get_cell_type())
 				{
@@ -384,10 +428,10 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 						break;
 					case Vertex_Cell:
 					{
-						std::vector<MapHandler<CMap2>::Vertex> picked;
-						if (cgogn::geometry::picking<VEC3>(*map2, p.get_position_attribute(), A, B, picked))
+						auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
+						if (!picked.empty())
 						{
-							if (!p.selecting_vertex_.is_valid() || (p.selecting_vertex_.is_valid() && !map2->same_cell(picked[0], p.selecting_vertex_)))
+							if (p.selecting_vertex_.is_nil() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
 							{
 								p.selecting_vertex_ = picked[0];
 								std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
@@ -403,13 +447,13 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 							case MapParameters::NormalAngle:
 								break;
 							case MapParameters::SingleCell: {
-								std::vector<MapHandler<CMap2>::Edge> picked;
-								if (cgogn::geometry::picking<VEC3>(*map2, p.get_position_attribute(), A, B, picked))
+								auto picked = get_picked_cells(map, CellType::Edge_Cell, p.get_position_attribute(), A, B);
+								if (!picked.empty())
 								{
-									if (!p.selecting_edge_.is_valid() || (p.selecting_edge_.is_valid() && !map2->same_cell(picked[0], p.selecting_edge_)))
+									if (p.selecting_edge_.is_nil() || (!p.selecting_edge_.is_nil() && !map->same_cell(picked[0],p.selecting_edge_, CellType::Edge_Cell)))
 									{
 										p.selecting_edge_ = picked[0];
-										std::pair<MapHandler<CMap2>::Vertex, MapHandler<CMap2>::Vertex> vertices = map2->vertices(p.selecting_edge_);
+										auto vertices = map->vertices((p.selecting_edge_));
 										std::vector<VEC3> selection_segment{
 											p.get_position_attribute()[vertices.first],
 											p.get_position_attribute()[vertices.second]
@@ -420,10 +464,10 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 							}
 								break;
 							case MapParameters::WithinSphere: {
-								std::vector<MapHandler<CMap2>::Vertex> picked;
-								if (cgogn::geometry::picking<VEC3>(*map2, p.get_position_attribute(), A, B, picked))
+								auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
+								if (!picked.empty())
 								{
-									if (!p.selecting_vertex_.is_valid() || (p.selecting_vertex_.is_valid() && !map2->same_cell(picked[0], p.selecting_vertex_)))
+									if (p.selecting_vertex_.is_nil() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
 									{
 										p.selecting_vertex_ = picked[0];
 										std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
@@ -441,17 +485,28 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 						{
 							case MapParameters::NormalAngle:
 								break;
-							case MapParameters::SingleCell: {
-								std::vector<MapHandler<CMap2>::Face> picked;
-								if (cgogn::geometry::picking<VEC3>(*map2, p.get_position_attribute(), A, B, picked))
+							case MapParameters::SingleCell:
+							{
+								auto picked = get_picked_cells(map, CellType::Face_Cell, p.get_position_attribute(), A, B);
+								if (!picked.empty())
 								{
-									if (!p.selecting_face_.is_valid() || (p.selecting_face_.is_valid() && !map2->same_cell(picked[0], p.selecting_face_)))
+									if (p.selecting_face_.is_nil() || (!p.selecting_face_.is_nil() && !map->same_cell(picked[0],p.selecting_face_, CellType::Face_Cell)))
 									{
 										p.selecting_face_ = picked[0];
 										std::vector<VEC3> selection_polygon;
 										std::vector<uint32> ears;
-										cgogn::geometry::append_ear_triangulation<VEC3>(*map2, p.selecting_face_, p.get_position_attribute(), ears);
-										VEC3 c = cgogn::geometry::centroid<VEC3>(*map2, p.selecting_face_, p.get_position_attribute());
+										VEC3 c;
+										if (map->dimension() == 2)
+										{
+											const CMap2Handler::VertexAttribute<VEC3>& pos = dynamic_cast<const CMap2Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
+											cgogn::geometry::append_ear_triangulation<VEC3>(*map2, Face2(p.selecting_face_), pos, ears);
+											c = cgogn::geometry::centroid<VEC3>(*map2, Face2(p.selecting_face_), pos);
+										} else {
+											const CMap3Handler::VertexAttribute<VEC3>& pos = dynamic_cast<const CMap3Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
+											cgogn::geometry::append_ear_triangulation<VEC3>(*map3, Face3(p.selecting_face_), pos, ears);
+											c = cgogn::geometry::centroid<VEC3>(*map3, Face3(p.selecting_face_), pos);
+										}
+
 										for (uint32 i : ears)
 											selection_polygon.push_back(p.get_position_attribute()[i] * 0.9 + c * 0.1);
 										p.selecting_face_nb_indices_ = selection_polygon.size();
@@ -460,11 +515,12 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								}
 							}
 								break;
-							case MapParameters::WithinSphere: {
-								std::vector<MapHandler<CMap2>::Vertex> picked;
-								if (cgogn::geometry::picking<VEC3>(*map2, p.get_position_attribute(), A, B, picked))
+							case MapParameters::WithinSphere:
+							{
+								auto picked = get_picked_cells(map, CellType::Vertex_Cell, p.get_position_attribute(), A, B);
+								if (!picked.empty())
 								{
-									if (!p.selecting_vertex_.is_valid() || (p.selecting_vertex_.is_valid() && !map2->same_cell(picked[0], p.selecting_vertex_)))
+									if (p.selecting_vertex_.is_nil() || (!p.selecting_vertex_.is_nil() && !map->same_cell(picked[0],p.selecting_vertex_, CellType::Vertex_Cell)))
 									{
 										p.selecting_vertex_ = picked[0];
 										std::vector<VEC3> selection_point{p.get_position_attribute()[p.selecting_vertex_]};
@@ -477,6 +533,26 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 					}
 						break;
 					case Volume_Cell:
+						switch (p.selection_method_) {
+							case MapParameters::NormalAngle:
+								break;
+							case MapParameters::SingleCell:
+							{
+								auto picked = get_picked_cells(map, CellType::Volume_Cell, p.get_position_attribute(), A, B);
+								if (!picked.empty())
+								{
+									if (p.selecting_volume_.is_nil() || (!p.selecting_volume_.is_nil() && !map->same_cell(picked[0],p.selecting_volume_, CellType::Volume_Cell)))
+									{
+										p.selecting_volume_ = picked[0];
+									}
+								}
+								break;
+							}
+							default:
+								break;
+						}
+						break;
+					default:
 						break;
 				}
 
@@ -489,7 +565,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 void Plugin_Selection::wheelEvent(View* view, QWheelEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
 	{
 		MapParameters& p = get_parameters(view, map);
 		if (p.selecting_)
@@ -533,13 +609,78 @@ void Plugin_Selection::view_unlinked(View* view)
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
 }
 
+std::unique_ptr<Plugin_Selection::CollectorGen> Plugin_Selection::collector_within_sphere(MapHandlerGen* map, float64 radius, const MapHandlerGen::Attribute_T<VEC3>& position_att)
+{
+	if (map)
+	{
+		if (map->dimension() == 2)
+		{
+			CMap2Handler* mh2 = static_cast<CMap2Handler*>(map);
+			const CMap2::VertexAttribute<VEC3>* pos = static_cast<const CMap2::VertexAttribute<VEC3>*>(&position_att);
+			return cgogn::make_unique<cgogn::geometry::Collector_WithinSphere<VEC3, CMap2>>(*mh2->get_map(), radius, *pos);
+		} else {
+			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
+			const CMap3::VertexAttribute<VEC3>* pos = static_cast<const CMap3::VertexAttribute<VEC3>*>(&position_att);
+			return cgogn::make_unique<cgogn::geometry::Collector_WithinSphere<VEC3, CMap3>>(*mh3->get_map(), radius, *pos);
+		}
+	}
+	return nullptr;
+}
+
+std::vector<cgogn::Dart> Plugin_Selection::get_picked_cells(MapHandlerGen* map, CellType ct, const MapHandlerGen::Attribute_T<VEC3>& position_att, VEC3& A, VEC3& B)
+{
+	std::vector<cgogn::Dart> res;
+	bool pick_res = false;
+	if (map)
+	{
+		if (map->dimension() == 2)
+		{
+			CMap2Handler* mh2 = static_cast<CMap2Handler*>(map);
+			const CMap2::VertexAttribute<VEC3>* pos = static_cast<const CMap2::VertexAttribute<VEC3>*>(&position_att);
+			switch (ct) {
+				case CellType::Vertex_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Vertex2>&>(res)); break;
+				case CellType::Edge_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Edge2>&>(res)); break;
+				case CellType::Face_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Face2>&>(res)); break;
+				case CellType::Volume_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Volume>&>(res)); break;
+				default:
+					pick_res = false; break;
+			}
+		} else {
+			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
+			const CMap3::VertexAttribute<VEC3>* pos = static_cast<const CMap3::VertexAttribute<VEC3>*>(&position_att);
+			switch (ct) {
+				case CellType::Vertex_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Vertex3>&>(res)); break;
+				case CellType::Edge_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Edge3>&>(res)); break;
+				case CellType::Face_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Face3>&>(res)); break;
+				case CellType::Volume_Cell:
+					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Volume>&>(res)); break;
+				default:
+					pick_res = false; break;
+			}
+		}
+	}
+
+	if (!pick_res)
+		return std::vector<cgogn::Dart>();
+	else
+		return res;
+}
+
 void Plugin_Selection::map_linked(MapHandlerGen* map)
 {
 	update_dock_tab();
 
-	if (map->dimension() == 2)
+	if (map)
 	{
 		connect(map, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(linked_map_cells_set_added(CellType, const QString&)), Qt::UniqueConnection);
+		connect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
@@ -551,9 +692,10 @@ void Plugin_Selection::map_unlinked(MapHandlerGen* map)
 {
 	update_dock_tab();
 
-	if (map->dimension() == 2)
+	if (map)
 	{
 		disconnect(map, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(linked_map_cells_set_added(CellType, const QString&)));
+		disconnect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)));
 		disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)));
 		disconnect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)));
@@ -567,6 +709,14 @@ void Plugin_Selection::linked_map_cells_set_added(CellType ct, const QString& na
 
 	if (map->is_selected_map())
 		dock_tab_->selected_map_cells_set_added(ct, name);
+}
+
+void Plugin_Selection::linked_map_cells_set_removed(CellType ct, const QString& name)
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+
+	if (map->is_selected_map())
+		dock_tab_->selected_map_cells_set_removed(ct, name);
 }
 
 void Plugin_Selection::linked_map_attribute_added(cgogn::Orbit orbit, const QString& name)
@@ -646,7 +796,7 @@ void Plugin_Selection::update_dock_tab()
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	View* view = schnapps_->get_selected_view();
-	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (map && view->is_linked_to_plugin(this) && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
 	{
 		schnapps_->enable_plugin_tab_widgets(this);
 		const MapParameters& p = get_parameters(view, map);
@@ -655,8 +805,6 @@ void Plugin_Selection::update_dock_tab()
 	else
 		schnapps_->disable_plugin_tab_widgets(this);
 }
-
-Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 
 } // namespace plugin_selection
 } // namespace schnapps
