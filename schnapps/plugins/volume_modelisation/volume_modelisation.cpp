@@ -40,7 +40,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 {
 	operations_ = cgogn::make_unique<VolumeOperation>();
 
-	operations_->add_operation("Delete edge",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("merge edges incident volumes",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3)
@@ -48,7 +48,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 			res.reserve(darts.size());
 			CMap3* map3 = static_cast<CMap3Handler*>(mhg)->get_map();
 			for (auto d : darts)
-				res.push_back(map3->delete_edge(CMap3::Edge(d)));
+				res.push_back(map3->merge_incident_volumes(CMap3::Edge(d)));
 		}
 		return res;
 	});
