@@ -106,7 +106,7 @@ bool TetgenStructureVolumeImport::import_tetgen_structure()
 		return false;
 	}
 
-	ChunkArray<VEC3>* position = this->template position_attribute<VEC3>();
+	ChunkArray<VEC3>* position = this->position_attribute();
 	//create vertices
 	std::vector<uint32> vertices_indices;
 	float64* p = volume_->pointlist ;
@@ -126,7 +126,7 @@ bool TetgenStructureVolumeImport::import_tetgen_structure()
 		std::array<uint32,4> ids;
 		for(uint32 j = 0u; j < 4u; j++)
 			ids[j] = uint32(vertices_indices[t[j] - volume_->firstnumber]);
-		this->add_tetra(*position, ids[0], ids[1], ids[2], ids[3], true);
+		this->add_tetra(ids[0], ids[1], ids[2], ids[3], true);
 		t += 4 ;
 	}
 

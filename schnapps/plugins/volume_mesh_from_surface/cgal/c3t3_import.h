@@ -49,10 +49,10 @@ namespace plugin_vmfs
 {
 
 template<typename C3T3>
-class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits>
+class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits, VEC3>
 {
 public:
-	using Inherit = VolumeImport<CMap3::MapTraits>;
+	using Inherit = VolumeImport<CMap3::MapTraits, VEC3>;
 	using Self = C3T3VolumeImport<C3T3>;
 
 	inline C3T3VolumeImport(const C3T3& cpx) : Inherit(),
@@ -72,7 +72,7 @@ public:
 	{
 		const Triangulation& triangulation = cpx_.triangulation();
 		std::map<Vertex_handle, unsigned int> vertices_indices;
-		ChunkArray<VEC3>* position = this->template position_attribute<VEC3>();
+		ChunkArray<VEC3>* position = this->position_attribute();
 
 		const uint32 num_cells = cpx_.number_of_cells_in_complex();
 		this->reserve(num_cells);
@@ -86,12 +86,13 @@ public:
 		}
 
 		for (auto cit = cpx_.cells_in_complex_begin(), cend = cpx_.cells_in_complex_end(); cit != cend; ++cit)
-			this->add_tetra(*position, vertices_indices[cit->vertex(0)], vertices_indices[cit->vertex(1)], vertices_indices[cit->vertex(2)], vertices_indices[cit->vertex(3)], true);
+			this->add_tetra(vertices_indices[cit->vertex(0)], vertices_indices[cit->vertex(1)], vertices_indices[cit->vertex(2)], vertices_indices[cit->vertex(3)], true);
 
-		ChunkArray<float32>* subdomain_indices = this->volume_attributes_container().template add_chunk_array<float32>("subdomain index");
+
+		ChunkArray<float32>* subdomain_indices = this->template add_volume_attribute<float32>("subdomain index");
 		for (auto cit = cpx_.cells_in_complex_begin(), cend = cpx_.cells_in_complex_end(); cit != cend; ++cit)
 		{
-			const uint32 id = this->volume_attributes_container().template insert_lines<1>();
+			const uint32 id = this->insert_line_volume_container();
 			subdomain_indices->operator [](id) = float32(cpx_.subdomain_index(cit));
 		}
 	}
