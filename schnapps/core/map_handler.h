@@ -54,16 +54,18 @@ class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 	friend class View;
 
 public:
-	using ChunkArrayGen = cgogn::MapBaseData<cgogn::DefaultMapTraits>::ChunkArrayGen;
-	template<typename T>
-	using ChunkArray = cgogn::MapBaseData<cgogn::DefaultMapTraits>::ChunkArray<T>;
+
 	template<typename T>
 	using ChunkArrayContainer = MapBaseData::ChunkArrayContainer<T>;
-	using AttributeGen = cgogn::AttributeGen<cgogn::DefaultMapTraits>;
+	using ChunkArrayGen = cgogn::MapBaseData::ChunkArrayGen;
+	template<typename T>
+	using ChunkArray = cgogn::MapBaseData::ChunkArray<T>;
+
+	using AttributeGen = cgogn::AttributeGen;
 	template <typename T>
-	using Attribute_T = cgogn::Attribute_T<cgogn::DefaultMapTraits, T>;
+	using Attribute_T = cgogn::Attribute_T<T>;
 	template <typename T, cgogn::Orbit ORBIT>
-	using Attribute = cgogn::Attribute<cgogn::DefaultMapTraits, T,ORBIT>;
+	using Attribute = cgogn::Attribute<T,ORBIT>;
 
 	MapHandlerGen(const QString& name, SCHNApps* s, std::unique_ptr<MapBaseData> map);
 
@@ -352,8 +354,6 @@ class MapHandler : public MapHandlerGen
 public:
 
 	using ConcreteMap = typename MAP_TYPE::ConcreteMap;
-	template <typename T, cgogn::Orbit ORBIT>
-	using Attribute = typename MAP_TYPE::template Attribute<T, ORBIT>;
 	template <typename T>
 	using VertexAttribute = typename MAP_TYPE::template VertexAttribute<T>;
 	template <typename T>

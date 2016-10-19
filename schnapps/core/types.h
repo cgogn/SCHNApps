@@ -30,20 +30,16 @@
 
 namespace cgogn
 {
-struct DefaultMapTraits;
 
-template <typename MAP_TRAITS>
 class MapBaseData;
 
-template <typename MAP_TRAITS, typename MAP_TYPE>
-class CMap2_T;
-template <typename MAP_TRAITS>
 struct CMap2Type;
+template <typename MAP_TYPE>
+class CMap2_T;
 
-template <typename MAP_TRAITS, typename MAP_TYPE>
-class CMap3_T;
-template <typename MAP_TRAITS>
 struct CMap3Type;
+template <typename MAP_TYPE>
+class CMap3_T;
 
 }
 
@@ -52,9 +48,9 @@ namespace schnapps
 
 using namespace cgogn::numerics;
 
-using MapBaseData = cgogn::MapBaseData<cgogn::DefaultMapTraits>;
-using CMap2 = cgogn::CMap2_T<cgogn::DefaultMapTraits, cgogn::CMap2Type<cgogn::DefaultMapTraits>>;
-using CMap3 = cgogn::CMap3_T<cgogn::DefaultMapTraits, cgogn::CMap3Type<cgogn::DefaultMapTraits>>;
+using MapBaseData = cgogn::MapBaseData;
+using CMap2 = cgogn::CMap2_T<cgogn::CMap2Type>;
+using CMap3 = cgogn::CMap3_T<cgogn::CMap3Type>;
 
 enum CellType : uint16
 {

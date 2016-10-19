@@ -48,13 +48,13 @@ namespace plugin_image
 using namespace cgogn::numerics;
 class Image_DockTab;
 
-
 class SCHNAPPS_PLUGIN_IMAGE_API Image3D
 {
 public:
-	using DataInputGen = cgogn::io::DataInputGen<cgogn::DefaultMapTraits::CHUNK_SIZE>;
+
+	using DataInputGen = cgogn::io::DataInputGen;
 	template<typename BUFFER_T, typename T = BUFFER_T>
-	using DataInput = cgogn::io::DataInput<cgogn::DefaultMapTraits::CHUNK_SIZE, 1, BUFFER_T, T>;
+	using DataInput = cgogn::io::DataInput<1, BUFFER_T, T>;
 	using DataType = cgogn::io::DataType;
 
 #ifdef PLUGIN_IMAGE_WITH_CGAL

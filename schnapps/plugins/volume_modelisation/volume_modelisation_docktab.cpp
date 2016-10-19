@@ -124,4 +124,5 @@ QComboBox*VolumeModelisation_DockTab::get_cell_set_combo_box(CellType ct)
 }
 
 } // namespace plugin_volume_modelisation
+
 } // namespace schnapps

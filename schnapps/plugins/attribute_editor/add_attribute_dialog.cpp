@@ -42,7 +42,7 @@ AddAttributeDialog::AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p)
 	updating_ui_ = false;
 	setupUi(this);
 
-	schnapps_->foreach_map([&](MapHandlerGen* mhg)
+	schnapps_->foreach_map([&] (MapHandlerGen* mhg)
 	{
 		map_added(mhg);
 	});

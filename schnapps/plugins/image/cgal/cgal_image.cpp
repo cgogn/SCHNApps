@@ -30,14 +30,14 @@ namespace schnapps
 namespace plugin_image
 {
 
-SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const Image3D& im)
+SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const schnapps::plugin_image::Image3D& im)
 {
 	using DataType = cgogn::io::DataType;
 
 	const auto& dims = im.get_image_dimensions();
 	const auto& voxel_dims = im.get_voxel_dimensions();
 
-	_image* image  =_createImage(dims[0], dims[1], dims[2],
+	_image* image  = _createImage(dims[0], dims[1], dims[2],
 			im.get_nb_components(),
 			voxel_dims[0], voxel_dims[1], voxel_dims[2],
 			im.get_data_size(),
@@ -92,6 +92,6 @@ SCHNAPPS_PLUGIN_IMAGE_API SIGN get_cgal_sign(cgogn::io::DataType data_type)
 	}
 }
 
-
 } // namespace plugin_image
+
 } // namespace schnapps
