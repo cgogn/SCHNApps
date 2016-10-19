@@ -38,8 +38,10 @@
 
 namespace cgogn
 {
-template <typename DATA_TRAITS, typename T>
+
+template <typename T>
 class Attribute_T;
+
 } // namespace cgogn
 
 namespace schnapps
@@ -53,11 +55,12 @@ namespace plugin_volume_modelisation
 class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API MapOperator final
 {
 public:
+
 	using Dart = cgogn::Dart;
 	using FuncReturnType = std::vector<Dart>;
 	using FuncParamType = const std::vector<Dart>&;
-	using VEC3Attribute = cgogn::Attribute_T<cgogn::DefaultMapTraits, VEC3>;
-	using FuncType = std::function<FuncReturnType(MapHandlerGen*,VEC3Attribute&, FuncParamType)>;
+	using VEC3Attribute = cgogn::Attribute_T<VEC3>;
+	using FuncType = std::function<FuncReturnType(MapHandlerGen*, VEC3Attribute&, FuncParamType)>;
 
 	inline MapOperator() CGOGN_NOEXCEPT :
 		cell_type_(CellType::Unknown),

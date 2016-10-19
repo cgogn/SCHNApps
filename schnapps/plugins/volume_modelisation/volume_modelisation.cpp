@@ -40,7 +40,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 {
 	operations_ = cgogn::make_unique<VolumeOperation>();
 
-	operations_->add_operation("Merge incident volumes of edge",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Merge incident volumes of edge", CellType::Edge_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3)
@@ -53,7 +53,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 
-	operations_->add_operation("Delete volume",CellType::Volume_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Delete volume", CellType::Volume_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		if (mhg && mhg->dimension() == 3)
 		{
@@ -65,7 +65,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 	});
 
 
-	operations_->add_operation("Unsew volumes",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Unsew volumes", CellType::Face_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		if (mhg && mhg->dimension() == 3)
 		{
@@ -76,7 +76,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return std::vector<cgogn::Dart>();
 	});
 
-	operations_->add_operation("Merge incident volumes of face",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Merge incident volumes of face", CellType::Face_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		if (mhg && mhg->dimension() == 3)
 		{
@@ -87,7 +87,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return std::vector<cgogn::Dart>();
 	});
 
-	operations_->add_operation("Split 1 to 4",CellType::Volume_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Split 1 to 4", CellType::Volume_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
@@ -108,7 +108,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 
-	operations_->add_operation("Split 1 to 3",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Split 1 to 3", CellType::Face_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
@@ -129,7 +129,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 
-	operations_->add_operation("Swap 2 to 3",CellType::Face_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& , const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Swap 2 to 3", CellType::Face_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& , const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3)
@@ -146,7 +146,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 
-	operations_->add_operation("Swap 3 to 2",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& , const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Swap 3 to 2", CellType::Edge_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& , const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3)
@@ -163,7 +163,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 
-	operations_->add_operation("SwapGen32",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("SwapGen32", CellType::Edge_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
@@ -181,7 +181,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 
-	operations_->add_operation("Edge bisection",CellType::Edge_Cell, [=](MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
+	operations_->add_operation("Edge bisection", CellType::Edge_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
 	{
 		std::vector<cgogn::Dart> res;
 		if (mhg && mhg->dimension() == 3 && pos_attr.is_valid())
@@ -192,7 +192,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 			for (auto d : darts)
 			{
 				const CMap3::Edge e(d);
-				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, e,pos3);
+				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, e, pos3);
 				const cgogn::Dart res_dart = cgogn::modeling::edge_bisection(*map3, e);
 				if (!res_dart.is_nil())
 				{
@@ -242,7 +242,7 @@ void VolumeModelisationPlugin::process_operation()
 
 		std::vector<cgogn::Dart> arg;
 		arg.reserve(csg->get_nb_cells());
-		csg->foreach_cell([&arg](cgogn::Dart d) { arg.push_back(d);});
+		csg->foreach_cell([&arg] (cgogn::Dart d) { arg.push_back(d); });
 
 		auto pos_attribute = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(docktab_->position_comboBox->currentText());
 		std::vector<cgogn::Dart> res = op->func_(mhg,pos_attribute, arg);
@@ -254,6 +254,7 @@ void VolumeModelisationPlugin::process_operation()
 		}
 
 		mhg->notify_connectivity_change();
+		mhg->notify_attribute_change(CMap3::Vertex::ORBIT, pos_attribute.name());
 	}
 }
 
@@ -311,45 +312,6 @@ void VolumeModelisationPlugin::update_dock_tab()
 	docktab_->update(map);
 }
 
-void VolumeModelisationPlugin::draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{
-}
-
-void VolumeModelisationPlugin::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{
-}
-
-void VolumeModelisationPlugin::keyPress(View* view, QKeyEvent* event)
-{
-}
-
-void VolumeModelisationPlugin::keyRelease(View* view, QKeyEvent* event)
-{
-}
-
-void VolumeModelisationPlugin::mousePress(View* view, QMouseEvent* event)
-{
-}
-
-void VolumeModelisationPlugin::mouseRelease(View* view, QMouseEvent* event)
-{
-}
-
-void VolumeModelisationPlugin::mouseMove(View* view, QMouseEvent* event)
-{
-}
-
-void VolumeModelisationPlugin::wheelEvent(View* view, QWheelEvent* event)
-{
-}
-
-void VolumeModelisationPlugin::view_linked(View* view)
-{
-}
-
-void VolumeModelisationPlugin::view_unlinked(View* view)
-{
-}
-
 } // namespace plugin_volume_modelisation
+
 } // namespace schnapps
