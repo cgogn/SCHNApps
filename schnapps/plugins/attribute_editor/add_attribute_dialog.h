@@ -45,20 +45,25 @@ class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AddAttributeDialog : public QDialog, 
 	friend class AttributeEditorPlugin;
 
 public:
+
 	AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p);
 
 private slots:
+
 	void map_added(MapHandlerGen*);
 	void map_removed(MapHandlerGen*);
-	void selected_map_changed(const QString&);
+//	void selected_map_changed(const QString&);
 	void add_attribute_validated();
+
 private:
+
 	SCHNApps* schnapps_;
 	AttributeEditorPlugin* plugin_;
 	bool updating_ui_;
 };
 
 } // namespace plugin_attribute_editor
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H

@@ -288,7 +288,7 @@ void SCHNApps::remove_plugin_dock_tab(Plugin* plugin, QWidget *tab_widget)
 	}
 }
 
-void SCHNApps::enable_plugin_tab_widgets(PluginInteraction* plugin)
+void SCHNApps::enable_plugin_tab_widgets(Plugin* plugin)
 {
 	if (plugin_dock_tabs_.count(plugin) > 0ul)
 	{
@@ -297,7 +297,7 @@ void SCHNApps::enable_plugin_tab_widgets(PluginInteraction* plugin)
 	}
 }
 
-void SCHNApps::disable_plugin_tab_widgets(PluginInteraction* plugin)
+void SCHNApps::disable_plugin_tab_widgets(Plugin* plugin)
 {
 	if (plugin_dock_tabs_.count(plugin) > 0ul)
 	{

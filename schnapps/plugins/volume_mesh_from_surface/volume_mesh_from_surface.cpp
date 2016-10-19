@@ -121,7 +121,7 @@ void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 	}
 }
 
-Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_tetgen(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const std::string& tetgen_args)
+Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args)
 {
 	if (!mh2 || !position_att.is_valid())
 		return nullptr;
@@ -145,7 +145,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	return handler_map3;
 }
 
-Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const MeshGeneratorParameters& params)
+Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const MeshGeneratorParameters& params)
 {
 #ifdef PLUGIN_VMFS_WITH_CGAL
 	if (!mh2 || !position_att.is_valid())

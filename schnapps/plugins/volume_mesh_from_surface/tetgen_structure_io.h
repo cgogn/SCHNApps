@@ -35,16 +35,18 @@ namespace tetgen
 {
 class tetgenio;
 }
+
 namespace schnapps
 {
 
 namespace plugin_vmfs
 {
 
-class SCHNAPPS_PLUGIN_VMFS_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits, VEC3>
+class SCHNAPPS_PLUGIN_VMFS_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<VEC3>
 {
 public:
-	using Inherit = cgogn::io::VolumeImport<schnapps::CMap3::MapTraits, VEC3>;
+
+	using Inherit = cgogn::io::VolumeImport<VEC3>;
 	using Self = TetgenStructureVolumeImport;
 	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
 	template <typename T>
