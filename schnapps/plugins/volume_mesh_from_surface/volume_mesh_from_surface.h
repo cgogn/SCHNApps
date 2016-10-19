@@ -87,7 +87,9 @@ class SCHNAPPS_PLUGIN_VMFS_API Plugin_VolumeMeshFromSurface : public PluginProce
 	Q_INTERFACES(schnapps::Plugin)
 
 	friend class VolumeMeshFromSurfaceDialog;
+
 public:
+
 	using Map2 = schnapps::CMap2;
 	using Map3 = schnapps::CMap3;
 	using MapHandler2 = schnapps::MapHandler<Map2>;
@@ -95,11 +97,12 @@ public:
 
 	Plugin_VolumeMeshFromSurface();
 
-	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const std::string& tetgen_args);
-	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::Attribute<VEC3, CMap2::Vertex::ORBIT> position_att, const MeshGeneratorParameters& params);
+	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args);
+	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const MeshGeneratorParameters& params);
 	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const MeshGeneratorParameters& params);
 
 private:
+
 	virtual bool enable() override;
 	virtual void disable() override;
 
@@ -109,6 +112,7 @@ private:
 	std::unique_ptr<VolumeMeshFromSurfaceDialog> dialog_;
 
 public slots:
+
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
 	void plugin_enabled(Plugin*);
@@ -116,6 +120,7 @@ public slots:
 };
 
 } // namespace plugin_vmfs
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_

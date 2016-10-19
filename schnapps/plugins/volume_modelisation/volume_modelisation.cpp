@@ -254,7 +254,7 @@ void VolumeModelisationPlugin::process_operation()
 		}
 
 		mhg->notify_connectivity_change();
-		mhg->notify_attribute_change(CMap3::Vertex::ORBIT, pos_attribute.name());
+		mhg->notify_attribute_change(CMap3::Vertex::ORBIT, docktab_->position_comboBox->currentText());
 	}
 }
 

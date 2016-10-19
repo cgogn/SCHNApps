@@ -156,9 +156,9 @@ public:
 
 public slots:
 
-	void enable_plugin_tab_widgets(PluginInteraction* plugin);
+	void enable_plugin_tab_widgets(Plugin* plugin);
 
-	void disable_plugin_tab_widgets(PluginInteraction* plugin);
+	void disable_plugin_tab_widgets(Plugin* plugin);
 
 	/*********************************************************
 	 * MANAGE MAPS

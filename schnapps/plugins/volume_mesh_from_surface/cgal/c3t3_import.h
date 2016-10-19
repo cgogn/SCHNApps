@@ -49,17 +49,18 @@ namespace plugin_vmfs
 {
 
 template<typename C3T3>
-class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3::MapTraits, VEC3>
+class C3T3VolumeImport : public cgogn::io::VolumeImport<VEC3>
 {
 public:
-	using Inherit = VolumeImport<CMap3::MapTraits, VEC3>;
+
+	using Inherit = VolumeImport<VEC3>;
 	using Self = C3T3VolumeImport<C3T3>;
 
-	inline C3T3VolumeImport(const C3T3& cpx) : Inherit(),
-		cpx_(cpx)
+	inline C3T3VolumeImport(const C3T3& cpx) : Inherit(), cpx_(cpx)
 	{
 		import_c3t3();
 	}
+
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(C3T3VolumeImport);
 
 	template<typename T>
