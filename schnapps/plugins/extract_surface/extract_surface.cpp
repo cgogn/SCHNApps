@@ -79,7 +79,7 @@ void Plugin_ExtractSurface::extract_surface(MapHandlerGen* in_map3, MapHandlerGe
 	cgogn::io::SurfaceImport<VEC3> si;
 	std::map<uint32, uint32> old_new_id_map;
 	auto  in_pos_att = mh3_in->get_attribute<VEC3, CMap3::Vertex::ORBIT>(pos_att_name);
-	auto* out_pos_att = si.add_position_attribute();
+	auto* out_pos_att = si.position_attribute();
 
 	map3.foreach_cell([&](CMap3::Vertex v)
 	{
