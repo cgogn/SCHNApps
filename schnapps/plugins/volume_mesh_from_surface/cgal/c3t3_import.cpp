@@ -99,6 +99,17 @@ SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const MeshGeneratorParameters& para
 	Mesh_domain domain(cgal_im);
 
 	tetrahedralize(param, domain, criteria, output_volume_map);
+
+	// translate the mesh
+	const VEC3 origin(im->get_origin()[0], im->get_origin()[1], im->get_origin()[2]);
+	auto pos_attr = output_volume_map->get_attribute<VEC3, CMap3::Vertex::ORBIT>("position");
+	if (pos_attr.is_valid())
+	{
+		output_volume_map->get_map()->foreach_cell([&](CMap3::Vertex v)
+		{
+			pos_attr[v] += origin;
+		});
+	}
 }
 
 } // namespace plugin_vmfs

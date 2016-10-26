@@ -211,7 +211,6 @@ Image3D Image3D::new_image_3d(const QString& image_path)
 				res_img.import_vtk(in);
 			else
 				return res_img;
-
 		}
 	}
 	return res_img;
@@ -325,7 +324,7 @@ void Image3D::import_inr(std::istream& inr_data)
 
 void Image3D::import_vtk(std::istream& vtk_data)
 {
-	const auto to_upper = [=](const std::string& s) { return cgogn::to_upper(s); };
+	const auto to_upper = [&](const std::string& s) { return cgogn::to_upper(s); };
 
 	std::string line;
 	std::string word;
@@ -350,6 +349,7 @@ void Image3D::import_vtk(std::istream& vtk_data)
 	if (dataset != "STRUCTURED_POINTS")
 		return;
 
+	origin_.fill(0);
 
 	while(!vtk_data.eof())
 	{
@@ -369,7 +369,6 @@ void Image3D::import_vtk(std::istream& vtk_data)
 		if (word == "ORIGIN")
 		{
 			sstream >> origin_[0] >> origin_[1] >> origin_[2];
-			origin_.fill(0);
 		}
 
 
