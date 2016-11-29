@@ -27,6 +27,7 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
+#include <cgogn/io/io_utils.h>
 #include <QFileDialog>
 
 namespace schnapps
@@ -60,8 +61,8 @@ ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
 	connect(this->listWidgetCellAttributes,SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cell_attribute_changed(QListWidgetItem*)));
 	connect(this->listWidgetVertexAttributes, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(vertex_attribute_changed(QListWidgetItem*)));
 
-	this->checkBoxBinary->setChecked(p->export_params_.binary_);
-	this->checkBoxCompress->setChecked(p->export_params_.compress_);
+	this->checkBoxBinary->setChecked(p->export_params_->binary_);
+	this->checkBoxCompress->setChecked(p->export_params_->compress_);
 
 }
 
@@ -74,7 +75,7 @@ void ExportDialog::selected_map_changed(QString map_name)
 
 	if (MapHandlerGen* mhg = schnapps_->get_map(map_name))
 	{
-		plugin_->export_params_.map_name_ = map_name.toStdString();
+		plugin_->map_name_ = map_name;
 		const auto* vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
 		for (const auto& att_name : vert_att_cont->names())
 		{
@@ -93,7 +94,7 @@ void ExportDialog::selected_map_changed(QString map_name)
 	} else {
 		this->comboBoxPositionSelection->clear();
 		this->comboBoxPositionSelection->addItem("-select attribute-");
-		plugin_->export_params_.map_name_ = std::string();
+		plugin_->map_name_.clear();
 	}
 }
 
@@ -101,7 +102,7 @@ void ExportDialog::position_att_changed(QString pos_name)
 {
 	if (!pos_name.isEmpty())
 	{
-		plugin_->export_params_.position_attribute_name_= pos_name.toStdString();
+		plugin_->export_params_->position_attribute_.second = pos_name.toStdString();
 		for (int i = 0; i < this->listWidgetVertexAttributes->count(); ++i)
 		{
 			QListWidgetItem* item = this->listWidgetVertexAttributes->item(i);
@@ -117,7 +118,7 @@ void ExportDialog::position_att_changed(QString pos_name)
 
 void ExportDialog::output_file_changed(QString output)
 {
-		plugin_->export_params_.output_ = output.toStdString();
+		plugin_->export_params_->filename(output.toStdString());
 }
 
 void ExportDialog::map_added(MapHandlerGen* mhg)
@@ -138,27 +139,29 @@ void ExportDialog::choose_file()
 		if (!filename.isEmpty())
 		{
 			this->lineEditOutput->setText(filename);
-			plugin_->export_params_.output_ = filename.toStdString();
+			plugin_->export_params_->filename(filename.toStdString());
 		} else
 			this->lineEditOutput->setText("-select output-");
 }
 
 void ExportDialog::binary_option_changed(bool b)
 {
-	plugin_->export_params_.binary_ = b;
+	plugin_->export_params_->binary(b);
 }
 
 void ExportDialog::compress_option_changed(bool b)
 {
-	plugin_->export_params_.compress_ = b;
+	plugin_->export_params_->compress(b);
 }
 
 void ExportDialog::reinit()
 {
-	ExportParams& p = plugin_->export_params_;
-	p.reset();
-	this->checkBoxBinary->setChecked(p.binary_);
-	this->checkBoxCompress->setChecked(p.compress_);
+	delete plugin_->export_params_;
+	plugin_->export_params_ = new cgogn::io::ExportOptions(cgogn::io::ExportOptions::create());
+	plugin_->map_name_.clear();
+	auto* p = plugin_->export_params_;
+	this->checkBoxBinary->setChecked(p->binary_);
+	this->checkBoxCompress->setChecked(p->compress_);
 	this->comboBoxMapSelection->setCurrentIndex(0);
 	this->comboBoxPositionSelection->clear();
 	this->comboBoxPositionSelection->addItem("-select attribute-");
@@ -173,34 +176,41 @@ void ExportDialog::export_validated()
 
 void ExportDialog::vertex_attribute_changed(QListWidgetItem* item)
 {
-	auto& vertex_atts = plugin_->export_params_.other_exported_attributes_[CellType::Vertex_Cell];
-	auto it = std::find(vertex_atts.begin(), vertex_atts.end(), item->text().toStdString());
+	const MapHandlerGen* mhg = schnapps_->get_map(plugin_->map_name_);
+	if (!mhg)
+		return;
+	auto& attributes = plugin_->export_params_->attributes_to_export_;
+	auto pair = std::make_pair(mhg->orbit(CellType::Vertex_Cell), item->text().toStdString());
+
+	auto it = std::find(attributes.begin(), attributes.end(), pair);
 	if (item->checkState() == Qt::Checked)
 	{
-		if (it == vertex_atts.end())
-			vertex_atts.push_back(item->text().toStdString());
+		if (it == attributes.end())
+			attributes.push_back(std::move(pair));
 	} else {
-		if (it != vertex_atts.end())
-			vertex_atts.erase(it);
+		if (it != attributes.end())
+			attributes.erase(it);
 	}
 }
 
 void ExportDialog::cell_attribute_changed(QListWidgetItem* item)
 {
-	MapHandlerGen* mhg = schnapps_->get_map(QString::fromStdString(plugin_->export_params_.map_name_));
+	const MapHandlerGen* mhg = schnapps_->get_map(plugin_->map_name_);
 	if (!mhg)
 		return;
+	auto& attributes = plugin_->export_params_->attributes_to_export_;
 	const CellType cell_type = mhg->dimension() == 2u ? CellType::Face_Cell : CellType::Volume_Cell;
-	auto& cell_atts = plugin_->export_params_.other_exported_attributes_[cell_type];
-	auto it = std::find(cell_atts.begin(), cell_atts.end(), item->text().toStdString());
+	auto pair = std::make_pair(mhg->orbit(cell_type), item->text().toStdString());
+
+	auto it = std::find(attributes.begin(), attributes.end(), pair);
 
 	if (item->checkState() == Qt::Checked)
 	{
-		if (it == cell_atts.end())
-			cell_atts.push_back(item->text().toStdString());
+		if (it == attributes.end())
+			attributes.push_back(std::move(pair));
 	} else {
-		if (it != cell_atts.end())
-			cell_atts.erase(it);
+		if (it != attributes.end())
+			attributes.erase(it);
 	}
 }
 

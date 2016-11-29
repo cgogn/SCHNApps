@@ -40,68 +40,36 @@ namespace schnapps
 namespace plugin_export
 {
 
-ExportParams::ExportParams() :
-	map_name_(),
-	position_attribute_name_(),
-	other_exported_attributes_(),
-	output_(),
-	binary_(false),
-	compress_(false)
-{}
-
-void ExportParams::reset()
+Plugin_Export::Plugin_Export() :
+	export_mesh_action_(nullptr),
+	export_dialog_(nullptr),
+	export_params_(nullptr),
+	map_name_()
 {
-	map_name_.clear();
-	position_attribute_name_.clear();
-	other_exported_attributes_.clear();
-	output_.clear();
-	binary_ = false;
-	compress_ = false;
+	export_params_ = new cgogn::io::ExportOptions(cgogn::io::ExportOptions::create());
 }
 
-
-Plugin_Export::Plugin_Export() {
-	export_dialog_ = nullptr;
-}
-
-Plugin_Export::~Plugin_Export() {
+Plugin_Export::~Plugin_Export()
+{
+	delete export_params_;
 	delete export_dialog_;
 }
 
 void Plugin_Export::export_mesh()
 {
-	ExportParams& p = this->export_params_;
-	MapHandlerGen* mhg = schnapps_->get_map(QString::fromStdString(p.map_name_));
+	MapHandlerGen* mhg = schnapps_->get_map(map_name_);
 	if (mhg)
 	{
 		std::vector<std::pair<cgogn::Orbit, std::string>> other_attributes;
 		if (MapHandler<CMap2>* m2h = dynamic_cast<MapHandler<CMap2>*>(mhg))
 		{
 			CMap2& cmap2 = *m2h->get_map();
-			const cgogn::Orbit vertex_orbit = CMap2::Vertex::ORBIT;
-			const cgogn::Orbit face_orbit = CMap2::Face::ORBIT;
-
-			for (const auto& att : p.other_exported_attributes_[CellType::Vertex_Cell])
-				other_attributes.push_back({vertex_orbit, att});
-			for (const auto& att : p.other_exported_attributes_[CellType::Face_Cell])
-				other_attributes.push_back({face_orbit, att});
-
-			cgogn::io::ExportOptions exp_opt(p.output_, {vertex_orbit, p.position_attribute_name_}, other_attributes, p.binary_,p.compress_, true);
-			cgogn::io::export_surface(cmap2, exp_opt);
+			cgogn::io::export_surface(cmap2, *(this->export_params_));
 		} else {
 			if (MapHandler<CMap3>* m3h = dynamic_cast<MapHandler<CMap3>*>(mhg))
 			{
 				CMap3& cmap3 = *m3h->get_map();
-				const cgogn::Orbit vertex_orbit = CMap3::Vertex::ORBIT;
-				const cgogn::Orbit volume_orbit = CMap3::Volume::ORBIT;
-
-				for (const auto& att : p.other_exported_attributes_[CellType::Vertex_Cell])
-					other_attributes.push_back({vertex_orbit, att});
-				for (const auto& att : p.other_exported_attributes_[CellType::Volume_Cell])
-					other_attributes.push_back({volume_orbit, att});
-
-				cgogn::io::ExportOptions exp_opt(p.output_, {vertex_orbit, p.position_attribute_name_}, other_attributes, p.binary_,p.compress_, true);
-				cgogn::io::export_volume(cmap3, exp_opt);
+				cgogn::io::export_volume(cmap3, *(this->export_params_));
 			}
 		}
 	}
@@ -123,12 +91,12 @@ void Plugin_Export::disable()
 	schnapps_->remove_menu_action(export_mesh_action_);
 }
 
-void Plugin_Export::export_mesh(const QString& filename)
+void Plugin_Export::export_mesh(const QString& /*filename*/)
 {
 	MapHandlerGen* mhg = schnapps_->get_selected_map();
 	if(!mhg)
 		return;
-
+	cgogn_log_warning("Plugin_Export::export_mesh()") << "TODO: Plugin_Export::export_mesh().";
 }
 
 void Plugin_Export::export_mesh_from_file_dialog()
