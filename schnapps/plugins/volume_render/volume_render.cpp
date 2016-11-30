@@ -44,6 +44,16 @@ MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* ma
 	if (view_param_set.count(map) == 0)
 	{
 		MapParameters& p = view_param_set[map];
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+		p.face_color_.setAlpha(p.transparency_);
+		p.volume_drawer_rend_ = p.volume_drawer_->generate_renderer(view->devicePixelRatio()*view->size().width(),view->devicePixelRatio()*view->size().height(), view);
+		p.volume_drawer_rend_->set_lighted(false);
+		p.volume_drawer_rend_->set_color(p.face_color_);
+		p.volume_drawer_rend_->set_max_nb_layers(16);
+		p.volume_drawer_rend_->set_explode_volume(p.volume_explode_factor_);
+		p.plane_clip_from_frame();
+		p.volume_drawer_rend_->set_clipping_plane(p.plane_clipping_);
+#endif
 		p.map_ = static_cast<MapHandler<CMap3>*>(map);
 		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
 		p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
@@ -91,7 +101,11 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 				glEnable(GL_POLYGON_OFFSET_FILL);
 				glPolygonOffset(1.0f, 1.0f);
 				if (p.volume_drawer_rend_)
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 					p.volume_drawer_rend_->draw_faces(proj, mv, view);
+#else
+					p.volume_drawer_rend_->draw_faces(proj, mv);
+#endif
 				glDisable(GL_POLYGON_OFFSET_FILL);
 			}
 		}
@@ -294,7 +308,9 @@ void Plugin_VolumeRender::linked_map_connectivity_changed()
 			if (pos_attr.is_valid())
 			{
 				p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 				p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
+#endif
 				p.topo_drawer_->update<VEC3>(*mh3->get_map(),pos_attr);
 			}
 		}
@@ -316,7 +332,9 @@ void Plugin_VolumeRender::linked_attribute_changed(cgogn::Orbit, QString)
 			if (pos_attr.is_valid())
 			{
 				p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 				p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
+#endif
 				p.topo_drawer_->update<VEC3>(*mh3->get_map(),pos_attr);
 			}
 		}
@@ -493,7 +511,9 @@ MapParameters::MapParameters() :
 	vertex_color_(190, 85, 168),
 	edge_color_(0, 0, 0),
 	face_color_(85, 168, 190),
-	volume_explode_factor_(0.8f)
+	volume_explode_factor_(0.8f),
+	transparency_(130),
+	plane_clipping_(0.,0.,0.,0.)
 {
 	shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
 	shader_simple_color_param_->color_ = edge_color_;
@@ -502,9 +522,14 @@ MapParameters::MapParameters() :
 	shader_point_sprite_param_->color_ = vertex_color_;
 	shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 	volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
 	volume_drawer_rend_ = volume_drawer_->generate_renderer();
 	volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
+#else
+	volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeTransparencyDrawer>();
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+
 
 	topo_drawer_ =  cgogn::make_unique<cgogn::rendering::TopoDrawer>();
 	topo_drawer_rend_ = topo_drawer_->generate_renderer();
@@ -525,7 +550,9 @@ void MapParameters::set_position_vbo(cgogn::rendering::VBO* v)
 		if (pos_attr.is_valid())
 		{
 			volume_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 			volume_drawer_->update_edge<VEC3>(*map_->get_map(), pos_attr);
+#endif
 			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
 		}
 	}

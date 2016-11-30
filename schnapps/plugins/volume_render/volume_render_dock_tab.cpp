@@ -59,6 +59,13 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
+
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
+	slider_transparency->setValue(0);
+	slider_transparency->setDisabled(true);
+#else
+	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_changed(int)));
+#endif
 }
 
 
@@ -197,6 +204,21 @@ void VolumeRender_DockTab::render_topology_changed(bool b)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.render_topology_ = b;
+			view->update();
+		}
+	}
+}
+
+void VolumeRender_DockTab::transparency_changed(int n)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_transparency_factor(n);
 			view->update();
 		}
 	}

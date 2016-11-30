@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>244</width>
+    <width>278</width>
     <height>600</height>
    </rect>
   </property>
@@ -15,6 +15,85 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="6" column="0" colspan="2">
+    <layout class="QGridLayout" name="gridLayout_3">
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="labelExplodVolumes">
+       <property name="text">
+        <string>explod volumes</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QSlider" name="sliderExplodeVolumes">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximum">
+        <number>100</number>
+       </property>
+       <property name="value">
+        <number>100</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="0" colspan="2">
+    <widget class="QCheckBox" name="check_renderBoundary">
+     <property name="text">
+      <string>render boundary</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0" colspan="2">
+    <widget class="QCheckBox" name="check_clippingPlane">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>clipping plane</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="0" colspan="2">
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>156</width>
+       <height>161</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="10" column="0">
+    <widget class="QCheckBox" name="topologyRender_checkBox">
+     <property name="text">
+      <string>render topology</string>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <widget class="QLabel" name="label_2">
      <property name="text">
@@ -300,34 +379,25 @@
      </item>
     </layout>
    </item>
-   <item row="6" column="0" colspan="2">
-    <layout class="QGridLayout" name="gridLayout_3">
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <item row="0" column="0">
-      <widget class="QLabel" name="labelExplodVolumes">
+   <item row="7" column="0" colspan="2">
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QLabel" name="label_transparency">
        <property name="text">
-        <string>explod volumes</string>
+        <string>transparency</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QSlider" name="sliderExplodeVolumes">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
+     <item>
+      <widget class="QSlider" name="slider_transparency">
        <property name="maximum">
-        <number>100</number>
+        <number>254</number>
        </property>
        <property name="value">
-        <number>100</number>
+        <number>130</number>
        </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -335,49 +405,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item row="7" column="0" colspan="2">
-    <widget class="QCheckBox" name="check_renderBoundary">
-     <property name="text">
-      <string>render boundary</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="0" colspan="2">
-    <widget class="QCheckBox" name="check_clippingPlane">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>clipping plane</string>
-     </property>
-     <property name="checked">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="10" column="0" colspan="2">
-    <spacer name="verticalSpacer">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>156</width>
-       <height>161</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item row="9" column="0">
-    <widget class="QCheckBox" name="topologyRender_checkBox">
-     <property name="text">
-      <string>render topology</string>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>

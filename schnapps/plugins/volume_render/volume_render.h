@@ -34,15 +34,19 @@
 
 #include <volume_render_dock_tab.h>
 
+#include <QAction>
+#include <map>
+
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/volume_drawer.h>
 #include <cgogn/rendering/frame_manipulator.h>
 #include <cgogn/rendering/topo_drawer.h>
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+#include <cgogn/rendering/transparency_volume_drawer.h>
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 
-#include <QAction>
-#include <map>
 
 namespace schnapps
 {
@@ -77,10 +81,15 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	}
 
 	const QColor& get_face_color() const { return face_color_; }
+
 	void set_face_color(const QColor& c)
 	{
 		face_color_ = c;
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 		volume_drawer_rend_->set_face_color(c);
+#else
+		volume_drawer_rend_->set_color(c);
+#endif
 	}
 
 	float32 get_vertex_base_size() const { return vertex_base_size_; }
@@ -108,6 +117,16 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
 	}
 
+	int32 get_transparency_factor() const { return transparency_; }
+	void set_transparency_factor(int32 n)
+	{
+		transparency_ = n;
+		face_color_.setAlpha(n);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+		volume_drawer_rend_->set_color(face_color_);
+#endif
+	}
+
 	bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
 	void set_apply_clipping_plane(bool b)
 	{
@@ -127,6 +146,16 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		}
 	}
 
+	void plane_clip_from_frame()
+	{
+		VEC3D position;
+		VEC3D axis_z;
+		frame_manip_->get_position(position);
+		frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt,axis_z);
+		const double d = -(position.dot(axis_z));
+		plane_clipping_ = QVector4D(axis_z[0],axis_z[1],axis_z[2],d);
+	}
+
 private:
 
 	MapHandler<CMap3>* map_;
@@ -144,9 +173,16 @@ private:
 	float32 vertex_base_size_;
 
 	float32 volume_explode_factor_;
+	int32 transparency_;
+	QVector4D plane_clipping_;
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer> volume_drawer_;
+	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer::Renderer> volume_drawer_rend_;
+#else
 	std::unique_ptr<cgogn::rendering::VolumeDrawer> volume_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeDrawer::Renderer> volume_drawer_rend_;
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 
 	std::unique_ptr<cgogn::rendering::TopoDrawer> topo_drawer_;
 	std::unique_ptr<cgogn::rendering::TopoDrawer::Renderer> topo_drawer_rend_;
