@@ -126,6 +126,7 @@ private:
 	void wheelEvent(View* view, QWheelEvent* event) override;
 	void view_linked(View* view) override;
 	void view_unlinked(View* view) override;
+	void resizeGL(View* view, int width, int height) override;
 
 	void import_image(const QString& image_path);
 

@@ -428,6 +428,9 @@ void View::postDraw()
 
 void View::resizeGL(int width, int height)
 {
+	for (PluginInteraction* plugin : plugins_)
+		plugin->resizeGL(this, width, height);
+
 	QOGLViewer::resizeGL(width, height);
 
 	if (button_area_)

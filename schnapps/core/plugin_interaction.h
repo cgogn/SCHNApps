@@ -78,6 +78,7 @@ private:
 	virtual void mouseRelease(View* view, QMouseEvent* event) = 0;
 	virtual void mouseMove(View* view, QMouseEvent* event) = 0;
 	virtual void wheelEvent(View* view, QWheelEvent* event) = 0;
+	virtual void resizeGL(View* view, int width, int height) = 0;
 
 	virtual void view_linked(View* view) = 0;
 	virtual void view_unlinked(View* view) = 0;

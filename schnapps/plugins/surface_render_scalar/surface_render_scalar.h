@@ -161,15 +161,16 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
+	void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
-	inline void keyPress(View*, QKeyEvent*) override {}
-	inline void keyRelease(View*, QKeyEvent*) override {}
-	inline void mousePress(View*, QMouseEvent*) override {}
-	inline void mouseRelease(View*, QMouseEvent*) override {}
-	inline void mouseMove(View*, QMouseEvent*) override {}
-	inline void wheelEvent(View*, QWheelEvent*) override {}
+	void keyPress(View*, QKeyEvent*) override {}
+	void keyRelease(View*, QKeyEvent*) override {}
+	void mousePress(View*, QMouseEvent*) override {}
+	void mouseRelease(View*, QMouseEvent*) override {}
+	void mouseMove(View*, QMouseEvent*) override {}
+	void wheelEvent(View*, QWheelEvent*) override {}
+	void resizeGL(View* /*view*/, int /*width*/, int /*height*/) override {}
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;

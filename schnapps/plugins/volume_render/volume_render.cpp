@@ -187,6 +187,16 @@ void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
 	}
 }
 
+void Plugin_VolumeRender::resizeGL(View* view, int width, int height)
+{
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.volume_drawer_rend_->resize(view->devicePixelRatio()*width,view->devicePixelRatio()*height);
+	}
+}
+
 void Plugin_VolumeRender::view_linked(View* view)
 {
 	update_dock_tab();
