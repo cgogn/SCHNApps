@@ -54,6 +54,7 @@ private slots:
 	void map_removed(MapHandlerGen*);
 //	void selected_map_changed(const QString&);
 	void add_attribute_validated();
+	void data_type_changed(const QString& data_type);
 
 private:
 

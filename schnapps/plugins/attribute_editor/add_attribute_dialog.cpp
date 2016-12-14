@@ -28,6 +28,8 @@
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
 #include <attribute_factory.h>
+#include <map>
+#include <string>
 
 namespace schnapps
 {
@@ -50,6 +52,7 @@ AddAttributeDialog::AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p)
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(add_attribute_validated()));
+	connect(this->type_comboBox,SIGNAL(currentTextChanged(QString)), this, SLOT(data_type_changed(QString)));
 
 // NOTE : not good order.
 //	for (const auto& pair : AttributeFactory<CMap2>::get_instance().get_map())
@@ -95,21 +98,68 @@ void AddAttributeDialog::map_removed(MapHandlerGen* mhg)
 		mapSelectionComboBox->removeItem(this->mapSelectionComboBox->findText(mhg->get_name()));
 }
 
+void AddAttributeDialog::data_type_changed(const QString& data_type)
+{
+	static const std::map<std::string, int> nb_components_map {
+		{cgogn::name_of_type(cgogn::Dart()), 1},
+		{cgogn::name_of_type(bool()), 1},
+		{cgogn::name_of_type(int8()), 1},
+		{cgogn::name_of_type(int16()), 1},
+		{cgogn::name_of_type(int32()), 1},
+		{cgogn::name_of_type(int64()), 1},
+		{cgogn::name_of_type(uint8()), 1},
+		{cgogn::name_of_type(uint16()), 1},
+		{cgogn::name_of_type(uint32()), 1},
+		{cgogn::name_of_type(uint64()), 1},
+		{cgogn::name_of_type(float32()), 1},
+		{cgogn::name_of_type(float64()), 1},
+
+		{cgogn::name_of_type(VEC2F()), 2},
+		{cgogn::name_of_type(VEC2D()), 2},
+		{cgogn::name_of_type(VEC3F()), 3},
+		{cgogn::name_of_type(VEC3D()), 3},
+		{cgogn::name_of_type(VEC4F()), 4},
+		{cgogn::name_of_type(VEC4D()), 4},
+
+		{cgogn::name_of_type(MAT2F()), 4},
+		{cgogn::name_of_type(MAT2D()), 4},
+		{cgogn::name_of_type(MAT3F()), 9},
+		{cgogn::name_of_type(MAT3D()), 9},
+		{cgogn::name_of_type(MAT4F()), 16},
+		{cgogn::name_of_type(MAT4D()), 16},
+	};
+
+	this->tableWidget_defaultValue->clear();
+
+	auto it = nb_components_map.find(data_type.toStdString());
+	if (it != nb_components_map.end())
+	{
+		this->tableWidget_defaultValue->setColumnCount(it->second);
+	} else {
+		this->tableWidget_defaultValue->setColumnCount(1);
+	}
+}
+
 void AddAttributeDialog::add_attribute_validated()
 {
 	MapHandlerGen* mhg = schnapps_->get_map(mapSelectionComboBox->currentText());
+	QStringList defaut_value_components;
+	for (int c = 0 ; c < this->tableWidget_defaultValue->columnCount(); ++c)
+		defaut_value_components.push_back(this->tableWidget_defaultValue->item(0,c)->text());
 	if (mhg)
 	{
 		if (mhg->dimension() == 2u)
 			AttributeFactory<CMap2>::get_instance().create_attribute(dynamic_cast<CMap2Handler*>(mhg),
 												type_comboBox->currentText().toStdString(),
 												cell_type(orbit_combobox->currentText().toStdString()),
-												name_lineEdit->text().toStdString());
+												name_lineEdit->text().toStdString(),
+												defaut_value_components);
 		else
 			AttributeFactory<CMap3>::get_instance().create_attribute(dynamic_cast<CMap3Handler*>(mhg),
 												type_comboBox->currentText().toStdString(),
 												cell_type(orbit_combobox->currentText().toStdString()),
-												name_lineEdit->text().toStdString());
+												name_lineEdit->text().toStdString(),
+												defaut_value_components);
 	}
 }
 
