@@ -44,6 +44,8 @@ AddAttributeDialog::AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p)
 	updating_ui_ = false;
 	setupUi(this);
 
+	tableWidget_defaultValue->verticalHeader()->setVisible(false);
+	tableWidget_defaultValue->horizontalHeader()->setVisible(false);
 	schnapps_->foreach_map([&] (MapHandlerGen* mhg)
 	{
 		map_added(mhg);
@@ -129,14 +131,14 @@ void AddAttributeDialog::data_type_changed(const QString& data_type)
 		{cgogn::name_of_type(MAT4D()), 16},
 	};
 
-	this->tableWidget_defaultValue->clear();
+	tableWidget_defaultValue->clear();
 
 	auto it = nb_components_map.find(data_type.toStdString());
 	if (it != nb_components_map.end())
 	{
-		this->tableWidget_defaultValue->setColumnCount(it->second);
+		tableWidget_defaultValue->setColumnCount(it->second);
 	} else {
-		this->tableWidget_defaultValue->setColumnCount(1);
+		tableWidget_defaultValue->setColumnCount(1);
 	}
 }
 

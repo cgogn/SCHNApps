@@ -74,16 +74,18 @@ public:
 		type_create_fn_map[cgogn::name_of_type(T())] = [&](MapHandler* mh, CellType ct, const std::string& attribute_name, const QStringList& default_value)
 		{
 			cgogn::Attribute_T<T> new_att = create_attribute<T>(mh, ct, attribute_name);
-			if (new_att.is_valid())
+			if (new_att.is_valid() && !default_value.empty())
 			{
 				std::stringstream sstream;
 				for (int i = 0; i < default_value.size() -1; ++i)
 					sstream << default_value[i].toStdString() << ' ';
-				sstream << default_value[default_value.size() -1].toStdString();
-
-				T val;
-				cgogn::serialization::parse(sstream, val);
-				new_att.set_all_values(val);
+				bool extract_ok = static_cast<bool>(sstream << default_value[default_value.size() -1].toStdString());
+				if (extract_ok)
+				{
+					T val;
+					cgogn::serialization::parse(sstream, val);
+					new_att.set_all_values(val);
+				}
 			}
 		};
 	}
