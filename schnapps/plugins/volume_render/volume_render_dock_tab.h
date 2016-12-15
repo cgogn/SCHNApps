@@ -78,7 +78,8 @@ private slots:
 	void explode_volumes_changed(int i);
 	void apply_clipping_plane_changed(bool b);
 	void render_topology_changed(bool b);
-	void transparency_changed(int n);
+	void transparency_factor_changed(int n);
+	void transparency_rendering_changed(bool b);
 
 	void vertex_color_clicked();
 	void edge_color_clicked();

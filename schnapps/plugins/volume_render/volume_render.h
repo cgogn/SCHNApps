@@ -85,10 +85,9 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	void set_face_color(const QColor& c)
 	{
 		face_color_ = c;
-#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 		volume_drawer_rend_->set_face_color(c);
-#else
-		volume_drawer_rend_->set_color(c);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+		volume_transparency_drawer_rend_->set_color(c);
 #endif
 	}
 
@@ -111,19 +110,22 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	{
 		volume_explode_factor_ = vef;
 		volume_drawer_rend_->set_explode_volume(vef);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+		volume_transparency_drawer_rend_->set_explode_volume(vef);
+#endif
 		topo_drawer_->set_explode_volume(vef);
 		auto pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
 		if (pos_attr.is_valid())
 			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
 	}
 
-	int32 get_transparency_factor() const { return transparency_; }
+	int32 get_transparency_factor() const { return transparency_factor_; }
 	void set_transparency_factor(int32 n)
 	{
-		transparency_ = n;
+		transparency_factor_ = n;
 		face_color_.setAlpha(n);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-		volume_drawer_rend_->set_color(face_color_);
+		volume_transparency_drawer_rend_->set_color(face_color_);
 #endif
 	}
 
@@ -173,16 +175,15 @@ private:
 	float32 vertex_base_size_;
 
 	float32 volume_explode_factor_;
-	int32 transparency_;
+	int32 transparency_factor_;
 	QVector4D plane_clipping_;
 
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer> volume_drawer_;
-	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer::Renderer> volume_drawer_rend_;
-#else
+	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer> volume_transparency_drawer_;
+	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer::Renderer> volume_transparency_drawer_rend_;
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 	std::unique_ptr<cgogn::rendering::VolumeDrawer> volume_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeDrawer::Renderer> volume_drawer_rend_;
-#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 
 	std::unique_ptr<cgogn::rendering::TopoDrawer> topo_drawer_;
 	std::unique_ptr<cgogn::rendering::TopoDrawer::Renderer> topo_drawer_rend_;
@@ -197,6 +198,7 @@ public:
 	bool render_faces_;
 	bool render_boundary_;
 	bool render_topology_;
+	bool use_transparency_;
 };
 
 /**
@@ -236,6 +238,8 @@ private:
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
+
+	void connectivity_changed(MapHandlerGen* mh);
 
 private slots:
 

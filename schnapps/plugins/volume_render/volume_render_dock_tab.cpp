@@ -63,8 +63,12 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 	slider_transparency->setValue(0);
 	slider_transparency->setDisabled(true);
+	checkBox_transparency->setChecked(false);
+	checkBox_transparency->setDisabled(true);
 #else
-	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_changed(int)));
+	checkBox_transparency->setChecked(false);
+	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_factor_changed(int)));
+	connect(checkBox_transparency, SIGNAL(toggled(bool)), this, SLOT(transparency_rendering_changed(bool)));
 #endif
 }
 
@@ -149,6 +153,22 @@ void VolumeRender_DockTab::render_faces_changed(bool b)
 	}
 }
 
+void VolumeRender_DockTab::transparency_rendering_changed(bool b)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.use_transparency_ = b;
+			plugin_->connectivity_changed(map);
+			view->update();
+		}
+	}
+}
+
 void VolumeRender_DockTab::render_boundary_changed(bool b)
 {
 	if (!updating_ui_)
@@ -209,7 +229,7 @@ void VolumeRender_DockTab::render_topology_changed(bool b)
 	}
 }
 
-void VolumeRender_DockTab::transparency_changed(int n)
+void VolumeRender_DockTab::transparency_factor_changed(int n)
 {
 	if (!updating_ui_)
 	{
