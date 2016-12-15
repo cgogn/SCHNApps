@@ -356,6 +356,21 @@ void SCHNApps::remove_map(const QString &name)
 	}
 }
 
+MapHandlerGen* SCHNApps::duplicate_map(const QString& name)
+{
+	if (maps_.count(name) > 0ul)
+	{
+		auto& map = maps_.at(name);
+		MapHandlerGen* duplicate = this->add_map(QString("copy_") + map->get_name(), map->dimension());
+		duplicate->merge(map.get());
+		return duplicate;
+	} else {
+		return nullptr;
+	}
+}
+
+
+
 MapHandlerGen* SCHNApps::get_map(const QString& name) const
 {
 	if (maps_.count(name) > 0ul)

@@ -149,8 +149,8 @@ void ControlDock_MapTab::duplicate_current_map_clicked()
 {
 	if (!updating_ui_)
 	{
-//		if (selected_map_)
-//			schnapps_->duplicate_map(selected_map_->get_name(), true);
+		if (selected_map_)
+			schnapps_->duplicate_map(selected_map_->get_name());
 	}
 }
 

@@ -180,9 +180,8 @@ public slots:
 	/**
 	* @brief Duplicate (copy) a map
 	* @param name of map to copy
-	* @param properties copy BB & VBO
 	*/
-//	MapHandlerGen* duplicate_map(const QString& name, bool properties);
+	MapHandlerGen* duplicate_map(const QString& name);
 
 	/**
 	* @brief Get a map object from its name
