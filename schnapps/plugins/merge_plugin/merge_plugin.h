@@ -32,6 +32,8 @@
 namespace schnapps
 {
 
+class MapHandlerGen;
+
 namespace merge_plugin
 {
 
@@ -49,6 +51,10 @@ public:
 
 	MergePlugin();
 	~MergePlugin() override;
+	/**
+	 * @brief merge second_map into first_map
+	 */
+	bool merge(MapHandlerGen* first_map, const MapHandlerGen* second_map);
 
 private:
 

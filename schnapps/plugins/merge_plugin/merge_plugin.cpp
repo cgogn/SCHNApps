@@ -25,6 +25,7 @@
 #include <merge_plugin.h>
 #include <merge_dialog.h>
 #include <schnapps/core/schnapps.h>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
@@ -40,6 +41,11 @@ MergePlugin::MergePlugin() :
 MergePlugin::~MergePlugin()
 {
 	delete merge_dialog_;
+}
+
+bool MergePlugin::merge(MapHandlerGen* first_map, const MapHandlerGen* second_map)
+{
+	first_map->merge(second_map);
 }
 
 bool MergePlugin::enable()

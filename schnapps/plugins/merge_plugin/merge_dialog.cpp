@@ -79,7 +79,7 @@ void MergeDialog::merge_validated()
 		return;
 
 	MapHandlerGen* copy_mhg1 = schnapps_->duplicate_map(mhg1->get_name());
-	copy_mhg1->merge(mhg2);
+	plugin_->merge(copy_mhg1, mhg2);
 }
 
 } // namespace merge_plugin
