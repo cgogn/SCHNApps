@@ -46,7 +46,7 @@ MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* ma
 		MapParameters& p = view_param_set[map];
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 		p.face_color_.setAlpha(p.transparency_);
-		p.volume_drawer_rend_ = p.volume_drawer_->generate_renderer(view->devicePixelRatio()*view->size().width(),view->devicePixelRatio()*view->size().height(), view);
+		p.volume_drawer_rend_ = p.volume_drawer_->generate_renderer(/*view->devicePixelRatio()*view->size().width(),view->devicePixelRatio()*view->size().height(), view*/);
 		p.volume_drawer_rend_->set_lighted(false);
 		p.volume_drawer_rend_->set_color(p.face_color_);
 		p.volume_drawer_rend_->set_max_nb_layers(16);
@@ -193,7 +193,7 @@ void Plugin_VolumeRender::resizeGL(View* view, int width, int height)
 	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
 	{
 		MapParameters& p = get_parameters(view, map);
-		p.volume_drawer_rend_->resize(view->devicePixelRatio()*width,view->devicePixelRatio()*height);
+		p.volume_drawer_rend_->resize(view->devicePixelRatio()*width,view->devicePixelRatio()*height, view);
 	}
 }
 
