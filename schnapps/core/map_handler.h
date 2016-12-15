@@ -81,7 +81,7 @@ public:
 	 * @brief get the name of MapHandlerGen object
 	 * @return name
 	 */
-	inline const QString& get_name() { return name_; }
+	inline const QString& get_name() const { return name_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
@@ -90,6 +90,8 @@ public:
 	inline const SCHNApps* get_schnapps() const { return schnapps_; }
 
 	inline const MapBaseData* get_map() const { return map_.get(); }
+
+	virtual bool merge(const MapHandlerGen* other_map) = 0;
 
 	bool is_selected_map() const;
 
@@ -513,6 +515,34 @@ public:
 	{
 		auto && p = get_map()->vertices(Edge(edge));
 		return std::make_pair(p.first.dart, p.second.dart);
+	}
+
+	virtual bool merge(const MapHandlerGen* other_map) override
+	{
+		if (other_map->dimension() > this->dimension())
+		{
+			cgogn_log_warning("MapHandler::Merge") << "Cannot merge a map of dimension " << other_map->dimension() << " inside a map of lower dimension " << this->dimension() << '.';
+			return false;
+		}
+
+		if (other_map->dimension() == this->dimension())
+		{
+			const MapHandler* mh = dynamic_cast<const MapHandler*>(other_map);
+			typename MAP_TYPE::DartMarker dm(*this->get_map());
+			this->get_map()->merge(*mh->get_map(), dm);
+		} else {
+			if (other_map->dimension() == 2)
+			{
+				const CMap2Handler* mh = dynamic_cast<const CMap2Handler*>(other_map);
+				typename MAP_TYPE::DartMarker dm(*this->get_map());
+				this->get_map()->merge(*mh->get_map(), dm);
+			} else {
+				// other non-handled cases like merging a 1-map in a 3-map or merging a 1-map in a 2-map.
+				cgogn_log_warning("MapHandler::Merge") << "Merge nod handled: dimension" << other_map->dimension() << " inside a map of dimension " << this->dimension() << '.';
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/*********************************************************
