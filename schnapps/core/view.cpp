@@ -395,6 +395,8 @@ void View::draw()
 		}
 	});
 
+	draw_buttons();
+
 	QMatrix4x4 pm;
 	current_camera_->getProjectionMatrix(pm);
 	QMatrix4x4 mm;
@@ -419,7 +421,7 @@ void View::draw()
 
 void View::postDraw()
 {
-	draw_buttons();
+//	draw_buttons();
 	if (is_selected_view())
 		draw_frame();
 
