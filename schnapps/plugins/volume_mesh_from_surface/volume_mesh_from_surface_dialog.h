@@ -29,6 +29,7 @@
 #include <ui_cgal_export.h>
 #include <ui_tetgen_export.h>
 #include <ui_export_dialog.h>
+#include <memory>
 
 namespace schnapps
 {

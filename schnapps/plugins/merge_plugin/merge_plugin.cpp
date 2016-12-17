@@ -45,7 +45,7 @@ MergePlugin::~MergePlugin()
 
 bool MergePlugin::merge(MapHandlerGen* first_map, const MapHandlerGen* second_map)
 {
-	first_map->merge(second_map);
+	return first_map->merge(second_map);
 }
 
 bool MergePlugin::enable()

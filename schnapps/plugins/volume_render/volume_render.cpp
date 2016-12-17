@@ -529,7 +529,9 @@ MapParameters::MapParameters() :
 	position_vbo_(nullptr),
 	vertex_scale_factor_(1.0f),
 	vertex_base_size_(1.0f),
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 	volume_transparency_drawer_(nullptr),
+#endif
 	volume_drawer_rend_(nullptr),
 	topo_drawer_(nullptr),
 	topo_drawer_rend_(nullptr),

@@ -50,7 +50,6 @@ public:
 private slots:
 	void map_added(MapHandlerGen*);
 	void map_removed(MapHandlerGen*);
-	void selected_map_changed(const QString&);
 	void merge_validated();
 private:
 	SCHNApps* schnapps_;
