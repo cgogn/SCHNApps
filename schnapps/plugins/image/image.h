@@ -83,7 +83,7 @@ public:
 	inline bool is_little_endian() const { return cgogn::internal::cgogn_is_little_endian ; }
 	inline std::size_t get_data_size() const { return data_->data_size();}
 	inline DataType get_data_type() const { return data_->data_type(); }
-
+	inline bool is_empty() const { return data_.get() == nullptr; }
 
 	static Image3D new_image_3d(const QString& image_path);
 private:

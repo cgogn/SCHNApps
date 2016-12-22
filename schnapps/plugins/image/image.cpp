@@ -123,14 +123,17 @@ void Plugin_Image::import_image(const QString& image_path)
 	if (fileinfo.exists() && fileinfo.isFile())
 	{
 		images_.push_back({image_path, Image3D::new_image_3d(image_path)});
-		emit(image_added(image_path));
+		if (!images_.back().second.is_empty())
+			emit(image_added(image_path));
+		else
+			images_.pop_back();
 	}
 
 }
 
 void Plugin_Image::import_image_dialog()
 {
-	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->get_app_path(),  "3DImages (*.inr *.vtk *.inr.gz)");
+	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->get_app_path(),  "3DImages (*.inr *.vtk *.inr.gz *.vtk.gz)");
 	for (const auto& im : filenames)
 		import_image(im);
 }
