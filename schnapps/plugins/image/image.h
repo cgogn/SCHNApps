@@ -144,6 +144,13 @@ private:
 	Image_DockTab*	dock_tab_;
 };
 
+/**
+ * @brief uncompress_gz_file
+ * @param filename, path of the fil to uncompress
+ * @return the path of the extracted file (usually in the temporary folder), an empty QString if unsuccessfull
+ */
+SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename);
+
 } // namespace plugin_image
 } // namespace schnapps
 

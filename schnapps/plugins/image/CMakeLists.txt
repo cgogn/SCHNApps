@@ -6,14 +6,16 @@ find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
+find_package(Boost COMPONENTS system iostreams)
+if (Boost_FOUND)
+	find_package(CGAL COMPONENTS Core ImageIO)
+endif()
 
-find_package(CGAL COMPONENTS Core ImageIO)
 if(CGAL_FOUND)
 	include(${CGAL_USE_FILE})
 	find_package(MPFR REQUIRED)
 	find_package(GMP REQUIRED)
-	find_package(Boost REQUIRED)
-endif(CGAL_FOUND)
+endif()
 
 set(HEADER_FILES
 	dll.h
@@ -43,6 +45,11 @@ set(CMAKE_AUTOUIC ON)
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
+
+if(Boost_IOSTREAMS_FOUND)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM=1")
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT")
 if(CGAL_FOUND)
@@ -66,11 +73,12 @@ target_link_libraries(${PROJECT_NAME}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
 	${CGAL_ImageIO_LIBRARY}
+	${Boost_LIBRARIES}
 )
 
 if(CGAL_FOUND AND WIN32)
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CGAL_INSTALL_PREFIX}/bin"
-        $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CGAL_INSTALL_PREFIX}/bin"
+		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()
