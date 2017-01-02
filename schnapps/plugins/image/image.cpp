@@ -458,13 +458,15 @@ void Image3D::import_vtk(std::istream& vtk_data)
 SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
 {
 #ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
-	cgogn::Scoped_C_Locale locale;
 	if (!QFileInfo::exists(filename_in))
 		return QString();
-	const QString filename_out = QDir::cleanPath(QDir::tempPath() + QDir::separator() + QFileInfo(filename_in).completeBaseName());
-	std::ifstream in_file(filename_in.toStdString(), std::ios_base::binary | std::ios_base::in);
-	std::ofstream out_file(filename_out.toStdString(), std::ios_base::binary | std::ios_base::out | std::ios_base::trunc);
 
+	const QString filename_out = QDir::cleanPath(QDir::tempPath() + QDir::separator() + QFileInfo(filename_in).completeBaseName());
+	if (QFileInfo::exists(filename_out))
+		QFile::remove(filename_out);
+
+	std::ifstream in_file(filename_in.toStdString(), std::ios_base::binary | std::ios_base::in);
+	std::ofstream out_file(filename_out.toStdString(), std::ios_base::binary | std::ios_base::out);
 	if (!in_file || !out_file)
 		return QString();
 
