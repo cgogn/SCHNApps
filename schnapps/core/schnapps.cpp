@@ -85,7 +85,9 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 }
 
 SCHNApps::~SCHNApps()
-{}
+{
+	plugins_.clear();
+}
 
 /*********************************************************
  * MANAGE CAMERAS
