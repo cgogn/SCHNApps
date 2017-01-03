@@ -86,7 +86,11 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 
 SCHNApps::~SCHNApps()
 {
-	plugins_.clear();
+	// first safely unload every plugins (this has to be done before the views get deleted)
+	while(!plugins_.empty())
+	{
+		this->disable_plugin(plugins_.begin()->first);
+	}
 }
 
 /*********************************************************
@@ -229,8 +233,8 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin.get());
 		if (pi)
 		{
-			for (View* view : pi->get_linked_views())
-				view->unlink_plugin(pi);
+			while(!pi->get_linked_views().empty()) // Safe way to iterate over a container that is currently being modified
+				(*pi->get_linked_views().begin())->unlink_plugin(pi);
 		}
 
 		// call disable() method and dereference plugin
