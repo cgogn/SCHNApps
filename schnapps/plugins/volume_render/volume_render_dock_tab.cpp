@@ -60,13 +60,11 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
 
-#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
-	slider_transparency->setValue(0);
-	slider_transparency->setDisabled(true);
 	checkBox_transparency->setChecked(false);
+	slider_transparency->setDisabled(true);
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
 	checkBox_transparency->setDisabled(true);
 #else
-	checkBox_transparency->setChecked(false);
 	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_factor_changed(int)));
 	connect(checkBox_transparency, SIGNAL(toggled(bool)), this, SLOT(transparency_rendering_changed(bool)));
 #endif
@@ -157,12 +155,13 @@ void VolumeRender_DockTab::transparency_rendering_changed(bool b)
 {
 	if (!updating_ui_)
 	{
+		slider_transparency->setEnabled(b);
 		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.use_transparency_ = b;
+			p.set_transparency_enabled(b);
 			plugin_->connectivity_changed(map);
 			view->update();
 		}
@@ -359,6 +358,10 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 	check_renderBoundary->setChecked(p.render_boundary_);
 	sliderExplodeVolumes->setValue(std::round(100.0f*p.get_volume_explode_factor()));
 	topologyRender_checkBox->setChecked(p.render_topology_);
+
+	checkBox_transparency->setChecked(p.use_transparency_);
+	slider_transparency->setValue(p.get_transparency_factor());
+	slider_transparency->setEnabled(p.use_transparency_);
 
 	vertex_color_ = p.get_vertex_color();
 	vertexColorButton->setStyleSheet("QPushButton { background-color:" + vertex_color_.name() + " }");

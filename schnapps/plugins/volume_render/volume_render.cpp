@@ -44,22 +44,15 @@ MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* ma
 	if (view_param_set.count(map) == 0)
 	{
 		MapParameters& p = view_param_set[map];
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-		p.face_color_.setAlpha(p.transparency_factor_);
-		p.volume_transparency_drawer_rend_ = p.volume_transparency_drawer_->generate_renderer();
-		p.volume_transparency_drawer_rend_->resize(view->devicePixelRatio()*view->size().width(),view->devicePixelRatio()*view->size().height(), view);
-		p.volume_transparency_drawer_rend_->set_lighted(true);
-		p.volume_transparency_drawer_rend_->set_color(p.face_color_);
-//		p.volume_transparency_drawer_rend_->set_max_nb_layers(16);
-		p.volume_transparency_drawer_rend_->set_explode_volume(p.volume_explode_factor_);
-//		p.plane_clip_from_frame();
-//		p.volume_transparency_drawer_rend_->set_clipping_plane(p.plane_clipping_);
-#endif
+		p.volume_transparency_drawer_rend_->resize(view->devicePixelRatio()*view->size().width(), view->devicePixelRatio()*view->size().height(), view);
 		p.map_ = static_cast<MapHandler<CMap3>*>(map);
-		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_cells(Edge_Cell))));
-		p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
-		p.frame_manip_->set_position(map->get_bb().max());
-		p.frame_manip_->z_plane_param(QColor(200,200,200), 0.0f, 0.0f, 3.0f);
+		if (map->get_bb().is_initialized())
+		{
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2.0f * std::sqrt(float32(map->nb_cells(Edge_Cell)))));
+			p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
+			p.frame_manip_->set_position(map->get_bb().max());
+			p.frame_manip_->z_plane_param(QColor(200,200,200), 0.0f, 0.0f, 3.0f);
+		}
 		return p;
 	}
 	else
@@ -95,6 +88,33 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 		view->makeCurrent();
 		const MapParameters& p = get_parameters(view, map);
 
+		if (map->is_selected_map() && p.apply_clipping_plane_)
+			p.frame_manip_->draw(true, true, proj, mv, view);
+
+		if (p.render_topology_)
+			if (p.topo_drawer_rend_)
+				p.topo_drawer_rend_->draw(proj,mv,view);
+
+		if (p.render_vertices_)
+		{
+			if (p.get_position_vbo())
+			{
+				p.shader_point_sprite_param_->bind(proj, mv);
+				map->draw(cgogn::rendering::POINTS);
+				p.shader_point_sprite_param_->release();
+			}
+		}
+
+		if (p.render_edges_)
+		{
+			if (p.get_position_vbo())
+			{
+				p.shader_simple_color_param_->bind(proj, mv);
+				map->draw(cgogn::rendering::LINES);
+				p.shader_simple_color_param_->release();
+			}
+		}
+
 		if (p.render_faces_)
 		{
 			if (p.get_position_vbo())
@@ -112,33 +132,6 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 				glDisable(GL_POLYGON_OFFSET_FILL);
 			}
 		}
-
-		if (p.render_edges_)
-		{
-			if (p.get_position_vbo())
-			{
-				p.shader_simple_color_param_->bind(proj, mv);
-				map->draw(cgogn::rendering::LINES);
-				p.shader_simple_color_param_->release();
-			}
-		}
-
-		if (p.render_vertices_)
-		{
-			if (p.get_position_vbo())
-			{
-				p.shader_point_sprite_param_->bind(proj, mv);
-				map->draw(cgogn::rendering::POINTS);
-				p.shader_point_sprite_param_->release();
-			}
-		}
-
-		if (p.render_topology_)
-			if (p.topo_drawer_rend_)
-				p.topo_drawer_rend_->draw(proj,mv,view);
-
-		if (map->is_selected_map() && p.apply_clipping_plane_)
-			p.frame_manip_->draw(true, true, proj, mv, view);
 	}
 }
 
@@ -152,8 +145,8 @@ void Plugin_VolumeRender::mousePress(View* view, QMouseEvent* event)
 		{
 			qoglviewer::Vec P = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 0.0), &map->get_frame());
 			qoglviewer::Vec Q = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 1.0), &map->get_frame());
-			VEC3 A(P.x, P.y, P.z);
-			VEC3 B(Q.x, Q.y, Q.z);
+			VEC3D A(P.x, P.y, P.z);
+			VEC3D B(Q.x, Q.y, Q.z);
 			p.frame_manip_->pick(event->x(), event->y(), A, B);
 			view->update();
 		}
@@ -231,6 +224,7 @@ void Plugin_VolumeRender::connectivity_changed(MapHandlerGen* map)
 		{
 			MapParameters& p = view_param_set[map];
 			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
+			if (!p.position_vbo_) return;
 			auto pos_attr = mh3->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(p.position_vbo_->name()));
 			if (pos_attr.is_valid())
 			{
@@ -329,7 +323,7 @@ void Plugin_VolumeRender::linked_map_bb_changed()
 		if (view_param_set.count(map) > 0ul)
 		{
 			MapParameters& p = view_param_set[map];
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
+			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2.0f * std::sqrt(float(nbe))));
 			p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
 		}
 	}
@@ -481,6 +475,7 @@ void Plugin_VolumeRender::set_face_color(View* view, MapHandlerGen* map, const Q
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_face_color(color);
+		p.set_transparency_factor(p.get_transparency_factor());
 		if (view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
@@ -524,31 +519,15 @@ void Plugin_VolumeRender::set_apply_clipping_plane(View* view, MapHandlerGen* ma
 }
 
 MapParameters::MapParameters() :
-	shader_simple_color_param_(nullptr),
-	shader_point_sprite_param_(nullptr),
 	position_vbo_(nullptr),
-	vertex_scale_factor_(1.0f),
-	vertex_base_size_(1.0f),
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-	volume_transparency_drawer_(nullptr),
-#endif
-	volume_drawer_rend_(nullptr),
-	topo_drawer_(nullptr),
-	topo_drawer_rend_(nullptr),
-	frame_manip_(nullptr),
+	plane_clipping_(0.,0.,0.,0.),
 	apply_clipping_plane_(false),
 	render_vertices_(false),
 	render_edges_(false),
 	render_faces_(true),
 	render_boundary_(false),
 	render_topology_(false),
-	vertex_color_(190, 85, 168),
-	edge_color_(0, 0, 0),
-	face_color_(85, 168, 190),
-	volume_explode_factor_(0.8f),
-	transparency_factor_(130),
-	use_transparency_(false),
-	plane_clipping_(0.,0.,0.,0.)
+	use_transparency_(false)
 {
 	shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
 	shader_simple_color_param_->color_ = edge_color_;
@@ -559,21 +538,36 @@ MapParameters::MapParameters() :
 
 	volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
 	volume_drawer_rend_ = volume_drawer_->generate_renderer();
-	volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-	volume_transparency_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeTransparencyDrawer>();
-#endif
-
 
 	topo_drawer_ =  cgogn::make_unique<cgogn::rendering::TopoDrawer>();
 	topo_drawer_rend_ = topo_drawer_->generate_renderer();
+
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+	{
+		volume_transparency_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeTransparencyDrawer>();
+		volume_transparency_drawer_rend_ = volume_transparency_drawer_->generate_renderer();
+		volume_transparency_drawer_rend_->set_explode_volume(volume_explode_factor_);
+		volume_transparency_drawer_rend_->set_lighted(true);
+	}
+#endif
+	frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
+
+	volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
 	topo_drawer_->set_explode_volume(volume_explode_factor_);
 
-	frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
+	set_transparency_factor(254);
+	set_vertex_color(QColor(190, 85, 168));
+	set_edge_color(QColor(0, 0, 0));
+	set_face_color(QColor(85, 168, 190));
+	set_volume_explode_factor(0.8f);
+	set_vertex_scale_factor(1);
+	set_vertex_base_size(1);
 }
 
 void MapParameters::set_position_vbo(cgogn::rendering::VBO* v)
 {
+	auto old = position_vbo_;
 	position_vbo_ = v;
 	if (position_vbo_ && position_vbo_->vector_dimension() == 3)
 	{
@@ -595,9 +589,8 @@ void MapParameters::set_position_vbo(cgogn::rendering::VBO* v)
 #endif
 			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
 		}
-	}
-	else
-		position_vbo_ = nullptr;
+	} else
+		position_vbo_ = old;
 }
 
 } // namespace plugin_volume_render

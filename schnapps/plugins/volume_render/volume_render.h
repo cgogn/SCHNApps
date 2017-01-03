@@ -78,6 +78,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	{
 		edge_color_ = c;
 		shader_simple_color_param_->color_ = edge_color_;
+		volume_drawer_rend_->set_edge_color(c);
 	}
 
 	const QColor& get_face_color() const { return face_color_; }
@@ -114,6 +115,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		volume_transparency_drawer_rend_->set_explode_volume(vef);
 #endif
 		topo_drawer_->set_explode_volume(vef);
+		if (!position_vbo_) return;
 		auto pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
 		if (pos_attr.is_valid())
 			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
@@ -122,11 +124,28 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	int32 get_transparency_factor() const { return transparency_factor_; }
 	void set_transparency_factor(int32 n)
 	{
-		transparency_factor_ = n;
-		face_color_.setAlpha(n);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-		volume_transparency_drawer_rend_->set_color(face_color_);
+		n = n % 255;
+		transparency_factor_ = n;
+		if (use_transparency_)
+		{
+			face_color_.setAlpha(n);
+			volume_transparency_drawer_rend_->set_color(face_color_);
+		}
 #endif
+	}
+
+	inline void set_transparency_enabled(bool b)
+	{
+		use_transparency_ = b;
+		if (b)
+		{
+			transparency_factor_ = transparency_factor_ % 255;
+			face_color_.setAlpha(transparency_factor_);
+		} else {
+			face_color_.setAlpha(255);
+		}
+		set_face_color(face_color_);
 	}
 
 	bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
@@ -135,8 +154,8 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		apply_clipping_plane_ = b;
 		if (b)
 		{
-			VEC3 position;
-			VEC3 axis_z;
+			VEC3F position;
+			VEC3F axis_z;
 			frame_manip_->get_position(position);
 			frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt, axis_z);
 			float32 d = -(position.dot(axis_z));
@@ -150,11 +169,11 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 
 	void plane_clip_from_frame()
 	{
-		VEC3D position;
-		VEC3D axis_z;
+		VEC3F position;
+		VEC3F axis_z;
 		frame_manip_->get_position(position);
 		frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt,axis_z);
-		const double d = -(position.dot(axis_z));
+		const float d = -(position.dot(axis_z));
 		plane_clipping_ = QVector4D(axis_z[0],axis_z[1],axis_z[2],d);
 	}
 
@@ -225,7 +244,7 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
+	inline void draw(View*, const QMatrix4x4& /*proj*/, const QMatrix4x4& /*mv*/) override {}
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
 	inline void keyPress(View*, QKeyEvent*) override {}
