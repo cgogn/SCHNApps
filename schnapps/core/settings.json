@@ -1,0 +1,4 @@
+{
+	"plugins_paths" : [],
+	"load_modules" : ["import", "export", "merge", "selection"]
+}

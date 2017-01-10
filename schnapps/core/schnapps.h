@@ -25,7 +25,7 @@
 #define SCHNAPPS_CORE_SCHNAPPS_H_
 
 #include <schnapps/core/dll.h>
-
+#include <schnapps/core/settings.h>
 #include <schnapps/core/schnapps_window.h>
 
 #include <QObject>
@@ -381,6 +381,8 @@ signals:
 protected:
 
 	QString app_path_;
+
+	Settings schnapps_settings_;
 
 	std::map<QString, std::unique_ptr<Camera>> cameras_;
 

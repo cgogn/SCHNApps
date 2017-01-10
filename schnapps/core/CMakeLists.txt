@@ -85,6 +85,11 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()
 
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy
+		"settings.json"
+		"${CMAKE_BINARY_DIR}/settings/settings_${PROJECT_NAME}.json"
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(DIRECTORY .
 	DESTINATION include/schnapps/core

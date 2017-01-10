@@ -82,6 +82,14 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 #else
 	register_plugins_directory(app_path + QString("/../lib"));
 #endif
+
+	schnapps_settings_ = Settings(QDir::cleanPath(app_path + "/../settings/settings_schnapps_core.json"));
+
+	for (const QVariant& plugin_dir_v : schnapps_settings_["plugins_paths"].toList())
+			this->register_plugins_directory(plugin_dir_v.toString());
+
+	for (const QVariant& plugin_v : schnapps_settings_["load_modules"].toList())
+			this->enable_plugin(plugin_v.toString());
 }
 
 SCHNApps::~SCHNApps()
