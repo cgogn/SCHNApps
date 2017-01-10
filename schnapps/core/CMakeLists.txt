@@ -25,6 +25,7 @@ set(HEADER_FILES
 	types.h
 	color_combo_box.h
 	cells_set.h
+	settings.h
 )
 
 set(SOURCE_FILES
@@ -42,6 +43,7 @@ set(SOURCE_FILES
 	color_combo_box.cpp
 	cells_set.cpp
 	types.cpp
+	settings.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
