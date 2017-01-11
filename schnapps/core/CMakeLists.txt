@@ -53,8 +53,10 @@ qt5_add_resources(RCC_FILES
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${RCC_FILES})
 
-if(NOT MSVC)
-	target_compile_options(${PROJECT_NAME} PUBLIC "-std=c++11")
+if (SCHNAPPS_DOUBLE_PRECISION)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DSCHNAPPS_DOUBLE_PRECISION")
+else()
+	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DSCHNAPPS_SINGLE_PRECISION")
 endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_CORE_DLL_EXPORT")

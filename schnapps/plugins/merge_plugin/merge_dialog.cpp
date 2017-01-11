@@ -1,7 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin ExtractSurface                                                        *
+* Merge plugin                                                                 *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,49 +22,65 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
-#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
-
 #include <dll.h>
-#include <ui_add_attribute_dialog.h>
+#include <merge_dialog.h>
+#include <schnapps/core/map_handler.h>
+#include <schnapps/core/schnapps.h>
+#include <merge_plugin.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
-
-namespace plugin_attribute_editor
+namespace merge_plugin
 {
 
-class AttributeEditorPlugin;
-
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AddAttributeDialog : public QDialog, public Ui::AddAttribute
+MergeDialog::MergeDialog(SCHNApps* s, MergePlugin* p)
 {
-	Q_OBJECT
-	friend class AttributeEditorPlugin;
+	schnapps_ = s;
+	plugin_ = p;
+	updating_ui_ = false;
+	setupUi(this);
 
-public:
+	schnapps_->foreach_map([&](MapHandlerGen* mhg)
+	{
+		map_added(mhg);
+	});
 
-	AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p);
+	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
+	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(merge_validated()));
+}
 
-private slots:
+void MergeDialog::map_added(MapHandlerGen* mhg)
+{
+	if (mhg)
+	{
+		comboBoxMapSelection->addItem(mhg->get_name());
+		comboBoxMapSelection_2->addItem(mhg->get_name());
+	}
+}
 
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
-//	void selected_map_changed(const QString&);
-	void add_attribute_validated();
-	void data_type_changed(const QString& data_type);
+void MergeDialog::map_removed(MapHandlerGen* mhg)
+{
+	if (mhg)
+	{
+		comboBoxMapSelection->removeItem(this->comboBoxMapSelection->findText(mhg->get_name()));
+		comboBoxMapSelection_2->removeItem(this->comboBoxMapSelection->findText(mhg->get_name()));
+	}
+}
 
-private:
 
-	SCHNApps* schnapps_;
-	AttributeEditorPlugin* plugin_;
-	bool updating_ui_;
-};
+void MergeDialog::merge_validated()
+{
+	MapHandlerGen* mhg1 = schnapps_->get_map(comboBoxMapSelection->currentText());
+	MapHandlerGen* mhg2 = schnapps_->get_map(comboBoxMapSelection_2->currentText());
 
-} // namespace plugin_attribute_editor
+	if (!mhg1 || !mhg2)
+		return;
 
+	MapHandlerGen* copy_mhg1 = schnapps_->duplicate_map(mhg1->get_name());
+	plugin_->merge(copy_mhg1, mhg2);
+}
+
+} // namespace merge_plugin
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H

@@ -32,28 +32,22 @@
 // forward declaration of QAction
 class QAction;
 
+namespace cgogn
+{
+namespace io
+{
+// forward declaration of ExportOptions
+class ExportOptions;
+} // namespace io
+} // namespace cgogn
+
 namespace schnapps
 {
-
-class MapHandlerGen;
 
 namespace plugin_export
 {
 
 class ExportDialog;
-
-struct SCHNAPPS_PLUGIN_EXPORT_API ExportParams
-{
-	ExportParams();
-	void reset();
-
-	std::string map_name_;
-	std::string position_attribute_name_;
-	std::map<CellType, std::vector<std::string>> other_exported_attributes_;
-	std::string output_;
-	bool binary_;
-	bool compress_;
-};
 
 /**
 * @brief Plugin for CGoGN mesh import
@@ -82,7 +76,8 @@ public slots:
 private:
 	QAction* export_mesh_action_;
 	ExportDialog* export_dialog_;
-	ExportParams export_params_;
+	cgogn::io::ExportOptions* export_params_;
+	QString map_name_;
 };
 
 } // namespace plugin_export

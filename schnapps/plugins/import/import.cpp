@@ -93,7 +93,7 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 
 void Plugin_Import::import_surface_mesh_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", schnapps_->get_app_path(), "Surface mesh Files (*.ply *.off *.stl *.trian *.vtk *.vtp *.obj *.msh *.mesh *.meshb)");
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", schnapps_->get_app_path(), "Surface mesh Files (*.ply *.off *.stl *.trian *.vtk *.vtp *.vtu *.obj *.msh *.mesh *.meshb)");
 	QStringList::Iterator it = filenames.begin();
 	while (it != filenames.end())
 	{

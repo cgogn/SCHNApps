@@ -59,6 +59,15 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
+
+	checkBox_transparency->setChecked(false);
+	slider_transparency->setDisabled(true);
+#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
+	checkBox_transparency->setDisabled(true);
+#else
+	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_factor_changed(int)));
+	connect(checkBox_transparency, SIGNAL(toggled(bool)), this, SLOT(transparency_rendering_changed(bool)));
+#endif
 }
 
 
@@ -142,6 +151,23 @@ void VolumeRender_DockTab::render_faces_changed(bool b)
 	}
 }
 
+void VolumeRender_DockTab::transparency_rendering_changed(bool b)
+{
+	if (!updating_ui_)
+	{
+		slider_transparency->setEnabled(b);
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_transparency_enabled(b);
+			plugin_->connectivity_changed(map);
+			view->update();
+		}
+	}
+}
+
 void VolumeRender_DockTab::render_boundary_changed(bool b)
 {
 	if (!updating_ui_)
@@ -197,6 +223,21 @@ void VolumeRender_DockTab::render_topology_changed(bool b)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.render_topology_ = b;
+			view->update();
+		}
+	}
+}
+
+void VolumeRender_DockTab::transparency_factor_changed(int n)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_transparency_factor(n);
 			view->update();
 		}
 	}
@@ -317,6 +358,10 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 	check_renderBoundary->setChecked(p.render_boundary_);
 	sliderExplodeVolumes->setValue(std::round(100.0f*p.get_volume_explode_factor()));
 	topologyRender_checkBox->setChecked(p.render_topology_);
+
+	checkBox_transparency->setChecked(p.use_transparency_);
+	slider_transparency->setValue(p.get_transparency_factor());
+	slider_transparency->setEnabled(p.use_transparency_);
 
 	vertex_color_ = p.get_vertex_color();
 	vertexColorButton->setStyleSheet("QPushButton { background-color:" + vertex_color_.name() + " }");

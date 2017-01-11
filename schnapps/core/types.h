@@ -74,10 +74,6 @@ using VEC3D = Eigen::Vector3d;
 using VEC2F = Eigen::Vector2f;
 using VEC2D = Eigen::Vector2d;
 
-using VEC4 = VEC4D;
-using VEC3 = VEC3D;
-using VEC2 = VEC2D;
-
 using MAT2F = Eigen::Matrix2f;
 using MAT2D = Eigen::Matrix2d;
 using MAT3F = Eigen::Matrix3f;
@@ -85,9 +81,27 @@ using MAT3D = Eigen::Matrix3d;
 using MAT4F = Eigen::Matrix4f;
 using MAT4D = Eigen::Matrix4d;
 
+#ifdef SCHNAPPS_DOUBLE_PRECISION
+using VEC2 = VEC2D;
+using VEC3 = VEC3D;
+using VEC4 = VEC4D;
+
 using MAT22 = MAT2D;
 using MAT33 = MAT3D;
 using MAT44 = MAT4D;
+#else
+#ifdef SCHNAPPS_SINGLE_PRECISION
+using VEC4 = VEC4F;
+using VEC3 = VEC3F;
+using VEC2 = VEC2F;
+
+using MAT22 = MAT2F;
+using MAT33 = MAT3F;
+using MAT44 = MAT4F;
+#else
+#error Neither SCHNAPPS_SINGLE_PRECISION or SCHNAPPS_DOUBLE_PRECISION is defined.
+#endif
+#endif
 
 using SCALAR = cgogn::geometry::vector_traits<VEC3>::Scalar;
 

@@ -78,44 +78,37 @@ void Plugin_Image::disable()
 }
 
 void Plugin_Image::draw(schnapps::View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{
-}
+{}
 
 void Plugin_Image::draw_map(schnapps::View* view, schnapps::MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{
-}
+{}
 
 void Plugin_Image::keyPress(schnapps::View* view, QKeyEvent* event)
-{
-}
+{}
 
 void Plugin_Image::keyRelease(schnapps::View* view, QKeyEvent* event)
-{
-}
+{}
 
 void Plugin_Image::mousePress(schnapps::View* view, QMouseEvent* event)
-{
-}
+{}
 
 void Plugin_Image::mouseRelease(schnapps::View* view, QMouseEvent* event)
-{
-}
+{}
 
 void Plugin_Image::mouseMove(schnapps::View* view, QMouseEvent* event)
-{
-}
+{}
 
 void Plugin_Image::wheelEvent(schnapps::View* view, QWheelEvent* event)
-{
-}
+{}
 
 void Plugin_Image::view_linked(schnapps::View* view)
-{
-}
+{}
 
 void Plugin_Image::view_unlinked(schnapps::View* view)
-{
-}
+{}
+
+void Plugin_Image::resizeGL(View* /*view*/, int /*width*/, int /*height*/)
+{}
 
 void Plugin_Image::import_image(const QString& image_path)
 {

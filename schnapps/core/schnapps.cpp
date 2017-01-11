@@ -85,7 +85,13 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 }
 
 SCHNApps::~SCHNApps()
-{}
+{
+	// first safely unload every plugins (this has to be done before the views get deleted)
+	while(!plugins_.empty())
+	{
+		this->disable_plugin(plugins_.begin()->first);
+	}
+}
 
 /*********************************************************
  * MANAGE CAMERAS
@@ -227,8 +233,8 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin.get());
 		if (pi)
 		{
-			for (View* view : pi->get_linked_views())
-				view->unlink_plugin(pi);
+			while(!pi->get_linked_views().empty()) // Safe way to iterate over a container that is currently being modified
+				(*pi->get_linked_views().begin())->unlink_plugin(pi);
 		}
 
 		// call disable() method and dereference plugin
@@ -355,6 +361,21 @@ void SCHNApps::remove_map(const QString &name)
 		maps_.erase(name);
 	}
 }
+
+MapHandlerGen* SCHNApps::duplicate_map(const QString& name)
+{
+	if (maps_.count(name) > 0ul)
+	{
+		auto& map = maps_.at(name);
+		MapHandlerGen* duplicate = this->add_map(QString("copy_") + map->get_name(), map->dimension());
+		duplicate->merge(map.get());
+		return duplicate;
+	} else {
+		return nullptr;
+	}
+}
+
+
 
 MapHandlerGen* SCHNApps::get_map(const QString& name) const
 {

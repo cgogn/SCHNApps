@@ -1,9 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Render                                                         *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Merge plugin                                                                 *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
-* Inspired by the surface render plugin                                        *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -23,13 +22,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_MERGE_PLUGIN_MERGE_DIALOG_H
+#define SCHNAPPS_MERGE_PLUGIN_MERGE_DIALOG_H
 
-#include "dll.h"
-#include <ui_volume_render.h>
-
-#include <QColorDialog>
+#include <dll.h>
+#include <ui_merge_dialog.h>
 
 namespace schnapps
 {
@@ -37,64 +34,30 @@ namespace schnapps
 class SCHNApps;
 class MapHandlerGen;
 
-namespace plugin_volume_render
+namespace merge_plugin
 {
 
-class Plugin_VolumeRender;
-struct MapParameters;
+class MergePlugin;
 
-class SCHNAPPS_PLUGIN_VOLUME_RENDER_API VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
+class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergeDialog : public QDialog, public Ui::MergeDialog
 {
 	Q_OBJECT
-
-	friend class Plugin_VolumeRender;
+	friend class MergePlugin;
 
 public:
-
-	VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_VolumeRender* plugin_;
-
-	QColorDialog* color_dial_;
-	int current_color_dial_;
-
-	QColor vertex_color_;
-	QColor edge_color_;
-	QColor face_color_;
-
-	bool updating_ui_;
+	MergeDialog(SCHNApps* s, MergePlugin* p);
 
 private slots:
-
-	void position_vbo_changed(int index);
-	void render_vertices_changed(bool b);
-	void vertices_scale_factor_changed(int i);
-	void render_edges_changed(bool b);
-	void render_faces_changed(bool b);
-	void render_boundary_changed(bool b);
-	void explode_volumes_changed(int i);
-	void apply_clipping_plane_changed(bool b);
-	void render_topology_changed(bool b);
-	void transparency_factor_changed(int n);
-	void transparency_rendering_changed(bool b);
-
-	void vertex_color_clicked();
-	void edge_color_clicked();
-	void face_color_clicked();
-	void color_selected();
-
+	void map_added(MapHandlerGen*);
+	void map_removed(MapHandlerGen*);
+	void merge_validated();
 private:
-
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+	SCHNApps* schnapps_;
+	MergePlugin* plugin_;
+	bool updating_ui_;
 };
 
-} // namespace plugin_volume_render
+} // namespace merge_plugin
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_MERGE_PLUGIN_MERGE_DIALOG_H

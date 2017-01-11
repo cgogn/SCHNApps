@@ -1,7 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin ExtractSurface                                                        *
+* Merge plugin                                                                 *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,49 +22,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
-#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
+#ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_H_
+#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_H_
 
-#include <dll.h>
-#include <ui_add_attribute_dialog.h>
 
-namespace schnapps
-{
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_API
+#if defined SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_API
+#endif
 
-class SCHNApps;
-class MapHandlerGen;
-
-namespace plugin_attribute_editor
-{
-
-class AttributeEditorPlugin;
-
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AddAttributeDialog : public QDialog, public Ui::AddAttribute
-{
-	Q_OBJECT
-	friend class AttributeEditorPlugin;
-
-public:
-
-	AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p);
-
-private slots:
-
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
-//	void selected_map_changed(const QString&);
-	void add_attribute_validated();
-	void data_type_changed(const QString& data_type);
-
-private:
-
-	SCHNApps* schnapps_;
-	AttributeEditorPlugin* plugin_;
-	bool updating_ui_;
-};
-
-} // namespace plugin_attribute_editor
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
+#endif // SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_H_

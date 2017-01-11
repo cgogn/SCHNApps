@@ -1,9 +1,8 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Render                                                         *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Merge plugin                                                                 *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
-* Inspired by the surface render plugin                                        *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -23,78 +22,54 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
+#define SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
 
 #include "dll.h"
-#include <ui_volume_render.h>
-
-#include <QColorDialog>
+#include <schnapps/core/plugin_processing.h>
+#include <QAction>
 
 namespace schnapps
 {
 
-class SCHNApps;
 class MapHandlerGen;
 
-namespace plugin_volume_render
+namespace merge_plugin
 {
 
-class Plugin_VolumeRender;
-struct MapParameters;
-
-class SCHNAPPS_PLUGIN_VOLUME_RENDER_API VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
+class MergeDialog;
+/**
+* @brief Empty plugin example
+*/
+class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergePlugin : public PluginProcessing
 {
 	Q_OBJECT
-
-	friend class Plugin_VolumeRender;
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
 
 public:
 
-	VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p);
+	MergePlugin();
+	~MergePlugin() override;
+	/**
+	 * @brief merge second_map into first_map
+	 */
+	bool merge(MapHandlerGen* first_map, const MapHandlerGen* second_map);
 
 private:
 
-	SCHNApps* schnapps_;
-	Plugin_VolumeRender* plugin_;
+	bool enable() override;
+	void disable() override;
 
-	QColorDialog* color_dial_;
-	int current_color_dial_;
+	QAction* merge_action_;
+	MergeDialog* merge_dialog_;
 
-	QColor vertex_color_;
-	QColor edge_color_;
-	QColor face_color_;
-
-	bool updating_ui_;
-
+	public slots:
 private slots:
-
-	void position_vbo_changed(int index);
-	void render_vertices_changed(bool b);
-	void vertices_scale_factor_changed(int i);
-	void render_edges_changed(bool b);
-	void render_faces_changed(bool b);
-	void render_boundary_changed(bool b);
-	void explode_volumes_changed(int i);
-	void apply_clipping_plane_changed(bool b);
-	void render_topology_changed(bool b);
-	void transparency_factor_changed(int n);
-	void transparency_rendering_changed(bool b);
-
-	void vertex_color_clicked();
-	void edge_color_clicked();
-	void face_color_clicked();
-	void color_selected();
-
-private:
-
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+	void merge_dialog();
 };
 
-} // namespace plugin_volume_render
+} // namespace merge_plugin
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_

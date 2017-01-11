@@ -34,15 +34,19 @@
 
 #include <volume_render_dock_tab.h>
 
+#include <QAction>
+#include <map>
+
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/volume_drawer.h>
 #include <cgogn/rendering/frame_manipulator.h>
 #include <cgogn/rendering/topo_drawer.h>
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+#include <cgogn/rendering/transparency_volume_drawer.h>
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 
-#include <QAction>
-#include <map>
 
 namespace schnapps
 {
@@ -74,13 +78,18 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	{
 		edge_color_ = c;
 		shader_simple_color_param_->color_ = edge_color_;
+		volume_drawer_rend_->set_edge_color(c);
 	}
 
 	const QColor& get_face_color() const { return face_color_; }
+
 	void set_face_color(const QColor& c)
 	{
 		face_color_ = c;
 		volume_drawer_rend_->set_face_color(c);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+		volume_transparency_drawer_rend_->set_color(c);
+#endif
 	}
 
 	float32 get_vertex_base_size() const { return vertex_base_size_; }
@@ -102,10 +111,41 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	{
 		volume_explode_factor_ = vef;
 		volume_drawer_rend_->set_explode_volume(vef);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+		volume_transparency_drawer_rend_->set_explode_volume(vef);
+#endif
 		topo_drawer_->set_explode_volume(vef);
+		if (!position_vbo_) return;
 		auto pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
 		if (pos_attr.is_valid())
 			topo_drawer_->update<VEC3>(*map_->get_map(),pos_attr);
+	}
+
+	int32 get_transparency_factor() const { return transparency_factor_; }
+	void set_transparency_factor(int32 n)
+	{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+		n = n % 255;
+		transparency_factor_ = n;
+		if (use_transparency_)
+		{
+			face_color_.setAlpha(n);
+			volume_transparency_drawer_rend_->set_color(face_color_);
+		}
+#endif
+	}
+
+	inline void set_transparency_enabled(bool b)
+	{
+		use_transparency_ = b;
+		if (b)
+		{
+			transparency_factor_ = transparency_factor_ % 255;
+			face_color_.setAlpha(transparency_factor_);
+		} else {
+			face_color_.setAlpha(255);
+		}
+		set_face_color(face_color_);
 	}
 
 	bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
@@ -114,8 +154,8 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		apply_clipping_plane_ = b;
 		if (b)
 		{
-			VEC3 position;
-			VEC3 axis_z;
+			VEC3F position;
+			VEC3F axis_z;
 			frame_manip_->get_position(position);
 			frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt, axis_z);
 			float32 d = -(position.dot(axis_z));
@@ -125,6 +165,16 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 			volume_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 			topo_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 		}
+	}
+
+	void plane_clip_from_frame()
+	{
+		VEC3F position;
+		VEC3F axis_z;
+		frame_manip_->get_position(position);
+		frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt,axis_z);
+		const float d = -(position.dot(axis_z));
+		plane_clipping_ = QVector4D(axis_z[0],axis_z[1],axis_z[2],d);
 	}
 
 private:
@@ -144,7 +194,13 @@ private:
 	float32 vertex_base_size_;
 
 	float32 volume_explode_factor_;
+	int32 transparency_factor_;
+	QVector4D plane_clipping_;
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer> volume_transparency_drawer_;
+	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer::Renderer> volume_transparency_drawer_rend_;
+#endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 	std::unique_ptr<cgogn::rendering::VolumeDrawer> volume_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeDrawer::Renderer> volume_drawer_rend_;
 
@@ -161,6 +217,7 @@ public:
 	bool render_faces_;
 	bool render_boundary_;
 	bool render_topology_;
+	bool use_transparency_;
 };
 
 /**
@@ -187,7 +244,7 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
+	inline void draw(View*, const QMatrix4x4& /*proj*/, const QMatrix4x4& /*mv*/) override {}
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
 	inline void keyPress(View*, QKeyEvent*) override {}
@@ -196,9 +253,12 @@ private:
 	void mouseRelease(View*, QMouseEvent*) override;
 	void mouseMove(View*, QMouseEvent*) override;
 	inline void wheelEvent(View*, QWheelEvent*) override {}
+	void resizeGL(View* view, int width, int height) override;
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
+
+	void connectivity_changed(MapHandlerGen* mh);
 
 private slots:
 

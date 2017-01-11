@@ -30,6 +30,7 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <QStringList>
 
 namespace schnapps
 {
@@ -51,14 +52,14 @@ public:
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(AttributeFactory);
 
-	inline void create_attribute(MapHandler* mh, const std::string& type_name, CellType ct, const std::string& attribute_name)
+	inline void create_attribute(MapHandler* mh, const std::string& type_name, CellType ct, const std::string& attribute_name, const QStringList& default_value)
 	{
 		if (mh->dimension() != MAP_TYPE::DIMENSION)
 			return;
 
 		auto it = type_create_fn_map.find(type_name);
 		if (it != type_create_fn_map.end())
-			(it->second)(mh, ct, attribute_name);
+			(it->second)(mh, ct, attribute_name, default_value);
 	}
 
 	inline static Self& get_instance()
@@ -70,7 +71,23 @@ public:
 	template<typename T>
 	inline void register_type()
 	{
-		type_create_fn_map[cgogn::name_of_type(T())] = [&](MapHandler* mh, CellType ct, const std::string& attribute_name) { create_attribute<T>(mh, ct, attribute_name); };
+		type_create_fn_map[cgogn::name_of_type(T())] = [&](MapHandler* mh, CellType ct, const std::string& attribute_name, const QStringList& default_value)
+		{
+			cgogn::Attribute_T<T> new_att = create_attribute<T>(mh, ct, attribute_name);
+			if (new_att.is_valid() && !default_value.empty())
+			{
+				std::stringstream sstream;
+				for (int i = 0; i < default_value.size() -1; ++i)
+					sstream << default_value[i].toStdString() << ' ';
+				bool extract_ok = static_cast<bool>(sstream << default_value[default_value.size() -1].toStdString());
+				if (extract_ok)
+				{
+					T val;
+					cgogn::serialization::parse(sstream, val);
+					new_att.set_all_values(val);
+				}
+			}
+		};
 	}
 
 	const std::unordered_map<std::string, std::function<void(MapHandler*, CellType, const std::string&)>>& get_map() const
@@ -108,33 +125,35 @@ private:
 	}
 
 	template<typename T>
-	inline void create_attribute(MapHandler* mh, CellType ct, const std::string& attribute_name)
+	inline cgogn::Attribute_T<T> create_attribute(MapHandler* mh, CellType ct, const std::string& attribute_name)
 	{
 		switch (ct) {
 			case CellType::Dart_Cell:
-					create_attribute<T, MAP_TYPE::CDart::ORBIT>(mh, attribute_name); break;
+					return create_attribute<T, MAP_TYPE::CDart::ORBIT>(mh, attribute_name);
 			case CellType::Vertex_Cell:
-					create_attribute<T, MAP_TYPE::Vertex::ORBIT>(mh, attribute_name); break;
+					return create_attribute<T, MAP_TYPE::Vertex::ORBIT>(mh, attribute_name);
 			case CellType::Edge_Cell:
-					create_attribute<T, MAP_TYPE::Edge::ORBIT>(mh, attribute_name); break;
+					return create_attribute<T, MAP_TYPE::Edge::ORBIT>(mh, attribute_name);
 			case CellType::Face_Cell:
-				create_attribute<T, MAP_TYPE::Face::ORBIT>(mh, attribute_name); break;
+				return create_attribute<T, MAP_TYPE::Face::ORBIT>(mh, attribute_name);
 			case CellType::Volume_Cell:
-					create_attribute<T, MAP_TYPE::Volume::ORBIT>(mh, attribute_name); break;
+					return create_attribute<T, MAP_TYPE::Volume::ORBIT>(mh, attribute_name);
 			default:
-				break;
+				return cgogn::Attribute_T<T>();
 		}
 	}
 
 	template<typename T, cgogn::Orbit ORBIT>
-	inline void create_attribute(MapHandler* mh, const std::string& attribute_name)
+	inline cgogn::Attribute<T,ORBIT> create_attribute(MapHandler* mh, const std::string& attribute_name)
 	{
 		if (mh)
-			mh->template add_attribute<T, ORBIT>(QString::fromStdString(attribute_name));
+			return mh->template add_attribute<T, ORBIT>(QString::fromStdString(attribute_name));
+		else
+			return cgogn::Attribute<T,ORBIT>();
 	}
 
 
-	std::unordered_map<std::string, std::function<void(MapHandler*, CellType, const std::string&)>> type_create_fn_map;
+	std::unordered_map<std::string, std::function<void(MapHandler*, CellType, const std::string&, const QStringList&)>> type_create_fn_map;
 };
 
 } // namespace plugin_attribute_editor

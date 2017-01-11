@@ -32,7 +32,7 @@ ViewDialogList::ViewDialogList(const QString& name, QWidget* parent) :
 	QDialog(parent)
 {
 	setWindowTitle(name);
-	setWindowFlags(windowFlags()/* | Qt::FramelessWindowHint*/ | Qt::SplashScreen | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint);
+	setWindowFlags(/*windowFlags() | Qt::FramelessWindowHint*/ /*| Qt::SplashScreen*/ Qt::Window | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint | Qt::CustomizeWindowHint);
 
 	layout_ = new QVBoxLayout(this);
 	setLayout(layout_);
