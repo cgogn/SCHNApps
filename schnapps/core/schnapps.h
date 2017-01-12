@@ -378,6 +378,16 @@ signals:
 
 	void schnapps_closing();
 
+
+public:
+	/**
+	 * @brief get_setting
+	 * @return a QVariant containing the setting associated to the string.
+	 */
+	const QVariant get_setting(const QString& name) const
+	{
+		return schnapps_settings_[name];
+	}
 protected:
 
 	QString app_path_;

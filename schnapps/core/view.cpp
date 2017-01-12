@@ -602,7 +602,11 @@ void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
 void View::map_added(MapHandlerGen* mh)
 {
 	if (mh)
+	{
 		dialog_maps_->add_item(mh->get_name());
+		if (schnapps_->get_setting("auto_add_map_to_selected_view").toBool())
+			dialog_maps_->list()->item(dialog_maps_->nb_items() -1)->setCheckState(Qt::Checked);
+	}
 }
 
 void View::map_removed(MapHandlerGen* mh)
