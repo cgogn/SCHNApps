@@ -178,6 +178,9 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	}
 
 private:
+	void initialize_gl();
+
+private:
 
 	MapHandler<CMap3>* map_;
 
@@ -272,6 +275,7 @@ private slots:
 	void linked_map_bb_changed();
 	void linked_map_connectivity_changed();
 	void linked_attribute_changed(cgogn::Orbit,QString);
+	void viewer_initialized();
 
 	void update_dock_tab();
 
