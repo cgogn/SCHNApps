@@ -270,8 +270,12 @@ void Plugin_SurfaceRender::linked_map_bb_changed()
 void Plugin_SurfaceRender::viewer_initialized()
 {
 	View* view = dynamic_cast<View*>(QObject::sender());
-	if (view)
-		this->parameter_set_.erase(view);
+	if (view && (this->parameter_set_.count(view) > 0))
+	{
+		auto& view_param_set = parameter_set_[view];
+		for (auto & p : view_param_set)
+			p.second.initialize_gl();
+	}
 }
 
 void Plugin_SurfaceRender::update_dock_tab()
