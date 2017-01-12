@@ -77,7 +77,9 @@ void SurfaceRenderVector_DockTab::selected_vector_vbo_changed(QListWidgetItem* i
 			if ((item->checkState() == Qt::Checked))
 			{
 				const MapParameters& p = plugin_->get_parameters(view, map);
-				int idx = p.get_vector_vbo_index(map->get_vbo(item->text()));
+				const uint32 idx = p.get_vector_vbo_index(map->get_vbo(item->text()));
+				if (idx == UINT32_MAX)
+					return;
 				slider_vectorsScaleFactor->setEnabled(true);
 				slider_vectorsScaleFactor->setSliderPosition(p.get_vector_scale_factor(idx) * 50.0f);
 				combo_color->setEnabled(true);
@@ -107,7 +109,7 @@ void SurfaceRenderVector_DockTab::vector_vbo_checked(QListWidgetItem* item)
 			{
 				updating_ui_ = true;
 				p.add_vector_vbo(vbo);
-				int idx = p.get_vector_vbo_index(vbo);
+				const uint32 idx = p.get_vector_vbo_index(vbo);
 				if (list_vectorVBO->currentItem() != item)
 					list_vectorVBO->setCurrentItem(item);
 				slider_vectorsScaleFactor->setEnabled(true);
