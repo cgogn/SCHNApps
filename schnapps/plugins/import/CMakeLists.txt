@@ -44,3 +44,9 @@ target_link_libraries(${PROJECT_NAME}
 	${lm6_LIBRARIES}
 	${ply_LIBRARIES}
 )
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy
+		"settings.json"
+		"${CMAKE_BINARY_DIR}/settings/settings_${PROJECT_NAME}.json"
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

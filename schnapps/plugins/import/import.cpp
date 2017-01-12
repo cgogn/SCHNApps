@@ -47,6 +47,12 @@ bool Plugin_Import::enable()
 	//	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
 	//	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
 
+#ifdef WIN32
+	settings_ = Settings(QDir::cleanPath(schnapps_->get_app_path() + "/../../settings/settings_plugin_import.json"));
+#else
+	settings_ = Settings(QDir::cleanPath(schnapps_->get_app_path() + "/../settings/settings_plugin_import.json"));
+#endif
+
 	return true;
 }
 
@@ -71,8 +77,12 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 			cgogn::io::import_surface<VEC3>(*map, filename.toStdString());
 			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
 			{
-				mh->set_bb_vertex_attribute("position");
-				mhg->create_vbo("position");
+				const QString bb_attribute = get_setting("bb_attribute").toString();
+				mh->set_bb_vertex_attribute(bb_attribute.isEmpty()?"position":bb_attribute);
+
+				const auto& vbo_list = get_setting("vbo_list").toList();
+				for (const QVariant& var : vbo_list)
+					mhg->create_vbo(var.toString());
 			}
 			//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
 			//			{

@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_PLUGIN_H_
 
 #include <schnapps/core/dll.h>
+#include <schnapps/core/settings.h>
 
 #include <QtPlugin>
 
@@ -66,6 +67,8 @@ public slots:
 	 */
 	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
+	inline const QVariant get_setting(const QString& name) const { return settings_[name]; }
+
 private:
 
 	inline void set_name(const QString& name) { name_ = name; }
@@ -84,6 +87,9 @@ protected:
 
 	// file path to the plugin library file
 	QString file_path_;
+
+	// settings associated to the plugin
+	Settings settings_;
 
 	// pointer to schnapps object
 	SCHNApps* schnapps_;
