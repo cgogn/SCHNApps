@@ -251,6 +251,7 @@ public:
 
 private slots:
 
+	void viewer_initialized();
 //	void selected_cells_changed();
 
 	/**********************************************************

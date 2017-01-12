@@ -285,6 +285,7 @@ private slots:
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
+	void viewer_initialized();
 
 	void update_dock_tab();
 

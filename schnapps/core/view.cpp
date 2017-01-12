@@ -369,6 +369,8 @@ void View::init()
 	cameras_button_ = new ViewButton(":icons/icons/cameras.png", this);
 	button_area_left_->add_button(cameras_button_);
 	connect(cameras_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_cameras_list_view(int, int, int, int)));
+
+	QOGLViewer::init(); // emit viewerInitialized signal
 }
 
 void View::preDraw()
