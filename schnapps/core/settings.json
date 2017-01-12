@@ -1,4 +1,5 @@
 {
 	"plugins_paths" : [],
-	"load_modules" : ["import", "export", "merge", "selection"]
+	"load_modules" : ["import", "export", "merge", "selection", "attribute_editor"],
+	"auto_select_added_map" : true
 }
