@@ -595,6 +595,7 @@ void Plugin_Selection::view_linked(View* view)
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
 }
@@ -605,6 +606,7 @@ void Plugin_Selection::view_unlinked(View* view)
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
 }
@@ -789,6 +791,17 @@ void Plugin_Selection::linked_map_bb_changed()
 			MapParameters& p = view_param_set[map];
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
 		}
+	}
+}
+
+void Plugin_Selection::viewer_initialized()
+{
+	View* view = dynamic_cast<View*>(QObject::sender());
+	if (view && (this->parameter_set_.count(view) > 0))
+	{
+		auto& view_param_set = parameter_set_[view];
+		for (auto & p : view_param_set)
+			p.second.initialize_gl();
 	}
 }
 

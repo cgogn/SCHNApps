@@ -87,46 +87,12 @@ public:
 		selection_method_(SingleCell)
 	{
 		selection_sphere_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
-
-		shader_point_sprite_param_selection_sphere_ = cgogn::rendering::ShaderPointSprite::generate_param();
-		shader_point_sprite_param_selection_sphere_->color_ = QColor(60, 60, 220, 128);
-		shader_point_sprite_param_selection_sphere_->set_position_vbo(selection_sphere_vbo_.get());
-
 		selected_vertices_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
-
-		shader_point_sprite_param_selected_vertices_ = cgogn::rendering::ShaderPointSprite::generate_param();
-		shader_point_sprite_param_selected_vertices_->color_ = color_;
-		shader_point_sprite_param_selected_vertices_->set_position_vbo(selected_vertices_vbo_.get());
-
 		selection_edge_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
-
-		shader_bold_line_param_selection_edge_ = cgogn::rendering::ShaderBoldLine::generate_param();
-		shader_bold_line_param_selection_edge_->color_ = QColor(60, 60, 220, 128);
-		shader_bold_line_param_selection_edge_->width_ = 4.0f;
-		shader_bold_line_param_selection_edge_->set_position_vbo(selection_edge_vbo_.get());
-
 		selected_edges_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
-
-		shader_bold_line_param_selected_edges_ = cgogn::rendering::ShaderBoldLine::generate_param();
-		shader_bold_line_param_selected_edges_->color_ = color_;
-		shader_bold_line_param_selected_edges_->width_ = 2.0f;
-		shader_bold_line_param_selected_edges_->set_position_vbo(selected_edges_vbo_.get());
-
 		selection_face_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
-
-		shader_simple_color_param_selection_face_ = cgogn::rendering::ShaderSimpleColor::generate_param();
-		shader_simple_color_param_selection_face_->color_ = QColor(60, 60, 220, 128);
-		shader_simple_color_param_selection_face_->set_position_vbo(selection_face_vbo_.get());
-
 		selected_faces_vbo_ = cgogn::make_unique<cgogn::rendering::VBO>(3);
-
-		shader_flat_param_selected_faces_ = cgogn::rendering::ShaderFlat::generate_param();
-		shader_flat_param_selected_faces_->front_color_ = color_;
-		shader_flat_param_selected_faces_->back_color_ = color_;
-		shader_flat_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
-
-		drawer_selected_volumes_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
-		drawer_rend_selected_volumes_ = drawer_selected_volumes_->generate_renderer();
+		initialize_gl();
 	}
 
 	const MapHandlerGen::Attribute_T<VEC3>& get_position_attribute() const { return *position_; }
@@ -282,6 +248,40 @@ public slots:
 				view->update();
 		}
 	}
+private:
+	void initialize_gl()
+	{
+		shader_point_sprite_param_selection_sphere_ = cgogn::rendering::ShaderPointSprite::generate_param();
+		shader_point_sprite_param_selection_sphere_->color_ = QColor(60, 60, 220, 128);
+		shader_point_sprite_param_selection_sphere_->set_position_vbo(selection_sphere_vbo_.get());
+
+		shader_point_sprite_param_selected_vertices_ = cgogn::rendering::ShaderPointSprite::generate_param();
+		shader_point_sprite_param_selected_vertices_->color_ = color_;
+		shader_point_sprite_param_selected_vertices_->set_position_vbo(selected_vertices_vbo_.get());
+
+		shader_bold_line_param_selection_edge_ = cgogn::rendering::ShaderBoldLine::generate_param();
+		shader_bold_line_param_selection_edge_->color_ = QColor(60, 60, 220, 128);
+		shader_bold_line_param_selection_edge_->width_ = 4.0f;
+		shader_bold_line_param_selection_edge_->set_position_vbo(selection_edge_vbo_.get());
+
+		shader_bold_line_param_selected_edges_ = cgogn::rendering::ShaderBoldLine::generate_param();
+		shader_bold_line_param_selected_edges_->color_ = color_;
+		shader_bold_line_param_selected_edges_->width_ = 2.0f;
+		shader_bold_line_param_selected_edges_->set_position_vbo(selected_edges_vbo_.get());
+
+		shader_simple_color_param_selection_face_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+		shader_simple_color_param_selection_face_->color_ = QColor(60, 60, 220, 128);
+		shader_simple_color_param_selection_face_->set_position_vbo(selection_face_vbo_.get());
+
+		shader_flat_param_selected_faces_ = cgogn::rendering::ShaderFlat::generate_param();
+		shader_flat_param_selected_faces_->front_color_ = color_;
+		shader_flat_param_selected_faces_->back_color_ = color_;
+		shader_flat_param_selected_faces_->set_position_vbo(selected_faces_vbo_.get());
+
+		drawer_selected_volumes_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
+		drawer_rend_selected_volumes_ = drawer_selected_volumes_->generate_renderer();
+	}
+
 
 private:
 
@@ -393,6 +393,7 @@ private slots:
 	void linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name);
 	void linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
 	void linked_map_bb_changed();
+	void viewer_initialized();
 
 	void update_dock_tab();
 
