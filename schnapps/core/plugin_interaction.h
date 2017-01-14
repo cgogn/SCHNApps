@@ -47,7 +47,7 @@ public:
 
 	inline PluginInteraction() {}
 
-	~PluginInteraction() {}
+	~PluginInteraction() override;
 
 public slots:
 

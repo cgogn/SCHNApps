@@ -26,6 +26,9 @@
 namespace schnapps
 {
 
+PluginInteraction::~PluginInteraction()
+{}
+
 void PluginInteraction::link_view(View* view)
 {
 	if (view && !is_linked_to_view(view))
