@@ -42,8 +42,8 @@ class SCHNAPPS_CORE_API Plugin : public QObject
 
 public:
 
-	inline Plugin()	{}
-	virtual inline ~Plugin() {}
+	inline Plugin() {}
+	virtual ~Plugin();
 
 	inline const QString& get_name() const { return name_; }
 
@@ -67,7 +67,8 @@ public slots:
 	 */
 	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
-	inline const QVariant get_setting(const QString& name) const { return settings_[name]; }
+	const QVariant get_setting(const QString& name) const;
+	void add_setting(const QString& name, const QVariant& val);
 
 private:
 
@@ -87,9 +88,6 @@ protected:
 
 	// file path to the plugin library file
 	QString file_path_;
-
-	// settings associated to the plugin
-	Settings settings_;
 
 	// pointer to schnapps object
 	SCHNApps* schnapps_;
