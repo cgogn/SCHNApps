@@ -79,21 +79,21 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 
 #ifdef WIN32
 	register_plugins_directory(app_path);
-	schnapps_settings_ = Settings(QDir::cleanPath(app_path + "/../../settings/settings_schnapps_core.json"));
 #else
 	register_plugins_directory(app_path + QString("/../lib"));
-	schnapps_settings_ = Settings(QDir::cleanPath(app_path + "/../settings/settings_schnapps_core.json"));
 #endif
+	settings_ = Settings::from_file("settings.json");
+	settings_->set_widget(window->settings_widget_.get());
+	for (const QVariant& plugin_dir_v : get_setting("plugins_paths").toList())
+		this->register_plugins_directory(plugin_dir_v.toString());
 
-	for (const QVariant& plugin_dir_v : schnapps_settings_["plugins_paths"].toList())
-			this->register_plugins_directory(plugin_dir_v.toString());
-
-	for (const QVariant& plugin_v : schnapps_settings_["load_modules"].toList())
-			this->enable_plugin(plugin_v.toString());
+	for (const QVariant& plugin_v : get_setting("load_modules").toList())
+		this->enable_plugin(plugin_v.toString());
 }
 
 SCHNApps::~SCHNApps()
 {
+	settings_->to_file("settings.json");
 	// first safely unload every plugins (this has to be done before the views get deleted)
 	while(!plugins_.empty())
 	{

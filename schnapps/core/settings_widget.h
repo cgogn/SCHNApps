@@ -21,57 +21,41 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_SETTINGS_H_
-#define SCHNAPPS_CORE_SETTINGS_H_
+#ifndef SCHNAPPS_CORE_SETTINGS_WIDGET_H_
+#define SCHNAPPS_CORE_SETTINGS_WIDGET_H_
 
 #include <schnapps/core/dll.h>
-#include <QVariantMap>
-#include <QStringList>
-#include <memory>
-
-class QHBoxLayout;
-class QListWidgetItem;
+#include <ui_settings_widget.h>
+#include <QWidget>
 
 namespace schnapps
 {
 
-class SettingsWidget;
+class Settings;
 
-class SCHNAPPS_CORE_API Settings : public QObject
+class SCHNAPPS_CORE_API SettingsWidget : public QWidget, public Ui::SettingsWidget
 {
+	friend class Settings;
 	Q_OBJECT
 
-	friend class SettingsWidget;
 public:
-	Settings() = default;
-	Settings(const Settings&) = delete;
-	Settings(Settings&&) = delete;
-	Settings& operator=(const Settings&) = delete;
-	Settings& operator=(Settings&&) = delete;
-	~Settings() override;
-	void add_setting(const QString& module_name, const QString& setting_name, const QVariant& value);
-	QVariant& operator[](const QString& s) { return map_[s]; }
-	const QVariant operator[](const QString& s) const { return map_[s]; }
-	bool contains(const QString& s) const { return map_.contains(s); }
-	void to_file(const QString& filename);
-	static std::unique_ptr<Settings> from_file(const QString& setting_filename);
-	void set_widget(QWidget* widget);
+	SettingsWidget(QWidget* parent = nullptr, Qt::WindowFlags f = Qt::WindowFlags());
+	~SettingsWidget() override;
 
-private slots:
-	void setting_changed(const QString& name, const QVariant& value);
-	void setting_changed_bool(bool b);
-	void setting_changed_double(double d);
-	void setting_changed_string(const QString& str);
-	void setting_changed_list(QListWidgetItem* item);
+public slots:
+	void display_setting_widget();
 
 private:
+	void fill_widget();
+	QHBoxLayout* add_option_to_widget(QWidget* widget, const QString& option_name, const QVariant& var);
+	QHBoxLayout* add_option_to_widget(QWidget* widget, const QString& option_name, bool value);
+	QHBoxLayout* add_option_to_widget(QWidget* widget, const QString& option_name, double value);
+	QHBoxLayout* add_option_to_widget(QWidget* widget, const QString& option_name, const QString& value);
+	QHBoxLayout* add_option_to_widget(QWidget* widget, const QString& option_name, const QVariantList& value);
 
-	void add_module(const QString& module_name, const QVariantMap& module);
-	SettingsWidget* settings_widget_;
-	QVariantMap map_;
-	QMap<QString, QStringList> modules_;
+	Settings* settings_;
 };
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_CORE_SETTINGS_H_
+#endif // SCHNAPPS_CORE_SETTINGS_WIDGET_H_

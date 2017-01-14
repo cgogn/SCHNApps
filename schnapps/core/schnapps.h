@@ -384,15 +384,21 @@ public:
 	 * @brief get_setting
 	 * @return a QVariant containing the setting associated to the string.
 	 */
-	const QVariant get_setting(const QString& name) const
+	inline const QVariant get_setting(const QString& name) const
 	{
-		return schnapps_settings_[name];
+		return settings_->operator[](name);
 	}
+
+	inline void add_setting(const QString& module_name, const QString& name, const QVariant& val)
+	{
+		settings_->add_setting(module_name,name,val);
+	}
+
 protected:
 
 	QString app_path_;
 
-	Settings schnapps_settings_;
+	std::unique_ptr<Settings> settings_;
 
 	std::map<QString, std::unique_ptr<Camera>> cameras_;
 

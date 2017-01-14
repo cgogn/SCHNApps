@@ -105,6 +105,8 @@ protected:
 	QDockWidget* plugin_dock_;
 	QTabWidget* plugin_dock_tab_widget_;
 
+	std::unique_ptr<QWidget> settings_widget_;
+
 	QVBoxLayout* central_layout_;
 };
 

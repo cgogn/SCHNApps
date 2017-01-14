@@ -26,6 +26,7 @@ set(HEADER_FILES
 	color_combo_box.h
 	cells_set.h
 	settings.h
+	settings_widget.h
 )
 
 set(SOURCE_FILES
@@ -36,6 +37,8 @@ set(SOURCE_FILES
 	view_dialog_list.cpp
 	view_button_area.cpp
 	plugin_interaction.cpp
+	plugin.cpp
+	plugin_processing.cpp
 	map_handler.cpp
 	control_dock_camera_tab.cpp
 	control_dock_plugin_tab.cpp
@@ -44,6 +47,7 @@ set(SOURCE_FILES
 	cells_set.cpp
 	types.cpp
 	settings.cpp
+	settings_widget.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -79,16 +83,16 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 if(WIN32)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${CGOGN_BUILD_PATH}/bin/$<CONFIGURATION>"
-		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
+	add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_directory
+			"${CGOGN_BUILD_PATH}/bin/$<CONFIGURATION>"
+			$<TARGET_FILE_DIR:${PROJECT_NAME}>)
 endif()
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy
 		"settings.json"
-		"${CMAKE_BINARY_DIR}/settings/settings_${PROJECT_NAME}.json"
+		${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 install(DIRECTORY .
