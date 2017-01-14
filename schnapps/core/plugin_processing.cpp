@@ -21,27 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
-#define SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
-
-#include <schnapps/core/dll.h>
-#include <schnapps/core/plugin.h>
+#include <schnapps/core/plugin_processing.h>
 
 namespace schnapps
 {
 
-class SCHNAPPS_CORE_API PluginProcessing : public Plugin
-{
-	Q_OBJECT
-
-public:
-
-	PluginProcessing()
-	{}
-
-	~PluginProcessing() override;
-};
+PluginProcessing::~PluginProcessing()
+{}
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
