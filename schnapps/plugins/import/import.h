@@ -25,7 +25,6 @@
 #define SCHNAPPS_PLUGIN_IMPORT_H_
 
 #include <schnapps/core/plugin_processing.h>
-#include <schnapps/core/settings.h>
 #include <schnapps/plugins/import/dll.h>
 #include <QAction>
 
