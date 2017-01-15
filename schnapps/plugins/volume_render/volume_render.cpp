@@ -276,7 +276,7 @@ void Plugin_VolumeRender::map_unlinked(MapHandlerGen* map)
 
 void Plugin_VolumeRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -289,7 +289,7 @@ void Plugin_VolumeRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 
 void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -316,8 +316,11 @@ void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_VolumeRender::linked_map_bb_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
-	uint32 nbe = map->nb_cells(Edge_Cell);
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+	if (!map)
+		return;
+
+	const uint32 nbe = map->nb_cells(Edge_Cell);
 
 	for (auto& it : parameter_set_)
 	{
@@ -333,7 +336,8 @@ void Plugin_VolumeRender::linked_map_bb_changed()
 
 void Plugin_VolumeRender::linked_map_connectivity_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+	if (!map) return;
 
 	for (auto& it : parameter_set_)
 	{
@@ -364,14 +368,14 @@ void Plugin_VolumeRender::linked_map_connectivity_changed()
 
 void Plugin_VolumeRender::linked_attribute_changed(cgogn::Orbit, QString)
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 	if (map)
 		this->connectivity_changed(map);
 }
 
 void Plugin_VolumeRender::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(QObject::sender());
+	View* view = dynamic_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];

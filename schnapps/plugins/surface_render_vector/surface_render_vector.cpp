@@ -135,7 +135,7 @@ void Plugin_SurfaceRenderVector::map_unlinked(MapHandlerGen *map)
 
 void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -149,7 +149,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 
 void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -179,7 +179,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 
 void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	for (auto& it : parameter_set_)
 	{
@@ -195,7 +195,7 @@ void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 
 void Plugin_SurfaceRenderVector::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(QObject::sender());
+	View* view = dynamic_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];

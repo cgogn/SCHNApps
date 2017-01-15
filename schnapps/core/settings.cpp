@@ -139,25 +139,25 @@ void Settings::setting_changed(const QString& module_name, const QString& name, 
 
 void Settings::setting_changed_bool(bool b)
 {
-	QObject* sender = QObject::sender();
+	QObject* sender = this->sender();
 	setting_changed(sender->parent()->objectName(), sender->objectName(), QVariant(b));
 }
 
 void Settings::setting_changed_double(double d)
 {
-	QObject* sender = QObject::sender();
+	QObject* sender = this->sender();
 	setting_changed(sender->parent()->objectName(), sender->objectName(), QVariant(d));
 }
 
 void Settings::setting_changed_string(const QString& str)
 {
-	QObject* sender = QObject::sender();
+	QObject* sender = this->sender();
 	setting_changed(sender->parent()->objectName(), sender->objectName(), QVariant(str));
 }
 
 void Settings::setting_changed_list(QListWidgetItem* item)
 {
-	QObject* sender = QObject::sender();
+	QObject* sender = this->sender();
 	QListWidget* listw = dynamic_cast<QListWidget*>(sender);
 	if (listw)
 	{

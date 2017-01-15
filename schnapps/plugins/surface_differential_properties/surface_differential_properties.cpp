@@ -111,7 +111,7 @@ void Plugin_SurfaceDifferentialProperties::attribute_changed(cgogn::Orbit orbit,
 {
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 		if (compute_normal_last_parameters_.count(map->get_name()) > 0ul)
 		{
 			ComputeNormalParameters& params = compute_normal_last_parameters_[map->get_name()];

@@ -243,7 +243,7 @@ void MapHandlerGen::update_mutually_exclusive_cells_sets(CellType ct)
 
 void MapHandlerGen::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(QObject::sender());
+	View* view = dynamic_cast<View*>(sender());
 	if (view)
 		bb_drawer_renderer_[view] = bb_drawer_.generate_renderer();
 }

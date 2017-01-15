@@ -707,7 +707,7 @@ void Plugin_Selection::map_unlinked(MapHandlerGen* map)
 
 void Plugin_Selection::linked_map_cells_set_added(CellType ct, const QString& name)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 		dock_tab_->selected_map_cells_set_added(ct, name);
@@ -715,7 +715,7 @@ void Plugin_Selection::linked_map_cells_set_added(CellType ct, const QString& na
 
 void Plugin_Selection::linked_map_cells_set_removed(CellType ct, const QString& name)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 		dock_tab_->selected_map_cells_set_removed(ct, name);
@@ -723,7 +723,7 @@ void Plugin_Selection::linked_map_cells_set_removed(CellType ct, const QString& 
 
 void Plugin_Selection::linked_map_attribute_added(cgogn::Orbit orbit, const QString& name)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map() && map->cell_type(orbit) == Vertex_Cell)
 		dock_tab_->selected_map_vertex_attribute_added(name);
@@ -731,7 +731,7 @@ void Plugin_Selection::linked_map_attribute_added(cgogn::Orbit orbit, const QStr
 
 void Plugin_Selection::linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->cell_type(orbit) == Vertex_Cell)
 	{
@@ -753,7 +753,7 @@ void Plugin_Selection::linked_map_attribute_changed(cgogn::Orbit orbit, const QS
 
 void Plugin_Selection::linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map() && map->cell_type(orbit) == Vertex_Cell)
 	{
@@ -780,7 +780,7 @@ void Plugin_Selection::linked_map_attribute_removed(cgogn::Orbit orbit, const QS
 
 void Plugin_Selection::linked_map_bb_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 	uint32 nbe = map->nb_cells(Edge_Cell);
 
 	for (auto& it : parameter_set_)
@@ -796,7 +796,7 @@ void Plugin_Selection::linked_map_bb_changed()
 
 void Plugin_Selection::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(QObject::sender());
+	View* view = dynamic_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];

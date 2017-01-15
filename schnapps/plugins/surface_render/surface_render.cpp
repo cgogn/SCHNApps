@@ -211,7 +211,7 @@ void Plugin_SurfaceRender::map_unlinked(MapHandlerGen *map)
 
 void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
 	if (map && map->is_selected_map())
 	{
@@ -226,7 +226,7 @@ void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 
 void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
 	if (map && map->is_selected_map())
 	{
@@ -259,7 +259,7 @@ void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_SurfaceRender::linked_map_bb_changed()
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 	const uint32 nbe = map->nb_cells(Edge_Cell);
 
 	for (auto& it : parameter_set_)
@@ -275,7 +275,7 @@ void Plugin_SurfaceRender::linked_map_bb_changed()
 
 void Plugin_SurfaceRender::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(QObject::sender());
+	View* view = dynamic_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];
