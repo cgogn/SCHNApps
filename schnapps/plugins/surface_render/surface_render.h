@@ -262,7 +262,7 @@ public:
 
 	inline Plugin_SurfaceRender() {}
 
-	~Plugin_SurfaceRender() {}
+	~Plugin_SurfaceRender() override;
 
 private:
 
@@ -297,6 +297,7 @@ private slots:
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
 	void viewer_initialized();
+	void enable_on_selected_view(Plugin* p);
 
 	void update_dock_tab();
 
@@ -388,6 +389,7 @@ public slots:
 
 private:
 
+	QVariant* setting_auto_enable_on_selected_view;
 	SurfaceRender_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 };
