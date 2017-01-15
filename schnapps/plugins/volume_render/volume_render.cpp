@@ -61,11 +61,15 @@ MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* ma
 
 bool Plugin_VolumeRender::enable()
 {
+	setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true);
+	setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position");
+
 	dock_tab_ = new VolumeRender_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Volume Render");
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
+	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 	update_dock_tab();
 
@@ -79,6 +83,7 @@ void Plugin_VolumeRender::disable()
 
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
 	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
+	disconnect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 }
 
 void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
@@ -252,6 +257,10 @@ void Plugin_VolumeRender::map_linked(MapHandlerGen* map)
 
 	if (map->dimension() == 3)
 	{
+		View* view = schnapps_->get_selected_view();
+		if (view)
+			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_->toString());
+
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
@@ -278,11 +287,18 @@ void Plugin_VolumeRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
-	if (map->is_selected_map())
+	if (map && map->is_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
+			const QString vbo_name = QString::fromStdString(vbo->name());
+			dock_tab_->add_position_vbo(vbo_name);
+			View* view = schnapps_->get_selected_view();
+			if (view)
+			{
+				if (!get_parameters(view, map).get_position_vbo() && vbo_name == setting_auto_load_position_attribute_->toString())
+					set_position_vbo(view->get_name(), map->get_name(), vbo_name);
+			}
 		}
 	}
 }
@@ -381,6 +397,14 @@ void Plugin_VolumeRender::viewer_initialized()
 		auto& view_param_set = parameter_set_[view];
 		for (auto & p : view_param_set)
 			p.second.initialize_gl();
+	}
+}
+
+void Plugin_VolumeRender::enable_on_selected_view(Plugin* p)
+{
+	if ((this == p) && schnapps_->get_selected_view() && setting_auto_enable_on_selected_view_->toBool())
+	{
+		schnapps_->get_selected_view()->link_plugin(this);
 	}
 }
 

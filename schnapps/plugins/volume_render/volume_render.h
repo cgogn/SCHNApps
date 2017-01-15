@@ -276,6 +276,7 @@ private slots:
 	void linked_map_connectivity_changed();
 	void linked_attribute_changed(cgogn::Orbit,QString);
 	void viewer_initialized();
+	void enable_on_selected_view(Plugin* p);
 
 	void update_dock_tab();
 
@@ -353,6 +354,9 @@ private:
 
 	VolumeRender_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
+
+	QVariant* setting_auto_enable_on_selected_view_;
+	QVariant* setting_auto_load_position_attribute_;
 };
 
 } // namespace plugin_volume_render

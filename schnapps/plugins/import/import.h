@@ -86,6 +86,8 @@ private:
 
 private:
 
+	QVariant* setting_bbox_name_;
+	QVariant* setting_vbo_names_;
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
 	//	QAction* import_2D_image_action_;
