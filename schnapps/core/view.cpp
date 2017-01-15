@@ -604,7 +604,7 @@ void View::map_added(MapHandlerGen* mh)
 	if (mh)
 	{
 		dialog_maps_->add_item(mh->get_name());
-		if (schnapps_->get_core_setting("auto_add_map_to_selected_view").toBool())
+		if (schnapps_->get_core_setting("Add map to selected view").toBool())
 			dialog_maps_->list()->item(dialog_maps_->nb_items() -1)->setCheckState(Qt::Checked);
 	}
 }
