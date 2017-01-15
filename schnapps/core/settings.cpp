@@ -69,15 +69,27 @@ void Settings::add_module(const QString& module_name, const QVariantMap& module)
 Settings::~Settings()
 {}
 
-void Settings::add_setting(const QString& module_name, const QString& setting_name, const QVariant& value)
+QVariant* Settings::add_setting(const QString& module_name, const QString& setting_name, const QVariant& value)
 {
 	if (!map_[module_name].contains(setting_name))
 		map_[module_name][setting_name] = value;
+	return &map_[module_name][setting_name];
 }
 
-QVariant Settings::get_setting(const QString& module_name, const QString& setting_name)
+const QVariant Settings::get_setting(const QString& module_name, const QString& setting_name) const
 {
-	return map_[module_name][setting_name];
+	auto module_it = map_.constFind(module_name);
+	if (module_it != map_.constEnd())
+	{
+		auto setting_it = module_it.value().constFind(setting_name);
+		if (setting_it != module_it.value().constEnd())
+			return setting_it.value();
+		else
+			cgogn_log_debug("Settings::get_setting") << "Unable to find setting \"" << setting_name.toStdString() << "\" in module \"" << module_name.toStdString() << "\".";
+	} else {
+		cgogn_log_debug("Settings::get_setting") << "Unable to find module \"" << module_name.toStdString() << "\".";
+	}
+	return QVariant();
 }
 
 void Settings::to_file(const QString& filename)

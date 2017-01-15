@@ -385,12 +385,12 @@ public:
 		return settings_->get_setting(module_name, name);
 	}
 
-	inline void add_setting(const QString& module_name, const QString& name, const QVariant& val)
+	inline QVariant* add_setting(const QString& module_name, const QString& name, const QVariant& val)
 	{
-		settings_->add_setting(module_name,name,val);
+		return settings_->add_setting(module_name,name,val);
 	}
 
-	inline QVariant get_core_setting(const QString& name) const
+	inline const QVariant get_core_setting(const QString& name) const
 	{
 		return settings_->get_setting("core", name);
 	}

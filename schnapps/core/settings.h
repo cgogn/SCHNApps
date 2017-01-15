@@ -50,8 +50,15 @@ public:
 	Settings& operator=(Settings&&) = delete;
 	~Settings() override;
 
-	void add_setting(const QString& module_name, const QString& setting_name, const QVariant& value);
-	QVariant get_setting(const QString& module_name, const QString& setting_name);
+	/**
+	 * @brief add_setting, store a new setting
+	 * @param module_name
+	 * @param setting_name
+	 * @param value
+	 * @return a pointer to the place where the data is stored.
+	 */
+	QVariant* add_setting(const QString& module_name, const QString& setting_name, const QVariant& value);
+	const QVariant get_setting(const QString& module_name, const QString& setting_name) const;
 
 	void to_file(const QString& filename);
 	static std::unique_ptr<Settings> from_file(const QString& setting_filename);

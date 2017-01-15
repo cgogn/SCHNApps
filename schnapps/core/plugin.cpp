@@ -32,9 +32,9 @@ const QVariant Plugin::get_setting(const QString& name) const
 	return get_schnapps()->get_setting(this->get_name(), name);
 }
 
-void Plugin::add_setting(const QString& name, const QVariant& val)
+QVariant* Plugin::add_setting(const QString& name, const QVariant& default_value)
 {
-	get_schnapps()->add_setting(this->get_name(), name, val);
+	return get_schnapps()->add_setting(this->get_name(), name, default_value);
 }
 
 Plugin::~Plugin()
