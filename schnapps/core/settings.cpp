@@ -151,7 +151,15 @@ void Settings::setting_changed_list(QListWidgetItem* item)
 	{
 		const int index = listw->row(item);
 		QVariantList list = map_[sender->objectName()].toList();
-		list[index] = QVariant(item->text());
+		if (item->text().isEmpty())
+			list.removeAt(index);
+		else
+		{
+			if (index >= list.size())
+				list.push_back(QVariant(item->text()));
+			else
+				list[index] = QVariant(item->text());
+		}
 		map_[sender->objectName()] = QVariant(list);
 	}
 }

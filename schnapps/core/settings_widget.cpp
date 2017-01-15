@@ -34,7 +34,8 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QDoubleSpinBox>
-
+#include <QPushButton>
+#include <iostream>
 namespace schnapps
 {
 
@@ -120,6 +121,40 @@ QHBoxLayout*SettingsWidget::add_option_to_widget(QWidget* widget, const QString&
 	label->setText(option_name);
 	QListWidget* list_widget = new QListWidget(widget);
 	list_widget->setObjectName(option_name);
+
+	{ // pushbuttons '+' and '-'
+		QPushButton* button_plus = new QPushButton(QIcon(":icons/icons/plus.png"),"", widget);
+		QPushButton* button_minus = new QPushButton(QIcon(":icons/icons/minus.png"),"", widget);
+		QSpacerItem* hspacer = new QSpacerItem(10, 10, QSizePolicy::Expanding, QSizePolicy::Minimum);
+		button_minus->setFixedSize(QSize(20,20));
+		button_plus->setFixedSize(QSize(20,20));
+		QVBoxLayout* vlay = new QVBoxLayout();
+		vlay->addWidget(label);
+		QHBoxLayout* pblay = new QHBoxLayout();
+		pblay->addWidget(button_plus);
+		pblay->addWidget(button_minus);
+		pblay->addItem(hspacer);
+		vlay->addLayout(pblay);
+		hlay->addLayout(vlay);
+		QSpacerItem* vspacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+		vlay->addItem(vspacer);
+
+		connect(button_plus, &QPushButton::pressed, [=]()
+		{
+			QListWidgetItem *item = new QListWidgetItem("new item", list_widget);
+			item->setFlags(item->flags() | Qt::ItemIsEditable);
+		});
+
+		connect(button_minus, &QPushButton::pressed, [=]()
+		{
+			for (QListWidgetItem* it : list_widget->selectedItems())
+			{
+				it->setText("");
+				delete list_widget->takeItem(list_widget->row(it));
+			}
+		});
+
+	}
 	for (const QVariant& item_var : value)
 	{
 		const QString str = item_var.toString();
@@ -130,7 +165,6 @@ QHBoxLayout*SettingsWidget::add_option_to_widget(QWidget* widget, const QString&
 		item->setText(str);
 	}
 	connect(list_widget, SIGNAL(itemChanged(QListWidgetItem*)), settings_, SLOT(setting_changed_list(QListWidgetItem*)));
-	hlay->addWidget(label);
 	hlay->addWidget(list_widget);
 	return hlay;
 }
