@@ -29,7 +29,7 @@ namespace schnapps
 
 const QVariant Plugin::get_setting(const QString& name) const
 {
-	return get_schnapps()->get_setting(name);
+	return get_schnapps()->get_setting(this->get_name(), name);
 }
 
 void Plugin::add_setting(const QString& name, const QVariant& val)

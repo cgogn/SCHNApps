@@ -35,7 +35,7 @@
 #include <QVBoxLayout>
 #include <QDoubleSpinBox>
 #include <QPushButton>
-#include <iostream>
+
 namespace schnapps
 {
 
@@ -179,14 +179,15 @@ void SettingsWidget::fill_widget()
 
 	tabWidget->clear();
 
-	for(auto it = settings_->modules_.constBegin(); it != settings_->modules_.constEnd(); ++it)
+	for(auto it = settings_->map_.constBegin(); it != settings_->map_.constEnd(); ++it)
 	{
 		QWidget* new_w = new QWidget();
+		new_w->setObjectName(it.key());
 		tabWidget->addTab(new_w, it.key());
 		QVBoxLayout* vertical_layout = new QVBoxLayout(new_w);
-		for (const QString& key : it.value())
+		for (auto vmit = it.value().constBegin(); vmit != it.value().constEnd() ; ++vmit)
 		{
-			QHBoxLayout* hlay = SettingsWidget::add_option_to_widget(new_w, key, settings_->map_[key]);
+			QHBoxLayout* hlay = SettingsWidget::add_option_to_widget(new_w, vmit.key(), vmit.value());
 			if (hlay)
 				vertical_layout->addLayout(hlay);
 		}

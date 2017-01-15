@@ -84,10 +84,10 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 #endif
 	settings_ = Settings::from_file("settings.json");
 	settings_->set_widget(window->settings_widget_.get());
-	for (const QVariant& plugin_dir_v : get_setting("plugins_paths").toList())
+	for (const QVariant& plugin_dir_v : get_core_setting("plugins_paths").toList())
 		this->register_plugins_directory(plugin_dir_v.toString());
 
-	for (const QVariant& plugin_v : get_setting("load_modules").toList())
+	for (const QVariant& plugin_v : get_core_setting("load_modules").toList())
 		this->enable_plugin(plugin_v.toString());
 }
 

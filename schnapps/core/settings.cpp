@@ -60,28 +60,24 @@ std::unique_ptr<Settings> Settings::from_file(const QString& setting_filename)
 
 void Settings::add_module(const QString& module_name, const QVariantMap& module)
 {
-	for (auto it = module.constBegin(); it != module.constEnd() ; ++it)
+	if (!map_.contains(module_name))
 	{
-		if (!map_.contains(it.key()))
-		{
-			map_[it.key()] = it.value();
-			modules_[module_name].push_back(it.key());
-		}
+		map_[module_name] = module;
 	}
 }
 
 Settings::~Settings()
-{
-
-}
+{}
 
 void Settings::add_setting(const QString& module_name, const QString& setting_name, const QVariant& value)
 {
-	if (!map_.contains(setting_name))
-	{
-		map_[setting_name] = value;
-		modules_[module_name].push_back(setting_name);
-	}
+	if (!map_[module_name].contains(setting_name))
+		map_[module_name][setting_name] = value;
+}
+
+QVariant Settings::get_setting(const QString& module_name, const QString& setting_name)
+{
+	return map_[module_name][setting_name];
 }
 
 void Settings::to_file(const QString& filename)
@@ -91,13 +87,8 @@ void Settings::to_file(const QString& filename)
 	if (setting_file.open(QIODevice::WriteOnly))
 	{
 		QJsonObject obj;
-		for (auto it = modules_.constBegin(); it != modules_.constEnd() ; ++it)
-		{
-			QVariantMap map;
-			for (const QString s : it.value())
-				map[s] = map_[s];
-			obj[it.key()] = QJsonObject::fromVariantMap(map);
-		}
+		for (auto it = map_.constBegin(); it != map_.constEnd() ; ++it)
+			obj[it.key()] = QJsonObject::fromVariantMap(it.value());
 		QJsonDocument doc(obj);
 		setting_file.write(doc.toJson());
 	} else {
@@ -112,35 +103,44 @@ void Settings::set_widget(QWidget* widget)
 		settings_widget_->settings_ = this;
 }
 
-void Settings::setting_changed(const QString& name, const QVariant& value)
+void Settings::setting_changed(const QString& module_name, const QString& name, const QVariant& value)
 {
-	if (!map_.contains(name))
+	if (!map_.contains(module_name))
 	{
-		cgogn_log_debug("Settings::setting_changed") << "Trying to modify a non-existing setting \"" << name.toStdString() << "\".";
-	} else {
-		QVariant& v = map_[name];
-		if (v.type() != value.type())
+		cgogn_log_debug("Settings::setting_changed") << "Trying to modify a setting of a non-existing module \"" << module_name.toStdString() << "\".";
+	} else
+	{
+		if (!map_[module_name].contains(name))
 		{
-			cgogn_log_debug("Settings::setting_changed") << "Cannot replace a setting of type \"" << v.typeName() << "\" by another setting of type \"" << value.typeName() << "\".";
+			cgogn_log_debug("Settings::setting_changed") << "Trying to modify a non-existing setting \"" << name.toStdString() << "\" of the module \"" << module_name.toStdString() << "\".";
 		} else {
-			v = value;
+			QVariant& v = map_[module_name][name];
+			if (v.type() != value.type())
+			{
+				cgogn_log_debug("Settings::setting_changed") << "Cannot replace a setting of type \"" << v.typeName() << "\" by another setting of type \"" << value.typeName() << "\".";
+			} else {
+				v = value;
+			}
 		}
 	}
 }
 
 void Settings::setting_changed_bool(bool b)
 {
-	setting_changed(QObject::sender()->objectName(), QVariant(b));
+	QObject* sender = QObject::sender();
+	setting_changed(sender->parent()->objectName(), sender->objectName(), QVariant(b));
 }
 
 void Settings::setting_changed_double(double d)
 {
-	setting_changed(QObject::sender()->objectName(), QVariant(d));
+	QObject* sender = QObject::sender();
+	setting_changed(sender->parent()->objectName(), sender->objectName(), QVariant(d));
 }
 
 void Settings::setting_changed_string(const QString& str)
 {
-	setting_changed(QObject::sender()->objectName(), QVariant(str));
+	QObject* sender = QObject::sender();
+	setting_changed(sender->parent()->objectName(), sender->objectName(), QVariant(str));
 }
 
 void Settings::setting_changed_list(QListWidgetItem* item)
@@ -149,8 +149,9 @@ void Settings::setting_changed_list(QListWidgetItem* item)
 	QListWidget* listw = dynamic_cast<QListWidget*>(sender);
 	if (listw)
 	{
+		const QString module_name = sender->parent()->objectName();
 		const int index = listw->row(item);
-		QVariantList list = map_[sender->objectName()].toList();
+		QVariantList list = map_[module_name][sender->objectName()].toList();
 		if (item->text().isEmpty())
 			list.removeAt(index);
 		else
@@ -160,7 +161,7 @@ void Settings::setting_changed_list(QListWidgetItem* item)
 			else
 				list[index] = QVariant(item->text());
 		}
-		map_[sender->objectName()] = QVariant(list);
+		map_[module_name][sender->objectName()] = QVariant(list);
 	}
 }
 

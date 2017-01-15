@@ -49,16 +49,17 @@ public:
 	Settings& operator=(const Settings&) = delete;
 	Settings& operator=(Settings&&) = delete;
 	~Settings() override;
+
 	void add_setting(const QString& module_name, const QString& setting_name, const QVariant& value);
-	QVariant& operator[](const QString& s) { return map_[s]; }
-	const QVariant operator[](const QString& s) const { return map_[s]; }
-	bool contains(const QString& s) const { return map_.contains(s); }
+	QVariant get_setting(const QString& module_name, const QString& setting_name);
+
 	void to_file(const QString& filename);
 	static std::unique_ptr<Settings> from_file(const QString& setting_filename);
+
 	void set_widget(QWidget* widget);
 
 private slots:
-	void setting_changed(const QString& name, const QVariant& value);
+	void setting_changed(const QString& module_name, const QString& name, const QVariant& value);
 	void setting_changed_bool(bool b);
 	void setting_changed_double(double d);
 	void setting_changed_string(const QString& str);
@@ -68,8 +69,7 @@ private:
 
 	void add_module(const QString& module_name, const QVariantMap& module);
 	SettingsWidget* settings_widget_;
-	QVariantMap map_;
-	QMap<QString, QStringList> modules_;
+	QMap<QString, QVariantMap> map_;
 };
 
 } // namespace schnapps
