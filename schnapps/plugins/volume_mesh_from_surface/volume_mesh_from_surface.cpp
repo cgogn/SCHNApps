@@ -151,6 +151,18 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	if (!mh2 || !position_att.is_valid())
 		return nullptr;
 
+	CMap2& map2 = *mh2->get_map();
+	bool is_triangular = true;
+	map2.foreach_cell([&is_triangular, &map2](CMap2::Face f) -> bool
+	{
+		return is_triangular = (map2.codegree(f) == 3);
+	});
+	if (!is_triangular)
+	{
+		cgogn_log_warning("Plugin_VolumeMeshFromSurface::generate_cgal") << "The surface map must be triangulated.";
+		return nullptr;
+	}
+
 	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
 	tetrahedralize(params, mh2, position_att, mh3);
 	return mh3;
