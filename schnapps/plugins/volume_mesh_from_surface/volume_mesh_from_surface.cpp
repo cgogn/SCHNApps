@@ -29,6 +29,7 @@
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/io/map_export.h>
 #ifdef PLUGIN_VMFS_WITH_CGAL
+#include <cgogn/modeling/algos/refinements.h>
 #include <cgal/c3t3_import.h>
 #endif // PLUGIN_VMFS_WITH_CGAL
 #include <image.h>
@@ -159,8 +160,9 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	});
 	if (!is_triangular)
 	{
-		cgogn_log_warning("Plugin_VolumeMeshFromSurface::generate_cgal") << "The surface map must be triangulated.";
-		return nullptr;
+		cgogn::modeling::triangule<CMap2, VEC3>(map2, position_att);
+		mh2->notify_connectivity_change();
+		mh2->notify_attribute_change(CMap2::Vertex::ORBIT,"position");
 	}
 
 	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));

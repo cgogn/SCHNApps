@@ -6,6 +6,7 @@ project(plugin_volume_mesh_from_surface
 
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
+find_package(cgogn_modeling REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(CGAL COMPONENTS Core ImageIO)
 if(CGAL_FOUND)
@@ -70,6 +71,7 @@ target_link_libraries(${PROJECT_NAME}
 	${CGAL_LIBRARIES}
 	${cgogn_core_LIBRARIES}
 	${cgogn_io_LIBRARIES}
+	${cgogn_modeling_LIBRARIES}
 	${CGAL_Core_LIBRARY}
 	${Boost_LIBRARIES}
 	${MPFR_LIBRARIES}
