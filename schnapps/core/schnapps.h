@@ -27,6 +27,7 @@
 #include <schnapps/core/dll.h>
 #include <schnapps/core/settings.h>
 #include <schnapps/core/schnapps_window.h>
+#include <schnapps/core/status_bar_output.h>
 
 #include <QObject>
 #include <QString>
@@ -400,6 +401,7 @@ protected:
 	QString app_path_;
 
 	std::unique_ptr<Settings> settings_;
+	std::unique_ptr<StatusBarOutput> status_bar_output_;
 
 	std::map<QString, std::unique_ptr<Camera>> cameras_;
 

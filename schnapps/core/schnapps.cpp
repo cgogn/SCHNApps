@@ -58,8 +58,10 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	selected_view_(nullptr),
 	window_(window)
 {
-	// create & setup control dock
+	status_bar_output_ = cgogn::make_unique<StatusBarOutput>(window->statusBar());
+	cgogn::logger::Logger::get_logger().add_output(status_bar_output_.get());
 
+	// create & setup control dock
 	control_camera_tab_ = new ControlDock_CameraTab(this);
 	window_->control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
 	control_plugin_tab_ = new ControlDock_PluginTab(this);

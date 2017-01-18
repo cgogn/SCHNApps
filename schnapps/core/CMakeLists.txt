@@ -27,6 +27,7 @@ set(HEADER_FILES
 	cells_set.h
 	settings.h
 	settings_widget.h
+	status_bar_output.h
 )
 
 set(SOURCE_FILES
@@ -48,6 +49,7 @@ set(SOURCE_FILES
 	types.cpp
 	settings.cpp
 	settings_widget.cpp
+	status_bar_output.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
