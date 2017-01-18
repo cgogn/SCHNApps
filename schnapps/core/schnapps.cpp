@@ -182,7 +182,7 @@ void SCHNApps::register_plugins_directory(const QString& path)
 			}
 			else
 			{
-				std::cout << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded." << std::endl;
+				cgogn_log_info("SCHNApps::register_plugins_directory") << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded.";
 			}
 		}
 	}
@@ -214,7 +214,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				// if it succeeded we reference this plugin
 				plugins_.insert(std::make_pair(plugin_name, std::unique_ptr<Plugin>(plugin)));
 
-				status_bar_message(plugin_name + QString(" successfully loaded."), 2000);
+				cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" successfully loaded.")).toStdString();
 				emit(plugin_enabled(plugin));
 //				menubar->repaint();
 				return plugin;
@@ -225,7 +225,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				return nullptr;
 			}
 		} else { // if loading fails
-			std::cout << "loader.instance() failed with error \"" << loader.errorString().toStdString() << "\"." << std::endl;
+			cgogn_log_warning("SCHNApps::enable_plugin") << "Loader.instance() failed with error \"" << loader.errorString().toStdString() << "\".";
 			return nullptr;
 		}
 	}
@@ -578,7 +578,7 @@ void SCHNApps::set_split_view_positions(QString positions)
 		}
 		if (qts.atEnd())
 		{
-			std::cerr << "Problem restoring view split configuration" << std::endl;
+			cgogn_log_error("SCHNApps::set_split_view_positions") << "Problem restoring view split configuration.";
 			return;
 		}
 

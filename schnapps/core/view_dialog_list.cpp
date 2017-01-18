@@ -22,8 +22,8 @@
 *******************************************************************************/
 
 #include <iostream>
-
 #include <schnapps/core/view_dialog_list.h>
+#include <cgogn/core/utils/logger.h>
 
 namespace schnapps
 {
@@ -115,7 +115,7 @@ void ViewDialogList::check(const QString& str, Qt::CheckState ck)
 	if (!items.empty())
 		items[0]->setCheckState(ck);
 	else
-		std::cerr << "ViewDialogList::check() " << str.toStdString() << " not in list" << std::endl;
+		cgogn_log_warning("ViewDialogList::check") << "\"" << str.toStdString() << "\" not in list.";
 }
 
  bool ViewDialogList::is_checked(const QString& str)
@@ -123,7 +123,7 @@ void ViewDialogList::check(const QString& str, Qt::CheckState ck)
 	QList<QListWidgetItem*> items = list_items_->findItems(str, Qt::MatchExactly);
 	if (!items.empty())
 		return (items[0]->checkState() == Qt::Checked);
-	std::cerr << "ViewDialogList::isChecked() "<< str.toStdString() << " not in list" << std::endl;
+	cgogn_log_warning("ViewDialogList::is_checked") << "\"" << str.toStdString() << "\" not in list.";
 	return false;
 }
 

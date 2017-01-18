@@ -141,7 +141,7 @@ void SurfaceRenderVector_DockTab::vector_scale_factor_changed(int i)
 		if (view && map && item)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			int idx = p.get_vector_vbo_index(map->get_vbo(item->text()));
+			const uint32 idx = p.get_vector_vbo_index(map->get_vbo(item->text()));
 			float scale = p.get_vector_scale_factor(idx);
 			float new_scale = float(i) / 50.0f;
 			if (fabs(scale - new_scale) > 0.01f)
@@ -239,7 +239,7 @@ void SurfaceRenderVector_DockTab::update_map_parameters(MapHandlerGen* map, cons
 			QListWidgetItem* item = list_vectorVBO->item(list_vectorVBO->count() - 1);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
 			item->setCheckState(Qt::Unchecked);
-			if (p.get_vector_vbo_index(vbo.get()) >= 0)
+			if (p.get_vector_vbo_index(vbo.get())!= UINT32_MAX)
 				list_vectorVBO->item(i-1)->setCheckState(Qt::Checked);
 
 			++i;

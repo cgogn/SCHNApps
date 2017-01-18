@@ -478,19 +478,19 @@ void View::keyPressEvent(QKeyEvent* event)
 				msg_box.setDefaultButton(QMessageBox::Ok);
 				if (msg_box.exec() == QMessageBox::Ok)
 				{
-					schnapps_->status_bar_message("frame snapshot !!", 2000);
+					cgogn_log_info("View::keyPressEvent") << "frame snapshot !!";
 					connect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
 				}
 				else
 				{
-					schnapps_->status_bar_message("cancel frame snapshot", 2000);
+					cgogn_log_info("View::keyPressEvent") <<"Cancel frame snapshot.";
 					save_snapshots_ = false;
 				}
 			}
 			else
 			{
 				disconnect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
-				schnapps_->status_bar_message("Stop frame snapshot", 2000);
+				cgogn_log_info("View::keyPressEvent") <<"Stop frame snapshot.";
 			}
 
 		}
