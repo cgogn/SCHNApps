@@ -681,6 +681,9 @@ protected:
 		cgogn::rendering::VBO* vbo = this->get_vbo(name);
 		if (!vbo)
 		{
+			if (!has_attribute(Vertex::ORBIT, name))
+				return nullptr;
+
 			const MAP_TYPE* cmap = get_map();
 
 			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
