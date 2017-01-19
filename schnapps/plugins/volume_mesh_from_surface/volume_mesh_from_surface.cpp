@@ -162,7 +162,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	{
 		cgogn::modeling::triangule<CMap2, VEC3>(map2, position_att);
 		mh2->notify_connectivity_change();
-		mh2->notify_attribute_change(CMap2::Vertex::ORBIT,"position");
+		mh2->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(position_att.name()));
 	}
 
 	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
