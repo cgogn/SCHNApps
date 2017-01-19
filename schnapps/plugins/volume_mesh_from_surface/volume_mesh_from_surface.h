@@ -97,6 +97,7 @@ public:
 
 	Plugin_VolumeMeshFromSurface();
 
+	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att);
 	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args);
 	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const MeshGeneratorParameters& params);
 	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const MeshGeneratorParameters& params);
@@ -112,7 +113,7 @@ private:
 	std::unique_ptr<VolumeMeshFromSurfaceDialog> dialog_;
 
 public slots:
-
+	void generate_button_netgen_pressed();
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
 	void plugin_enabled(Plugin*);

@@ -34,6 +34,8 @@
 #endif // PLUGIN_VMFS_WITH_CGAL
 #include <image.h>
 #include <tetgen/tetgen.h>
+#include <netgen_structure_io.h>
+#include <netgen/nglib/nglib.h>
 
 namespace schnapps
 {
@@ -102,6 +104,25 @@ void Plugin_VolumeMeshFromSurface::disable()
 	schnapps_->remove_menu_action(gen_mesh_action_);
 }
 
+void Plugin_VolumeMeshFromSurface::generate_button_netgen_pressed()
+{
+	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
+	MapHandler2* handler_map2 = dynamic_cast<MapHandler2*>(mhg);
+	if (handler_map2)
+	{
+		Map2* map = handler_map2->get_map();
+		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
+		auto position_att = map->template get_attribute<VEC3, Map2::Vertex::ORBIT>(position_att_name);
+
+		if (!position_att.is_valid())
+		{
+			cgogn_log_info("Plugin_VolumeMeshFromSurface") << "The position attribute has to be of type VEC3.";
+			return;
+		}
+		generate_netgen(handler_map2, position_att);
+	}
+}
+
 void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 {
 	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
@@ -120,6 +141,27 @@ void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 		const std::string& tetgen_command_line = generation_parameters_.tetgen_command_line;
 		generate_tetgen(handler_map2, position_att, tetgen_command_line.c_str());
 	}
+}
+
+Plugin_VolumeMeshFromSurface::MapHandler3*Plugin_VolumeMeshFromSurface::generate_netgen(Plugin_VolumeMeshFromSurface::MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att)
+{
+	if (!mh2 || !position_att.is_valid())
+		return nullptr;
+
+	Map2* map = mh2->get_map();
+	auto netgen_structure = export_netgen(*map, position_att);
+	nglib::Ng_Meshing_Parameters mp;
+	nglib::Ng_GenerateVolumeMesh (netgen_structure.get(), &mp);
+
+	NetgenStructureVolumeImport netgen_import(netgen_structure.get());
+	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("netgen_export", 3));
+	netgen_import.create_map(*handler_map3->get_map());
+
+	handler_map3->attribute_added(CMap3::Vertex::ORBIT, "position");
+	handler_map3->set_bb_vertex_attribute("position");
+	static_cast<MapHandlerGen*>(handler_map3)->create_vbo("position");
+
+	return handler_map3;
 }
 
 Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args)
@@ -239,7 +281,7 @@ void Plugin_VolumeMeshFromSurface::plugin_disabled(Plugin* plugin)
 
 				for(int i = 1, size = dialog_->export_dialog_->comboBox_images->count(); i < size; ++i)
 				{
-					dialog_->export_dialog_->comboBox_images->removeItem(i);
+					dialog_->export_dialog_->comboBox_images->removeItem(1);
 				}
 		}
 	}

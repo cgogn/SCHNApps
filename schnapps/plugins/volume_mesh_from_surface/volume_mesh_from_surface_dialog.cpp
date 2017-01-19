@@ -41,19 +41,18 @@ VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_Vol
 {
 	export_dialog_ = cgogn::make_unique<ExportDialog>();
 	cgal_dialog_ = cgogn::make_unique<ExportCGALDialog>();
+	netgen_dialog_ = cgogn::make_unique<ExportNetgenDialog>();
 	tetgen_dialog_ = cgogn::make_unique<ExportTetgenDialog>();
 
 	this->export_dialog_->setupUi(export_dialog_.get());
 	this->cgal_dialog_->setupUi(cgal_dialog_.get());
+	this->netgen_dialog_->setupUi(netgen_dialog_.get());
 	this->tetgen_dialog_->setupUi(tetgen_dialog_.get());
 
 	connect(this->export_dialog_->comboBoxMapSelection, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_map_changed(QString)));
-	connect(this->export_dialog_->pushButton_gen_volume_meshTetgen, SIGNAL(pressed()), this->tetgen_dialog_.get(), SLOT(show()));
-	connect(this->export_dialog_->pushButtonGenMeshCGAL, SIGNAL(pressed()), this->cgal_dialog_.get(), SLOT(show()));
+	connect(this->export_dialog_->comboBox_generator, SIGNAL(currentIndexChanged(QString)), this, SLOT(generator_changed(QString)));
 
-	connect(this->export_dialog_->pushButton_gen_volume_meshTetgen, SIGNAL(pressed()), this->export_dialog_.get(), SLOT(hide()));
-	connect(this->export_dialog_->pushButtonGenMeshCGAL, SIGNAL(pressed()), this->export_dialog_.get(), SLOT(hide()));
-
+	connect(this->netgen_dialog_->buttonBox,SIGNAL(accepted()), plugin_, SLOT(generate_button_netgen_pressed()));
 	connect(this->tetgen_dialog_->buttonBox,SIGNAL(accepted()), plugin_, SLOT(generate_button_tetgen_pressed()));
 	connect(this->cgal_dialog_->buttonBox, SIGNAL(accepted()), plugin_, SLOT(generate_button_cgal_pressed()));
 	connect(this->tetgen_dialog_->lineEdit_tetgen_args, SIGNAL(textChanged(QString)), this, SLOT(tetgen_args_updated(QString)));
@@ -88,15 +87,33 @@ VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_Vol
 	connect(this->export_dialog_->comboBox_images, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_image_changed(QString)));
 
 	update_mesh_generatuion_ui();
-
-	this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
-	this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(true);
-
 }
 
 void VolumeMeshFromSurfaceDialog::show_export_dialog()
 {
 	this->export_dialog_->show();
+}
+
+void VolumeMeshFromSurfaceDialog::generator_changed(const QString& generator)
+{
+	if (generator == "cgal")
+	{
+		this->cgal_dialog_->show();
+		this->tetgen_dialog_->hide();
+	} else {
+		this->cgal_dialog_->hide();
+		if (generator == "tetgen")
+		{
+			this->tetgen_dialog_->show();
+		} else {
+			this->tetgen_dialog_->hide();
+			if (generator =="netgen")
+			{
+				this->netgen_dialog_->show();
+				// todo
+			}
+		}
+	}
 }
 
 void VolumeMeshFromSurfaceDialog::map_added(MapHandlerGen* mhg)
@@ -129,38 +146,31 @@ QString VolumeMeshFromSurfaceDialog::get_selected_map() const
 void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 {
 	MapHandlerGen* mhg = schnapps_->get_map(map_name);
+	const bool previous_state = export_dialog_->comboBox_generator->blockSignals(true);
+	export_dialog_->comboBox_generator->clear();
 
 	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
 	{
-		this->export_dialog_->comboBox_images->setCurrentIndex(0);
-		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(false);
-#ifdef PLUGIN_VMFS_WITH_CGAL
-		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(false);
-#endif
+		QStringList list;
+		list << "-select-" << "cgal" << "netgen" << "tetgen";
+		export_dialog_->comboBox_generator->insertItems(0, list);
+		export_dialog_->comboBox_images->setCurrentIndex(0);
 
-
-		this->export_dialog_->comboBoxPositionSelection->clear();
+		export_dialog_->comboBoxPositionSelection->clear();
 		const auto* vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
 		for (const auto& att_name : vert_att_cont->names())
-			this->export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
-
-	} else {
-		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
-		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(true);
+			export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
 	}
-
+	if (!previous_state)
+		export_dialog_->comboBox_generator->blockSignals(false);
 }
 
 void VolumeMeshFromSurfaceDialog::selected_image_changed(QString /*image_name*/)
 {
-	this->export_dialog_->comboBoxMapSelection->setCurrentIndex(0);
-	if (this->export_dialog_->comboBox_images->currentIndex() >= 1)
-	{
-		this->export_dialog_->pushButton_gen_volume_meshTetgen->setDisabled(true);
-#ifdef PLUGIN_VMFS_WITH_CGAL
-		this->export_dialog_->pushButtonGenMeshCGAL->setDisabled(false);
-#endif
-	}
+	export_dialog_->comboBoxMapSelection->setCurrentIndex(0);
+	export_dialog_->comboBox_generator->clear();
+	if (export_dialog_->comboBox_images->currentIndex() >= 1)
+		export_dialog_->comboBox_generator->insertItem(0, "cgal");
 }
 
 void VolumeMeshFromSurfaceDialog::cell_size_changed(double cs)

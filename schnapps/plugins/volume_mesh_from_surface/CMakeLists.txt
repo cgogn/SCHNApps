@@ -16,14 +16,18 @@ if(CGAL_FOUND)
 	find_package(Boost REQUIRED)
 endif(CGAL_FOUND)
 
+add_subdirectory(netgen)
+
 set(HEADER_FILES
 	dll.h
+	netgen_structure_io.h
 	tetgen_structure_io.h
 	volume_mesh_from_surface.h
 	volume_mesh_from_surface_dialog.h
 )
 
 set(SOURCE_FILES
+	netgen_structure_io.cpp
 	tetgen_structure_io.cpp
 	volume_mesh_from_surface.cpp
 	volume_mesh_from_surface_dialog.cpp
@@ -60,12 +64,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
 	$<BUILD_INTERFACE:${CGAL_INCLUDE_DIRS}>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/netgen/libsrc/include>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
+	nglib
 	tet
 	plugin_image
 	${CGAL_LIBRARIES}

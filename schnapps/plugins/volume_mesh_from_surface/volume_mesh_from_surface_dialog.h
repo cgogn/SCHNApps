@@ -28,6 +28,7 @@
 #include <schnapps/core/types.h>
 #include <ui_cgal_export.h>
 #include <ui_tetgen_export.h>
+#include <ui_netgen_export.h>
 #include <ui_export_dialog.h>
 #include <memory>
 
@@ -44,6 +45,9 @@ class Plugin_VolumeMeshFromSurface;
 struct MeshGeneratorParameters;
 
 class SCHNAPPS_PLUGIN_VMFS_API ExportDialog : public QDialog, public Ui::Dialog_export
+{};
+
+class SCHNAPPS_PLUGIN_VMFS_API ExportNetgenDialog : public QDialog, public Ui::Dialog_netgen
 {};
 
 class SCHNAPPS_PLUGIN_VMFS_API ExportTetgenDialog : public QDialog, public Ui::Dialog_tetgen
@@ -72,6 +76,8 @@ public slots:
 	void show_export_dialog();
 
 private slots:
+	void generator_changed(const QString& generator);
+
 	void selected_map_changed(QString map_name);
 	void selected_image_changed(QString image_name);
 
@@ -110,6 +116,7 @@ private:
 	void update_mesh_generatuion_ui();
 
 	std::unique_ptr<ExportCGALDialog> cgal_dialog_;
+	std::unique_ptr<ExportNetgenDialog> netgen_dialog_;
 	std::unique_ptr<ExportTetgenDialog> tetgen_dialog_;
 	std::unique_ptr<ExportDialog> export_dialog_;
 
