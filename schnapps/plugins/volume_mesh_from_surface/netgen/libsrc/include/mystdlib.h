@@ -1,4 +1,4 @@
-#ifndef FILE_MYSTDLIB
+﻿#ifndef FILE_MYSTDLIB
 #define FILE_MYSTDLIB
 
 #ifdef HAVE_CONFIG_H
@@ -72,9 +72,6 @@ namespace metis { extern "C" {
 
 
 #endif
-
-
-using namespace std;
 
 #endif
 

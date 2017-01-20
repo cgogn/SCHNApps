@@ -1,4 +1,4 @@
-//
+﻿//
 //  Write user dependent output file
 //
 
@@ -12,6 +12,7 @@
 
 #include "writeuser.hpp"
 
+using namespace std;
 
 namespace netgen
 {

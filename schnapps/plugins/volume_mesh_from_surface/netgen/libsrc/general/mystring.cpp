@@ -1,4 +1,4 @@
-
+﻿
 //**************************************************************
 //
 // filename:             mystring.cpp
@@ -21,6 +21,7 @@
 #include <linalg.hpp>
 #include <gprim.hpp>
 
+using namespace std;
 
 namespace netgen
 {

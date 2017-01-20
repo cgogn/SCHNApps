@@ -1,4 +1,4 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 
 #include <meshing.hpp>
 #include <csg.hpp>
@@ -12,7 +12,7 @@
 // #include "../visualization/soldata.hpp"
 // #include <visual.hpp>
 
-
+using namespace std;
 
 namespace netgen
 {

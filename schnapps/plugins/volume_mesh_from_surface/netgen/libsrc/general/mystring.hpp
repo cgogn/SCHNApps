@@ -1,4 +1,4 @@
-
+﻿
 //**************************************************************
 //
 // filename:             mystring.h
@@ -27,7 +27,7 @@ class Vec3d;
 
 
 // extract string str which is enclosed by the given character encl from a given string in
-void ReadEnclString(istream & in, string & str, const char encl);
+void ReadEnclString(std::istream & in, std::string & str, const char encl);
 
 
 class MyStr;
@@ -39,8 +39,8 @@ DLL_HEADER int operator <= (const MyStr &, const MyStr &);
 DLL_HEADER int operator > (const MyStr &, const MyStr &);
 DLL_HEADER int operator >= (const MyStr &, const MyStr &);
 DLL_HEADER int operator != (const MyStr &, const MyStr &);
-DLL_HEADER ostream& operator << (ostream &, const MyStr &);
-DLL_HEADER istream& operator >> (istream &, MyStr &);
+DLL_HEADER std::ostream& operator << (std::ostream &, const MyStr &);
+DLL_HEADER std::istream& operator >> (std::istream &, MyStr &);
 
 class DLL_HEADER MyStr
 {
@@ -55,7 +55,7 @@ public:
   MyStr(double);
   MyStr(const Point3d& p);
   MyStr(const Vec3d& p);
-  MyStr(const string & st);
+  MyStr(const std::string & st);
 
   ~MyStr();
   MyStr Left(unsigned);
@@ -70,7 +70,7 @@ public:
   DLL_HEADER friend MyStr operator + (const MyStr &, const MyStr &);
   void operator += (const MyStr &);
   char* c_str();
-  string cpp_string(void) const;
+  std::string cpp_string(void) const;
 
   //change every ',' -> ';', '.' -> ','
   void ConvertTextToExcel();
@@ -91,8 +91,8 @@ public:
   DLL_HEADER friend int operator > (const MyStr &, const MyStr &);
   DLL_HEADER friend int operator >= (const MyStr &, const MyStr &);
   DLL_HEADER friend int operator != (const MyStr &, const MyStr &);
-  DLL_HEADER friend ostream& operator << (ostream &, const MyStr &);
-  DLL_HEADER friend istream& operator >> (istream &, MyStr &);
+  DLL_HEADER friend std::ostream& operator << (std::ostream &, const MyStr &);
+  DLL_HEADER friend std::istream& operator >> (std::istream &, MyStr &);
   static void SetToErrHandler(void (*)());
 private:
   MyStr(unsigned, int);
@@ -204,7 +204,7 @@ inline int operator != (const MyStr &s1, const MyStr& s2)
   return !(s1 == s2);
 }
 
-inline ostream& operator << (ostream& os, const MyStr& s)
+inline std::ostream& operator << (std::ostream& os, const MyStr& s)
 {
   return os << s.str;
 }

@@ -1,4 +1,4 @@
-#ifndef FILE_NGEXCEPTION
+﻿#ifndef FILE_NGEXCEPTION
 #define FILE_NGEXCEPTION
 
 /**************************************************************************/
@@ -14,19 +14,19 @@ namespace netgen
 class NgException 
 {
   /// verbal description of exception
-  string what;
+  std::string what;
 public:
   ///
-  DLL_HEADER NgException (const string & s);
+  DLL_HEADER NgException (const std::string & s);
   ///
   DLL_HEADER virtual ~NgException ();
 
   /// append string to description
-  DLL_HEADER void Append (const string & s);
+  DLL_HEADER void Append (const std::string & s);
   //  void Append (const char * s);
   
   /// verbal description of exception
-  const string & What() const { return what; }
+  const std::string & What() const { return what; }
 };
 }
 

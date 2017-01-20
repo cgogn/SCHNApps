@@ -1,9 +1,11 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 
 
 #include <myadt.hpp>
 // class DenseMatrix;
 #include <gprim.hpp>
+
+using namespace std;
 
 namespace netgen
 {

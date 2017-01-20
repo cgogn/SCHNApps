@@ -1,4 +1,4 @@
-#ifndef FILE_MESHING3
+﻿#ifndef FILE_MESHING3
 #define FILE_MESHING3
 
 
@@ -30,7 +30,7 @@ class Meshing3
   double tolfak;
 public:
   /// 
-  Meshing3 (const string & rulefilename); 
+  Meshing3 (const std::string & rulefilename);
   /// 
   Meshing3 (const char ** rulep);
   ///

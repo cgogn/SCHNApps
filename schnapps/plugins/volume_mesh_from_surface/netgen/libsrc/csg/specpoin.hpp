@@ -1,4 +1,4 @@
-#ifndef FILE_SPECPOIN
+﻿#ifndef FILE_SPECPOIN
 #define FILE_SPECPOIN
 
 
@@ -51,7 +51,7 @@ namespace netgen
     SpecialPoint & operator= (const SpecialPoint & sp2);
   
     ///
-    void Print (ostream & str) const;
+    void Print (std::ostream & str) const;
 
 
     int GetLayer() const { return layer; }
@@ -63,7 +63,7 @@ namespace netgen
     }
   };
 
-  inline ostream & operator<< (ostream & ost, const SpecialPoint & sp)
+  inline std::ostream & operator<< (std::ostream & ost, const SpecialPoint & sp)
   {
     sp.Print (ost);
     return ost;

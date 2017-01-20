@@ -1,4 +1,4 @@
-/***************************************************************************/
+﻿/***************************************************************************/
 /*                                                                         */
 /* Vorlesung Optimierung I, Gfrerer, WS94/95                               */
 /* BFGS-Verfahren zur Lösung freier nichtlinearer Optimierungsprobleme     */
@@ -14,6 +14,8 @@
 #include <linalg.hpp>
 #include "opti.hpp"
 
+
+using namespace std;
 
 namespace netgen
 {

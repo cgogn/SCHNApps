@@ -1,4 +1,4 @@
-#ifndef FILE_GENCYL
+﻿#ifndef FILE_GENCYL
 #define FILE_GENCYL
 
 /**************************************************************************/
@@ -57,7 +57,7 @@ namespace netgen
     ///
     virtual Point<3> GetSurfacePoint () const;
     ///
-    virtual void Print (ostream & str) const;
+    virtual void Print (std::ostream & str) const;
   
     ///
     virtual void Reduce (const BoxSphere<3> & box);

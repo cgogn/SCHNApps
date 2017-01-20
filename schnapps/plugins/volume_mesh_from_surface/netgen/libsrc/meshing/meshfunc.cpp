@@ -1,5 +1,7 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 #include "meshing.hpp"
+
+using namespace std;
 
 namespace netgen
 {
@@ -157,7 +159,7 @@ namespace netgen
 		  mesh3d.VolumeElement(i).SetIndex (k);
 		
 		(*testout) 
-		  << "mesh has " << mesh3d.GetNE() << " prism/pyramid elements" << endl;
+		  << "mesh has " << mesh3d.GetNE() << " prism/pyramid elements" << endl;
 		
 		mesh3d.FindOpenElements(k);
 	      }

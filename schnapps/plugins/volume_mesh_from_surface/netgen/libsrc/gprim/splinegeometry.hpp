@@ -1,4 +1,4 @@
-/*
+﻿/*
 
 
 JS, Nov 2007
@@ -40,7 +40,7 @@ namespace netgen
     { return splines; }
 
     int GetNSplines (void) const { return splines.Size(); }
-    string GetSplineType (const int i) const { return splines[i]->GetType(); }
+    std::string GetSplineType (const int i) const { return splines[i]->GetType(); }
     SplineSeg<D> & GetSpline (const int i) {return *splines[i];}
     const SplineSeg<D> & GetSpline (const int i) const {return *splines[i];}
 

@@ -1,4 +1,4 @@
-/**************************************************************************/
+﻿/**************************************************************************/
 /* File:   flags.cc                                                       */
 /* Author: Joachim Schoeberl                                              */
 /* Date:   10. Oct. 96                                                    */
@@ -10,6 +10,9 @@
 
 #include <mystdlib.h>
 #include <myadt.hpp>
+
+
+using namespace std;
 
 namespace netgen
 {

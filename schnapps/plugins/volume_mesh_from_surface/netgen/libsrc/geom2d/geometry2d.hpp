@@ -1,4 +1,4 @@
-#ifndef FILE_GEOMETRY2D
+﻿#ifndef FILE_GEOMETRY2D
 #define FILE_GEOMETRY2D
 
 /* *************************************************************************/
@@ -96,7 +96,7 @@ namespace netgen
       return seg.MaxCurvature();
     }
 
-    virtual string GetType () const
+    virtual std::string GetType () const
     {
       return seg.GetType();
     }
@@ -128,7 +128,7 @@ namespace netgen
     Array<bool> quadmeshing;
     Array<bool> tensormeshing;
     Array<int> layer;
-    Array<string*> bcnames;
+    Array<std::string*> bcnames;
     double elto0;
 
 
@@ -137,11 +137,11 @@ namespace netgen
 
     DLL_HEADER void Load (const char * filename);
 
-    DLL_HEADER void LoadData( ifstream & infile );
-    DLL_HEADER void LoadDataNew ( ifstream & infile );
-    DLL_HEADER void LoadDataV2 ( ifstream & infile );
+    DLL_HEADER void LoadData( std::ifstream & infile );
+    DLL_HEADER void LoadDataNew ( std::ifstream & infile );
+    DLL_HEADER void LoadDataV2 ( std::ifstream & infile );
 
-    void TestComment ( ifstream & infile ) ;
+    void TestComment ( std::ifstream & infile ) ;
 
     
 
@@ -156,7 +156,7 @@ namespace netgen
     }
 
     
-    DLL_HEADER virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
+    DLL_HEADER virtual int GenerateMesh (std::shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
                                          int perfstepsstart, int perfstepsend);
     
     void PartitionBoundary (MeshingParameters & mp, double h, Mesh & mesh2d);
@@ -165,7 +165,7 @@ namespace netgen
 
 
     void GetMaterial (int  domnr, char* & material );
-    void SetMaterial (int  domnr, const string & material);
+    void SetMaterial (int  domnr, const std::string & material);
 
     double GetDomainMaxh ( const int domnr );
     void SetDomainMaxh ( const int domnr, double maxh );
@@ -187,12 +187,12 @@ namespace netgen
     }
 
 
-    string GetBCName (int bcnr) const;
-    void SetBCName (int bcnr, string name);
-    int GetBCNumber (string name) const; // 0 if not exists
-    int AddBCName (string name);
+    std::string GetBCName (int bcnr) const;
+    void SetBCName (int bcnr, std::string name);
+    int GetBCNumber (std::string name) const; // 0 if not exists
+    int AddBCName (std::string name);
 
-    string * BCNamePtr ( const int bcnr );
+    std::string * BCNamePtr ( const int bcnr );
 
     
     DLL_HEADER virtual Refinement & GetRefinement () const; 

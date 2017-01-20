@@ -1,4 +1,4 @@
-#ifndef LOCALH
+﻿#ifndef LOCALH
 #define LOCALH
 
 /**************************************************************************/
@@ -131,7 +131,7 @@ namespace netgen
     const Box<3> & GetBoundingBox () const
     { return boundingbox; }
     ///
-    void PrintMemInfo (ostream & ost) const;
+    void PrintMemInfo (std::ostream & ost) const;
   private:
     /// 
     double GetMinHRec (const Point3d & pmin, const Point3d & pmax,
@@ -172,21 +172,21 @@ namespace netgen
     ///
     void ConvexifyRec (GradingBox * box);
 
-    friend ostream & operator<< (ostream & ost, const LocalH & loch);
+    friend std::ostream & operator<< (std::ostream & ost, const LocalH & loch);
   };
 
 
 
 
-  inline ostream & operator<< (ostream & ost, const GradingBox & box)
+  inline std::ostream & operator<< (std::ostream & ost, const GradingBox & box)
   {
     ost << "gradbox, pmid = " << box.PMid() << ", h2 = " << box.H2() 
 	<< " cutbound = " << box.flags.cutboundary << " isinner = " << box.flags.isinner 
-	<< endl;
+	<< std::endl;
     return ost;
   }
 
-  inline ostream & operator<< (ostream & ost, const LocalH & loch)
+  inline std::ostream & operator<< (std::ostream & ost, const LocalH & loch)
   {
     for (int i = 0; i < loch.boxes.Size(); i++)
       ost << "box[" << i << "] = " << *(loch.boxes[i]);

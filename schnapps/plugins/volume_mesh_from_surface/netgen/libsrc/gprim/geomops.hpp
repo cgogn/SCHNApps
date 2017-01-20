@@ -1,4 +1,4 @@
-#ifndef FILE_GEOMOPS
+﻿#ifndef FILE_GEOMOPS
 #define FILE_GEOMOPS
 
 /* *************************************************************************/
@@ -350,7 +350,7 @@ namespace netgen
 
 
   template <int D, typename T>
-  inline ostream & operator<< (ostream & ost, const Vec<D,T> & a)
+  inline std::ostream & operator<< (std::ostream & ost, const Vec<D,T> & a)
   {
     ost << "(";
     for (int i = 0; i < D-1; i++)
@@ -360,7 +360,7 @@ namespace netgen
   }
 
   template <int D, typename T>
-  inline ostream & operator<< (ostream & ost, const Point<D,T> & a)
+  inline std::ostream & operator<< (std::ostream & ost, const Point<D,T> & a)
   {
     ost << "(";
     for (int i = 0; i < D-1; i++)
@@ -370,21 +370,21 @@ namespace netgen
   }
 
   template <int D>
-  inline ostream & operator<< (ostream & ost, const Box<D> & b)
+  inline std::ostream & operator<< (std::ostream & ost, const Box<D> & b)
   {
     ost << b.PMin() << " - " << b.PMax();
     return ost;
   }
 
   template <int H, int W, typename T>
-  inline ostream & operator<< (ostream & ost, const Mat<H,W,T> & m)
+  inline std::ostream & operator<< (std::ostream & ost, const Mat<H,W,T> & m)
   {
     ost << "(";
     for (int i = 0; i < H; i++)
       {
 	for (int j = 0; j < W; j++)
 	  ost << m(i,j) << "   ";
-	ost << endl;
+	ost << std::endl;
       }
     return ost;
   }

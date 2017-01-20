@@ -1,4 +1,4 @@
-#ifndef FILE_STLGEOM
+﻿#ifndef FILE_STLGEOM
 #define FILE_STLGEOM
 
 /**************************************************************************/
@@ -83,8 +83,8 @@ namespace netgen
 
     int GetNConfEdges() const;
 
-    void Write(ofstream& of) const;
-    void Read(ifstream& ifs);
+    void Write(std::ofstream& of) const;
+    void Read(std::ifstream& ifs);
 
     void BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line);
     void BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& line);
@@ -185,7 +185,7 @@ namespace netgen
 
     void Clear();
 
-    virtual void Save (string filename) const;
+    virtual void Save (std::string filename) const;
 
 
 	DLL_HEADER void STLInfo(double* data);
@@ -452,7 +452,7 @@ namespace netgen
     friend class MeshingSTLSurface;
 
 
-    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
+    virtual int GenerateMesh (std::shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
 			      int perfstepsstart, int perfstepsend);
     
     virtual const Refinement & GetRefinement () const;
@@ -463,7 +463,7 @@ namespace netgen
 
 
 
-  extern int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
+  extern int STLMeshingDummy (STLGeometry* stlgeometry, std::shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
 			      int perfstepsstart, int perfstepsend);
 
 

@@ -1,4 +1,4 @@
-/**************************************************************************/
+﻿/**************************************************************************/
 /* File:   nglib.cpp                                                      */
 /* Author: Joachim Schoeberl                                              */
 /* Date:   7. May. 2000                                                   */
@@ -26,9 +26,10 @@
 #include <nginterface.h>
 #include "nglib.h"
 
+
 namespace netgen {
    extern void MeshFromSpline2D (SplineGeometry2d & geometry,
-                                 shared_ptr<Mesh> & mesh, 
+                                 std::shared_ptr<Mesh> & mesh,
                                  MeshingParameters & mp);
 }
 
@@ -44,6 +45,7 @@ namespace netgen
 }
 #endif
 
+using namespace std;
 
 /*
 namespace netgen

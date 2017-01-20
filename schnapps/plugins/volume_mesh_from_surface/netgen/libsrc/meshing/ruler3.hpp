@@ -1,4 +1,4 @@
-#ifndef FILE_RULER3
+﻿#ifndef FILE_RULER3
 #define FILE_RULER3
 
 
@@ -191,7 +191,7 @@ public:
   ///
   const char * Name () const { return name; }
   ///
-  void LoadRule (istream & ist);
+  void LoadRule (std::istream & ist);
 
   ///
   const Array<Point3d> & GetTransFreeZone () { return transfreezone; }

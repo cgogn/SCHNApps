@@ -1,4 +1,4 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 
 #include "meshing.hpp"
 #include <opti.hpp>
@@ -8,6 +8,8 @@
 //#include <visual.hpp>
 //#endif
 #endif
+
+using namespace std;
 
 namespace netgen
 {

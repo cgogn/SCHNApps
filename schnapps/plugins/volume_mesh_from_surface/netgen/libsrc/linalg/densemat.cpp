@@ -1,7 +1,8 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 
 #include <linalg.hpp>
 
+using namespace std;
 
 namespace netgen
 {

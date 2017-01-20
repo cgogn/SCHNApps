@@ -1,4 +1,4 @@
-#ifndef FILE_BASEGEOM
+﻿#ifndef FILE_BASEGEOM
 #define FILE_BASEGEOM
 
 /**************************************************************************/
@@ -18,13 +18,13 @@ namespace netgen
   public:
     virtual ~NetgenGeometry () { ; }
 
-    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam, 
+    virtual int GenerateMesh (std::shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
 			      int perfstepsstart, int perfstepsend);
 
     virtual const Refinement & GetRefinement () const;
 
-    virtual void Save (string filename) const;
-    virtual void SaveToMeshFile (ostream & /* ost */) const { ; }
+    virtual void Save (std::string filename) const;
+    virtual void SaveToMeshFile (std::ostream & /* ost */) const { ; }
   };
 
 
@@ -35,8 +35,8 @@ namespace netgen
   {
   public:
     virtual ~GeometryRegister();
-    virtual NetgenGeometry * Load (string filename) const = 0;
-    virtual NetgenGeometry * LoadFromMeshFile (istream & /* ist */) const { return NULL; }
+    virtual NetgenGeometry * Load (std::string filename) const = 0;
+    virtual NetgenGeometry * LoadFromMeshFile (std::istream & /* ist */) const { return NULL; }
     virtual class VisualScene * GetVisualScene (const NetgenGeometry * /* geom */) const
     { return NULL; }
     virtual void SetParameters (Tcl_Interp * /* interp */) { ; }

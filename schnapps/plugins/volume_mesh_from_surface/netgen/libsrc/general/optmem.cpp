@@ -1,4 +1,4 @@
-/**************************************************************************/
+﻿/**************************************************************************/
 /* File:   optmem.cpp                                                     */
 /* Author: Joachim Schoeberl                                              */
 /* Date:   04. Apr. 97                                                    */
@@ -11,6 +11,9 @@
 
 #include <mystdlib.h>
 #include <myadt.hpp>
+
+
+using namespace std;
 
 namespace netgen
 {

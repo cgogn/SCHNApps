@@ -1,4 +1,4 @@
-#ifndef _CSGPARSER_HPP
+﻿#ifndef _CSGPARSER_HPP
 #define _CSGPARSER_HPP
 
 
@@ -47,14 +47,14 @@ namespace netgen
     TOKEN_TYPE token;
     PRIMITIVE_TYPE prim_token;
     double num_value;
-    string string_value;
+    std::string string_value;
     
     int linenum;
-    istream * scanin;
+    std::istream * scanin;
 
   public:
 
-    CSGScanner (istream & ascanin);
+    CSGScanner (std::istream & ascanin);
 
     TOKEN_TYPE GetToken() const
     { return token; }
@@ -62,7 +62,7 @@ namespace netgen
     double GetNumValue() const
     { return num_value; }
 
-    const string & GetStringValue() const
+    const std::string & GetStringValue() const
     { return string_value; }
 
     char GetCharValue() const
@@ -80,7 +80,7 @@ namespace netgen
     CSGScanner & Parse (Point<3> & p);
     CSGScanner & Parse (Vec<3> & p);
     */
-    void Error (const string & err);
+    void Error (const std::string & err);
   };
 
 

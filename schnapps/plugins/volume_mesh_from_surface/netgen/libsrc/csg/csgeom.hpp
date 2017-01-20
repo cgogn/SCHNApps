@@ -1,4 +1,4 @@
-#ifndef FILE_CSGEOM
+﻿#ifndef FILE_CSGEOM
 #define FILE_CSGEOM
 
 /**************************************************************************/
@@ -31,10 +31,10 @@ namespace netgen
     double red, blue, green;
     bool visible, transp;
     double maxh;
-    string material;
+    std::string material;
     int layer;
     int bc;     // for surface patches, only
-    string bcname;
+    std::string bcname;
 
   public:
     TopLevelObject (Solid * asolid,
@@ -46,8 +46,8 @@ namespace netgen
     const Surface * GetSurface () const { return surface; }
     Surface  * GetSurface () { return surface; }
 
-    void GetData (ostream & ost);
-    void SetData (istream & ist);
+    void GetData (std::ostream & ost);
+    void SetData (std::istream & ist);
 
     void SetMaxH (double amaxh) { maxh = amaxh; } 
     double GetMaxH () const { return maxh; }
@@ -71,8 +71,8 @@ namespace netgen
     { visible = avisible; }
     bool GetVisible () const { return visible; }
 
-    const string GetMaterial () const { return material; }
-    void SetMaterial (const string & mat) { material = mat; }
+    const std::string GetMaterial () const { return material; }
+    void SetMaterial (const std::string & mat) { material = mat; }
 
     int GetLayer () const { return layer; }
     void SetLayer (int alayer) { layer = alayer; }
@@ -80,8 +80,8 @@ namespace netgen
     void SetBCProp (int abc) { bc = abc; }
     int GetBCProp () const { return bc; }
 
-    void SetBCName (string abc) { bcname = abc; }
-    const string GetBCName () const { return bcname; }
+    void SetBCName (std::string abc) { bcname = abc; }
+    const std::string GetBCName () const { return bcname; }
   };
 
 
@@ -141,23 +141,23 @@ namespace netgen
     double ideps;
 
     /// filename of inputfile
-    string filename;
+    std::string filename;
 
   public:
     CSGeometry ();
-    CSGeometry (const string & afilename);
+    CSGeometry (const std::string & afilename);
     virtual ~CSGeometry ();
 
     void Clean ();
 
-    virtual void Save (string filename) const;
-    void Save (ostream & ost) const;
-    void Load (istream & ist);
+    virtual void Save (std::string filename) const;
+    void Save (std::ostream & ost) const;
+    void Load (std::istream & ist);
 
-    void SaveSurfaces (ostream & out) const;
-    void LoadSurfaces (istream & in);
+    void SaveSurfaces (std::ostream & out) const;
+    void LoadSurfaces (std::istream & in);
 
-    virtual void SaveToMeshFile (ostream & ost) const;
+    virtual void SaveToMeshFile (std::ostream & ost) const;
 
     int GetChangeVal() { return changeval; }
     void Change() { changeval++; }
@@ -173,7 +173,7 @@ namespace netgen
 
     void SetSolid (const char * name, Solid * sol);
     const Solid * GetSolid (const char * name) const;
-    const Solid * GetSolid (const string & name) const;
+    const Solid * GetSolid (const std::string & name) const;
     int GetNSolids () const { return solids.Size(); }
     const Solid * GetSolid (int i) const { return solids[i]; }
     const SYMBOLTABLE<Solid*> & GetSolids () const { return solids; }
@@ -181,8 +181,8 @@ namespace netgen
 
     void SetSplineCurve (const char * name, SplineGeometry<2> * spl);
     void SetSplineCurve (const char * name, SplineGeometry<3> * spl);
-    const SplineGeometry<2> * GetSplineCurve2d (const string & name) const;
-    const SplineGeometry<3> * GetSplineCurve3d (const string & name) const;
+    const SplineGeometry<2> * GetSplineCurve2d (const std::string & name) const;
+    const SplineGeometry<3> * GetSplineCurve3d (const std::string & name) const;
     
 
     void SetFlags (const char * solidname, const Flags & flags);
@@ -308,12 +308,12 @@ namespace netgen
       int si;
       int tlonr;
       int bcnr;
-      string * bcname;
+      std::string * bcname;
     };
 
     Array<BCModification> bcmodifications;
 
-    virtual int GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam, 
+    virtual int GenerateMesh (std::shared_ptr<Mesh> & mesh, MeshingParameters & mparam,
 			      int perfstepsstart, int perfstepsend);
 
     virtual const Refinement & GetRefinement () const; 

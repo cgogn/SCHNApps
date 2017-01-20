@@ -1,4 +1,4 @@
-// find inner point
+﻿// find inner point
 
 template <typename POINTArray, typename FACEArray>
 inline int FindInnerPoint2 (POINTArray & points,
@@ -89,7 +89,7 @@ inline int FindInnerPoint2 (POINTArray & points,
           }
 
   p = Point3d (pmin(0), pmin(1), pmin(2));
-  (*testout) << "fmin = " << fmin << endl;
+  (*testout) << "fmin = " << fmin << std::endl;
   return (fmin < -1e-3 * hmax);
 }
 

@@ -1,4 +1,4 @@
-#ifndef NETGEN_OUT_STREAM_HPP__
+﻿#ifndef NETGEN_OUT_STREAM_HPP__
 #define NETGEN_OUT_STREAM_HPP__
 
 // #include <ostream>
@@ -55,7 +55,7 @@ public:
 
 class NetgenOutStream
 {
-  ostream * out;
+  std::ostream * out;
 
   bool print;
   bool printheader;
@@ -70,7 +70,7 @@ public:
     ;
   }  
 
-  NetgenOutStream(ostream * aout, Imp imp ) :
+  NetgenOutStream(std::ostream * aout, Imp imp ) :
     out(aout),
     printheader(1)
   { 
@@ -80,7 +80,7 @@ public:
       print = false;
   }
 
-  NetgenOutStream(ostream * aout, Proc proc ) :
+  NetgenOutStream(std::ostream * aout, Proc proc ) :
     out(aout),
     printheader(1)
   { 
@@ -98,7 +98,7 @@ public:
 #endif
   }
 
-  NetgenOutStream(ostream * aout, Procs & procs ) :
+  NetgenOutStream(std::ostream * aout, Procs & procs ) :
     out(aout),
     printheader(1)
   { 
@@ -116,7 +116,7 @@ public:
 #endif
   }
 
-  ostream & OStream ()
+  std::ostream & OStream ()
   {
     return *out;
   }
@@ -138,7 +138,7 @@ public:
     return (*this); 
   }
 
-  NetgenOutStream& operator<< (ostream& ( *pf )(ostream&))
+  NetgenOutStream& operator<< (std::ostream& ( *pf )(std::ostream&))
   {
     if ( print )
       *out << (*pf) ;
@@ -146,7 +146,7 @@ public:
     return (*this);
   }
 
-  NetgenOutStream& operator<< (ios& ( *pf )(ios&))
+  NetgenOutStream& operator<< (std::ios& ( *pf )(std::ios&))
   {
     if ( print)
       *out << (*pf) ;
@@ -156,7 +156,7 @@ public:
     return (*this);
   }
 
-  NetgenOutStream& operator<< (ios_base& ( *pf )(ios_base&))
+  NetgenOutStream& operator<< (std::ios_base& ( *pf )(std::ios_base&))
   {
     if (print )
       *out << (*pf) ;
@@ -167,23 +167,23 @@ public:
 };
 
 /*
-NetgenOutStream operator<< ( ostream & ost, Imp  imp );
-NetgenOutStream operator<< ( ostream & ost, Proc proc );
-NetgenOutStream operator<< ( ostream & ost, Procs & procs );
+NetgenOutStream operator<< ( std::ostream & ost, Imp  imp );
+NetgenOutStream operator<< ( std::ostream & ost, Proc proc );
+NetgenOutStream operator<< ( std::ostream & ost, Procs & procs );
 */
 
-inline NetgenOutStream operator<< ( ostream & ost, Imp  imp )
+inline NetgenOutStream operator<< ( std::ostream & ost, Imp  imp )
   {
     return ( NetgenOutStream ( &ost, imp ) );
   }
 
-inline   NetgenOutStream operator<< ( ostream & ost, Proc proc )
+inline   NetgenOutStream operator<< ( std::ostream & ost, Proc proc )
   {
     return ( NetgenOutStream ( &ost, proc ) );
   }
 
 
-inline   NetgenOutStream operator<< ( ostream & ost, Procs & procs )
+inline   NetgenOutStream operator<< ( std::ostream & ost, Procs & procs )
   {
     return ( NetgenOutStream ( &ost, procs ) );
   }

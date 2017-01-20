@@ -1,4 +1,4 @@
-#ifndef NGS_ARCHIVE_BASE
+﻿#ifndef NGS_ARCHIVE_BASE
 #define NGS_ARCHIVE_BASE
 
 // copied from netgen
@@ -21,7 +21,7 @@ namespace ngstd
     virtual Archive & operator & (short & i) = 0;
     virtual Archive & operator & (unsigned char & i) = 0;
     virtual Archive & operator & (bool & b) = 0;
-    virtual Archive & operator & (string & str) = 0;
+    virtual Archive & operator & (std::string & str) = 0;
     virtual Archive & operator & (char *& str) = 0;
 
     template <typename T>

@@ -1,8 +1,10 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 #include <myadt.hpp>
 
 #include <linalg.hpp>
 #include <gprim.hpp>
+
+using namespace std;
 
 namespace netgen
 {

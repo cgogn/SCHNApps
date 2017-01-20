@@ -1,4 +1,4 @@
-#ifndef MESHTYPE
+﻿#ifndef MESHTYPE
 #define MESHTYPE
 
 
@@ -52,12 +52,12 @@ namespace netgen
       : trignum(-1), u(0), v(0) { ; }
   };
 
-  inline ostream & operator<< (ostream & ost, const PointGeomInfo & gi)
+  inline std::ostream & operator<< (std::ostream & ost, const PointGeomInfo & gi)
   {
     return (ost << gi.trignum << " " << gi.u << " " << gi.v);
   }
 
-  inline istream & operator>> (istream & ist, PointGeomInfo & gi)
+  inline std::istream & operator>> (std::istream & ist, PointGeomInfo & gi)
   {
     return (ist >> gi.trignum >> gi.u >> gi.v);
   }
@@ -103,7 +103,7 @@ namespace netgen
     }
   };
 
-  inline ostream & operator<< (ostream & ost, const EdgePointGeomInfo & gi)
+  inline std::ostream & operator<< (std::ostream & ost, const EdgePointGeomInfo & gi)
   {
     ost << "epgi: edgnr=" << gi.edgenr << ", dist=" << gi.dist;
     return ost;
@@ -132,12 +132,12 @@ namespace netgen
 #endif  
   };
 
-  inline istream & operator>> (istream & ist, PointIndex & pi)
+  inline std::istream & operator>> (std::istream & ist, PointIndex & pi)
   {
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const PointIndex & pi)
+  inline std::ostream & operator<< (std::ostream & ost, const PointIndex & pi)
   {
     return (ost << int(pi));
   }
@@ -158,12 +158,12 @@ namespace netgen
     ElementIndex & operator-- (int) { i--; return *this; }
   };
 
-  inline istream & operator>> (istream & ist, ElementIndex & pi)
+  inline std::istream & operator>> (std::istream & ist, ElementIndex & pi)
   {
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const ElementIndex & pi)
+  inline std::ostream & operator<< (std::ostream & ost, const ElementIndex & pi)
   {
     return (ost << int(pi));
   }
@@ -184,12 +184,12 @@ namespace netgen
     SurfaceElementIndex & operator-- (int) { i--; return *this; }
   };
 
-  inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
+  inline std::istream & operator>> (std::istream & ist, SurfaceElementIndex & pi)
   {
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & pi)
+  inline std::ostream & operator<< (std::ostream & ost, const SurfaceElementIndex & pi)
   {
     return (ost << int(pi));
   }
@@ -208,12 +208,12 @@ namespace netgen
     SegmentIndex & operator-- (int) { i--; return *this; }
   };
 
-  inline istream & operator>> (istream & ist, SegmentIndex & pi)
+  inline std::istream & operator>> (std::istream & ist, SegmentIndex & pi)
   {
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const SegmentIndex & pi)
+  inline std::ostream & operator<< (std::ostream & ost, const SegmentIndex & pi)
   {
     return (ost << int(pi));
   }
@@ -266,7 +266,7 @@ namespace netgen
 
   };
 
-  inline ostream & operator<<(ostream  & s, const MeshPoint & pt)
+  inline std::ostream & operator<<(std::ostream  & s, const MeshPoint & pt)
   { 
     return (s << Point<3> (pt)); 
   }
@@ -432,7 +432,7 @@ namespace netgen
 
     bool BadElement() const { return badel; }
 
-    // friend ostream & operator<<(ostream  & s, const Element2d & el);
+    // friend std::ostream & operator<<(std::ostream  & s, const Element2d & el);
     friend class Mesh;
 
 
@@ -517,7 +517,7 @@ namespace netgen
   };
 
 
-  ostream & operator<<(ostream  & s, const Element2d & el);
+  std::ostream & operator<<(std::ostream  & s, const Element2d & el);
 
 
 
@@ -671,7 +671,7 @@ namespace netgen
     /// Calculates Volume of elemenet
     double Volume (const T_POINTS & points) const;
     ///
-    void Print (ostream & ost) const;
+    void Print (std::ostream & ost) const;
     ///
     int GetNFaces () const
     {
@@ -741,7 +741,7 @@ namespace netgen
 					int pi, Vec<3> & grad) const;
 
     ///
-    // friend ostream & operator<<(ostream  & s, const Element & el);
+    // friend std::ostream & operator<<(std::ostream  & s, const Element & el);
 
     void SetRefinementFlag (bool rflag = 1) 
     { flags.refflag = rflag; }
@@ -793,7 +793,7 @@ namespace netgen
     int hp_elnr;
   };
 
-  ostream & operator<<(ostream  & s, const Element & el);
+  std::ostream & operator<<(std::ostream  & s, const Element & el);
 
 
 
@@ -813,7 +813,7 @@ namespace netgen
     ~Segment()
     { ; }
 
-    // friend ostream & operator<<(ostream  & s, const Segment & seg);
+    // friend std::ostream & operator<<(std::ostream  & s, const Segment & seg);
 
     PointIndex pnums[3];  // p1, p2, pmid
 
@@ -851,7 +851,7 @@ namespace netgen
 #endif
 
   private:
-    string* bcname;
+    std::string* bcname;
     bool is_curved;
 
   public:
@@ -868,20 +868,20 @@ namespace netgen
   
     int hp_elnr;
 
-    void SetBCName ( string * abcname )
+    void SetBCName ( std::string * abcname )
     {
       bcname = abcname;
     }
 
-    string * BCNamePtr () 
+    std::string * BCNamePtr ()
     { return bcname; }
 
-    const string * BCNamePtr () const 
+    const std::string * BCNamePtr () const
     { return bcname; }
 
-    const string & GetBCName () const
+    const std::string & GetBCName () const
     {
-      static string defaultstring = "default";
+      static std::string defaultstring = "default";
       if (! bcname ) return defaultstring;
       return *bcname;
     }
@@ -911,7 +911,7 @@ namespace netgen
 #endif
   };
 
-  ostream & operator<<(ostream  & s, const Segment & seg);
+  std::ostream & operator<<(std::ostream  & s, const Segment & seg);
 
 
   class Element0d
@@ -921,7 +921,7 @@ namespace netgen
     int index;
   };
 
-  ostream & operator<<(ostream  & s, const Element0d & el);
+  std::ostream & operator<<(std::ostream  & s, const Element0d & el);
 
   // class Surface;  
   // class FaceDescriptor;
@@ -946,8 +946,8 @@ namespace netgen
     Vec3d surfcolour;
     
     ///
-    static string default_bcname;
-    string * bcname = &default_bcname;
+    static std::string default_bcname;
+    std::string * bcname = &default_bcname;
     /// root of linked list 
     SurfaceElementIndex firstelement;
   
@@ -976,14 +976,14 @@ namespace netgen
     // Philippose - 06/07/2009
     // Get Surface colour
     Vec3d SurfColour () const { return surfcolour; }
-    DLL_HEADER const string & GetBCName () const { return *bcname; }
+    DLL_HEADER const std::string & GetBCName () const { return *bcname; }
     // string * BCNamePtr () { return bcname; }
     // const string * BCNamePtr () const  { return bcname; }
     void SetSurfNr (int sn) { surfnr = sn; }
     void SetDomainIn (int di) { domin = di; }
     void SetDomainOut (int dom) { domout = dom; }
     void SetBCProperty (int bc) { bcprop = bc; }
-    void SetBCName (string * bcn); //  { bcname = bcn; }
+    void SetBCName (std::string * bcn); //  { bcname = bcn; }
     // Philippose - 06/07/2009
     // Set the surface colour
     void SetSurfColour (Vec3d colour) { surfcolour = colour; }
@@ -992,11 +992,11 @@ namespace netgen
     void SetDomainOutSingular (double v) { domout_singular = v; }
 
     SurfaceElementIndex FirstElement() { return firstelement; }
-    // friend ostream & operator<<(ostream  & s, const FaceDescriptor & fd);
+    // friend std::ostream & operator<<(std::ostream  & s, const FaceDescriptor & fd);
     friend class Mesh;
   };
 
-  ostream & operator<< (ostream  & s, const FaceDescriptor & fd);
+  std::ostream & operator<< (std::ostream  & s, const FaceDescriptor & fd);
 
  
   class EdgeDescriptor
@@ -1032,7 +1032,7 @@ namespace netgen
        // h .. Histogramm, no pause
        // H .. Histogramm, pause
        */
-    string optimize3d = "cmdmustm";
+    std::string optimize3d = "cmdmustm";
     /// number of 3d optimization steps
     int optsteps3d = 3;
     /**
@@ -1044,7 +1044,7 @@ namespace netgen
        // P .. plot, pause
        // c .. combine
        **/
-    string optimize2d = "smsmsmSmSmSm";
+    std::string optimize2d = "smsmsmSmSmSm";
     /// number of 2d optimization steps
     int optsteps2d = 3;
     /// power of error (to approximate max err optimization)
@@ -1068,7 +1068,7 @@ namespace netgen
     /// minimal mesh size
     double minh = 0.0;
     /// file for meshsize
-    string meshsizefilename = "";
+    std::string meshsizefilename = "";
     /// start surfacemeshing from everywhere in surface
     int startinsurface = 0;
     /// check overlapping surfaces (debug)
@@ -1127,7 +1127,7 @@ namespace netgen
     MeshingParameters & operator= (const MeshingParameters & mp2) = default;
     MeshingParameters & operator= (MeshingParameters && mp2) = default;
     ///
-    void Print (ostream & ost) const;
+    void Print (std::ostream & ost) const;
     /// 
     // void CopyFrom(const MeshingParameters & other);
 
@@ -1153,7 +1153,7 @@ namespace netgen
     }
   };
 
-  inline ostream & operator<< (ostream & ost, const MeshingParameters & mp)
+  inline std::ostream & operator<< (std::ostream & ost, const MeshingParameters & mp)
   {
     mp.Print (ost);
     return ost;
@@ -1352,7 +1352,7 @@ namespace netgen
     /// remove secondorder
     void SetMaxPointNr (int maxpnum);
 
-    void Print (ostream & ost) const;
+    void Print (std::ostream & ost) const;
   };
 
 

@@ -1,4 +1,4 @@
-#ifndef FILE_ADFRONT3
+﻿#ifndef FILE_ADFRONT3
 #define FILE_ADFRONT3
 
 /**************************************************************************/
@@ -95,7 +95,7 @@ public:
 };
 
 
-inline ostream & operator<<(ostream  & s, const MiniElement2d & el)
+inline std::ostream & operator<<(std::ostream  & s, const MiniElement2d & el)
 {
   s << "np = " << el.GetNP();
   for (int j = 0; j < el.GetNP(); j++)

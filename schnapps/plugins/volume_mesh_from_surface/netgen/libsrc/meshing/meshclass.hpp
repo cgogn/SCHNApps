@@ -1,4 +1,4 @@
-#ifndef MESHCLASS
+﻿#ifndef MESHCLASS
 #define MESHCLASS
 
 /**************************************************************************/
@@ -82,10 +82,10 @@ namespace netgen
     Array<EdgeDescriptor> edgedecoding;
 
     /// sub-domain materials 
-    Array<string*> materials;
+    Array<std::string*> materials;
 
     /// labels for boundary conditions
-    Array<string*> bcnames;
+    Array<std::string*> bcnames;
 
     /// Periodic surface, close surface, etc. identifications
     Identifications * ident;
@@ -140,7 +140,7 @@ namespace netgen
 #endif
 
     
-    shared_ptr<NetgenGeometry> geometry;
+    std::shared_ptr<NetgenGeometry> geometry;
 
   private:
     void BuildBoundaryEdges(void);
@@ -393,7 +393,7 @@ namespace netgen
     ///
     DLL_HEADER void RestrictLocalH (resthtype rht, int nr, double loch);
     ///
-    DLL_HEADER void LoadLocalMeshSize (const string & meshsizefilename);
+    DLL_HEADER void LoadLocalMeshSize (const std::string & meshsizefilename);
     ///
     DLL_HEADER void SetGlobalH (double h);
     ///
@@ -474,17 +474,17 @@ namespace netgen
     void OrderElements(); 
 
     ///
-	DLL_HEADER void Save (ostream & outfile) const;
+	DLL_HEADER void Save (std::ostream & outfile) const;
     ///
-	DLL_HEADER void Load (istream & infile);
+	DLL_HEADER void Load (std::istream & infile);
     ///
-	DLL_HEADER void Merge (istream & infile, const int surfindex_offset = 0);
+	DLL_HEADER void Merge (std::istream & infile, const int surfindex_offset = 0);
     ///
-	DLL_HEADER void Save (const string & filename) const;
+	DLL_HEADER void Save (const std::string & filename) const;
     ///
-	DLL_HEADER void Load (const string & filename);
+	DLL_HEADER void Load (const std::string & filename);
     ///
-	DLL_HEADER void Merge (const string & filename, const int surfindex_offset = 0);
+	DLL_HEADER void Merge (const std::string & filename, const int surfindex_offset = 0);
 
 
     ///
@@ -576,19 +576,19 @@ namespace netgen
     { return edgedecoding.Append(fd) - 1; }
 
     ///
-    DLL_HEADER void SetMaterial (int domnr, const string & mat);
+    DLL_HEADER void SetMaterial (int domnr, const std::string & mat);
     ///
-    const string & GetMaterial (int domnr) const;
-    const string * GetMaterialPtr (int domnr) const // 1-based
+    const std::string & GetMaterial (int domnr) const;
+    const std::string * GetMaterialPtr (int domnr) const // 1-based
     { return domnr <= materials.Size() ? materials.Get(domnr) : nullptr; }
     
     DLL_HEADER void SetNBCNames ( int nbcn );
 
-    DLL_HEADER void SetBCName ( int bcnr, const string & abcname );
+    DLL_HEADER void SetBCName ( int bcnr, const std::string & abcname );
 
-    const string & GetBCName ( int bcnr ) const;
+    const std::string & GetBCName ( int bcnr ) const;
 
-    string * GetBCNamePtr (int bcnr) const
+    std::string * GetBCNamePtr (int bcnr) const
     { return bcnr < bcnames.Size() ? bcnames[bcnr] : nullptr; }
 
     ///
@@ -731,11 +731,11 @@ namespace netgen
     NgMutex & MajorMutex ()   { return majormutex; }
 
 
-    shared_ptr<NetgenGeometry> GetGeometry() const
+    std::shared_ptr<NetgenGeometry> GetGeometry() const
     { 
       return geometry; 
     }
-    void SetGeometry (shared_ptr<NetgenGeometry> geom) 
+    void SetGeometry (std::shared_ptr<NetgenGeometry> geom)
     {
       geometry = geom;
     }
@@ -752,7 +752,7 @@ namespace netgen
     ///
     friend void OptimizeRestart (Mesh & mesh3d);
     ///
-    void PrintMemInfo (ostream & ost) const;
+    void PrintMemInfo (std::ostream & ost) const;
     /// 
     friend class Meshing3;
 
@@ -803,9 +803,9 @@ namespace netgen
 
   };
 
-  inline ostream& operator<<(ostream& ost, const Mesh& mesh)
+  inline std::ostream& operator<<(std::ostream& ost, const Mesh& mesh)
   {
-    ost << "mesh: " << endl;
+    ost << "mesh: " << std::endl;
     mesh.Save(ost);
     return ost;
   }

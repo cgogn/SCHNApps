@@ -1,4 +1,4 @@
-#ifndef FILE_MYSIMD
+﻿#ifndef FILE_MYSIMD
 #define FILE_MYSIMD
 
 /**************************************************************************/
@@ -267,7 +267,7 @@ namespace netgen
   
   
   template <typename T>
-  ostream & operator<< (ostream & ost, SIMD<T> simd)
+  std::ostream & operator<< (std::ostream & ost, SIMD<T> simd)
   {
     ost << simd[0];
     for (int i = 1; i < simd.Size(); i++)
@@ -374,7 +374,7 @@ inline netgen::SIMD<double> pow (netgen::SIMD<double> a, double x) {
 
 
   template <int D, typename T>
-  ostream & operator<< (ostream & ost, MultiSIMD<D,T> multi)
+  std::ostream & operator<< (std::ostream & ost, MultiSIMD<D,T> multi)
   {
     ost << multi.Head() << " " << multi.Tail();
     return ost;

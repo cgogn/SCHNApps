@@ -1,4 +1,4 @@
-#ifndef FILE_GEOM2D
+﻿#ifndef FILE_GEOM2D
 #define FILE_GEOM2D
 
 /* *************************************************************************/
@@ -34,7 +34,7 @@ namespace netgen
 
   inline void PpSmV (const Point2d & p1, double s, const Vec2d & v, Point2d & p2);
   inline void PmP (const Point2d & p1, const Point2d & p2, Vec2d & v);
-  ostream & operator<<(ostream  & s, const Point2d & p);
+  std::ostream & operator<<(std::ostream  & s, const Point2d & p);
   inline Vec2d operator- (const Point2d & p1, const Point2d & p2);
   inline Point2d operator- (const Point2d & p1, const Vec2d & v);
   inline Point2d operator+ (const Point2d & p1, const Vec2d & v);
@@ -45,7 +45,7 @@ namespace netgen
   DLL_HEADER double FastAngle (const Vec2d & v);
   DLL_HEADER double Angle (const Vec2d & v1, const Vec2d & v2);
   DLL_HEADER double FastAngle (const Vec2d & v1, const Vec2d & v2);
-  ostream & operator<<(ostream  & s, const Vec2d & v);
+  std::ostream & operator<<(std::ostream  & s, const Vec2d & v);
   double Dist2(const Line2d & g, const Line2d & h );		// GH
   int Near (const Point2d & p1, const Point2d & p2, const double eps);
 
@@ -53,16 +53,16 @@ namespace netgen
   int IsOnLine (const Line2d & l, const Point2d & p, double heps = EPSGEOM);
   int IsOnLongLine (const Line2d & l, const Point2d & p);
   int Hit (const Line2d & l1, const Line2d & l2, double heps = EPSGEOM);
-  ostream & operator<<(ostream  & s, const Line2d & l);
+  std::ostream & operator<<(std::ostream  & s, const Line2d & l);
   DLL_HEADER Point2d CrossPoint (const PLine2d & l1, const PLine2d & l2);
   DLL_HEADER Point2d CrossPoint (const Line2d & l1, const Line2d & l2);
   int Parallel (const PLine2d & l1, const PLine2d & l2, double peps = EPSGEOM);
   int IsOnLine (const PLine2d & l, const Point2d & p, double heps = EPSGEOM);
   int IsOnLongLine (const PLine2d & l, const Point2d & p);
   int Hit (const PLine2d & l1, const Line2d & l2, double heps = EPSGEOM);
-  ostream & operator<<(ostream  & s, const Line2d & l);
-  ostream & operator<<(ostream  & s, const TRIANGLE2D & t); 
-  ostream & operator<<(ostream & s, const PTRIANGLE2D & t);
+  std::ostream & operator<<(std::ostream  & s, const Line2d & l);
+  std::ostream & operator<<(std::ostream  & s, const TRIANGLE2D & t);
+  std::ostream & operator<<(std::ostream & s, const PTRIANGLE2D & t);
   double Dist2 (const Point2d & p1, const Point2d & p2);
 
   ///
@@ -192,7 +192,7 @@ namespace netgen
     friend inline void PmP (const Point2d & p1, const Point2d & p2, Vec2d & v);
 
     ///
-    friend ostream & operator<<(ostream  & s, const Point2d & p);
+    friend std::ostream & operator<<(std::ostream  & s, const Point2d & p);
   };
 
 
@@ -299,7 +299,7 @@ namespace netgen
     friend DLL_HEADER double FastAngle (const Vec2d & v1, const Vec2d & v2);
 
     ///
-    friend ostream & operator<<(ostream  & s, const Vec2d & v);
+    friend std::ostream & operator<<(std::ostream  & s, const Vec2d & v);
   };
 
 
@@ -371,7 +371,7 @@ namespace netgen
     friend int Hit (const Line2d & l1, const Line2d & l2, double heps);
 
     ///
-    friend ostream & operator<<(ostream  & s, const Line2d & l);
+    friend std::ostream & operator<<(std::ostream  & s, const Line2d & l);
   };
 
 
@@ -436,7 +436,7 @@ namespace netgen
     friend int Hit (const PLine2d & l1, const Line2d & l2, double heps);
 
     ///
-    friend ostream & operator<<(ostream  & s, const Line2d & l);
+    friend std::ostream & operator<<(std::ostream  & s, const Line2d & l);
   };
 
 
@@ -542,7 +542,7 @@ namespace netgen
     ///
     int IsIn (const Point2d & p) const;
     ///
-    friend ostream & operator<<(ostream  & s, const TRIANGLE2D & t);
+    friend std::ostream & operator<<(std::ostream  & s, const TRIANGLE2D & t);
   };
 
 
@@ -604,7 +604,7 @@ namespace netgen
     ///
     int IsIn (const Point2d & p) const;
     ///
-    friend ostream & operator<<(ostream & s, const PTRIANGLE2D & t);
+    friend std::ostream & operator<<(std::ostream & s, const PTRIANGLE2D & t);
   };
 #endif
 

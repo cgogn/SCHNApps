@@ -1,4 +1,4 @@
-#ifndef FILE_NG_PROFILER
+﻿#ifndef FILE_NG_PROFILER
 #define FILE_NG_PROFILER
 
 /**************************************************************************/
@@ -27,14 +27,14 @@ class NgProfiler
   static long int tottimes[SIZE];
   static long int starttimes[SIZE];
   static long int counts[SIZE];
-  static string names[SIZE];
+  static std::string names[SIZE];
   static int usedcounter[SIZE];
 
   int total_timer;
 public: 
   NgProfiler();
   ~NgProfiler();
-  static int CreateTimer (const string & name);
+  static int CreateTimer (const std::string & name);
   
   static void StartTimer (int nr) 
   { 

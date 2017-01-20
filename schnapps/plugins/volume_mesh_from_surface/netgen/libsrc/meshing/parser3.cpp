@@ -1,4 +1,4 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 #include "meshing.hpp"
 
 #ifdef WIN32
@@ -7,6 +7,7 @@
 #define COMMASIGN ','
 #endif
 
+using namespace std;
 
 namespace netgen
 {

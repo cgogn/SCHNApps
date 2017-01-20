@@ -1,4 +1,4 @@
-#ifndef FILE_BRICK
+﻿#ifndef FILE_BRICK
 #define FILE_BRICK
 
 
@@ -40,7 +40,7 @@ namespace netgen
     virtual double HesseNorm () const;
 
     virtual Point<3> GetSurfacePoint () const;
-    virtual void Print (ostream & str) const;
+    virtual void Print (std::ostream & str) const;
   
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
 					   const Box<3> & boundingbox, 

@@ -1,4 +1,4 @@
-#ifndef FILE_ADFRONT2
+﻿#ifndef FILE_ADFRONT2
 #define FILE_ADFRONT2
 
 /**************************************************************************/
@@ -194,7 +194,7 @@ public:
   ///
   // void GetPoints (Array<Point<3> > & apoints) const;
   ///
-  void Print (ostream & ost) const;
+  void Print (std::ostream & ost) const;
 
   ///
   bool Empty () const
@@ -272,7 +272,7 @@ public:
   ///
   void SetStartFront ();
   ///
-  void PrintOpenSegments (ostream & ost) const;
+  void PrintOpenSegments (std::ostream & ost) const;
 };
 
 

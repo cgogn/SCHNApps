@@ -1,4 +1,4 @@
-#ifndef FILE_CURVE2D
+﻿#ifndef FILE_CURVE2D
 #define FILE_CURVE2D
 
 /**************************************************************************/
@@ -54,7 +54,7 @@ namespace netgen
     ///
     QuadraticCurve2d ();
     ///
-    void Read (istream & ist);
+    void Read (std::istream & ist);
     ///
     virtual void Project (Point<2> & p) const;
     ///

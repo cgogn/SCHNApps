@@ -1,4 +1,4 @@
-#ifndef FILE_AUTODIFF
+﻿#ifndef FILE_AUTODIFF
 #define FILE_AUTODIFF
 
 /**************************************************************************/
@@ -157,7 +157,7 @@ public:
 
 /// prints AutoDiff
 template<int D, typename SCAL>
-inline ostream & operator<< (ostream & ost, const AutoDiff<D,SCAL> & x)
+inline std::ostream & operator<< (std::ostream & ost, const AutoDiff<D,SCAL> & x)
 {
   ost << x.Value() << ", D = ";
   for (int i = 0; i < D; i++)

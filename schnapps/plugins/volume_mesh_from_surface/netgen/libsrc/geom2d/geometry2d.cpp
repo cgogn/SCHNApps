@@ -1,4 +1,4 @@
-/*
+﻿/*
 
 2d Spline curve for Mesh generator
 
@@ -6,6 +6,8 @@
 
 #include <meshing.hpp>
 #include <geometry2d.hpp>
+
+using namespace std;
 
 namespace netgen
 {

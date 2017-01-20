@@ -1,4 +1,4 @@
-#ifndef _REVOLUTION_HPP
+﻿#ifndef _REVOLUTION_HPP
 #define _REVOLUTION_HPP
 
 namespace netgen
@@ -62,7 +62,7 @@ namespace netgen
     virtual void Project (Point<3> & p) const;
 
     virtual Point<3> GetSurfacePoint () const;
-    virtual void Print (ostream & str) const;
+    virtual void Print (std::ostream & str) const;
   
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
 					   const Box<3> & boundingbox, 

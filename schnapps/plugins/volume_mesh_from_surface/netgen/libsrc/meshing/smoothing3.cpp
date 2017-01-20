@@ -1,4 +1,4 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 
 #include "meshing.hpp"
 #ifdef SOLIDGEOM
@@ -6,6 +6,7 @@
 #endif
 #include <opti.hpp>
 
+using namespace std;
 
 namespace netgen
 {

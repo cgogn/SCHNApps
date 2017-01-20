@@ -1,4 +1,4 @@
-#ifndef FILE_ALGPRIM
+﻿#ifndef FILE_ALGPRIM
 #define FILE_ALGPRIM
 
 
@@ -44,9 +44,9 @@ namespace netgen
     virtual Point<3> GetSurfacePoint () const;
 
 
-    virtual void Print (ostream & str) const;
-    virtual void Read (istream & ist);
-    void PrintCoeff (ostream & ost) const;
+    virtual void Print (std::ostream & str) const;
+    virtual void Read (std::istream & ist);
+    void PrintCoeff (std::ostream & ost) const;
   };
 
 
@@ -71,7 +71,7 @@ namespace netgen
     static Primitive * CreateDefault ();
 
     virtual Primitive * Copy () const;
-    virtual void Print (ostream & str) const;
+    virtual void Print (std::ostream & str) const;
 
     virtual void Transform (Transformation<3> & trans);
 
@@ -195,7 +195,7 @@ namespace netgen
     static Primitive * CreateDefault ();
 
     virtual Primitive * Copy () const;
-    virtual void Print (ostream & str) const;
+    virtual void Print (std::ostream & str) const;
 
     virtual void Transform (Transformation<3> & trans);
 
@@ -438,9 +438,9 @@ namespace netgen
 					   const Box<3> & bbox, 
 					   double facets) const;
     /// OK		 
-    virtual void Print (ostream & ist) const;
+    virtual void Print (std::ostream & ist) const;
     /// OK
-    virtual void Read (istream & ist);
+    virtual void Read (std::istream & ist);
   };
 
   /// ...end

@@ -1,4 +1,4 @@
-#ifndef FILE_TRANSFORM3D
+﻿#ifndef FILE_TRANSFORM3D
 #define FILE_TRANSFORM3D
 
 /* *************************************************************************/
@@ -15,7 +15,7 @@ namespace netgen
 {
 
 class Transformation3d;
-ostream & operator<< (ostream & ost, Transformation3d & trans);
+std::ostream & operator<< (std::ostream & ost, Transformation3d & trans);
 
 class Transformation3d
 {
@@ -65,7 +65,7 @@ public:
 	    lin[i-1][1] * from.X(2) + lin[i-1][2] * from.X(3);
 	}
     }
-  friend ostream & operator<< (ostream & ost, Transformation3d & trans);
+  friend std::ostream & operator<< (std::ostream & ost, Transformation3d & trans);
 };
 
 
@@ -188,7 +188,7 @@ public:
 };
 
 template <int D>
-ostream & operator<< (ostream & ost, Transformation<D> & trans);
+std::ostream & operator<< (std::ostream & ost, Transformation<D> & trans);
 
 
 }

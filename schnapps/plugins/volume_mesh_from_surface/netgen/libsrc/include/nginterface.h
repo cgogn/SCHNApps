@@ -1,4 +1,4 @@
-#ifndef NGINTERFACE
+﻿#ifndef NGINTERFACE
 #define NGINTERFACE
 
 
@@ -326,7 +326,7 @@ extern "C" {
   // redraw 
   DLL_HEADER void Ng_Redraw(bool blocking = false);
   ///
-  DLL_HEADER void Ng_TclCmd(string cmd);
+  DLL_HEADER void Ng_TclCmd(std::string cmd);
   ///
   DLL_HEADER void Ng_SetMouseEventHandler (netgen::MouseEventHandler * handler);
   ///

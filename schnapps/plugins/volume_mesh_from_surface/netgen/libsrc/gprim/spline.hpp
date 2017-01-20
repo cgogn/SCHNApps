@@ -1,4 +1,4 @@
-#ifndef FILE_SPLINE_HPP
+﻿#ifndef FILE_SPLINE_HPP
 #define FILE_SPLINE_HPP
 
 /**************************************************************************/
@@ -55,7 +55,7 @@ namespace netgen
     /// returns a (not necessarily unit-length) tangent vector for 0 <= t <= 1
     virtual Vec<D> GetTangent (const double t) const
     { 
-      cerr << "GetTangent not implemented for spline base-class"  << endl; 
+      std::cerr << "GetTangent not implemented for spline base-class"  << std::endl;
       Vec<D> dummy; return dummy;
     }
 
@@ -82,7 +82,7 @@ namespace netgen
 	the polynomial
 	$$ a x^2 + b y^2 + c x y + d x + e y + f = 0 $$
 	are written to ost */
-    void PrintCoeff (ostream & ost) const;
+    void PrintCoeff (std::ostream & ost) const;
 
     virtual void GetCoeff (Vector & coeffs) const = 0;
     virtual void GetCoeff (Vector & coeffs, Point<D> p0) const { ; } 
@@ -101,13 +101,13 @@ namespace netgen
 
     virtual double MaxCurvature(void) const = 0;
 
-    virtual string GetType(void) const {return "splinebase";}
+    virtual std::string GetType(void) const {return "splinebase";}
 
     virtual void Project (const Point<D> point, Point<D> & point_on_curve, double & t) const
-    { cerr << "Project not implemented for spline base-class" << endl;}
+    { std::cerr << "Project not implemented for spline base-class" << std::endl;}
 
     virtual void GetRawData (Array<double> & data) const
-    { cerr << "GetRawData not implemented for spline base-class" << endl;}
+    { std::cerr << "GetRawData not implemented for spline base-class" << std::endl;}
 
   };
 
@@ -141,7 +141,7 @@ namespace netgen
     virtual void GetCoeff (Vector & coeffs) const;
     virtual void GetCoeff (Vector & coeffs, Point<D> p0) const;
     
-    virtual string GetType(void) const {return "line";}
+    virtual std::string GetType(void) const {return "line";}
 
     virtual void LineIntersections (const double a, const double b, const double c,
 				    Array < Point<D> > & points, const double eps) const;
@@ -190,7 +190,7 @@ namespace netgen
     virtual void GetCoeff (Vector & coeffs) const;
     virtual void GetCoeff (Vector & coeffs, Point<D> p0) const;
     
-    virtual string GetType(void) const {return "spline3";}
+    virtual std::string GetType(void) const {return "spline3";}
 
     const GeomPoint<D> & TangentPoint (void) const { return p2; }
 
@@ -243,7 +243,7 @@ namespace netgen
     ///
     const Point<D> & MidPoint(void) const {return pm; }
 
-    virtual string GetType(void) const {return "circle";}
+    virtual std::string GetType(void) const {return "circle";}
 
     virtual void LineIntersections (const double a, const double b, const double c,
 				    Array < Point<D> > & points, const double eps) const;
@@ -325,7 +325,7 @@ namespace netgen
 
 
   template<int D>
-  void SplineSeg<D> :: PrintCoeff (ostream & ost) const
+  void SplineSeg<D> :: PrintCoeff (std::ostream & ost) const
   {
     Vector u(6);
 
@@ -333,7 +333,7 @@ namespace netgen
 
     for ( int i=0; i<6; i++)
       ost << u[i] << "  ";
-    ost << endl;
+    ost << std::endl;
   }
 
 

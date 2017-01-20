@@ -1,4 +1,4 @@
-#ifndef FILE_VECTOR
+﻿#ifndef FILE_VECTOR
 #define FILE_VECTOR
 
 /* *************************************************************************/
@@ -194,10 +194,10 @@ inline double operator* (const FlatVector & v1, const FlatVector & v2)
 
 
 
-inline ostream & operator<< (ostream & ost, const FlatVector & v)
+inline std::ostream & operator<< (std::ostream & ost, const FlatVector & v)
 {
   for (int i = 0; i < v.Size(); i++)
-    ost << " " << setw(7) << v[i];
+    ost << " " << std::setw(7) << v[i];
   return ost;
 }
 

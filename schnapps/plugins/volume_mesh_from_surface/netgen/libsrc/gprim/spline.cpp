@@ -1,4 +1,4 @@
-/*
+﻿/*
 
 Spline curve for Mesh generator
 
@@ -8,6 +8,8 @@ Spline curve for Mesh generator
 #include <linalg.hpp>
 #include <gprim.hpp>
 #include "spline.hpp"
+
+using namespace std;
 
 namespace netgen
 {

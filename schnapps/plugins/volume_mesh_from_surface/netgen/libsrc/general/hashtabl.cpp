@@ -1,4 +1,4 @@
-/**************************************************************************/
+﻿/**************************************************************************/
 /* File:   hashtabl.cpp                                                   */
 /* Author: Joachim Schoeberl                                              */
 /* Date:   01. Jun. 95                                                    */
@@ -11,6 +11,9 @@
 #include <algorithm>
 #include <mystdlib.h>
 #include <myadt.hpp>
+
+
+using namespace std;
 
 namespace netgen
 {

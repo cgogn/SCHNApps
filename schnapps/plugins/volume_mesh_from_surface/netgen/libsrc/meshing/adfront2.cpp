@@ -1,10 +1,11 @@
-/*
+﻿/*
   Advancing front class for surfaces
 */
 
 #include <mystdlib.h>
 #include "meshing.hpp"
 
+using namespace std;
 
 namespace netgen
 {

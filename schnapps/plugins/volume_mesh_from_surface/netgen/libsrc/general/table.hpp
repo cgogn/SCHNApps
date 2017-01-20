@@ -1,4 +1,4 @@
-#ifndef FILE_TABLE
+﻿#ifndef FILE_TABLE
 #define FILE_TABLE
 
 /**************************************************************************/
@@ -194,7 +194,7 @@ public:
     { BASE_TABLE::AllocateElementsOneBlock (sizeof(T)); }
 
 
-  inline void PrintMemInfo (ostream & ost) const
+  inline void PrintMemInfo (std::ostream & ost) const
   {
     int els = AllocatedElements(); 
     ost << "table: allocaed " << els 
@@ -202,7 +202,7 @@ public:
 	<< els * sizeof(T) 
 	<< " bytes in " << Size() << " bags."
 	<< " used: " << UsedElements()
-	<< endl;
+	<< std::endl;
   }
 
   /// Access entry.
@@ -219,7 +219,7 @@ public:
 
 
 template <class T, int BASE>
-inline ostream & operator<< (ostream & ost, const TABLE<T,BASE> & table)
+inline std::ostream & operator<< (std::ostream & ost, const TABLE<T,BASE> & table)
 {
   for (int i = BASE; i < table.Size()+BASE; i++)
     {
@@ -228,7 +228,7 @@ inline ostream & operator<< (ostream & ost, const TABLE<T,BASE> & table)
       ost << "(" << row.Size() << ") ";
       for (int j = 0; j < row.Size(); j++)
 	ost << row[j] << " ";
-      ost << endl;
+      ost << std::endl;
     }
   return ost;
 }

@@ -1,4 +1,4 @@
-#include <mystdlib.h>
+﻿#include <mystdlib.h>
 
 #include <myadt.hpp>
 #include <csg.hpp>
@@ -6,6 +6,7 @@
 #include <linalg.hpp>
 #include <meshing.hpp>
 
+using namespace std;
 
 namespace netgen
 {

@@ -1,4 +1,4 @@
-#ifndef WRITEUSER
+﻿#ifndef WRITEUSER
 #define WRITEUSER
 
 /**************************************************************************/
@@ -21,7 +21,7 @@ void WriteFile (int typ,
 
 DLL_HEADER extern
 void ReadFile (Mesh & mesh,
-               const string & filename);
+               const std::string & filename);
 
 
 
@@ -31,15 +31,15 @@ void ReadFile (Mesh & mesh,
 extern
 void WriteNeutralFormat (const Mesh & mesh,
                          const NetgenGeometry & geom,
-                         const string & filename);
+                         const std::string & filename);
 
 extern
 void WriteSurfaceFormat (const Mesh & mesh,
-                         const string & filename);
+                         const std::string & filename);
 
 extern
 void WriteSTLFormat (const Mesh & mesh,
-                     const string & filename);
+                     const std::string & filename);
 
 
 // Philippose - 16 August 2010
@@ -48,120 +48,120 @@ void WriteSTLFormat (const Mesh & mesh,
 // a separate "solid" entity in the STL file
 extern
 void WriteSTLExtFormat (const Mesh & mesh,
-                        const string & filename);
+                        const std::string & filename);
 
 
 extern
 void WriteVRMLFormat (const Mesh & mesh,
                       bool faces,
-                      const string & filename);
+                      const std::string & filename);
 
 extern
 void WriteFEPPFormat (const Mesh & mesh,
                       const NetgenGeometry & geom,
-                      const string & filename);
+                      const std::string & filename);
 
 extern
 void WriteGmshFormat (const Mesh & mesh,
                       const NetgenGeometry & geom,
-                      const string & filename);
+                      const std::string & filename);
 
 
 // Philippose - 29/01/2009
 // Added GMSH v2.xx Mesh Export support
 void WriteGmsh2Format (const Mesh & mesh,
                        const NetgenGeometry & geom,
-                       const string & filename);
+                       const std::string & filename);
 
 
 // Philippose - 25/10/2009
 // Added OpenFOAM 1.5+ Mesh Export support
 extern 
 void WriteOpenFOAM15xFormat (const Mesh & mesh, 
-                             const string & casename,
+                             const std::string & casename,
                              const bool compressed);
 
 
 extern
 void WriteUserChemnitz (const Mesh & mesh,
-                        const string & filename);
+                        const std::string & filename);
 
 extern
 void WriteJCMFormat (const Mesh & mesh,
                      const NetgenGeometry & geom,
-                     const string & filename);
+                     const std::string & filename);
 
 
 extern
 void WriteDiffPackFormat (const Mesh & mesh,
                           const NetgenGeometry & geom,
-                          const string & filename);
+                          const std::string & filename);
 
 extern
 void WriteTochnogFormat (const Mesh & mesh,
-                         const string & filename);
+                         const std::string & filename);
 
 extern
 void WriteTecPlotFormat (const Mesh & mesh,
                          const NetgenGeometry & geom,
-                         const string & filename);
+                         const std::string & filename);
 
 extern
 void WriteAbaqusFormat (const Mesh & mesh,
-                        const string & filename);
+                        const std::string & filename);
 
 extern
 void WriteFluentFormat (const Mesh & mesh,
-                        const string & filename);
+                        const std::string & filename);
 
 extern
 void WritePermasFormat (const Mesh & mesh,
-                        const string & filename);
+                        const std::string & filename);
 
 extern
 void WriteFEAPFormat (const Mesh & mesh,
-                      const string & filename);
+                      const std::string & filename);
 
 extern
 void WriteElmerFormat (const Mesh & mesh,
-                       const string & filename);
+                       const std::string & filename);
 
 
 extern
 void WriteEdgeElementFormat (const Mesh & mesh,
                              const NetgenGeometry & geom,
-                             const string & filename);
+                             const std::string & filename);
 
 
 
 #ifdef OLIVER
 extern
 void WriteTETFormat (const Mesh & mesh,
-                     const string & filename);
+                     const std::string & filename);
 
 #endif
 
 extern void ReadTETFormat (Mesh & mesh,
-                           const string & filename);
+                           const std::string & filename);
 
 
 extern void ReadFNFFormat (Mesh & mesh,
-                           const string & filename);
+                           const std::string & filename);
 
 
 
 void WriteDolfinFormat (const Mesh & mesh,
-                        const string & filename);
+                        const std::string & filename);
 
 
 extern void DLL_HEADER RegisterUserFormats (Array<const char*> & names,
                                  Array<const char*> & extensions);
 
 
-extern bool DLL_HEADER WriteUserFormat (const string & format,
+extern bool DLL_HEADER WriteUserFormat (const std::string & format,
                              const Mesh & mesh,
                              const NetgenGeometry & geom,
-                             const string & filename);
+                             const std::string & filename);
 
 }
 

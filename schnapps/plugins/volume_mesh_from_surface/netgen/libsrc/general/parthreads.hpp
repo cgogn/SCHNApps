@@ -1,4 +1,4 @@
-#ifndef FILE_PARTHREADS
+﻿#ifndef FILE_PARTHREADS
 #define FILE_PARTHREADS
 
 /**************************************************************************/
@@ -76,8 +76,8 @@ public:
 template<typename TFunc>
 void ParallelFor( int first, int next, const TFunc & f )
 {
-  int nthreads = thread::hardware_concurrency();
-  thread * threads = new thread[nthreads];
+  int nthreads = std::thread::hardware_concurrency();
+  std::thread * threads = new std::thread[nthreads];
   for (int i=0; i<nthreads; i++)
     {
       int myfirst = first + (next-first)*i/nthreads;
@@ -95,16 +95,16 @@ void ParallelFor( int first, int next, const TFunc & f )
 
 
 
-  typedef void (*TaskManager)(function<void(int,int)>);
+  typedef void (*TaskManager)(std::function<void(int,int)>);
 
-  inline void DummyTaskManager (function<void(int,int)> func)
+  inline void DummyTaskManager (std::function<void(int,int)> func)
   {
     func(0,2);
     func(1,2);
   }
   
   template <typename FUNC>
-  inline void ParallelFor (TaskManager tm, size_t n, FUNC func)
+  inline void ParallelFor (TaskManager tm, std::size_t n, FUNC func)
   {
     (*tm) ([n,func] (size_t nr, size_t nums)
            {
@@ -117,7 +117,7 @@ void ParallelFor( int first, int next, const TFunc & f )
   }
   
   template <typename FUNC>
-  inline void ParallelForRange (TaskManager tm, size_t n, FUNC func)
+  inline void ParallelForRange (TaskManager tm, std::size_t n, FUNC func)
   {
     (*tm) ([n,func] (size_t nr, size_t nums)
            {
