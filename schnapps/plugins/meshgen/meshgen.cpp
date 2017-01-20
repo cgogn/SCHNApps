@@ -22,7 +22,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_mesh_from_surface.h>
+#include <meshgen.h>
 #include <tetgen_structure_io.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>

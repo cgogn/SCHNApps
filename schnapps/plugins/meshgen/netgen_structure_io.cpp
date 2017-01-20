@@ -22,7 +22,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_mesh_from_surface.h>
+#include <meshgen.h>
 #include <netgen_structure_io.h>
 #include <netgen/libsrc/meshing/meshing.hpp>
 #include <netgen/nglib/nglib.h>

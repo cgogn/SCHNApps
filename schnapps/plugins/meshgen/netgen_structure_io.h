@@ -26,7 +26,7 @@
 #define SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
 
 #include <functional>
-#include <schnapps/plugins/volume_mesh_from_surface/dll.h>
+#include <dll.h>
 #include <schnapps/core/map_handler.h>
 #include <cgogn/io/volume_import.h>
 

@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_MESHGEN_VECTOR_DIALOG_H_
-#define SCHNAPPS_PLUGIN_MESHGEN_VECTOR_DIALOG_H_
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_
+#define SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_
 
 #include "dll.h"
 #include <schnapps/core/types.h>
@@ -141,4 +141,4 @@ private:
 } // namespace plugin_meshgen
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_MESHGEN_VECTOR_DIALOG_H_
+#endif // SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_

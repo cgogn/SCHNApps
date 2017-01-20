@@ -26,7 +26,7 @@
 #define SCHNAPPS_PLUGIN_MESHGEN_H_
 
 #include "dll.h"
-#include <volume_mesh_from_surface_dialog.h>
+#include <meshgen_dialog.h>
 #include <schnapps/core/plugin_processing.h>
 #include <cgogn/core/cmap/cmap2.h>
 

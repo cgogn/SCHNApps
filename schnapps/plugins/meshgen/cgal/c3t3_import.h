@@ -25,9 +25,9 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_C3T3_IMPORT_H
 #define SCHNAPPS_PLUGIN_MESHGEN_C3T3_IMPORT_H
 
-#include "../dll.h"
+#include <dll.h>
+#include <meshgen.h>
 #include <schnapps/core/map_handler.h>
-#include <volume_mesh_from_surface.h>
 #include <cgogn/io/volume_import.h>
 
 #include <CGAL/Mesh_triangulation_3.h>

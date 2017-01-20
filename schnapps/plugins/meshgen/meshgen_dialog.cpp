@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_mesh_from_surface.h>
-#include <volume_mesh_from_surface_dialog.h>
+#include <meshgen.h>
+#include <meshgen_dialog.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 #include "image.h"

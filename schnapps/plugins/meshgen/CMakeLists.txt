@@ -22,15 +22,15 @@ set(HEADER_FILES
 	dll.h
 	netgen_structure_io.h
 	tetgen_structure_io.h
-	volume_mesh_from_surface.h
-	volume_mesh_from_surface_dialog.h
+	meshgen.h
+	meshgen_dialog.h
 )
 
 set(SOURCE_FILES
 	netgen_structure_io.cpp
 	tetgen_structure_io.cpp
-	volume_mesh_from_surface.cpp
-	volume_mesh_from_surface_dialog.cpp
+	meshgen.cpp
+	meshgen_dialog.cpp
 )
 
 if(CGAL_FOUND)
