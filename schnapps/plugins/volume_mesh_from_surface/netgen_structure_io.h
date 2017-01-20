@@ -30,11 +30,18 @@
 #include <schnapps/core/map_handler.h>
 #include <cgogn/io/volume_import.h>
 
+namespace nglib
+{
+	class Ng_Meshing_Parameters;
+} // namespace nglib
+
 namespace schnapps
 {
 
 namespace plugin_vmfs
 {
+
+class NetgenParameters;
 
 class SCHNAPPS_PLUGIN_VMFS_API NetgenStructureVolumeImport : public cgogn::io::VolumeImport<VEC3>
 {
@@ -56,6 +63,7 @@ private:
 };
 
 SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<void*, std::function<void(void**)>> export_netgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
+SCHNAPPS_PLUGIN_VMFS_API nglib::Ng_Meshing_Parameters* setup_netgen_parameters(const NetgenParameters& params);
 
 } // namespace plugin_vmfs
 } // namespace schnapps

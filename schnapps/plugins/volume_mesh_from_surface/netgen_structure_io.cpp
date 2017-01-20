@@ -22,6 +22,7 @@
 *                                                                              *
 *******************************************************************************/
 
+#include <volume_mesh_from_surface.h>
 #include <netgen_structure_io.h>
 #include <netgen/libsrc/meshing/meshing.hpp>
 #include <netgen/nglib/nglib.h>
@@ -91,6 +92,32 @@ bool NetgenStructureVolumeImport::import_netgen_structure()
 		nglib::Ng_GetVolumeElement(volume_mesh_structure_,i, &tetra[0]);
 		this->add_tetra(tetra[0]-1, tetra[1]-1, tetra[2]-1, tetra[3]-1, true);
 	}
+}
+
+nglib::Ng_Meshing_Parameters* setup_netgen_parameters(const NetgenParameters& params)
+{
+	nglib::Ng_Meshing_Parameters* mp = new nglib::Ng_Meshing_Parameters();
+	mp->uselocalh = params.uselocalh;
+	mp->maxh = params.maxh;
+	mp->minh = params.minh;
+	mp->fineness = params.fineness;
+	mp->grading = params.grading;
+	mp->elementsperedge = params.elementsperedge;
+	mp->elementspercurve = params.elementspercurve;
+	mp->closeedgeenable = params.closeedgeenable;
+	mp->minedgelen = params.minedgelen;
+	mp->second_order = params.second_order;
+	mp->quad_dominated = params.quad_dominated;
+	mp->meshsize_filename = params.meshsize_filename;
+	mp->optsurfmeshenable = params.optsurfmeshenable;
+	mp->optvolmeshenable = params.optvolmeshenable;
+	mp->optsteps_2d = params.optsteps_2d;
+	mp->optsteps_3d = params.optsteps_3d;
+	mp->invert_tets = params.invert_tets;
+	mp->invert_trigs = params.invert_trigs;
+	mp->check_overlap = params.check_overlap;
+	mp->check_overlapping_boundary = params.check_overlapping_boundary;
+	return mp;
 }
 
 } // namespace plugin_vmfs

@@ -43,8 +43,36 @@ namespace schnapps
 namespace plugin_vmfs
 {
 
-MeshGeneratorParameters::MeshGeneratorParameters() :
-	tetgen_command_line("-pqY"),
+TetgenParameters::TetgenParameters() :
+	tetgen_command_line("-pqY")
+{}
+
+NetgenParameters::NetgenParameters() :
+	uselocalh(true),
+	maxh(1000),
+	minh(0),
+	fineness(0.5),
+	grading(0.3),
+	elementsperedge(2.0),
+	elementspercurve(2.0),
+	closeedgeenable(false),
+	closeedgefact(2.0),
+	minedgelenenable(false),
+	minedgelen(1e-4),
+	second_order(false),
+	quad_dominated(false),
+	meshsize_filename(nullptr),
+	optsurfmeshenable(true),
+	optvolmeshenable(true),
+	optsteps_2d(3),
+	optsteps_3d(3),
+	invert_tets(false),
+	invert_trigs(false),
+	check_overlap(true),
+	check_overlapping_boundary(true)
+{}
+
+CGALParameters::CGALParameters() :
 	cell_size_(8),
 	cell_radius_edge_ratio_(3),
 	facet_angle_(30),
@@ -64,6 +92,14 @@ MeshGeneratorParameters::MeshGeneratorParameters() :
 	perturber_sliver_bound_(0),
 	do_exuder_(true),
 	exuder_sliver_bound_(0)
+{
+
+}
+
+MeshGeneratorParameters::MeshGeneratorParameters() :
+	cgal(),
+	netgen(),
+	tetgen()
 {}
 
 Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
@@ -119,7 +155,7 @@ void Plugin_VolumeMeshFromSurface::generate_button_netgen_pressed()
 			cgogn_log_info("Plugin_VolumeMeshFromSurface") << "The position attribute has to be of type VEC3.";
 			return;
 		}
-		generate_netgen(handler_map2, position_att);
+		generate_netgen(handler_map2, position_att, generation_parameters_.netgen);
 	}
 }
 
@@ -138,20 +174,22 @@ void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 			cgogn_log_info("Plugin_VolumeMeshFromSurface") << "The position attribute has to be of type VEC3.";
 			return;
 		}
-		const std::string& tetgen_command_line = generation_parameters_.tetgen_command_line;
+		const std::string& tetgen_command_line = generation_parameters_.tetgen.tetgen_command_line;
 		generate_tetgen(handler_map2, position_att, tetgen_command_line.c_str());
 	}
 }
 
-Plugin_VolumeMeshFromSurface::MapHandler3*Plugin_VolumeMeshFromSurface::generate_netgen(Plugin_VolumeMeshFromSurface::MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att)
+Plugin_VolumeMeshFromSurface::MapHandler3*Plugin_VolumeMeshFromSurface::generate_netgen(Plugin_VolumeMeshFromSurface::MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const NetgenParameters& params)
 {
 	if (!mh2 || !position_att.is_valid())
 		return nullptr;
 
 	Map2* map = mh2->get_map();
 	auto netgen_structure = export_netgen(*map, position_att);
-	nglib::Ng_Meshing_Parameters mp;
-	nglib::Ng_GenerateVolumeMesh (netgen_structure.get(), &mp);
+	nglib::Ng_Meshing_Parameters* mp = setup_netgen_parameters(params);
+
+	nglib::Ng_GenerateVolumeMesh (netgen_structure.get(), mp);
+	delete mp;
 
 	NetgenStructureVolumeImport netgen_import(netgen_structure.get());
 	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("netgen_export", 3));
@@ -188,7 +226,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	return handler_map3;
 }
 
-Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const MeshGeneratorParameters& params)
+Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const CGALParameters& params)
 {
 #ifdef PLUGIN_VMFS_WITH_CGAL
 	if (!mh2 || !position_att.is_valid())
@@ -215,7 +253,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 #endif // PLUGIN_VMFS_WITH_CGAL
 }
 
-Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(const plugin_image::Image3D* im, const MeshGeneratorParameters& params)
+Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(const plugin_image::Image3D* im, const CGALParameters& params)
 {
 #ifdef PLUGIN_VMFS_WITH_CGAL
 	if (!im)
@@ -237,7 +275,7 @@ void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 		MapHandler2* mh2 = dynamic_cast<MapHandler2*>(mhg);
 		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
 		auto position_att = mh2->template get_attribute<VEC3, Map2::Vertex::ORBIT>(QString::fromStdString(position_att_name));
-		generate_cgal(mh2, position_att, generation_parameters_);
+		generate_cgal(mh2, position_att, generation_parameters_.cgal);
 
 	} else {
 		if (dialog_->export_dialog_->comboBox_images->currentIndex() > 0)
@@ -248,7 +286,7 @@ void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 				plugin_image::Image3D const * im = plugin_image_->get_image(im_path);
 				if (im)
 				{
-					generate_cgal(im, generation_parameters_);
+					generate_cgal(im, generation_parameters_.cgal);
 				}
 			}
 		}
@@ -286,7 +324,6 @@ void Plugin_VolumeMeshFromSurface::plugin_disabled(Plugin* plugin)
 		}
 	}
 }
-
 
 } // namespace plugin_vmfs
 } // namespace schnapps

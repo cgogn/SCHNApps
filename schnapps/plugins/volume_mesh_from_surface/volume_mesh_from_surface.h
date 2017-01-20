@@ -48,11 +48,56 @@ namespace plugin_vmfs
 
 class Plugin_VolumeMeshFromSurface;
 
-struct SCHNAPPS_PLUGIN_VMFS_API MeshGeneratorParameters
+struct SCHNAPPS_PLUGIN_VMFS_API TetgenParameters
 {
-	friend class Plugin_VolumeMeshFromSurface;
-
+	TetgenParameters();
 	std::string tetgen_command_line;
+};
+
+struct SCHNAPPS_PLUGIN_VMFS_API NetgenParameters
+{
+	NetgenParameters();
+	bool uselocalh;
+
+	double maxh;
+	double minh;
+
+	double fineness;
+	double grading;
+
+	double elementsperedge;
+	double elementspercurve;
+
+	bool closeedgeenable;
+	double closeedgefact;
+
+	bool minedgelenenable;
+	double minedgelen;
+
+	bool second_order;
+	bool quad_dominated;
+
+	char * meshsize_filename;
+
+	bool optsurfmeshenable;
+	bool optvolmeshenable;
+
+	int optsteps_3d;
+	int optsteps_2d;
+
+	// Philippose - 13/09/2010
+	// Added a couple more parameters into the meshing parameters list
+	// from Netgen into Nglib
+	bool invert_tets;
+	bool invert_trigs;
+
+	bool check_overlap;
+	bool check_overlapping_boundary;
+};
+
+struct SCHNAPPS_PLUGIN_VMFS_API CGALParameters
+{
+	CGALParameters();
 
 	float64 cell_size_;
 	float64 cell_radius_edge_ratio_;
@@ -76,8 +121,14 @@ struct SCHNAPPS_PLUGIN_VMFS_API MeshGeneratorParameters
 	float64 perturber_sliver_bound_;
 	bool do_exuder_;
 	float64 exuder_sliver_bound_;
+};
 
+struct SCHNAPPS_PLUGIN_VMFS_API MeshGeneratorParameters
+{
 	MeshGeneratorParameters();
+	CGALParameters cgal;
+	NetgenParameters netgen;
+	TetgenParameters tetgen;
 };
 
 class SCHNAPPS_PLUGIN_VMFS_API Plugin_VolumeMeshFromSurface : public PluginProcessing
@@ -97,10 +148,10 @@ public:
 
 	Plugin_VolumeMeshFromSurface();
 
-	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att);
+	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const NetgenParameters& params);
 	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args);
-	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const MeshGeneratorParameters& params);
-	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const MeshGeneratorParameters& params);
+	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const CGALParameters& params);
+	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const CGALParameters& params);
 
 private:
 

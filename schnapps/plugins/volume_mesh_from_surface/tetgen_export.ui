@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>243</width>
-    <height>76</height>
+    <height>80</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,6 +17,9 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <widget class="QLabel" name="label">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;-p Tetrahedralizes a picecwise linear complex (.poly or .smesh file).&lt;/p&gt;&lt;p&gt;-q Quality mesh generation. A minimum radius-edge ratio may be specifyed (default 2.0).&lt;/p&gt;&lt;p&gt;-a Applies a maximum tetrahedron volume constraint.&lt;/p&gt;&lt;p&gt;-A Assigns attributes to identify tetrahedra in certain regions.&lt;/p&gt;&lt;p&gt;-r Reconstructs/Refines a previously generated mesh.&lt;/p&gt;&lt;p&gt;-Y Suppresses boundary facets/segments splitting.&lt;/p&gt;&lt;p&gt;-i Inserts a list of additional points into mesh.&lt;/p&gt;&lt;p&gt;-M Does not merge coplanar facets.&lt;/p&gt;&lt;p&gt;-T Set a tolerance for coplanar test (default 1e-8).&lt;/p&gt;&lt;p&gt;-d Detect intersections of PLC facets.&lt;/p&gt;&lt;p&gt;-z Numbers all output items starting from zero.&lt;/p&gt;&lt;p&gt;-o2 Generates second-order subparametric elements.&lt;/p&gt;&lt;p&gt;-B Suppresses output of boundary information.&lt;/p&gt;&lt;p&gt;-I Suppresses mesh iteration numbers.&lt;/p&gt;&lt;p&gt;-C Checks the consistency of the final mesh.&lt;/p&gt;&lt;p&gt;-Q Quiet: No terminal output except errors.&lt;/p&gt;&lt;p&gt;-V Verbose: Detailed information on what I'm doing.&lt;/p&gt;&lt;p&gt;-v Prints the version information.&lt;/p&gt;&lt;p&gt;-h Help: A brief instruction for using TetGen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>command line</string>
      </property>
@@ -24,6 +27,9 @@
    </item>
    <item row="0" column="1">
     <widget class="QLineEdit" name="lineEdit_tetgen_args">
+     <property name="toolTip">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;-p Tetrahedralizes a picecwise linear complex (.poly or .smesh file).&lt;/p&gt;&lt;p&gt;-q Quality mesh generation. A minimum radius-edge ratio may be specifyed (default 2.0).&lt;/p&gt;&lt;p&gt;-a Applies a maximum tetrahedron volume constraint.&lt;/p&gt;&lt;p&gt;-A Assigns attributes to identify tetrahedra in certain regions.&lt;/p&gt;&lt;p&gt;-r Reconstructs/Refines a previously generated mesh.&lt;/p&gt;&lt;p&gt;-Y Suppresses boundary facets/segments splitting.&lt;/p&gt;&lt;p&gt;-i Inserts a list of additional points into mesh.&lt;/p&gt;&lt;p&gt;-M Does not merge coplanar facets.&lt;/p&gt;&lt;p&gt;-T Set a tolerance for coplanar test (default 1e-8).&lt;/p&gt;&lt;p&gt;-d Detect intersections of PLC facets.&lt;/p&gt;&lt;p&gt;-z Numbers all output items starting from zero.&lt;/p&gt;&lt;p&gt;-o2 Generates second-order subparametric elements.&lt;/p&gt;&lt;p&gt;-B Suppresses output of boundary information.&lt;/p&gt;&lt;p&gt;-I Suppresses mesh iteration numbers.&lt;/p&gt;&lt;p&gt;-C Checks the consistency of the final mesh.&lt;/p&gt;&lt;p&gt;-Q Quiet: No terminal output except errors.&lt;/p&gt;&lt;p&gt;-V Verbose: Detailed information on what I'm doing.&lt;/p&gt;&lt;p&gt;-v Prints the version information.&lt;/p&gt;&lt;p&gt;-h Help: A brief instruction for using TetGen.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
       <string>-pqY</string>
      </property>

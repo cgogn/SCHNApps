@@ -76,10 +76,10 @@ namespace nglib
    // initialize, deconstruct Netgen library:
    DLL_HEADER void Ng_Init ()
    {
-      mycout = &cout;
-      myerr = &cerr;
+	  testout = new ofstream ("netgen.out");
+      mycout = testout;/*&cout;*/
+      myerr = testout;/*&cerr;*/
       // netgen::testout->SetOutStream (new ofstream ("test.out"));
-      testout = new ofstream ("test.out");
    }
 
 

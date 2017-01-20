@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>454</width>
-    <height>369</height>
+    <height>409</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,7 +18,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget_cgal">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -58,6 +58,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This parameter controls the shape of surface facets.&lt;/p&gt;&lt;p&gt;Actually, it is a lower bound for the angle (in degree) of surface facets.&lt;/p&gt;&lt;p&gt;When boundary surfaces are smooth, the termination of the meshing process is guaranteed if the angular bound is at most 30 degrees.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>facet angle</string>
          </property>
@@ -76,6 +79,9 @@
            <width>160</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This parameter controls the approximation error of boundary and subdivision surfaces.&lt;/p&gt;&lt;p&gt;Actually, it is either a constant or a spatially variable scalar field.&lt;/p&gt;&lt;p&gt;It provides an upper bound for the distance between the circumcenter of a surface &lt;br/&gt;facet and the center of a surface Delaunay ball of this facet.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>facet distance</string>
@@ -103,6 +109,9 @@
        </item>
        <item row="6" column="0">
         <widget class="QCheckBox" name="checkBoxLloyd">
+         <property name="toolTip">
+          <string>The function lloyd_optimize_mesh_3() is a mesh optimization process based on the minimization of a global energy function.</string>
+         </property>
          <property name="text">
           <string>Lloyd smoothing</string>
          </property>
@@ -110,6 +119,9 @@
        </item>
        <item row="7" column="0">
         <widget class="QCheckBox" name="checkBox_Perturber">
+         <property name="toolTip">
+          <string>The function perturb_mesh_3() is a mesh optimizer that improves the quality of a Delaunay mesh by changing the mesh vertices positions. </string>
+         </property>
          <property name="text">
           <string>perturber</string>
          </property>
@@ -136,6 +148,9 @@
        </item>
        <item row="8" column="0">
         <widget class="QCheckBox" name="checkBox_5Exuder">
+         <property name="toolTip">
+          <string>The function exude_mesh_3() performs a sliver exudation process on a Delaunay mesh. </string>
+         </property>
          <property name="text">
           <string>exuder</string>
          </property>
@@ -143,6 +158,9 @@
        </item>
        <item row="5" column="0">
         <widget class="QCheckBox" name="checkBox_ODT">
+         <property name="toolTip">
+          <string>The function odt_optimize_mesh_3() is a mesh optimization process based on the minimization of a global energy function. </string>
+         </property>
          <property name="text">
           <string>odt</string>
          </property>
@@ -161,6 +179,9 @@
            <width>160</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This parameter controls the size of surface facets.&lt;/p&gt;&lt;p&gt;Actually, each surface facet has a surface Delaunay ball which is a ball circumscribing the surface facet and centered on the surface patch.&lt;/p&gt;&lt;p&gt;The parameter facet_size is either a constant or a spatially variable scalar field, &lt;br/&gt;providing an upper bound for the radii of surface Delaunay balls.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>facet size</string>
@@ -200,6 +221,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This parameter controls the size of mesh tetrahedra. It is either a scalar or a spatially variable scalar field.&lt;/p&gt;&lt;p&gt;It provides an upper bound on the circumradii of the mesh tetrahedra.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>cell size</string>
          </property>
@@ -238,6 +262,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This parameter controls the shape of mesh cells (but can't filter slivers, as we discussed earlier).&lt;/p&gt;&lt;p&gt;Actually, it is an upper bound for the ratio between the circumradius of a mesh tetrahedron and its shortest edge.&lt;/p&gt;&lt;p&gt;There is a theoretical bound for this parameter:&lt;br/&gt;the Delaunay refinement process is guaranteed to terminate for values of cell_radius_edge_ratio bigger than 2. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>cell radius edge ratio</string>
          </property>
@@ -265,6 +292,9 @@
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
         <widget class="QCheckBox" name="checkBox_FreezeODT">
+         <property name="toolTip">
+          <string> If it is set to true (default value), frozen vertices will not move anymore in next iterations. Otherwise, at each iteration, any vertex that moves, unfreezes all its incident vertices.</string>
+         </property>
          <property name="text">
           <string>freeze</string>
          </property>
@@ -277,6 +307,9 @@
            <width>160</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A stopping criterion based on convergence: the optimization process is stopped, when at the last iteration,&lt;br/&gt;the displacement of any vertex is less than a given percentage of the length the shortest edge incident to that vertex.&lt;/p&gt;&lt;p&gt;The parameter convergence gives the threshold ratio.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>Convergence</string>
@@ -306,6 +339,9 @@
            <width>160</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;is designed to reduce running time of each optimization iteration.&lt;/p&gt;&lt;p&gt;Any vertex that has a displacement less than a given percentage of the length (the of its shortest incident edge, is frozen (i.e. is not relocated).&lt;/p&gt;&lt;p&gt;The parameter freeze_bound gives the threshold ratio.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>Freeze bound</string>
@@ -349,6 +385,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>sets a limit on the number of performed iterations. The default value of 0 means that there is no limit on the number of performed iterations.</string>
+         </property>
          <property name="text">
           <string>Max iterations</string>
          </property>
@@ -373,6 +412,9 @@
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="0" column="0">
         <widget class="QCheckBox" name="checkBox_FreezeLloyd">
+         <property name="toolTip">
+          <string> If it is set to true (default value), frozen vertices will not move anymore in next iterations. Otherwise, at each iteration, any vertex that moves, unfreezes all its incident vertices.</string>
+         </property>
          <property name="text">
           <string>freeze</string>
          </property>
@@ -385,6 +427,9 @@
            <width>160</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Designed to reduce running time of each optimization iteration.&lt;/p&gt;&lt;p&gt;Any vertex that has a displacement less than a given percentage of the length (the of its shortest incident edge, is frozen (i.e. is not relocated).&lt;/p&gt;&lt;p&gt;The parameter freeze_bound gives the threshold ratio.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>freeze bound</string>
@@ -415,6 +460,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;is a stopping criterion based on convergence: the optimization process is stopped, when at the last iteration,&lt;br/&gt;the displacement of any vertex is less than a given percentage of the length of the shortest edge incident to that vertex.&lt;/p&gt;&lt;p&gt;The parameter convergence gives the threshold ratio.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>convergence</string>
          </property>
@@ -443,6 +491,9 @@
            <width>160</width>
            <height>0</height>
           </size>
+         </property>
+         <property name="toolTip">
+          <string>sets a limit on the number of performed iterations. The default value of 0 means that there is no limit on the number of performed iterations.</string>
          </property>
          <property name="text">
           <string>max iteration</string>
@@ -487,6 +538,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;is designed to give, in degree, a targeted lower bound on dihedral angles of mesh cells.&lt;/p&gt;&lt;p&gt;The exudation process considers in turn all the mesh cells that have a smallest dihedral angle less than sliver_bound and tries to make them disappear by weighting their vertices.&lt;/p&gt;&lt;p&gt;The optimization process stops when every cell in the mesh achieves this quality.&lt;/p&gt;&lt;p&gt;The default value is 0 and means that there is no targeted bound: the exuder then runs as long as it can improve the smallest dihedral angles of the set of cells incident to some vertices.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>exuder sliver bound</string>
          </property>
@@ -516,6 +570,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Designed to give, in degree, a targeted lower bound on dihedral angles of mesh cells.&lt;/p&gt;&lt;p&gt;The function perturb_mesh_3() runs as long as steps are successful and step number sliver_bound (after which the worst tetrahedron in the mesh has a smallest angle larger than sliver_bound degrees) has not been reached.&lt;/p&gt;&lt;p&gt;The default value is 0 and means that there is no targeted bound: the perturber then runs as long as steps are successful.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string>perturber sliver bound</string>
          </property>
@@ -528,6 +585,9 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>is designed to give, in degree, a targeted lower bound on dihedral angles of mesh cells. The function perturb_mesh_3() runs as long as steps are successful and step number sliver_bound (after which the worst tetrahedron in the mesh has a smallest angle larger than sliver_bound degrees) has not been reached. The default value is 0 and means that there is no targeted bound: the perturber then runs as long as steps are successful.</string>
          </property>
          <property name="decimals">
           <number>3</number>

@@ -111,6 +111,21 @@ private slots:
 	void image_removed(QString im_path);
 	void tetgen_args_updated(QString str);
 
+	void netgen_uselocalh_toggled(bool b);
+	void netgen_maxh_changed(double d);
+	void netgen_minh_changed(double d);
+	void netgen_fineness_changed(double d);
+	void netgen_grading_changed(double d);
+	void netgen_elemsperedge_changed(double d);
+	void netgen_elemspercurve_changed(double d);
+	void netgen_closeedgeenable_toggled(bool b);
+	void netgen_closeedgefact_changed(double d);
+	void netgen_minedgelenenable_toggled(bool b);
+	void netgen_minedgelen_changed(double d);
+	void netgen_second_order_toggled(bool b);
+	void netgen_quad_dominated_toggled(bool b);
+	void netgen_optsteps_3d_changed(int i);
+
 private:
 	QString get_selected_map() const ;
 	void update_mesh_generatuion_ui();
