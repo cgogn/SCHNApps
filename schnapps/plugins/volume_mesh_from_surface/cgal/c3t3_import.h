@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_C3T3_IMPORT_H
+#define SCHNAPPS_PLUGIN_MESHGEN_C3T3_IMPORT_H
 
 #include "../dll.h"
 #include <schnapps/core/map_handler.h>
@@ -45,7 +45,7 @@ namespace plugin_image
 class Image3D;
 }
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
 template<typename C3T3>
@@ -116,8 +116,8 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 }
 
 
-SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const CGALParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map);
-SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map);
 
 template<typename Domain_>
 void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, MapHandler<CMap3>* output_volume_map)
@@ -168,7 +168,7 @@ void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criter
 	import_c3t3(c3t3,output_volume_map);
 }
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_C3T3_IMPORT_H
+#endif // SCHNAPPS_PLUGIN_MESHGEN_C3T3_IMPORT_H

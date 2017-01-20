@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#define SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
 
 #include "dll.h"
 #include <schnapps/core/types.h>
@@ -34,10 +34,10 @@
 namespace schnapps
 {
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
-class SCHNAPPS_PLUGIN_VMFS_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS> {
+class SCHNAPPS_PLUGIN_MESHGEN_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS> {
 public:
 	using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
 	using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
@@ -52,9 +52,9 @@ private:
 	const CMap2::VertexAttribute<VEC3> position_attribute_;
 };
 
-SCHNAPPS_PLUGIN_VMFS_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#endif // SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H

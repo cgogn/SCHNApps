@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -31,10 +31,10 @@
 namespace schnapps
 {
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
-SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const CGALParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map)
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map)
 {
 
 	using Kernel		= CGAL::Exact_predicates_inexact_constructions_kernel;
@@ -65,7 +65,7 @@ SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const CGALParameters& param, MapHan
 	}
 }
 
-SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map)
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map)
 {
 	using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
 #if CGAL_VERSION_NR >= CGAL_VERSION_NUMBER(4,8,0)
@@ -112,5 +112,5 @@ SCHNAPPS_PLUGIN_VMFS_API void tetrahedralize(const CGALParameters& param, const 
 	}
 }
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 } // namespace schnapps

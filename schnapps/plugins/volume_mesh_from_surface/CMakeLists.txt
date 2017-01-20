@@ -1,6 +1,6 @@
-add_subdirectory(tetgen)
+﻿add_subdirectory(tetgen)
 
-project(plugin_volume_mesh_from_surface
+project(plugin_meshgen
 	LANGUAGES C CXX
 )
 
@@ -52,12 +52,12 @@ set(CMAKE_AUTOUIC ON)
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 if(CGAL_FOUND)
-	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DPLUGIN_VMFS_WITH_CGAL")
+	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DPLUGIN_MESHGEN_WITH_CGAL")
 	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DBOOST_PARAMETER_MAX_ARITY=12")
 endif(CGAL_FOUND)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_VMFS_DLL_EXPORT")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_MESHGEN_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>

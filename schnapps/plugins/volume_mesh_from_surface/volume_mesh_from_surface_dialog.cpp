@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -31,7 +31,7 @@
 namespace schnapps
 {
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
 VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_VolumeMeshFromSurface* p) :
@@ -435,5 +435,5 @@ void VolumeMeshFromSurfaceDialog::update_mesh_generatuion_ui()
 }
 
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 } // namespace schnapps

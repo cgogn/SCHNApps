@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,20 +22,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VMFS_DLL_H_
-#define SCHNAPPS_PLUGIN_VMFS_DLL_H_
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_DLL_H_
+#define SCHNAPPS_PLUGIN_MESHGEN_DLL_H_
 
 
 #ifdef WIN32
-#ifndef SCHNAPPS_PLUGIN_VMFS_API
-#if defined SCHNAPPS_PLUGIN_VMFS_DLL_EXPORT
-#define SCHNAPPS_PLUGIN_VMFS_API __declspec(dllexport)
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_API
+#if defined SCHNAPPS_PLUGIN_MESHGEN_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_MESHGEN_API __declspec(dllexport)
 #else
-#define SCHNAPPS_PLUGIN_VMFS_API __declspec(dllimport)
+#define SCHNAPPS_PLUGIN_MESHGEN_API __declspec(dllimport)
 #endif
 #endif
 #else
-#define SCHNAPPS_PLUGIN_VMFS_API
+#define SCHNAPPS_PLUGIN_MESHGEN_API
 #endif
 
-#endif // SCHNAPPS_PLUGIN_VMFS_DLL_H_
+#endif // SCHNAPPS_PLUGIN_MESHGEN_DLL_H_

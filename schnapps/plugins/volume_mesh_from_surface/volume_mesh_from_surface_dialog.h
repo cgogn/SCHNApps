@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -21,8 +21,9 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DIALOG_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DIALOG_H_
+
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_VECTOR_DIALOG_H_
+#define SCHNAPPS_PLUGIN_MESHGEN_VECTOR_DIALOG_H_
 
 #include "dll.h"
 #include <schnapps/core/types.h>
@@ -38,25 +39,25 @@ namespace schnapps
 class SCHNApps;
 class MapHandlerGen;
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
 class Plugin_VolumeMeshFromSurface;
 struct MeshGeneratorParameters;
 
-class SCHNAPPS_PLUGIN_VMFS_API ExportDialog : public QDialog, public Ui::Dialog_export
+class SCHNAPPS_PLUGIN_MESHGEN_API ExportDialog : public QDialog, public Ui::Dialog_export
 {};
 
-class SCHNAPPS_PLUGIN_VMFS_API ExportNetgenDialog : public QDialog, public Ui::Dialog_netgen
+class SCHNAPPS_PLUGIN_MESHGEN_API ExportNetgenDialog : public QDialog, public Ui::Dialog_netgen
 {};
 
-class SCHNAPPS_PLUGIN_VMFS_API ExportTetgenDialog : public QDialog, public Ui::Dialog_tetgen
+class SCHNAPPS_PLUGIN_MESHGEN_API ExportTetgenDialog : public QDialog, public Ui::Dialog_tetgen
 {};
 
-class SCHNAPPS_PLUGIN_VMFS_API ExportCGALDialog : public QDialog, public Ui::Dialog_cgal
+class SCHNAPPS_PLUGIN_MESHGEN_API ExportCGALDialog : public QDialog, public Ui::Dialog_cgal
 {};
 
-class SCHNAPPS_PLUGIN_VMFS_API VolumeMeshFromSurfaceDialog : QObject
+class SCHNAPPS_PLUGIN_MESHGEN_API VolumeMeshFromSurfaceDialog : QObject
 {
 	Q_OBJECT
 
@@ -137,7 +138,7 @@ private:
 
 };
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_VECTOR_DIALOG_H_
+#endif // SCHNAPPS_PLUGIN_MESHGEN_VECTOR_DIALOG_H_

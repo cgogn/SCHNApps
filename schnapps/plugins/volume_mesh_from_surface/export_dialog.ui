@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_VMFS_API</exportmacro>
+ <exportmacro>SCHNAPPS_PLUGIN_MESHGEN_API</exportmacro>
  <class>Dialog_export</class>
  <widget class="QDialog" name="Dialog_export">
   <property name="geometry">

@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -28,10 +28,10 @@
 #include <schnapps/core/map_handler.h>
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/io/map_export.h>
-#ifdef PLUGIN_VMFS_WITH_CGAL
+#ifdef PLUGIN_MESHGEN_WITH_CGAL
 #include <cgogn/modeling/algos/refinements.h>
 #include <cgal/c3t3_import.h>
-#endif // PLUGIN_VMFS_WITH_CGAL
+#endif // PLUGIN_MESHGEN_WITH_CGAL
 #include <image.h>
 #include <tetgen/tetgen.h>
 #include <netgen_structure_io.h>
@@ -40,7 +40,7 @@
 namespace schnapps
 {
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
 TetgenParameters::TetgenParameters() :
@@ -228,7 +228,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 
 Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const CGALParameters& params)
 {
-#ifdef PLUGIN_VMFS_WITH_CGAL
+#ifdef PLUGIN_MESHGEN_WITH_CGAL
 	if (!mh2 || !position_att.is_valid())
 		return nullptr;
 
@@ -250,12 +250,12 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	return mh3;
 #else
 	return nullptr;
-#endif // PLUGIN_VMFS_WITH_CGAL
+#endif // PLUGIN_MESHGEN_WITH_CGAL
 }
 
 Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(const plugin_image::Image3D* im, const CGALParameters& params)
 {
-#ifdef PLUGIN_VMFS_WITH_CGAL
+#ifdef PLUGIN_MESHGEN_WITH_CGAL
 	if (!im)
 		return nullptr;
 	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_image_export", 3));
@@ -263,12 +263,12 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	return mh3;
 #else
 	return nullptr;
-#endif // PLUGIN_VMFS_WITH_CGAL
+#endif // PLUGIN_MESHGEN_WITH_CGAL
 }
 
 void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 {
-#ifdef PLUGIN_VMFS_WITH_CGAL
+#ifdef PLUGIN_MESHGEN_WITH_CGAL
 	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
 	if (mhg)
 	{
@@ -291,7 +291,7 @@ void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 			}
 		}
 	}
-#endif // PLUGIN_VMFS_WITH_CGAL
+#endif // PLUGIN_MESHGEN_WITH_CGAL
 }
 
 void Plugin_VolumeMeshFromSurface::plugin_enabled(Plugin* plugin)
@@ -325,5 +325,5 @@ void Plugin_VolumeMeshFromSurface::plugin_disabled(Plugin* plugin)
 	}
 }
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 } // namespace schnapps

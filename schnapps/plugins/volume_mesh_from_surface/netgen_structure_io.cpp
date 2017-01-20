@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -30,7 +30,7 @@
 namespace schnapps
 {
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
 std::unique_ptr<void*, std::function<void (void**)> > export_netgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos)
@@ -120,5 +120,5 @@ nglib::Ng_Meshing_Parameters* setup_netgen_parameters(const NetgenParameters& pa
 	return mp;
 }
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 } // namespace schnapps

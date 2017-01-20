@@ -1,7 +1,7 @@
-/*******************************************************************************
+﻿/*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Volume Mesh From Surface                                              *
+* Plugin MeshGen                                                               *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
-#define SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_H_
+#define SCHNAPPS_PLUGIN_MESHGEN_H_
 
 #include "dll.h"
 #include <volume_mesh_from_surface_dialog.h>
@@ -43,18 +43,18 @@ class Plugin_Image;
 class Image3D;
 } // namespace plugin_image
 
-namespace plugin_vmfs
+namespace plugin_meshgen
 {
 
 class Plugin_VolumeMeshFromSurface;
 
-struct SCHNAPPS_PLUGIN_VMFS_API TetgenParameters
+struct SCHNAPPS_PLUGIN_MESHGEN_API TetgenParameters
 {
 	TetgenParameters();
 	std::string tetgen_command_line;
 };
 
-struct SCHNAPPS_PLUGIN_VMFS_API NetgenParameters
+struct SCHNAPPS_PLUGIN_MESHGEN_API NetgenParameters
 {
 	NetgenParameters();
 	bool uselocalh;
@@ -95,7 +95,7 @@ struct SCHNAPPS_PLUGIN_VMFS_API NetgenParameters
 	bool check_overlapping_boundary;
 };
 
-struct SCHNAPPS_PLUGIN_VMFS_API CGALParameters
+struct SCHNAPPS_PLUGIN_MESHGEN_API CGALParameters
 {
 	CGALParameters();
 
@@ -123,7 +123,7 @@ struct SCHNAPPS_PLUGIN_VMFS_API CGALParameters
 	float64 exuder_sliver_bound_;
 };
 
-struct SCHNAPPS_PLUGIN_VMFS_API MeshGeneratorParameters
+struct SCHNAPPS_PLUGIN_MESHGEN_API MeshGeneratorParameters
 {
 	MeshGeneratorParameters();
 	CGALParameters cgal;
@@ -131,7 +131,7 @@ struct SCHNAPPS_PLUGIN_VMFS_API MeshGeneratorParameters
 	TetgenParameters tetgen;
 };
 
-class SCHNAPPS_PLUGIN_VMFS_API Plugin_VolumeMeshFromSurface : public PluginProcessing
+class SCHNAPPS_PLUGIN_MESHGEN_API Plugin_VolumeMeshFromSurface : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -171,8 +171,8 @@ public slots:
 	void plugin_disabled(Plugin*);
 };
 
-} // namespace plugin_vmfs
+} // namespace plugin_meshgen
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_MESH_FROM_SURFACE_H_
+#endif // SCHNAPPS_PLUGIN_MESHGEN_H_
