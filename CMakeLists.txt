@@ -4,6 +4,7 @@ project(SCHNApps
 	LANGUAGES CXX
 )
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL "preserve cmake flags" FORCE)
 
 #### Default build type
