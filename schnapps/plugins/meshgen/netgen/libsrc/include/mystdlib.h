@@ -60,8 +60,8 @@ namespace metis { extern "C" {
 # ifndef NO_PARALLEL_THREADS
 #  ifdef MSVC_EXPRESS
 #  else
-#   include <afxwin.h>
-#   include <afxmt.h>
+//#   include <afxwin.h>
+//#   include <afxmt.h>
 #  endif // MSVC_EXPRESS
 # endif
 # include <windows.h>

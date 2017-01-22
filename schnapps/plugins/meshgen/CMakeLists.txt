@@ -54,6 +54,7 @@ add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 if(CGAL_FOUND)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DPLUGIN_MESHGEN_WITH_CGAL")
 	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DBOOST_PARAMETER_MAX_ARITY=12")
+	target_link_libraries(${PROJECT_NAME} plugin_image ${CGAL_ImageIO_LIBRARY})
 endif(CGAL_FOUND)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
@@ -71,7 +72,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	nglib
+	netgen
 	tet
 	plugin_image
 	${CGAL_LIBRARIES}

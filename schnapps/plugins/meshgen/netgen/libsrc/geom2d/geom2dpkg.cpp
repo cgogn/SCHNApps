@@ -1,6 +1,6 @@
 #include <meshing.hpp>
 #include <geometry2d.hpp>
-#include <visual.hpp>
+//#include <visual.hpp>
 #include <inctcl.hpp>
 
 #include "vsgeom2d.hpp"

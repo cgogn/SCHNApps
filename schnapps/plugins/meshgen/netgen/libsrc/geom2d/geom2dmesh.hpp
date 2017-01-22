@@ -7,11 +7,12 @@
 /* Date:   22. Jan. 01                                                    */
 /**************************************************************************/
 
+#include <../meshing/meshing.hpp>
 
 namespace netgen
 {
 
-  class Refinement2d : public Refinement
+  class DLL_HEADER Refinement2d : public Refinement
   {
     const class SplineGeometry2d & geometry;
 

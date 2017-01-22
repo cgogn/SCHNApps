@@ -93,7 +93,7 @@ public:
   DLL_HEADER friend int operator != (const MyStr &, const MyStr &);
   DLL_HEADER friend std::ostream& operator << (std::ostream &, const MyStr &);
   DLL_HEADER friend std::istream& operator >> (std::istream &, MyStr &);
-  static void SetToErrHandler(void (*)());
+//  static void SetToErrHandler(void (*)());
 private:
   MyStr(unsigned, int);
   char *str;
@@ -209,10 +209,10 @@ inline std::ostream& operator << (std::ostream& os, const MyStr& s)
   return os << s.str;
 }
 
-inline void MyStr::SetToErrHandler(void (*Handler)())
-{
-  ErrHandler = Handler;
-};
+//inline void MyStr::SetToErrHandler(void (*Handler)())
+//{
+//  ErrHandler = Handler;
+//};
 
 }
 #endif

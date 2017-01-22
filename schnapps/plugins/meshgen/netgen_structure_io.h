@@ -56,7 +56,7 @@ public:
 	explicit NetgenStructureVolumeImport(void** netgen_data);
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(NetgenStructureVolumeImport);
 
-	bool import_netgen_structure();
+	void import_netgen_structure();
 
 private:
 	void** volume_mesh_structure_;

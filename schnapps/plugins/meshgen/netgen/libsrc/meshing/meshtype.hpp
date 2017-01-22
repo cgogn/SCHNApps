@@ -319,7 +319,7 @@ namespace netgen
     ///
     Element2d ();
     ///
-    Element2d (int anp);
+	DLL_HEADER Element2d (int anp);
     ///
     DLL_HEADER Element2d (ELEMENT_TYPE type);
     ///
@@ -542,7 +542,7 @@ namespace netgen
   /**
      Volume element
   */
-  class Element
+  class DLL_HEADER Element
   {
   private:
     /// point numbers
@@ -589,7 +589,7 @@ namespace netgen
     flagstruct flags;
 
     ///
-    DLL_HEADER Element ();
+	Element ();
     ///
     Element (int anp);
     ///
@@ -803,12 +803,12 @@ namespace netgen
   /**
      Edge segment.
   */
-  class Segment
+  class DLL_HEADER Segment
   {
   public:
     ///
-    DLL_HEADER Segment();
-    DLL_HEADER Segment (const Segment& other);
+	Segment();
+	Segment (const Segment& other);
 
     ~Segment()
     { ; }
@@ -927,7 +927,7 @@ namespace netgen
   // class FaceDescriptor;
 
   ///
-  class FaceDescriptor
+  class DLL_HEADER FaceDescriptor
   {
     /// which surface, 0 if not available
     int surfnr;
@@ -955,13 +955,13 @@ namespace netgen
     double domout_singular;
 
   public:
-    DLL_HEADER FaceDescriptor();
-    DLL_HEADER FaceDescriptor(int surfnri, int domini, int domouti, int tlosurfi);
-    DLL_HEADER FaceDescriptor(const Segment & seg);
-    DLL_HEADER FaceDescriptor(const FaceDescriptor& other);
-    DLL_HEADER ~FaceDescriptor()  { ; }
+	 FaceDescriptor();
+	 FaceDescriptor(int surfnri, int domini, int domouti, int tlosurfi);
+	 FaceDescriptor(const Segment & seg);
+	 FaceDescriptor(const FaceDescriptor& other);
+	 ~FaceDescriptor()  { ; }
 
-    DLL_HEADER int SegmentFits (const Segment & seg);
+	 int SegmentFits (const Segment & seg);
 
     int SurfNr () const { return surfnr; }
     int DomainIn () const { return domin; }
@@ -976,7 +976,7 @@ namespace netgen
     // Philippose - 06/07/2009
     // Get Surface colour
     Vec3d SurfColour () const { return surfcolour; }
-    DLL_HEADER const std::string & GetBCName () const { return *bcname; }
+	 const std::string & GetBCName () const { return *bcname; }
     // string * BCNamePtr () { return bcname; }
     // const string * BCNamePtr () const  { return bcname; }
     void SetSurfNr (int sn) { surfnr = sn; }

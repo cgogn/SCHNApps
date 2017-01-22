@@ -94,7 +94,7 @@ public:
 };
 
 
-void MeshFromSpline2D (SplineGeometry2d & geometry,
+DLL_HEADER void MeshFromSpline2D (SplineGeometry2d & geometry,
 		       shared_ptr<Mesh> & mesh, 
 		       MeshingParameters & mp);
 

@@ -43,7 +43,7 @@
 
 #include "mpi_interface.hpp"
 #include "netgenout.hpp"
-#include "gzstream.h"
+//#include "gzstream.h"
 #include "archive_base.hpp"
 
 #include "mysimd.hpp"

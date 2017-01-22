@@ -10,6 +10,8 @@
 #include <gprim.hpp>
 #include "splinegeometry.hpp"
  
+using namespace std;
+
 namespace netgen
 {
 

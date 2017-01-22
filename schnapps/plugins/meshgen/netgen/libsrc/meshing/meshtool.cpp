@@ -1,7 +1,7 @@
 ﻿#include <mystdlib.h>
 
 #include "meshing.hpp"
-#include <csg.hpp>
+//#include <csg.hpp>
 #include <geometry2d.hpp>
 
 using namespace std;

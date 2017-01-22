@@ -72,7 +72,7 @@ NetgenStructureVolumeImport::NetgenStructureVolumeImport(void** netgen_data) : I
 	import_netgen_structure();
 }
 
-bool NetgenStructureVolumeImport::import_netgen_structure()
+void NetgenStructureVolumeImport::import_netgen_structure()
 {
 	ChunkArray<VEC3>* position = this->position_attribute();
 

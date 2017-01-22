@@ -1,6 +1,8 @@
 #ifndef BISECT
 #define BISECT
 
+#include <../general/parthreads.hpp>
+
 class BisectionOptions
 {
 public:

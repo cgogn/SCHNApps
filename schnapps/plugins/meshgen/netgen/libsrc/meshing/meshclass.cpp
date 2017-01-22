@@ -782,9 +782,9 @@ namespace netgen
     cout << "filename = " << filename << endl;
     istream * infile = NULL;
 
-    if (filename.find(".vol.gz") != string::npos)
-      infile = new igzstream (filename.c_str());
-    else
+//    if (filename.find(".vol.gz") != string::npos)
+//      infile = new igzstream (filename.c_str());
+//    else
       infile = new ifstream (filename.c_str());
 
     // ifstream infile(filename.c_str());

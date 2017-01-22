@@ -14,7 +14,7 @@ namespace netgen
 
 
   // extern double teterrpow; 
-  MESHING3_RESULT MeshVolume (MeshingParameters & mp, Mesh& mesh3d)
+  DLL_HEADER MESHING3_RESULT MeshVolume (MeshingParameters & mp, Mesh& mesh3d)
   {
      int oldne;
      int meshed;
@@ -622,7 +622,7 @@ namespace netgen
 
 
 
-  MESHING3_RESULT OptimizeVolume (MeshingParameters & mp, 
+  DLL_HEADER MESHING3_RESULT OptimizeVolume (MeshingParameters & mp,
 				  Mesh & mesh3d)
     //				  const CSGeometry * geometry)
   {
@@ -683,7 +683,7 @@ namespace netgen
 
 
 
-  void RemoveIllegalElements (Mesh & mesh3d)
+  DLL_HEADER void RemoveIllegalElements (Mesh & mesh3d)
   {
     int it = 10;
     int nillegal, oldn;

@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 project(netgen)
 
-find_package(Zlib REQUIRED NO_CMAKE_ENVIRONMENT_PATH)
-
 set(NETGEN_SRC
 	libsrc/general/array.cpp
 	libsrc/general/bitarray.cpp
@@ -19,12 +17,13 @@ set(NETGEN_SRC
 	libsrc/general/dynamicmem.cpp
 	libsrc/general/ngexception.cpp
 	libsrc/general/profiler.cpp
-	libsrc/general/gzstream.cpp
+
 	libsrc/linalg/densemat.cpp
 	libsrc/linalg/polynomial.cpp
 	libsrc/linalg/bfgs.cpp
 	libsrc/linalg/linopt.cpp
 	libsrc/linalg/linsearch.cpp
+
 	libsrc/gprim/geom2d.cpp
 	libsrc/gprim/geom3d.cpp
 	libsrc/gprim/geomtest3d.cpp
@@ -32,6 +31,11 @@ set(NETGEN_SRC
 	libsrc/gprim/transform3d.cpp
 	libsrc/gprim/spline.cpp
 	libsrc/gprim/geomfuncs.cpp
+	libsrc/gprim/splinegeometry.cpp
+
+	libsrc/meshing/bisect.cpp
+	libsrc/meshing/secondorder.cpp
+	libsrc/meshing/hprefinement.cpp
 	libsrc/meshing/meshclass.cpp
 	libsrc/meshing/adfront2.cpp
 	libsrc/meshing/adfront3.cpp
@@ -73,31 +77,23 @@ set(NETGEN_SRC
 	libsrc/meshing/hexarls.cpp
 	libsrc/meshing/validate.cpp
 	libsrc/meshing/basegeom.cpp
-	libsrc/stlgeom/stlgeom.cpp
-	libsrc/stlgeom/stltool.cpp
-	libsrc/stlgeom/stltopology.cpp
-	libsrc/stlgeom/stlline.cpp
-	libsrc/stlgeom/meshstlsurface.cpp
+	libsrc/meshing/meshfunc2d.cpp
+
 	libsrc/interface/nginterface.cpp
-	libsrc/interface/writeuser.cpp
-	libsrc/csg/csgeom.cpp
-	libsrc/csg/surface.cpp
-	libsrc/csg/solid.cpp
-	libsrc/csg/revolution.cpp
-	libsrc/csg/extrusion.cpp
-	libsrc/csg/polyhedra.cpp
-	libsrc/csg/algprim.cpp
+
 	libsrc/geom2d/genmesh2d.cpp
 	libsrc/geom2d/geometry2d.cpp
+	libsrc/geom2d/geom2dmesh.cpp
+
+	nglib/nglib.cpp
 	)
 
 add_library(${PROJECT_NAME} SHARED ${NETGEN_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libsrc/include>
-	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_ZLIB_INCLUDE_DIR}>)
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libsrc/include>)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_link_libraries(${PROJECT_NAME} ${Zlib_LIBRARIES})
+target_link_libraries(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DNGINTERFACE_EXPORTS")
-
-add_subdirectory(nglib)
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DNGLIB_EXPORTS")
+#add_subdirectory(nglib)

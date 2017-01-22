@@ -50,13 +50,13 @@ namespace nglib
 typedef void * Ng_Mesh;
 
 /// Data type for NETGEN CSG geometry
-typedef void * Ng_CSG_Geometry;
+//typedef void * Ng_CSG_Geometry;
 
 /// Data type for NETGEN 2D geometry
 typedef void * Ng_Geometry_2D;
 
 /// Data type for NETGEN STL geometry
-typedef void * Ng_STL_Geometry;
+//typedef void * Ng_STL_Geometry;
 
 #ifdef OCCGEOMETRY
 /// Data type for NETGEN OpenCascade geometry
@@ -595,37 +595,37 @@ DLL_HEADER void Ng_HP_Refinement (Ng_Geometry_2D * geom,
 
 
 // loads geometry from STL file
-DLL_HEADER Ng_STL_Geometry * Ng_STL_LoadGeometry (const char * filename, int binary = 0);
+//DLL_HEADER Ng_STL_Geometry * Ng_STL_LoadGeometry (const char * filename, int binary = 0);
 
 
-// generate new STL Geometry
-DLL_HEADER Ng_STL_Geometry * Ng_STL_NewGeometry ();
+//// generate new STL Geometry
+//DLL_HEADER Ng_STL_Geometry * Ng_STL_NewGeometry ();
   
 
-// fills STL Geometry
-// positive orientation
-// normal vector may be null-pointer
-DLL_HEADER void Ng_STL_AddTriangle (Ng_STL_Geometry * geom, 
-                         double * p1, double * p2, double * p3, 
-                         double * nv = NULL);
+//// fills STL Geometry
+//// positive orientation
+//// normal vector may be null-pointer
+//DLL_HEADER void Ng_STL_AddTriangle (Ng_STL_Geometry * geom,
+//                         double * p1, double * p2, double * p3,
+//                         double * nv = NULL);
 
-// add (optional) edges :
-DLL_HEADER void Ng_STL_AddEdge (Ng_STL_Geometry * geom, 
-                     double * p1, double * p2);
+//// add (optional) edges :
+//DLL_HEADER void Ng_STL_AddEdge (Ng_STL_Geometry * geom,
+//                     double * p1, double * p2);
 
-// after adding triangles (and edges) initialize
-DLL_HEADER Ng_Result Ng_STL_InitSTLGeometry (Ng_STL_Geometry * geom);
+//// after adding triangles (and edges) initialize
+//DLL_HEADER Ng_Result Ng_STL_InitSTLGeometry (Ng_STL_Geometry * geom);
 
-// automatically generates edges:
-DLL_HEADER Ng_Result Ng_STL_MakeEdges (Ng_STL_Geometry * geom,
-                            Ng_Mesh* mesh,
-                            Ng_Meshing_Parameters * mp);
+//// automatically generates edges:
+//DLL_HEADER Ng_Result Ng_STL_MakeEdges (Ng_STL_Geometry * geom,
+//                            Ng_Mesh* mesh,
+//                            Ng_Meshing_Parameters * mp);
 
 
-// generates mesh, empty mesh must be already created.
-DLL_HEADER Ng_Result Ng_STL_GenerateSurfaceMesh (Ng_STL_Geometry * geom,
-                                                 Ng_Mesh * mesh,
-                                                 Ng_Meshing_Parameters * mp);
+//// generates mesh, empty mesh must be already created.
+//DLL_HEADER Ng_Result Ng_STL_GenerateSurfaceMesh (Ng_STL_Geometry * geom,
+//                                                 Ng_Mesh * mesh,
+//                                                 Ng_Meshing_Parameters * mp);
 
 
 #ifdef ACIS
@@ -707,11 +707,11 @@ DLL_HEADER void Ng_Uniform_Refinement (Ng_Mesh * mesh);
 DLL_HEADER void Ng_2D_Uniform_Refinement (Ng_Geometry_2D * geom,
 					  Ng_Mesh * mesh);
 
-DLL_HEADER void Ng_STL_Uniform_Refinement (Ng_STL_Geometry * geom,
-					   Ng_Mesh * mesh);
+//DLL_HEADER void Ng_STL_Uniform_Refinement (Ng_STL_Geometry * geom,
+//					   Ng_Mesh * mesh);
 
-DLL_HEADER void Ng_CSG_Uniform_Refinement (Ng_CSG_Geometry * geom,
-					   Ng_Mesh * mesh);
+//DLL_HEADER void Ng_CSG_Uniform_Refinement (Ng_CSG_Geometry * geom,
+//					   Ng_Mesh * mesh);
 
 #ifdef OCCGEOMETRY
 DLL_HEADER void Ng_OCC_Uniform_Refinement (Ng_OCC_Geometry * geom,
@@ -733,16 +733,30 @@ DLL_HEADER void Ng_Generate_SecondOrder (Ng_Mesh * mesh);
 DLL_HEADER void Ng_2D_Generate_SecondOrder (Ng_Geometry_2D * geom,
 					  Ng_Mesh * mesh);
 
-DLL_HEADER void Ng_STL_Generate_SecondOrder (Ng_STL_Geometry * geom,
-					   Ng_Mesh * mesh);
+//DLL_HEADER void Ng_STL_Generate_SecondOrder (Ng_STL_Geometry * geom,
+//					   Ng_Mesh * mesh);
 
-DLL_HEADER void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
-					   Ng_Mesh * mesh);
+//DLL_HEADER void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
+//					   Ng_Mesh * mesh);
 
 #ifdef OCCGEOMETRY
 DLL_HEADER void Ng_OCC_Generate_SecondOrder (Ng_OCC_Geometry * geom,
 					   Ng_Mesh * mesh);
 #endif
+
+class DLL_HEADER NullBuffer : public std::streambuf
+{
+public:
+  int overflow(int c) { return c; }
+};
+
+class DLL_HEADER NullStream : public std::ostream
+{
+public:
+	NullStream() : std::ostream(&m_sb) {}
+private:
+	NullBuffer m_sb;
+};
 
 } // namespace nglib
 

@@ -1,7 +1,7 @@
 ﻿#include <mystdlib.h>
 
 #include <meshing.hpp>
-#include <csg.hpp>
+//#include <csg.hpp>
 
 
 #ifdef SOCKETS
@@ -66,169 +66,169 @@ namespace netgen
 using namespace netgen;
 
 
-void Ng_LoadGeometry (const char * filename)
-{
-  // he: if filename is empty, return
-  // can be used to reset geometry
-  if (!filename || strcmp(filename,"")==0) 
-    {
-      ng_geometry.reset (new NetgenGeometry());
-      return;
-    }
+//void Ng_LoadGeometry (const char * filename)
+//{
+//  // he: if filename is empty, return
+//  // can be used to reset geometry
+//  if (!filename || strcmp(filename,"")==0)
+//    {
+//      ng_geometry.reset (new NetgenGeometry());
+//      return;
+//    }
 
-  for (int i = 0; i < geometryregister.Size(); i++)
-    {
-      NetgenGeometry * hgeom = geometryregister[i]->Load (filename);
-      if (hgeom)
-	{
-          ng_geometry.reset (hgeom);
-	  mesh.reset();
-	  return;
-	}
-    }
-
-
-  // if (id == 0)
-  cerr << "cannot load geometry '" << filename << "'" << ", id = " << id << endl;
-}                          
+//  for (int i = 0; i < geometryregister.Size(); i++)
+//    {
+//      NetgenGeometry * hgeom = geometryregister[i]->Load (filename);
+//      if (hgeom)
+//	{
+//          ng_geometry.reset (hgeom);
+//	  mesh.reset();
+//	  return;
+//	}
+//    }
 
 
-void Ng_LoadMeshFromStream ( istream & input )
-{
-  mesh.reset (new Mesh());
-  mesh -> Load(input);
-
-  SetGlobalMesh (mesh);
-  for (int i = 0; i < geometryregister.Size(); i++)
-    {
-      NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (input);
-      if (hgeom)
-	{
-          ng_geometry.reset (hgeom);
-	  break;
-	}
-    }
-
-  mesh->SetGeometry (ng_geometry);
-}
+//  // if (id == 0)
+//  cerr << "cannot load geometry '" << filename << "'" << ", id = " << id << endl;
+//}
 
 
+//void Ng_LoadMeshFromStream ( istream & input )
+//{
+//  mesh.reset (new Mesh());
+//  mesh -> Load(input);
+
+//  SetGlobalMesh (mesh);
+//  for (int i = 0; i < geometryregister.Size(); i++)
+//    {
+//      NetgenGeometry * hgeom = geometryregister[i]->LoadFromMeshFile (input);
+//      if (hgeom)
+//	{
+//          ng_geometry.reset (hgeom);
+//	  break;
+//	}
+//    }
+
+//  mesh->SetGeometry (ng_geometry);
+//}
 
 
-void Ng_LoadMesh (const char * filename)
-{
-#ifdef PARALLEL
-  MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
-  MPI_Comm_rank(MPI_COMM_WORLD, &id);
 
-  if (id == 0)
-    {
-#endif
-      if ( string(filename).find(".vol") == string::npos )
-        /*
-      if ( (strlen (filename) > 4) &&
-	   strcmp (filename + (strlen (filename)-4), ".vol") != 0 )
-        */
-	{
-	  mesh.reset (new Mesh());
-	  ReadFile(*mesh,filename);
+
+//void Ng_LoadMesh (const char * filename)
+//{
+//#ifdef PARALLEL
+//  MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
+//  MPI_Comm_rank(MPI_COMM_WORLD, &id);
+
+//  if (id == 0)
+//    {
+//#endif
+//      if ( string(filename).find(".vol") == string::npos )
+//        /*
+//      if ( (strlen (filename) > 4) &&
+//	   strcmp (filename + (strlen (filename)-4), ".vol") != 0 )
+//        */
+//	{
+//	  mesh.reset (new Mesh());
+//	  ReadFile(*mesh,filename);
 	  
-	  //mesh->SetGlobalH (mparam.maxh);
-	  //mesh->CalcLocalH();
-	  return;
-	}
+//	  //mesh->SetGlobalH (mparam.maxh);
+//	  //mesh->CalcLocalH();
+//	  return;
+//	}
 
-      string fn(filename);
+//      string fn(filename);
 
-      istream * infile;
-      if (fn.substr (fn.length()-3, 3) == ".gz")
-        infile = new igzstream (filename);
-      else
-        infile = new ifstream (filename);
+//      istream * infile;
+//      if (fn.substr (fn.length()-3, 3) == ".gz")
+//        infile = new igzstream (filename);
+//      else
+//        infile = new ifstream (filename);
 
-      Ng_LoadMeshFromStream(*infile);
-      delete infile;
+//      Ng_LoadMeshFromStream(*infile);
+//      delete infile;
       
-#ifdef PARALLEL
-      if (ntasks > 1)
-	{
+//#ifdef PARALLEL
+//      if (ntasks > 1)
+//	{
 
-	  char * weightsfilename = new char [strlen(filename)+1];
-	  strcpy (weightsfilename, filename);            
-	  weightsfilename[strlen (weightsfilename)-3] = 'w';
-	  weightsfilename[strlen (weightsfilename)-2] = 'e';
-	  weightsfilename[strlen (weightsfilename)-1] = 'i';
+//	  char * weightsfilename = new char [strlen(filename)+1];
+//	  strcpy (weightsfilename, filename);
+//	  weightsfilename[strlen (weightsfilename)-3] = 'w';
+//	  weightsfilename[strlen (weightsfilename)-2] = 'e';
+//	  weightsfilename[strlen (weightsfilename)-1] = 'i';
 
-	  ifstream weightsfile(weightsfilename);      
-	  delete [] weightsfilename;  
+//	  ifstream weightsfile(weightsfilename);
+//	  delete [] weightsfilename;
 	  
-	  if (!(weightsfile.good()))
-	    {
-	      // cout << "regular distribute" << endl;
-	      mesh -> Distribute();
-	    }
-	  else
-	    {
-	      char str[20];   
-	      bool endfile = false;
-	      int n, dummy;
+//	  if (!(weightsfile.good()))
+//	    {
+//	      // cout << "regular distribute" << endl;
+//	      mesh -> Distribute();
+//	    }
+//	  else
+//	    {
+//	      char str[20];
+//	      bool endfile = false;
+//	      int n, dummy;
 	      
-	      Array<int> segment_weights;
-	      Array<int> surface_weights;
-	      Array<int> volume_weights;
+//	      Array<int> segment_weights;
+//	      Array<int> surface_weights;
+//	      Array<int> volume_weights;
 	      
-	      while (weightsfile.good() && !endfile)
-		{
-		  weightsfile >> str;
+//	      while (weightsfile.good() && !endfile)
+//		{
+//		  weightsfile >> str;
 		  
-		  if (strcmp (str, "edgeweights") == 0)
-		    {
-		      weightsfile >> n;
-		      segment_weights.SetSize(n);
-		      for (int i = 0; i < n; i++)
-			weightsfile >> dummy >> segment_weights[i];
-		    }
+//		  if (strcmp (str, "edgeweights") == 0)
+//		    {
+//		      weightsfile >> n;
+//		      segment_weights.SetSize(n);
+//		      for (int i = 0; i < n; i++)
+//			weightsfile >> dummy >> segment_weights[i];
+//		    }
 		  
-		  if (strcmp (str, "surfaceweights") == 0)
-		    {
-		      weightsfile >> n;
-		      surface_weights.SetSize(n);
-		      for (int i=0; i<n; i++)
-			weightsfile >> dummy >> surface_weights[i];
-		    }
+//		  if (strcmp (str, "surfaceweights") == 0)
+//		    {
+//		      weightsfile >> n;
+//		      surface_weights.SetSize(n);
+//		      for (int i=0; i<n; i++)
+//			weightsfile >> dummy >> surface_weights[i];
+//		    }
 		  
-		  if (strcmp (str, "volumeweights") == 0)
-		    {
-		      weightsfile >> n;
-		      volume_weights.SetSize(n);
-		      for (int i=0; i<n; i++)
-			weightsfile >> dummy >> volume_weights[i];
-		    }
+//		  if (strcmp (str, "volumeweights") == 0)
+//		    {
+//		      weightsfile >> n;
+//		      volume_weights.SetSize(n);
+//		      for (int i=0; i<n; i++)
+//			weightsfile >> dummy >> volume_weights[i];
+//		    }
 		  
-		  if (strcmp (str, "endfile") == 0)
-		    endfile = true;  
-		}     
+//		  if (strcmp (str, "endfile") == 0)
+//		    endfile = true;
+//		}
 	      
-	      mesh -> Distribute(volume_weights, surface_weights, segment_weights);
-	    }
-	}
-    }
-  else
-    {
-      mesh.reset (new Mesh());
-//       vssolution.SetMesh(mesh);
-//       vsmesh.SetMesh(mesh);
-      SetGlobalMesh (mesh);
-      mesh->SendRecvMesh();
-    }
-#endif
-}
+//	      mesh -> Distribute(volume_weights, surface_weights, segment_weights);
+//	    }
+//	}
+//    }
+//  else
+//    {
+//      mesh.reset (new Mesh());
+////       vssolution.SetMesh(mesh);
+////       vsmesh.SetMesh(mesh);
+//      SetGlobalMesh (mesh);
+//      mesh->SendRecvMesh();
+//    }
+//#endif
+//}
 
-void Ng_LoadMeshFromString (const char * mesh_as_string)
-{
-  istringstream instream(mesh_as_string);
-  Ng_LoadMeshFromStream(instream);
-}
+//void Ng_LoadMeshFromString (const char * mesh_as_string)
+//{
+//  istringstream instream(mesh_as_string);
+//  Ng_LoadMeshFromStream(instream);
+//}
   
 
 
@@ -2314,7 +2314,7 @@ void Ng_GetArgs (int & argc, char ** &argv)
 
 void LinkFunction ()
 {
-  Ng_Redraw();
+//  Ng_Redraw();
 }
 
 

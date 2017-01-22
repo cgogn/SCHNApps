@@ -2,6 +2,8 @@
 #include "meshing.hpp"
 #include "hprefinement.hpp" 
 
+using namespace std;
+
 namespace netgen
 {
 

@@ -13,8 +13,8 @@
 #include <myadt.hpp>
 
 #include <linalg.hpp>
-#include <csg.hpp>
-#include <stlgeom.hpp>
+//#include <csg.hpp>
+//#include <stlgeom.hpp>
 #include <geometry2d.hpp>
 #include <meshing.hpp>
 //#include <../visualization/soldata.hpp>
@@ -23,6 +23,9 @@
 #include <occgeom.hpp>
 #endif
 
+namespace netgen {
+	extern DLL_HEADER MeshingParameters mparam;
+}
 #include <nginterface.h>
 #include "nglib.h"
 
@@ -78,7 +81,7 @@ namespace nglib
    // initialize, deconstruct Netgen library:
    DLL_HEADER void Ng_Init ()
    {
-	  testout = new ofstream ("netgen.out");
+	  testout = new NullStream ();
       mycout = testout;/*&cout;*/
       myerr = testout;/*&cerr;*/
       // netgen::testout->SetOutStream (new ofstream ("test.out"));
@@ -547,225 +550,225 @@ namespace nglib
 
 
 
-   Array<STLReadTriangle> readtrias; //only before initstlgeometry
-   Array<Point<3> > readedges; //only before init stlgeometry
+//   Array<STLReadTriangle> readtrias; //only before initstlgeometry
+//   Array<Point<3> > readedges; //only before init stlgeometry
 
-   // loads geometry from STL file
-   DLL_HEADER Ng_STL_Geometry * Ng_STL_LoadGeometry (const char * filename, int binary)
-   {
-      int i;
-      STLGeometry geom;
-      STLGeometry* geo;
-      ifstream ist(filename);
+//   // loads geometry from STL file
+//   DLL_HEADER Ng_STL_Geometry * Ng_STL_LoadGeometry (const char * filename, int binary)
+//   {
+//      int i;
+//      STLGeometry geom;
+//      STLGeometry* geo;
+//      ifstream ist(filename);
 
-      if (binary)
-      {
-         geo = geom.LoadBinary(ist);
-      }
-      else
-      {
-         geo = geom.Load(ist);
-      }
+//      if (binary)
+//      {
+//         geo = geom.LoadBinary(ist);
+//      }
+//      else
+//      {
+//         geo = geom.Load(ist);
+//      }
 
-      readtrias.SetSize(0);
-      readedges.SetSize(0);
+//      readtrias.SetSize(0);
+//      readedges.SetSize(0);
 
-      Point3d p;
-      Vec3d normal;
-      double p1[3];
-      double p2[3];
-      double p3[3];
-      double n[3];
+//      Point3d p;
+//      Vec3d normal;
+//      double p1[3];
+//      double p2[3];
+//      double p3[3];
+//      double n[3];
 
-      Ng_STL_Geometry * geo2 = Ng_STL_NewGeometry();
+//      Ng_STL_Geometry * geo2 = Ng_STL_NewGeometry();
 
-      for (i = 1; i <= geo->GetNT(); i++)
-      {
-         const STLTriangle& t = geo->GetTriangle(i);
-         p = geo->GetPoint(t.PNum(1));
-         p1[0] = p.X(); p1[1] = p.Y(); p1[2] = p.Z(); 
-         p = geo->GetPoint(t.PNum(2));
-         p2[0] = p.X(); p2[1] = p.Y(); p2[2] = p.Z(); 
-         p = geo->GetPoint(t.PNum(3));
-         p3[0] = p.X(); p3[1] = p.Y(); p3[2] = p.Z();
-         normal = t.Normal();
-         n[0] = normal.X(); n[1] = normal.Y(); n[2] = normal.Z();
+//      for (i = 1; i <= geo->GetNT(); i++)
+//      {
+//         const STLTriangle& t = geo->GetTriangle(i);
+//         p = geo->GetPoint(t.PNum(1));
+//         p1[0] = p.X(); p1[1] = p.Y(); p1[2] = p.Z();
+//         p = geo->GetPoint(t.PNum(2));
+//         p2[0] = p.X(); p2[1] = p.Y(); p2[2] = p.Z();
+//         p = geo->GetPoint(t.PNum(3));
+//         p3[0] = p.X(); p3[1] = p.Y(); p3[2] = p.Z();
+//         normal = t.Normal();
+//         n[0] = normal.X(); n[1] = normal.Y(); n[2] = normal.Z();
 
-         Ng_STL_AddTriangle(geo2, p1, p2, p3, n);
-      }
+//         Ng_STL_AddTriangle(geo2, p1, p2, p3, n);
+//      }
 
-      return geo2;
-   }
+//      return geo2;
+//   }
 
 
 
 
    // generate new STL Geometry
-   DLL_HEADER Ng_STL_Geometry * Ng_STL_NewGeometry ()
-   {
-      return (Ng_STL_Geometry*)(void*)new STLGeometry;
-   } 
+//   DLL_HEADER Ng_STL_Geometry * Ng_STL_NewGeometry ()
+//   {
+//      return (Ng_STL_Geometry*)(void*)new STLGeometry;
+//   }
 
 
 
 
-   // after adding triangles (and edges) initialize
-   DLL_HEADER Ng_Result Ng_STL_InitSTLGeometry (Ng_STL_Geometry * geom)
-   {
-      STLGeometry* geo = (STLGeometry*)geom;
-      geo->InitSTLGeometry(readtrias);
-      readtrias.SetSize(0);
+//   // after adding triangles (and edges) initialize
+//   DLL_HEADER Ng_Result Ng_STL_InitSTLGeometry (Ng_STL_Geometry * geom)
+//   {
+//      STLGeometry* geo = (STLGeometry*)geom;
+//      geo->InitSTLGeometry(readtrias);
+//      readtrias.SetSize(0);
 
-      if (readedges.Size() != 0)
-      {
-         /*
-         for (int i = 1; i <= readedges.Size(); i+=2)
-         {
-         cout << "e(" << readedges.Get(i) << "," << readedges.Get(i+1) << ")" << endl;
-         }
-         */
-         geo->AddEdges(readedges);
-      }
+//      if (readedges.Size() != 0)
+//      {
+//         /*
+//         for (int i = 1; i <= readedges.Size(); i+=2)
+//         {
+//         cout << "e(" << readedges.Get(i) << "," << readedges.Get(i+1) << ")" << endl;
+//         }
+//         */
+//         geo->AddEdges(readedges);
+//      }
 
-      if (geo->GetStatus() == STLTopology::STL_GOOD || geo->GetStatus() == STLTopology::STL_WARNING) return NG_OK;
-      return NG_SURFACE_INPUT_ERROR;
-   }
-
-
+//      if (geo->GetStatus() == STLTopology::STL_GOOD || geo->GetStatus() == STLTopology::STL_WARNING) return NG_OK;
+//      return NG_SURFACE_INPUT_ERROR;
+//   }
 
 
-   // automatically generates edges:
-   DLL_HEADER Ng_Result Ng_STL_MakeEdges (Ng_STL_Geometry * geom,
-                                          Ng_Mesh* mesh,
-                                          Ng_Meshing_Parameters * mp)
-   {
-      STLGeometry* stlgeometry = (STLGeometry*)geom;
-      Mesh* me = (Mesh*)mesh;
 
-      // Philippose - 27/07/2009
-      // Do not locally re-define "mparam" here... "mparam" is a global 
-      // object 
-      //MeshingParameters mparam;
-      mp->Transfer_Parameters();
 
-      me -> SetGlobalH (mparam.maxh);
-      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-                       stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
-                       0.3);
+//   // automatically generates edges:
+//   DLL_HEADER Ng_Result Ng_STL_MakeEdges (Ng_STL_Geometry * geom,
+//                                          Ng_Mesh* mesh,
+//                                          Ng_Meshing_Parameters * mp)
+//   {
+//      STLGeometry* stlgeometry = (STLGeometry*)geom;
+//      Mesh* me = (Mesh*)mesh;
 
-      // cout << "meshsize = " << mp->meshsize_filename << endl;
-      if (mp->meshsize_filename)
-        me -> LoadLocalMeshSize (mp->meshsize_filename);
+//      // Philippose - 27/07/2009
+//      // Do not locally re-define "mparam" here... "mparam" is a global
+//      // object
+//      //MeshingParameters mparam;
+//      mp->Transfer_Parameters();
 
-      /*
-      if (mp->meshsize_filename)
-        {
-          ifstream infile (mp->meshsize_filename);
-          if (!infile.good()) return NG_FILE_NOT_FOUND;
-          me -> LoadLocalMeshSize (infile);
-        }
-      */
+//      me -> SetGlobalH (mparam.maxh);
+//      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
+//                       stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+//                       0.3);
 
-      STLMeshing (*stlgeometry, *me);
+//      // cout << "meshsize = " << mp->meshsize_filename << endl;
+//      if (mp->meshsize_filename)
+//        me -> LoadLocalMeshSize (mp->meshsize_filename);
 
-      stlgeometry->edgesfound = 1;
-      stlgeometry->surfacemeshed = 0;
-      stlgeometry->surfaceoptimized = 0;
-      stlgeometry->volumemeshed = 0;
+//      /*
+//      if (mp->meshsize_filename)
+//        {
+//          ifstream infile (mp->meshsize_filename);
+//          if (!infile.good()) return NG_FILE_NOT_FOUND;
+//          me -> LoadLocalMeshSize (infile);
+//        }
+//      */
 
-      return NG_OK;
-   }
+//      STLMeshing (*stlgeometry, *me);
+
+//      stlgeometry->edgesfound = 1;
+//      stlgeometry->surfacemeshed = 0;
+//      stlgeometry->surfaceoptimized = 0;
+//      stlgeometry->volumemeshed = 0;
+
+//      return NG_OK;
+//   }
 
 
 
 
    // generates mesh, empty mesh be already created.
-   DLL_HEADER Ng_Result Ng_STL_GenerateSurfaceMesh (Ng_STL_Geometry * geom,
-                                                    Ng_Mesh* mesh,
-                                                    Ng_Meshing_Parameters * mp)
-   {
-      STLGeometry* stlgeometry = (STLGeometry*)geom;
-      Mesh* me = (Mesh*)mesh;
+//   DLL_HEADER Ng_Result Ng_STL_GenerateSurfaceMesh (Ng_STL_Geometry * geom,
+//                                                    Ng_Mesh* mesh,
+//                                                    Ng_Meshing_Parameters * mp)
+//   {
+//      STLGeometry* stlgeometry = (STLGeometry*)geom;
+//      Mesh* me = (Mesh*)mesh;
 
-      // Philippose - 27/07/2009
-      // Do not locally re-define "mparam" here... "mparam" is a global 
-      // object
-      //MeshingParameters mparam;
-      mp->Transfer_Parameters();
-
-
-      /*
-      me -> SetGlobalH (mparam.maxh);
-      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-      stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
-      0.3);
-      */
-      /*
-      STLMeshing (*stlgeometry, *me);
-
-      stlgeometry->edgesfound = 1;
-      stlgeometry->surfacemeshed = 0;
-      stlgeometry->surfaceoptimized = 0;
-      stlgeometry->volumemeshed = 0;
-      */  
-      int retval = STLSurfaceMeshing (*stlgeometry, *me);
-      if (retval == MESHING3_OK)
-      {
-         (*mycout) << "Success !!!!" << endl;
-         stlgeometry->surfacemeshed = 1;
-         stlgeometry->surfaceoptimized = 0;
-         stlgeometry->volumemeshed = 0;
-      } 
-      else if (retval == MESHING3_OUTERSTEPSEXCEEDED)
-      {
-         (*mycout) << "ERROR: Give up because of too many trials. Meshing aborted!" << endl;
-      }
-      else if (retval == MESHING3_TERMINATE)
-      {
-         (*mycout) << "Meshing Stopped!" << endl;
-      }
-      else
-      {
-         (*mycout) << "ERROR: Surface meshing not successful. Meshing aborted!" << endl;
-      }
+//      // Philippose - 27/07/2009
+//      // Do not locally re-define "mparam" here... "mparam" is a global
+//      // object
+//      //MeshingParameters mparam;
+//      mp->Transfer_Parameters();
 
 
-      STLSurfaceOptimization (*stlgeometry, *me, mparam);
+//      /*
+//      me -> SetGlobalH (mparam.maxh);
+//      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
+//      stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+//      0.3);
+//      */
+//      /*
+//      STLMeshing (*stlgeometry, *me);
 
-      return NG_OK;
-   }
+//      stlgeometry->edgesfound = 1;
+//      stlgeometry->surfacemeshed = 0;
+//      stlgeometry->surfaceoptimized = 0;
+//      stlgeometry->volumemeshed = 0;
+//      */
+//      int retval = STLSurfaceMeshing (*stlgeometry, *me);
+//      if (retval == MESHING3_OK)
+//      {
+//         (*mycout) << "Success !!!!" << endl;
+//         stlgeometry->surfacemeshed = 1;
+//         stlgeometry->surfaceoptimized = 0;
+//         stlgeometry->volumemeshed = 0;
+//      }
+//      else if (retval == MESHING3_OUTERSTEPSEXCEEDED)
+//      {
+//         (*mycout) << "ERROR: Give up because of too many trials. Meshing aborted!" << endl;
+//      }
+//      else if (retval == MESHING3_TERMINATE)
+//      {
+//         (*mycout) << "Meshing Stopped!" << endl;
+//      }
+//      else
+//      {
+//         (*mycout) << "ERROR: Surface meshing not successful. Meshing aborted!" << endl;
+//      }
+
+
+//      STLSurfaceOptimization (*stlgeometry, *me, mparam);
+
+//      return NG_OK;
+//   }
 
 
 
 
-   // fills STL Geometry
-   // positive orientation
-   // normal vector may be null-pointer
-   DLL_HEADER void Ng_STL_AddTriangle (Ng_STL_Geometry * geom, 
-                                       double * p1, double * p2, double * p3, 
-                                       double * nv)
-   {
-      Point<3> apts[3];
-      apts[0] = Point<3>(p1[0],p1[1],p1[2]);
-      apts[1] = Point<3>(p2[0],p2[1],p2[2]);
-      apts[2] = Point<3>(p3[0],p3[1],p3[2]);
+//   // fills STL Geometry
+//   // positive orientation
+//   // normal vector may be null-pointer
+//   DLL_HEADER void Ng_STL_AddTriangle (Ng_STL_Geometry * geom,
+//                                       double * p1, double * p2, double * p3,
+//                                       double * nv)
+//   {
+//      Point<3> apts[3];
+//      apts[0] = Point<3>(p1[0],p1[1],p1[2]);
+//      apts[1] = Point<3>(p2[0],p2[1],p2[2]);
+//      apts[2] = Point<3>(p3[0],p3[1],p3[2]);
 
-      Vec<3> n;
-      if (!nv)
-         n = Cross (apts[0]-apts[1], apts[0]-apts[2]);
-      else
-         n = Vec<3>(nv[0],nv[1],nv[2]);
+//      Vec<3> n;
+//      if (!nv)
+//         n = Cross (apts[0]-apts[1], apts[0]-apts[2]);
+//      else
+//         n = Vec<3>(nv[0],nv[1],nv[2]);
 
-      readtrias.Append(STLReadTriangle(apts,n));
-   }
+//      readtrias.Append(STLReadTriangle(apts,n));
+//   }
 
-   // add (optional) edges:
-   DLL_HEADER void Ng_STL_AddEdge (Ng_STL_Geometry * geom, 
-      double * p1, double * p2)
-   {
-      readedges.Append(Point3d(p1[0],p1[1],p1[2]));
-      readedges.Append(Point3d(p2[0],p2[1],p2[2]));
-   }
+//   // add (optional) edges:
+//   DLL_HEADER void Ng_STL_AddEdge (Ng_STL_Geometry * geom,
+//      double * p1, double * p2)
+//   {
+//      readedges.Append(Point3d(p1[0],p1[1],p1[2]));
+//      readedges.Append(Point3d(p2[0],p2[1],p2[2]));
+//   }
 
 
 
@@ -1098,20 +1101,20 @@ namespace nglib
 
 
 
-   DLL_HEADER void Ng_STL_Generate_SecondOrder(Ng_STL_Geometry * geom,
-					   Ng_Mesh * mesh)
-   {
-      ((STLGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
-   }
+//   DLL_HEADER void Ng_STL_Generate_SecondOrder(Ng_STL_Geometry * geom,
+//					   Ng_Mesh * mesh)
+//   {
+//      ((STLGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
+//   }
 
 
 
 
-   DLL_HEADER void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
-					   Ng_Mesh * mesh)
-   {
-      ((CSGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
-   }
+//   DLL_HEADER void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
+//					   Ng_Mesh * mesh)
+//   {
+//      ((CSGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
+//   }
 
 
 
@@ -1147,20 +1150,20 @@ namespace nglib
 
 
 
-   DLL_HEADER void Ng_STL_Uniform_Refinement (Ng_STL_Geometry * geom,
-      Ng_Mesh * mesh)
-   {
-      ( (STLGeometry*)geom ) -> GetRefinement().Refine ( * (Mesh*) mesh );
-   }
+//   DLL_HEADER void Ng_STL_Uniform_Refinement (Ng_STL_Geometry * geom,
+//      Ng_Mesh * mesh)
+//   {
+//      ( (STLGeometry*)geom ) -> GetRefinement().Refine ( * (Mesh*) mesh );
+//   }
 
 
 
 
-   DLL_HEADER void Ng_CSG_Uniform_Refinement (Ng_CSG_Geometry * geom,
-      Ng_Mesh * mesh)
-   {
-      ( (CSGeometry*)geom ) -> GetRefinement().Refine ( * (Mesh*) mesh );
-   }
+//   DLL_HEADER void Ng_CSG_Uniform_Refinement (Ng_CSG_Geometry * geom,
+//      Ng_Mesh * mesh)
+//   {
+//      ( (CSGeometry*)geom ) -> GetRefinement().Refine ( * (Mesh*) mesh );
+//   }
 
 
 
@@ -1246,9 +1249,9 @@ void Ng_InitSolutionData (Ng_SolutionData * soldata) { ; }
 */
 
 // Force linking libinterface to libnglib
-#include <../interface/writeuser.hpp>
-void MyDummyToForceLinkingLibInterface(Mesh &mesh, NetgenGeometry &geom)
-{
-  netgen::WriteUserFormat("", mesh, geom, "");
-}
+//#include <../interface/writeuser.hpp>
+//void MyDummyToForceLinkingLibInterface(Mesh &mesh, NetgenGeometry &geom)
+//{
+//  netgen::WriteUserFormat("", mesh, geom, "");
+//}
 

@@ -54,14 +54,14 @@ typedef int NG_FACE[4];      // points, last one is 0 for trig
 extern "C" {
 #endif
   
-  // load geomtry from file 
-  DLL_HEADER void Ng_LoadGeometry (const char * filename);
+//  // load geomtry from file
+//  DLL_HEADER void Ng_LoadGeometry (const char * filename);
   
-  // load netgen mesh
-  DLL_HEADER void Ng_LoadMesh (const char * filename);
+//  // load netgen mesh
+//  DLL_HEADER void Ng_LoadMesh (const char * filename);
 
-  // load netgen mesh
-  DLL_HEADER void Ng_LoadMeshFromString (const char * mesh_as_string);
+//  // load netgen mesh
+//  DLL_HEADER void Ng_LoadMeshFromString (const char * mesh_as_string);
 
   // space dimension (2 or 3)
   DLL_HEADER int Ng_GetDimension ();
@@ -324,7 +324,7 @@ extern "C" {
   /// delete gridfunctions
   DLL_HEADER void Ng_ClearSolutionData();
   // redraw 
-  DLL_HEADER void Ng_Redraw(bool blocking = false);
+//  DLL_HEADER void Ng_Redraw(bool blocking = false);
   ///
   DLL_HEADER void Ng_TclCmd(std::string cmd);
   ///
