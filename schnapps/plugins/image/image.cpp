@@ -477,7 +477,7 @@ SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
 	return filename_out;
 #else
 	cgogn_log_warning("schnapps::plugin_image::uncompress_gz_file") << "The plugin need boost_iostreams to uncompress .gz files.";
-	return QString()
+	return QString();
 #endif // SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 }
 
