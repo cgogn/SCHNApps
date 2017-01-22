@@ -1214,12 +1214,12 @@ namespace netgen
   */
 
 
-#ifndef WIN32
-   void ResetTime ()
-   {
-      ;
-   }
-#endif
+//#ifndef WIN32
+//   void ResetTime ()
+//   {
+//      ;
+//   }
+//#endif
 
 
 
