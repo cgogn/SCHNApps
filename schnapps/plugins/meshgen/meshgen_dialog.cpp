@@ -132,7 +132,10 @@ void VolumeMeshFromSurfaceDialog::generator_changed(const QString& generator)
 			}
 		}
 	}
+	const int old_idx = export_dialog_->comboBox_generator->currentIndex();
 	export_dialog_->comboBox_generator->setCurrentIndex(0);
+	if (old_idx != 0)
+		export_dialog_->hide();
 }
 
 void VolumeMeshFromSurfaceDialog::map_added(MapHandlerGen* mhg)
