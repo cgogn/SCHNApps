@@ -168,31 +168,35 @@ QString VolumeMeshFromSurfaceDialog::get_selected_map() const
 void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 {
 	MapHandlerGen* mhg = schnapps_->get_map(map_name);
-	const bool previous_state = export_dialog_->comboBox_generator->blockSignals(true);
+	QSignalBlocker blocker(export_dialog_->comboBox_generator);
 	export_dialog_->comboBox_generator->clear();
-
 	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
 	{
 		QStringList list;
 		list << "-select-" << "cgal" << "netgen" << "tetgen";
 		export_dialog_->comboBox_generator->insertItems(0, list);
+		QSignalBlocker blocker(export_dialog_->comboBox_images);
 		export_dialog_->comboBox_images->setCurrentIndex(0);
+
 
 		export_dialog_->comboBoxPositionSelection->clear();
 		const auto* vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
 		for (const auto& att_name : vert_att_cont->names())
 			export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
 	}
-	if (!previous_state)
-		export_dialog_->comboBox_generator->blockSignals(false);
 }
 
 void VolumeMeshFromSurfaceDialog::selected_image_changed(QString /*image_name*/)
 {
+	QSignalBlocker blocker(export_dialog_->comboBox_generator);
 	export_dialog_->comboBoxMapSelection->setCurrentIndex(0);
 	export_dialog_->comboBox_generator->clear();
 	if (export_dialog_->comboBox_images->currentIndex() >= 1)
-		export_dialog_->comboBox_generator->insertItem(0, "cgal");
+	{
+		QStringList list;
+		list << "-select-" << "cgal";
+		export_dialog_->comboBox_generator->insertItems(0, list);
+	}
 }
 
 void VolumeMeshFromSurfaceDialog::cell_size_changed(double cs)
