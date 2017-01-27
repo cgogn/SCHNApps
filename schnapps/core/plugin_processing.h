@@ -39,8 +39,7 @@ public:
 	PluginProcessing()
 	{}
 
-	~PluginProcessing() override
-	{}
+	~PluginProcessing() override;
 };
 
 } // namespace schnapps

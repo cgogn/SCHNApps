@@ -12,5 +12,7 @@
         <file>icons/Hsplit.png</file>
         <file>icons/arrow_down.png</file>
         <file>icons/arrow_up.png</file>
+        <file>icons/minus.png</file>
+        <file>icons/plus.png</file>
     </qresource>
 </RCC>

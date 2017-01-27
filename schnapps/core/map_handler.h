@@ -54,7 +54,7 @@ class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 	friend class View;
 
 public:
-
+	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	template<typename T>
 	using ChunkArrayContainer = MapBaseData::ChunkArrayContainer<T>;
 	using ChunkArrayGen = cgogn::MapBaseData::ChunkArrayGen;
@@ -251,6 +251,7 @@ public:
 
 private slots:
 
+	void viewer_initialized();
 //	void selected_cells_changed();
 
 	/**********************************************************
@@ -680,6 +681,9 @@ protected:
 		cgogn::rendering::VBO* vbo = this->get_vbo(name);
 		if (!vbo)
 		{
+			if (!has_attribute(Vertex::ORBIT, name))
+				return nullptr;
+
 			const MAP_TYPE* cmap = get_map();
 
 			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
@@ -718,6 +722,26 @@ protected:
 				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
 				vbo = this->vbos_.at(name).get();
 				cgogn::rendering::update_vbo(va3d, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
+
+			const VertexAttribute<AVEC3D> ava3d = cmap->template get_attribute<AVEC3D, Vertex::ORBIT>(name.toStdString());
+			if (ava3d.is_valid())
+			{
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(ava3d, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
+
+			const VertexAttribute<AVEC3F> ava3f = cmap->template get_attribute<AVEC3F, Vertex::ORBIT>(name.toStdString());
+			if (ava3f.is_valid())
+			{
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(ava3f, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
@@ -805,6 +829,23 @@ protected:
 				cgogn::rendering::update_vbo(va3d, vbo);
 				return;
 			}
+
+			const VertexAttribute<AVEC3F> ava3f = cmap->template get_attribute<AVEC3F, Vertex::ORBIT>(name.toStdString());
+			if (ava3f.is_valid())
+			{
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(ava3f, vbo);
+				return;
+			}
+
+			const VertexAttribute<AVEC3D> ava3d = cmap->template get_attribute<AVEC3D, Vertex::ORBIT>(name.toStdString());
+			if (ava3d.is_valid())
+			{
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(ava3d, vbo);
+				return;
+			}
+
 
 			const VertexAttribute<VEC2F> va2f = cmap->template get_attribute<VEC2F, Vertex::ORBIT>(name.toStdString());
 			if (va2f.is_valid())

@@ -23,6 +23,7 @@
 
 #include <schnapps/core/schnapps_window.h>
 #include <schnapps/core/schnapps.h>
+#include <schnapps/core/settings_widget.h>
 
 namespace schnapps
 {
@@ -76,6 +77,9 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path) :
 
 	connect(action_AboutSCHNApps, SIGNAL(triggered()), this, SLOT(about_SCHNApps()));
 	connect(action_AboutCGoGN, SIGNAL(triggered()), this, SLOT(about_CGoGN()));
+
+	settings_widget_ = cgogn::make_unique<SettingsWidget>();
+	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
 	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, this);
 }

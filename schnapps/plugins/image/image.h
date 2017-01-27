@@ -83,7 +83,7 @@ public:
 	inline bool is_little_endian() const { return cgogn::internal::cgogn_is_little_endian ; }
 	inline std::size_t get_data_size() const { return data_->data_size();}
 	inline DataType get_data_type() const { return data_->data_type(); }
-
+	inline bool is_empty() const { return data_.get() == nullptr; }
 
 	static Image3D new_image_3d(const QString& image_path);
 private:
@@ -143,6 +143,13 @@ private:
 	QAction* import_image_action_;
 	Image_DockTab*	dock_tab_;
 };
+
+/**
+ * @brief uncompress_gz_file
+ * @param filename, path of the fil to uncompress
+ * @return the path of the extracted file (usually in the temporary folder), an empty QString if unsuccessfull
+ */
+SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename);
 
 } // namespace plugin_image
 } // namespace schnapps

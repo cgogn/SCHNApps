@@ -1,0 +1,15 @@
+{
+	"core" : {
+		"Add map to selected view": true,
+		"Added map is selected": true,
+		"Load modules": [
+			"import",
+			"export",
+			"merge",
+			"selection",
+			"attribute_editor"
+		],
+		"Plugins paths": [
+		 ]
+	}
+}

@@ -58,8 +58,10 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	selected_view_(nullptr),
 	window_(window)
 {
-	// create & setup control dock
+	status_bar_output_ = cgogn::make_unique<StatusBarOutput>(window->statusBar());
+	cgogn::logger::Logger::get_logger().add_output(status_bar_output_.get());
 
+	// create & setup control dock
 	control_camera_tab_ = new ControlDock_CameraTab(this);
 	window_->control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
 	control_plugin_tab_ = new ControlDock_PluginTab(this);
@@ -82,10 +84,18 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 #else
 	register_plugins_directory(app_path + QString("/../lib"));
 #endif
+	settings_ = Settings::from_file("settings.json");
+	settings_->set_widget(window->settings_widget_.get());
+	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
+		this->register_plugins_directory(plugin_dir_v.toString());
+
+	for (const QVariant& plugin_v : get_core_setting("Load modules").toList())
+		this->enable_plugin(plugin_v.toString());
 }
 
 SCHNApps::~SCHNApps()
 {
+	settings_->to_file("settings.json");
 	// first safely unload every plugins (this has to be done before the views get deleted)
 	while(!plugins_.empty())
 	{
@@ -172,7 +182,7 @@ void SCHNApps::register_plugins_directory(const QString& path)
 			}
 			else
 			{
-				std::cout << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded." << std::endl;
+				cgogn_log_info("SCHNApps::register_plugins_directory") << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded.";
 			}
 		}
 	}
@@ -204,7 +214,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				// if it succeeded we reference this plugin
 				plugins_.insert(std::make_pair(plugin_name, std::unique_ptr<Plugin>(plugin)));
 
-				status_bar_message(plugin_name + QString(" successfully loaded."), 2000);
+				cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" successfully loaded.")).toStdString();
 				emit(plugin_enabled(plugin));
 //				menubar->repaint();
 				return plugin;
@@ -215,7 +225,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				return nullptr;
 			}
 		} else { // if loading fails
-			std::cout << "loader.instance() failed with error \"" << loader.errorString().toStdString() << "\"." << std::endl;
+			cgogn_log_warning("SCHNApps::enable_plugin") << "Loader.instance() failed with error \"" << loader.errorString().toStdString() << "\".";
 			return nullptr;
 		}
 	}
@@ -244,7 +254,7 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		QPluginLoader loader(plugin->get_file_path());
 		loader.unload();
 
-		status_bar_message(plugin_name + QString(" successfully unloaded."), 2000);
+		cgogn_log_info("SCHNApps::disable_plugin") << plugin_name.toStdString()  << " successfully unloaded.";
 		emit(plugin_disabled(plugin.get()));
 	}
 }
@@ -568,7 +578,7 @@ void SCHNApps::set_split_view_positions(QString positions)
 		}
 		if (qts.atEnd())
 		{
-			std::cerr << "Problem restoring view split configuration" << std::endl;
+			cgogn_log_error("SCHNApps::set_split_view_positions") << "Problem restoring view split configuration.";
 			return;
 		}
 

@@ -81,30 +81,9 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		render_boundary_(false),
 		face_style_(FLAT)
 	{
-		shader_flat_param_ = cgogn::rendering::ShaderFlat::generate_param();
-		shader_flat_param_->front_color_ = front_color_;
-		shader_flat_param_->back_color_ = back_color_;
-
-		shader_flat_color_param_ = cgogn::rendering::ShaderFlatColor::generate_param();
-
-		shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
-		shader_simple_color_param_->color_ = edge_color_;
-
-		shader_simple_color_param_boundary_ = cgogn::rendering::ShaderSimpleColor::generate_param();
-		shader_simple_color_param_boundary_->color_ = QColor(200, 200, 25);
-
-		shader_phong_param_ = cgogn::rendering::ShaderPhong::generate_param();
-		shader_phong_param_->front_color_ = front_color_;
-		shader_phong_param_->back_color_ = back_color_;
-		shader_phong_param_->double_side_ = render_back_faces_;
-
-		shader_phong_color_param_ = cgogn::rendering::ShaderPhongColor::generate_param();
-		shader_phong_color_param_->double_side_ = render_back_faces_;
-
-		shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
-		shader_point_sprite_param_->color_ = vertex_color_;
-		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		initialize_gl();
 	}
+
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
@@ -203,6 +182,38 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 	}
 
 private:
+	inline void initialize_gl()
+	{
+		shader_flat_param_ = cgogn::rendering::ShaderFlat::generate_param();
+		shader_flat_param_->front_color_ = front_color_;
+		shader_flat_param_->back_color_ = back_color_;
+
+		shader_flat_color_param_ = cgogn::rendering::ShaderFlatColor::generate_param();
+
+		shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+		shader_simple_color_param_->color_ = edge_color_;
+
+		shader_simple_color_param_boundary_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+		shader_simple_color_param_boundary_->color_ = QColor(200, 200, 25);
+
+		shader_phong_param_ = cgogn::rendering::ShaderPhong::generate_param();
+		shader_phong_param_->front_color_ = front_color_;
+		shader_phong_param_->back_color_ = back_color_;
+		shader_phong_param_->double_side_ = render_back_faces_;
+
+		shader_phong_color_param_ = cgogn::rendering::ShaderPhongColor::generate_param();
+		shader_phong_color_param_->double_side_ = render_back_faces_;
+
+		shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
+		shader_point_sprite_param_->color_ = vertex_color_;
+		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+
+		set_position_vbo(position_vbo_);
+		set_normal_vbo(normal_vbo_);
+		set_color_vbo(color_vbo_);
+	}
+
+private:
 
 	std::unique_ptr<cgogn::rendering::ShaderFlat::Param>		shader_flat_param_;
 	std::unique_ptr<cgogn::rendering::ShaderFlatColor::Param>	shader_flat_color_param_;
@@ -251,7 +262,7 @@ public:
 
 	inline Plugin_SurfaceRender() {}
 
-	~Plugin_SurfaceRender() {}
+	~Plugin_SurfaceRender() override;
 
 private:
 
@@ -285,6 +296,8 @@ private slots:
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
+	void viewer_initialized();
+	void enable_on_selected_view(Plugin* p);
 
 	void update_dock_tab();
 
@@ -378,6 +391,11 @@ private:
 
 	SurfaceRender_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
+
+	QVariant* setting_auto_enable_on_selected_view_;
+	QVariant* setting_auto_load_position_attribute_;
+	QVariant* setting_auto_load_normal_attribute_;
+	QVariant* setting_auto_load_color_attribute_;
 };
 
 } // namespace plugin_surface_render

@@ -25,11 +25,18 @@
 #include "image.h"
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QDir>
 #include <image_dock_tab.h>
 #include <schnapps/core/schnapps.h>
 #include <cgogn/io/c_locale.h>
 #include <cgogn/io/vtk_io.h>
 #include <cgogn/core/utils/string.h>
+
+#ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#endif // SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 
 namespace schnapps
 {
@@ -116,14 +123,17 @@ void Plugin_Image::import_image(const QString& image_path)
 	if (fileinfo.exists() && fileinfo.isFile())
 	{
 		images_.push_back({image_path, Image3D::new_image_3d(image_path)});
-		emit(image_added(image_path));
+		if (!images_.back().second.is_empty())
+			emit(image_added(image_path));
+		else
+			images_.pop_back();
 	}
 
 }
 
 void Plugin_Image::import_image_dialog()
 {
-	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->get_app_path(),  "3DImages (*.inr *.vtk)");
+	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->get_app_path(),  "3DImages (*.inr *.vtk *.inr.gz *.vtk.gz)");
 	for (const auto& im : filenames)
 		import_image(im);
 }
@@ -194,16 +204,26 @@ Image3D Image3D::new_image_3d(const QString& image_path)
 	if (fileinfo.exists() && fileinfo.isFile())
 	{
 		cgogn::Scoped_C_Locale locale;
-		std::ifstream in(image_path.toStdString(), std::ios_base::binary | std::ios_base::in);
-		const auto& suffix = fileinfo.suffix();
-		if(suffix == "inr")
-			res_img.import_inr(in);
-		else
+		std::ifstream in_file(image_path.toStdString(), std::ios_base::binary | std::ios_base::in);
+		const QString complete_suffix = fileinfo.completeSuffix();
+		if (!QString::compare(fileinfo.suffix(), "gz", Qt::CaseInsensitive))
 		{
-			if (suffix == "vtk")
-				res_img.import_vtk(in);
+			const QString temp_image_path = uncompress_gz_file(image_path);
+			if (QFileInfo::exists(temp_image_path))
+			{
+				res_img = std::move(Image3D::new_image_3d(temp_image_path));
+				QFile::remove(temp_image_path);
+			}
+		} else {
+			if (!QString::compare(complete_suffix, "inr", Qt::CaseInsensitive))
+				res_img.import_inr(in_file);
 			else
-				return res_img;
+			{
+				if (!QString::compare(complete_suffix, "vtk", Qt::CaseInsensitive))
+					res_img.import_vtk(in_file);
+				else
+					return res_img;
+			}
 		}
 	}
 	return res_img;
@@ -431,6 +451,34 @@ void Image3D::import_vtk(std::istream& vtk_data)
 				break;
 		}
 	}
+}
+
+
+
+SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
+{
+#ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
+	if (!QFileInfo::exists(filename_in))
+		return QString();
+
+	const QString filename_out = QDir::cleanPath(QDir::tempPath() + QDir::separator() + QFileInfo(filename_in).completeBaseName());
+	if (QFileInfo::exists(filename_out))
+		QFile::remove(filename_out);
+
+	std::ifstream in_file(filename_in.toStdString(), std::ios_base::binary | std::ios_base::in);
+	std::ofstream out_file(filename_out.toStdString(), std::ios_base::binary | std::ios_base::out);
+	if (!in_file || !out_file)
+		return QString();
+
+	boost::iostreams::filtering_streambuf<boost::iostreams::input> filt_in;
+	filt_in.push(boost::iostreams::gzip_decompressor());
+	filt_in.push(in_file);
+	boost::iostreams::copy(filt_in, out_file);
+	return filename_out;
+#else
+	cgogn_log_warning("schnapps::plugin_image::uncompress_gz_file") << "The plugin need boost_iostreams to uncompress .gz files.";
+	return QString();
+#endif // SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 }
 
 } // namespace plugin_image

@@ -33,6 +33,9 @@ namespace schnapps
 namespace plugin_surface_render
 {
 
+Plugin_SurfaceRender::~Plugin_SurfaceRender()
+{}
+
 MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
@@ -50,11 +53,17 @@ MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* m
 
 bool Plugin_SurfaceRender::enable()
 {
+	setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true);
+	setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position");
+	setting_auto_load_normal_attribute_ = add_setting("Auto load normal attribute", "normal");
+	setting_auto_load_color_attribute_ = add_setting("Auto load color attribute", "color");
+
 	dock_tab_ = new SurfaceRender_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render");
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
+	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 	update_dock_tab();
 
@@ -68,6 +77,7 @@ void Plugin_SurfaceRender::disable()
 
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
 	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
+	disconnect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 }
 
 void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
@@ -163,6 +173,7 @@ void Plugin_SurfaceRender::view_linked(View* view)
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
 }
@@ -173,6 +184,7 @@ void Plugin_SurfaceRender::view_unlinked(View* view)
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
 }
@@ -183,6 +195,14 @@ void Plugin_SurfaceRender::map_linked(MapHandlerGen *map)
 
 	if (map->dimension() == 2)
 	{
+		View* view = schnapps_->get_selected_view();
+		if (view)
+		{
+			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_->toString());
+			set_normal_vbo(view->get_name(), map->get_name(), setting_auto_load_normal_attribute_->toString());
+			set_color_vbo(view->get_name(), map->get_name(), setting_auto_load_color_attribute_->toString());
+		}
+
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
@@ -203,24 +223,35 @@ void Plugin_SurfaceRender::map_unlinked(MapHandlerGen *map)
 
 void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
-	if (map->is_selected_map())
+	if (map && map->is_selected_map())
 	{
+		const QString vbo_name = QString::fromStdString(vbo->name());
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
-			dock_tab_->add_normal_vbo(QString::fromStdString(vbo->name()));
-			dock_tab_->add_color_vbo(QString::fromStdString(vbo->name()));
+			View* view = schnapps_->get_selected_view();
+			dock_tab_->add_position_vbo(vbo_name);
+			dock_tab_->add_normal_vbo(vbo_name);
+			dock_tab_->add_color_vbo(vbo_name);
+			if (view)
+			{
+				if (!get_parameters(view, map).get_position_vbo() && vbo_name == setting_auto_load_position_attribute_->toString())
+					set_position_vbo(view->get_name(), map->get_name(), vbo_name);
+				if (!get_parameters(view, map).get_normal_vbo() && vbo_name == setting_auto_load_normal_attribute_->toString())
+					set_normal_vbo(view->get_name(), map->get_name(), vbo_name);
+				if (!get_parameters(view, map).get_color_vbo() && vbo_name == setting_auto_load_color_attribute_->toString())
+					set_color_vbo(view->get_name(), map->get_name(), vbo_name);
+			}
 		}
 	}
 }
 
 void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
-	if (map->is_selected_map())
+	if (map && map->is_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
 		{
@@ -251,8 +282,8 @@ void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_SurfaceRender::linked_map_bb_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
-	uint32 nbe = map->nb_cells(Edge_Cell);
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+	const uint32 nbe = map->nb_cells(Edge_Cell);
 
 	for (auto& it : parameter_set_)
 	{
@@ -263,6 +294,23 @@ void Plugin_SurfaceRender::linked_map_bb_changed()
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
 		}
 	}
+}
+
+void Plugin_SurfaceRender::viewer_initialized()
+{
+	View* view = dynamic_cast<View*>(sender());
+	if (view && (this->parameter_set_.count(view) > 0))
+	{
+		auto& view_param_set = parameter_set_[view];
+		for (auto & p : view_param_set)
+			p.second.initialize_gl();
+	}
+}
+
+void Plugin_SurfaceRender::enable_on_selected_view(Plugin* p)
+{
+	if ((this == p) && schnapps_->get_selected_view() && setting_auto_enable_on_selected_view_->toBool())
+		schnapps_->get_selected_view()->link_plugin(this);
 }
 
 void Plugin_SurfaceRender::update_dock_tab()

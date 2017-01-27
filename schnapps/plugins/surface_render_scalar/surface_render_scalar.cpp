@@ -96,6 +96,7 @@ void Plugin_SurfaceRenderScalar::view_linked(View* view)
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
 }
@@ -106,6 +107,7 @@ void Plugin_SurfaceRenderScalar::view_unlinked(View* view)
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
 }
@@ -136,7 +138,7 @@ void Plugin_SurfaceRenderScalar::map_unlinked(MapHandlerGen *map)
 
 void Plugin_SurfaceRenderScalar::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -149,7 +151,7 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 
 void Plugin_SurfaceRenderScalar::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -176,6 +178,17 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_removed(cgogn::rendering::VBO* v
 void Plugin_SurfaceRenderScalar::linked_map_bb_changed()
 {
 
+}
+
+void Plugin_SurfaceRenderScalar::viewer_initialized()
+{
+	View* view = dynamic_cast<View*>(sender());
+	if (view && (this->parameter_set_.count(view) > 0))
+	{
+		auto& view_param_set = parameter_set_[view];
+		for (auto & p : view_param_set)
+			p.second.initialize_gl();
+	}
 }
 
 void Plugin_SurfaceRenderScalar::update_dock_tab()

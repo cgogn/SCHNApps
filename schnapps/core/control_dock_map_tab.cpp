@@ -295,6 +295,11 @@ void ControlDock_MapTab::map_added(MapHandlerGen* m)
 	updating_ui_ = true;
 	list_maps->addItem(m->get_name());
 	updating_ui_ = false;
+	if (schnapps_->get_core_setting("Added map is selected").toBool())
+	{
+		if (list_maps->selectedItems().empty())
+			list_maps->setItemSelected(list_maps->item(list_maps->count() - 1),true);
+	}
 }
 
 void ControlDock_MapTab::map_removed(MapHandlerGen* m)

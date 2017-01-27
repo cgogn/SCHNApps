@@ -50,16 +50,10 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 		scalar_vbo_(nullptr),
 		color_map_(cgogn::rendering::ShaderScalarPerVertex::BWR),
 		expansion_(0),
-		show_iso_lines_(false),
-		nb_iso_levels_(10)
+		nb_iso_levels_(10),
+		show_iso_lines_(false)
 	{
-		shader_scalar_per_vertex_param_ = cgogn::rendering::ShaderScalarPerVertex::generate_param();
-		shader_scalar_per_vertex_param_->color_map_ = color_map_;
-		shader_scalar_per_vertex_param_->expansion_ = expansion_;
-		shader_scalar_per_vertex_param_->min_value_ = 0.0f;
-		shader_scalar_per_vertex_param_->max_value_ = 1.0f;
-		shader_scalar_per_vertex_param_->show_iso_lines_ = show_iso_lines_;
-		shader_scalar_per_vertex_param_->nb_iso_levels_ = nb_iso_levels_;
+		initialize_gl();
 	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
@@ -79,8 +73,14 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 		if (scalar_vbo_ && scalar_vbo_->vector_dimension() == 1)
 		{
 			const MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
-			float32 scalar_min = std::numeric_limits<float>::max();
-			float32 scalar_max = std::numeric_limits<float>::min();
+			if (!attr.is_valid())
+			{
+				cgogn_log_warning("plugin_surface_render_scalar|MapParameters::set_scalar_vbo") << "The attribute \"" << scalar_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(SCALAR()) << ".";
+				scalar_vbo_ = nullptr;
+				return;
+			}
+			SCALAR scalar_min = std::numeric_limits<SCALAR>::max();
+			SCALAR scalar_max = std::numeric_limits<SCALAR>::lowest();
 			for (const SCALAR& s : attr)
 			{
 				scalar_min = s < scalar_min ? s : scalar_min;
@@ -123,6 +123,21 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 	}
 
 private:
+	void initialize_gl()
+	{
+		shader_scalar_per_vertex_param_ = cgogn::rendering::ShaderScalarPerVertex::generate_param();
+		shader_scalar_per_vertex_param_->color_map_ = color_map_;
+		shader_scalar_per_vertex_param_->expansion_ = expansion_;
+		shader_scalar_per_vertex_param_->min_value_ = 0.0f;
+		shader_scalar_per_vertex_param_->max_value_ = 1.0f;
+		shader_scalar_per_vertex_param_->show_iso_lines_ = show_iso_lines_;
+		shader_scalar_per_vertex_param_->nb_iso_levels_ = nb_iso_levels_;
+
+		set_position_vbo(position_vbo_);
+		set_scalar_vbo(scalar_vbo_);
+	}
+
+private:
 
 	MapHandler<CMap2>* map_;
 
@@ -133,8 +148,8 @@ private:
 
 	cgogn::rendering::ShaderScalarPerVertex::ColorMap color_map_;
 	int32 expansion_;
-	bool show_iso_lines_;
 	int32 nb_iso_levels_;
+	bool show_iso_lines_;
 };
 
 /**
@@ -185,6 +200,7 @@ private slots:
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
+	void viewer_initialized();
 
 	void update_dock_tab();
 

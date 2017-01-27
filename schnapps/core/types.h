@@ -27,7 +27,7 @@
 #include "dll.h"
 #include <cgogn/core/utils/numerics.h>
 #include <cgogn/geometry/types/geometry_traits.h>
-
+#include <unsupported/Eigen/AlignedVector3>
 namespace cgogn
 {
 
@@ -81,9 +81,16 @@ using MAT3D = Eigen::Matrix3d;
 using MAT4F = Eigen::Matrix4f;
 using MAT4D = Eigen::Matrix4d;
 
+using AVEC3F = Eigen::AlignedVector3<float32>;
+using AVEC3D = Eigen::AlignedVector3<float64>;
+
 #ifdef SCHNAPPS_DOUBLE_PRECISION
 using VEC2 = VEC2D;
+#ifdef SCHNAPPS_USE_ALIGNEDVEC3
+using VEC3 = AVEC3D;
+#else
 using VEC3 = VEC3D;
+#endif
 using VEC4 = VEC4D;
 
 using MAT22 = MAT2D;
@@ -92,7 +99,11 @@ using MAT44 = MAT4D;
 #else
 #ifdef SCHNAPPS_SINGLE_PRECISION
 using VEC4 = VEC4F;
+#ifdef SCHNAPPS_USE_ALIGNEDVEC3
+using VEC3 = AVEC3F;
+#else
 using VEC3 = VEC3F;
+#endif
 using VEC2 = VEC2F;
 
 using MAT22 = MAT2F;

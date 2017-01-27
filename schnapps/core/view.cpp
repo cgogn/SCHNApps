@@ -369,6 +369,8 @@ void View::init()
 	cameras_button_ = new ViewButton(":icons/icons/cameras.png", this);
 	button_area_left_->add_button(cameras_button_);
 	connect(cameras_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_cameras_list_view(int, int, int, int)));
+
+	QOGLViewer::init(); // emit viewerInitialized signal
 }
 
 void View::preDraw()
@@ -476,19 +478,19 @@ void View::keyPressEvent(QKeyEvent* event)
 				msg_box.setDefaultButton(QMessageBox::Ok);
 				if (msg_box.exec() == QMessageBox::Ok)
 				{
-					schnapps_->status_bar_message("frame snapshot !!", 2000);
+					cgogn_log_info("View::keyPressEvent") << "frame snapshot !!";
 					connect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
 				}
 				else
 				{
-					schnapps_->status_bar_message("cancel frame snapshot", 2000);
+					cgogn_log_info("View::keyPressEvent") <<"Cancel frame snapshot.";
 					save_snapshots_ = false;
 				}
 			}
 			else
 			{
 				disconnect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
-				schnapps_->status_bar_message("Stop frame snapshot", 2000);
+				cgogn_log_info("View::keyPressEvent") <<"Stop frame snapshot.";
 			}
 
 		}
@@ -527,10 +529,10 @@ void View::mousePressEvent(QMouseEvent* event)
 	if (!is_selected_view())
 	{
 		schnapps_->set_selected_view(this);
-		schnapps_->status_bar_message(QString("Selecting ") + this->get_name(), 2000);
+		cgogn_log_info("View::mousePressEvent") << "Selecting view \"" << this->get_name().toStdString() << "\".";
 	}
 	else if (event->y() < 20)
-		schnapps_->status_bar_message(this->get_name(), 2000);
+		cgogn_log_info("View::mousePressEvent") << this->get_name().toStdString() << ".";
 
 	if (button_area_left_->is_clicked(event->x(), event->y()))
 		button_area_left_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
@@ -600,7 +602,11 @@ void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
 void View::map_added(MapHandlerGen* mh)
 {
 	if (mh)
+	{
 		dialog_maps_->add_item(mh->get_name());
+		if (schnapps_->get_core_setting("Add map to selected view").toBool())
+			dialog_maps_->list()->item(dialog_maps_->nb_items() -1)->setCheckState(Qt::Checked);
+	}
 }
 
 void View::map_removed(MapHandlerGen* mh)

@@ -7,8 +7,6 @@ project(schnapps
 
 find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
 
-option(SCHNAPPS_DOUBLE_PRECISION "Use double precision." ON)
-
 add_executable(${PROJECT_NAME} main.cpp)
 
 target_link_libraries(${PROJECT_NAME}

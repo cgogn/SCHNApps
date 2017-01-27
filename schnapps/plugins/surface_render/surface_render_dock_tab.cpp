@@ -325,10 +325,6 @@ void SurfaceRender_DockTab::color_selected()
 	}
 }
 
-
-
-
-
 void SurfaceRender_DockTab::add_position_vbo(QString name)
 {
 	updating_ui_ = true;

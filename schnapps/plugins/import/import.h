@@ -25,14 +25,14 @@
 #define SCHNAPPS_PLUGIN_IMPORT_H_
 
 #include <schnapps/core/plugin_processing.h>
-#include "dll.h"
-
+#include <schnapps/plugins/import/dll.h>
 #include <QAction>
+
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+class MapHandlerGen; // forward declaration of class
 
 namespace plugin_import
 {
@@ -86,6 +86,8 @@ private:
 
 private:
 
+	QVariant* setting_bbox_name_;
+	QVariant* setting_vbo_names_;
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
 	//	QAction* import_2D_image_action_;

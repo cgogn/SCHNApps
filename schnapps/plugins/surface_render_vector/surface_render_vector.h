@@ -83,7 +83,10 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 	}
 
 
-	const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const { return shader_vector_per_vertex_param_list_; }
+	const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const
+	{
+		return shader_vector_per_vertex_param_list_;
+	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
@@ -96,10 +99,10 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 		}
 	}
 
-	int32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
+	uint32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
 	{
-		int32 index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
-		return index >= vector_vbo_list_.size() ? -1 : index;
+		const uint32 index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
+		return index >= vector_vbo_list_.size() ? UINT32_MAX : index;
 	}
 	void add_vector_vbo(cgogn::rendering::VBO* v)
 	{
@@ -119,8 +122,8 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 	}
 	void remove_vector_vbo(cgogn::rendering::VBO* v)
 	{
-		int32 idx = get_vector_vbo_index(v);
-		if (idx >= 0)
+		const uint32 idx = get_vector_vbo_index(v);
+		if (idx != UINT32_MAX)
 		{
 			vector_vbo_list_[idx] = vector_vbo_list_.back();
 			vector_vbo_list_.pop_back();
@@ -133,18 +136,38 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 		}
 	}
 
-	float32 get_vector_scale_factor(int32 i) const { return vector_scale_factor_list_[i]; }
-	void set_vector_scale_factor(int32 i, float32 sf)
+	float32 get_vector_scale_factor(uint32 i) const { return vector_scale_factor_list_[i]; }
+	void set_vector_scale_factor(uint32 i, float32 sf)
 	{
 		vector_scale_factor_list_[i] = sf;
 		shader_vector_per_vertex_param_list_[i]->length_ = map_->get_bb_diagonal_size() / 100.0f * vector_scale_factor_list_[i];
 	}
 
-	const QColor& get_vector_color(int32 i) const { return vector_color_list_[i]; }
-	void set_vector_color(int32 i, const QColor& c)
+	const QColor& get_vector_color(uint32 i) const { return vector_color_list_[i]; }
+	void set_vector_color(uint32 i, const QColor& c)
 	{
 		vector_color_list_[i] = c;
 		shader_vector_per_vertex_param_list_[i]->color_ = vector_color_list_[i];
+	}
+
+private:
+	void initialize_gl()
+	{
+		shader_vector_per_vertex_param_list_.clear();
+		std::vector<cgogn::rendering::VBO*> vbos;
+		std::vector<float32> scale_factors;
+		std::vector<QColor> colors_list;
+
+		vbos.swap(vector_vbo_list_);
+		scale_factors.swap(vector_scale_factor_list_);
+		colors_list.swap(vector_color_list_);
+
+		for (uint32 i = 0u ; i < vbos.size(); ++i)
+		{
+			add_vector_vbo(vbos[i]);
+			set_vector_scale_factor(i, scale_factors[i]);
+			set_vector_color(i, colors_list[i]);
+		}
 	}
 
 private:
@@ -206,6 +229,7 @@ private slots:
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
+	void viewer_initialized();
 
 	void update_dock_tab();
 

@@ -61,11 +61,15 @@ MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* ma
 
 bool Plugin_VolumeRender::enable()
 {
+	setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true);
+	setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position");
+
 	dock_tab_ = new VolumeRender_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Volume Render");
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
+	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 	update_dock_tab();
 
@@ -79,6 +83,7 @@ void Plugin_VolumeRender::disable()
 
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
 	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
+	disconnect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 }
 
 void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
@@ -201,6 +206,7 @@ void Plugin_VolumeRender::view_linked(View* view)
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
 }
@@ -211,6 +217,7 @@ void Plugin_VolumeRender::view_unlinked(View* view)
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
 }
@@ -250,6 +257,10 @@ void Plugin_VolumeRender::map_linked(MapHandlerGen* map)
 
 	if (map->dimension() == 3)
 	{
+		View* view = schnapps_->get_selected_view();
+		if (view)
+			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_->toString());
+
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
@@ -274,20 +285,27 @@ void Plugin_VolumeRender::map_unlinked(MapHandlerGen* map)
 
 void Plugin_VolumeRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
-	if (map->is_selected_map())
+	if (map && map->is_selected_map())
 	{
 		if (vbo->vector_dimension() == 3)
 		{
-			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
+			const QString vbo_name = QString::fromStdString(vbo->name());
+			dock_tab_->add_position_vbo(vbo_name);
+			View* view = schnapps_->get_selected_view();
+			if (view)
+			{
+				if (!get_parameters(view, map).get_position_vbo() && vbo_name == setting_auto_load_position_attribute_->toString())
+					set_position_vbo(view->get_name(), map->get_name(), vbo_name);
+			}
 		}
 	}
 }
 
 void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -314,8 +332,11 @@ void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_VolumeRender::linked_map_bb_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
-	uint32 nbe = map->nb_cells(Edge_Cell);
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+	if (!map)
+		return;
+
+	const uint32 nbe = map->nb_cells(Edge_Cell);
 
 	for (auto& it : parameter_set_)
 	{
@@ -331,7 +352,8 @@ void Plugin_VolumeRender::linked_map_bb_changed()
 
 void Plugin_VolumeRender::linked_map_connectivity_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+	if (!map) return;
 
 	for (auto& it : parameter_set_)
 	{
@@ -362,9 +384,28 @@ void Plugin_VolumeRender::linked_map_connectivity_changed()
 
 void Plugin_VolumeRender::linked_attribute_changed(cgogn::Orbit, QString)
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
 	if (map)
 		this->connectivity_changed(map);
+}
+
+void Plugin_VolumeRender::viewer_initialized()
+{
+	View* view = dynamic_cast<View*>(sender());
+	if (view && (this->parameter_set_.count(view) > 0))
+	{
+		auto& view_param_set = parameter_set_[view];
+		for (auto & p : view_param_set)
+			p.second.initialize_gl();
+	}
+}
+
+void Plugin_VolumeRender::enable_on_selected_view(Plugin* p)
+{
+	if ((this == p) && schnapps_->get_selected_view() && setting_auto_enable_on_selected_view_->toBool())
+	{
+		schnapps_->get_selected_view()->link_plugin(this);
+	}
 }
 
 void Plugin_VolumeRender::update_dock_tab()
@@ -529,40 +570,15 @@ MapParameters::MapParameters() :
 	render_topology_(false),
 	use_transparency_(false)
 {
-	shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
-	shader_simple_color_param_->color_ = edge_color_;
+	transparency_factor_ = 254;
+	vertex_color_ = QColor(190, 85, 168);
+	edge_color_ = QColor(0, 0, 0);
+	face_color_ = QColor(85, 168, 190);
+	volume_explode_factor_ = 0.8f;
+	vertex_scale_factor_ = 1;
+	vertex_base_size_ = 1;
 
-	shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
-	shader_point_sprite_param_->color_ = vertex_color_;
-	shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
-
-	volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
-	volume_drawer_rend_ = volume_drawer_->generate_renderer();
-
-	topo_drawer_ =  cgogn::make_unique<cgogn::rendering::TopoDrawer>();
-	topo_drawer_rend_ = topo_drawer_->generate_renderer();
-
-
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-	{
-		volume_transparency_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeTransparencyDrawer>();
-		volume_transparency_drawer_rend_ = volume_transparency_drawer_->generate_renderer();
-		volume_transparency_drawer_rend_->set_explode_volume(volume_explode_factor_);
-		volume_transparency_drawer_rend_->set_lighted(true);
-	}
-#endif
-	frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
-
-	volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
-	topo_drawer_->set_explode_volume(volume_explode_factor_);
-
-	set_transparency_factor(254);
-	set_vertex_color(QColor(190, 85, 168));
-	set_edge_color(QColor(0, 0, 0));
-	set_face_color(QColor(85, 168, 190));
-	set_volume_explode_factor(0.8f);
-	set_vertex_scale_factor(1);
-	set_vertex_base_size(1);
+	initialize_gl();
 }
 
 void MapParameters::set_position_vbo(cgogn::rendering::VBO* v)
@@ -591,6 +607,46 @@ void MapParameters::set_position_vbo(cgogn::rendering::VBO* v)
 		}
 	} else
 		position_vbo_ = old;
+}
+
+void MapParameters::initialize_gl()
+{
+	shader_simple_color_param_ = cgogn::rendering::ShaderSimpleColor::generate_param();
+	shader_simple_color_param_->color_ = edge_color_;
+
+	shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
+	shader_point_sprite_param_->color_ = vertex_color_;
+	shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+
+	volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
+	volume_drawer_rend_ = volume_drawer_->generate_renderer();
+
+	topo_drawer_ =  cgogn::make_unique<cgogn::rendering::TopoDrawer>();
+	topo_drawer_rend_ = topo_drawer_->generate_renderer();
+
+
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+	{
+		volume_transparency_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeTransparencyDrawer>();
+		volume_transparency_drawer_rend_ = volume_transparency_drawer_->generate_renderer();
+		volume_transparency_drawer_rend_->set_explode_volume(volume_explode_factor_);
+		volume_transparency_drawer_rend_->set_lighted(true);
+	}
+#endif
+	frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
+
+	volume_drawer_rend_->set_explode_volume(volume_explode_factor_);
+	topo_drawer_->set_explode_volume(volume_explode_factor_);
+
+	set_transparency_factor(transparency_factor_);
+	set_vertex_color(vertex_color_);
+	set_edge_color(edge_color_);
+	set_face_color(face_color_);
+	set_volume_explode_factor(volume_explode_factor_);
+	set_vertex_scale_factor(vertex_scale_factor_);
+	set_vertex_base_size(vertex_base_size_);
+
+	set_position_vbo(position_vbo_);
 }
 
 } // namespace plugin_volume_render

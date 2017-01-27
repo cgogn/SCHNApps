@@ -64,8 +64,8 @@ void Plugin_SurfaceRenderVector::disable()
 	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
 	delete dock_tab_;
 
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
+	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
+	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
 }
 
 void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
@@ -93,6 +93,7 @@ void Plugin_SurfaceRenderVector::view_linked(View* view)
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
 }
@@ -103,6 +104,7 @@ void Plugin_SurfaceRenderVector::view_unlinked(View* view)
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
 }
@@ -133,7 +135,7 @@ void Plugin_SurfaceRenderVector::map_unlinked(MapHandlerGen *map)
 
 void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -147,7 +149,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 
 void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	if (map->is_selected_map())
 	{
@@ -177,7 +179,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 
 void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(QObject::sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
 	for (auto& it : parameter_set_)
 	{
@@ -188,6 +190,17 @@ void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 			for (uint32 i = 0, size = p.vector_scale_factor_list_.size(); i < size; ++i)
 				p.set_vector_scale_factor(i, p.vector_scale_factor_list_[i]);
 		}
+	}
+}
+
+void Plugin_SurfaceRenderVector::viewer_initialized()
+{
+	View* view = dynamic_cast<View*>(sender());
+	if (view && (this->parameter_set_.count(view) > 0))
+	{
+		auto& view_param_set = parameter_set_[view];
+		for (auto & p : view_param_set)
+			p.second.initialize_gl();
 	}
 }
 
@@ -250,8 +263,8 @@ void Plugin_SurfaceRenderVector::set_vector_scale_factor(View* view, MapHandlerG
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		int32 index = p.get_vector_vbo_index(vector_vbo);
-		if (index >= 0)
+		const uint32 index = p.get_vector_vbo_index(vector_vbo);
+		if (index != UINT32_MAX)
 		{
 			p.set_vector_scale_factor(index, sf);
 			if (view->is_selected_view() && map->is_selected_map())
@@ -266,8 +279,8 @@ void Plugin_SurfaceRenderVector::set_vector_color(View* view, MapHandlerGen* map
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		int32 index = p.get_vector_vbo_index(vector_vbo);
-		if (index >= 0)
+		const uint32 index = p.get_vector_vbo_index(vector_vbo);
+		if (index != UINT32_MAX)
 		{
 			p.set_vector_color(index, color);
 			if (view->is_selected_view() && map->is_selected_map())
