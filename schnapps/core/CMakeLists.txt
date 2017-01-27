@@ -61,13 +61,20 @@ qt5_add_resources(RCC_FILES
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${RCC_FILES})
 
-if (SCHNAPPS_DOUBLE_PRECISION)
-	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DSCHNAPPS_DOUBLE_PRECISION")
-else()
-	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DSCHNAPPS_SINGLE_PRECISION")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "SCHNAPPS_CORE_DLL_EXPORT")
+
+if (SCHNAPPS_ALIGNED_VEC3)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC "SCHNAPPS_USE_ALIGNEDVEC3")
 endif()
+
+if (SCHNAPPS_DOUBLE_PRECISION)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC "SCHNAPPS_DOUBLE_PRECISION")
+else()
+	target_compile_definitions(${PROJECT_NAME} PUBLIC "SCHNAPPS_SINGLE_PRECISION")
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_CORE_DLL_EXPORT")
+
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${QOGLViewer_INCLUDE_DIRS}

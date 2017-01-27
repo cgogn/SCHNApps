@@ -12,6 +12,12 @@ if(NOT CMAKE_BUILD_TYPE AND NOT MSVC)
 	set(CMAKE_BUILD_TYPE "Release")
 endif()
 
+#### Numerical precision
+option(SCHNAPPS_DOUBLE_PRECISION "Use double precision." ON)
+
+#### Aligned Vector3
+option(SCHNAPPS_ALIGNED_VEC3 "Use Eigen's AlignedVector3 by default." OFF)
+
 #### SCHNAPPS PATH / SCHNAPPS_SOURCE_DIR
 set(SCHNAPPS_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 set(SCHNAPPS_SOURCE_DIR ${SCHNAPPS_PATH})
