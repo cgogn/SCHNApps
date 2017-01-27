@@ -529,10 +529,10 @@ void View::mousePressEvent(QMouseEvent* event)
 	if (!is_selected_view())
 	{
 		schnapps_->set_selected_view(this);
-		schnapps_->status_bar_message(QString("Selecting ") + this->get_name(), 2000);
+		cgogn_log_info("View::mousePressEvent") << "Selecting view \"" << this->get_name().toStdString() << "\".";
 	}
 	else if (event->y() < 20)
-		schnapps_->status_bar_message(this->get_name(), 2000);
+		cgogn_log_info("View::mousePressEvent") << this->get_name().toStdString() << ".";
 
 	if (button_area_left_->is_clicked(event->x(), event->y()))
 		button_area_left_->click_button(event->x(), event->y(), event->globalX(), event->globalY());

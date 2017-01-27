@@ -254,7 +254,7 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		QPluginLoader loader(plugin->get_file_path());
 		loader.unload();
 
-		status_bar_message(plugin_name + QString(" successfully unloaded."), 2000);
+		cgogn_log_info("SCHNApps::disable_plugin") << plugin_name.toStdString()  << " successfully unloaded.";
 		emit(plugin_disabled(plugin.get()));
 	}
 }
