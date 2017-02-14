@@ -47,7 +47,6 @@
 #include <cgogn/rendering/transparency_volume_drawer.h>
 #endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 
-
 namespace schnapps
 {
 
@@ -355,12 +354,12 @@ private:
 	VolumeRender_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 
-	QVariant* setting_auto_enable_on_selected_view_;
-	QVariant* setting_auto_load_position_attribute_;
+	QVariant setting_auto_enable_on_selected_view_;
+	QVariant setting_auto_load_position_attribute_;
 };
 
 } // namespace plugin_volume_render
-} // namespace schnapps
 
+} // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_H_

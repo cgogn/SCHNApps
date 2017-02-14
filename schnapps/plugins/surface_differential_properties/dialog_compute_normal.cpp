@@ -30,16 +30,26 @@
 
 namespace schnapps
 {
+
 namespace plugin_sdp
 {
 
-ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s) :
+ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p) :
 	schnapps_(s),
+	plugin_(p),
 	selected_map_(nullptr)
 {
 	setupUi(this);
 
-	normal_attribute_name->setText("normal");
+	setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute");
+	if (!setting_auto_load_position_attribute_.isValid())
+		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position");
+
+	setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute");
+	if (!setting_auto_load_normal_attribute_.isValid())
+		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal");
+
+	normal_attribute_name->setText(setting_auto_load_normal_attribute_.toString());
 
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
@@ -82,7 +92,11 @@ void ComputeNormal_Dialog::selected_map_changed()
 					if (type == vec3_type_name)
 					{
 						combo_positionAttribute->addItem(name);
+						if (name == setting_auto_load_position_attribute_.toString())
+							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
 						combo_normalAttribute->addItem(name);
+						if (name == setting_auto_load_normal_attribute_.toString())
+							combo_normalAttribute->setCurrentIndex(combo_normalAttribute->count() - 1);
 					}
 				}
 			}
@@ -134,4 +148,5 @@ void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, cons
 }
 
 } // namespace plugin_sdp
+
 } // namespace schnapps

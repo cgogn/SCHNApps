@@ -39,41 +39,38 @@ std::unique_ptr<Settings> Settings::from_file(const QString& setting_filename)
 	QFile setting_file(setting_filename);
 	if (setting_file.exists() && setting_file.open(QIODevice::ReadOnly))
 	{
-		QByteArray data =  setting_file.readAll();
+		QByteArray data = setting_file.readAll();
 
 		QJsonParseError parse_error;
 		QJsonDocument doc = QJsonDocument::fromJson(data, &parse_error);
 		if (parse_error.error != QJsonParseError::NoError)
-		{
 			cgogn_log_warning("Settings(const QString&)") << "Error while reading the file \"" << setting_filename.toStdString() << "\". Error is : \"" << parse_error.errorString().toStdString() << "\".";
-		} else {
+		else
 			cgogn_log_info("Settings(const QString&)") << "Loaded setting file \"" << setting_filename.toStdString() << "\".";
-		}
 		const auto obj = doc.object();
-		for(auto it = obj.constBegin(); it != obj.constEnd(); ++it)
+		for (auto it = obj.constBegin(); it != obj.constEnd(); ++it)
 			settings->add_module(it.key(), it.value().toObject().toVariantMap());
-	} else {
-		cgogn_log_warning("Settings::from_file()") << "Unable to read the file \"" << setting_filename.toStdString() << "\".";
 	}
+	else
+		cgogn_log_warning("Settings::from_file()") << "Unable to read the file \"" << setting_filename.toStdString() << "\".";
+
 	return settings;
 }
 
 void Settings::add_module(const QString& module_name, const QVariantMap& module)
 {
 	if (!map_.contains(module_name))
-	{
 		map_[module_name] = module;
-	}
 }
 
 Settings::~Settings()
 {}
 
-QVariant* Settings::add_setting(const QString& module_name, const QString& setting_name, const QVariant& value)
+QVariant Settings::add_setting(const QString& module_name, const QString& setting_name, const QVariant& value)
 {
 	if (!map_[module_name].contains(setting_name))
 		map_[module_name][setting_name] = value;
-	return &map_[module_name][setting_name];
+	return map_[module_name][setting_name];
 }
 
 const QVariant Settings::get_setting(const QString& module_name, const QString& setting_name) const
@@ -86,9 +83,9 @@ const QVariant Settings::get_setting(const QString& module_name, const QString& 
 			return setting_it.value();
 		else
 			cgogn_log_debug("Settings::get_setting") << "Unable to find setting \"" << setting_name.toStdString() << "\" in module \"" << module_name.toStdString() << "\".";
-	} else {
-		cgogn_log_debug("Settings::get_setting") << "Unable to find module \"" << module_name.toStdString() << "\".";
 	}
+	else
+		cgogn_log_debug("Settings::get_setting") << "Unable to find module \"" << module_name.toStdString() << "\".";
 	return QVariant();
 }
 
@@ -103,9 +100,9 @@ void Settings::to_file(const QString& filename)
 			obj[it.key()] = QJsonObject::fromVariantMap(it.value());
 		QJsonDocument doc(obj);
 		setting_file.write(doc.toJson());
-	} else {
-		cgogn_log_info("Settings::to_file()") << "Unable to write in the file \"" << filename.toStdString() << "\".";
 	}
+	else
+		cgogn_log_info("Settings::to_file()") << "Unable to write in the file \"" << filename.toStdString() << "\".";
 }
 
 void Settings::set_widget(QWidget* widget)
@@ -118,21 +115,18 @@ void Settings::set_widget(QWidget* widget)
 void Settings::setting_changed(const QString& module_name, const QString& name, const QVariant& value)
 {
 	if (!map_.contains(module_name))
-	{
 		cgogn_log_debug("Settings::setting_changed") << "Trying to modify a setting of a non-existing module \"" << module_name.toStdString() << "\".";
-	} else
+	else
 	{
 		if (!map_[module_name].contains(name))
-		{
 			cgogn_log_debug("Settings::setting_changed") << "Trying to modify a non-existing setting \"" << name.toStdString() << "\" of the module \"" << module_name.toStdString() << "\".";
-		} else {
+		else
+		{
 			QVariant& v = map_[module_name][name];
 			if (v.type() != value.type())
-			{
 				cgogn_log_debug("Settings::setting_changed") << "Cannot replace a setting of type \"" << v.typeName() << "\" by another setting of type \"" << value.typeName() << "\".";
-			} else {
+			else
 				v = value;
-			}
 		}
 	}
 }

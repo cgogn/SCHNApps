@@ -29,20 +29,50 @@
 
 namespace schnapps
 {
+
 namespace plugin_sdp
 {
 
-ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s) :
+ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p) :
 	schnapps_(s),
+	plugin_(p),
 	selected_map_(nullptr)
 {
 	setupUi(this);
 
-	Kmax_attribute_name->setText("Kmax");
-	kmax_attribute_name->setText("kmax");
-	Kmin_attribute_name->setText("Kmin");
-	kmin_attribute_name->setText("kmin");
-	Knormal_attribute_name->setText("Knormal");
+	setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute");
+	if (!setting_auto_load_position_attribute_.isValid())
+		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position");
+
+	setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute");
+	if (!setting_auto_load_normal_attribute_.isValid())
+		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal");
+
+	setting_auto_load_Kmax_attribute_ = plugin_->get_setting("Auto load Kmax attribute");
+	if (!setting_auto_load_Kmax_attribute_.isValid())
+		setting_auto_load_Kmax_attribute_ = plugin_->add_setting("Auto load Kmax attribute", "Kmax");
+
+	setting_auto_load_kmax_attribute_ = plugin_->get_setting("Auto load kmax attribute");
+	if (!setting_auto_load_kmax_attribute_.isValid())
+		setting_auto_load_kmax_attribute_ = plugin_->add_setting("Auto load kmax attribute", "kmax");
+
+	setting_auto_load_Kmin_attribute_ = plugin_->get_setting("Auto load Kmin attribute");
+	if (!setting_auto_load_Kmin_attribute_.isValid())
+		setting_auto_load_Kmin_attribute_ = plugin_->add_setting("Auto load Kmin attribute", "Kmin");
+
+	setting_auto_load_kmin_attribute_ = plugin_->get_setting("Auto load kmin attribute");
+	if (!setting_auto_load_kmin_attribute_.isValid())
+		setting_auto_load_kmin_attribute_ = plugin_->add_setting("Auto load kmin attribute", "kmin");
+
+	setting_auto_load_Knormal_attribute_ = plugin_->get_setting("Auto load Knormal attribute");
+	if (!setting_auto_load_Knormal_attribute_.isValid())
+		setting_auto_load_Knormal_attribute_ = plugin_->add_setting("Auto load Knormal attribute", "Knormal");
+
+	Kmax_attribute_name->setText(setting_auto_load_Kmax_attribute_.toString());
+	kmax_attribute_name->setText(setting_auto_load_kmax_attribute_.toString());
+	Kmin_attribute_name->setText(setting_auto_load_Kmin_attribute_.toString());
+	kmin_attribute_name->setText(setting_auto_load_kmin_attribute_.toString());
+	Knormal_attribute_name->setText(setting_auto_load_Knormal_attribute_.toString());
 
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
@@ -91,15 +121,29 @@ void ComputeCurvature_Dialog::selected_map_changed()
 					if (type == vec3_type_name)
 					{
 						combo_positionAttribute->addItem(name);
+						if (name == setting_auto_load_position_attribute_.toString())
+							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
 						combo_normalAttribute->addItem(name);
+						if (name == setting_auto_load_normal_attribute_.toString())
+							combo_normalAttribute->setCurrentIndex(combo_normalAttribute->count() - 1);
 						combo_KmaxAttribute->addItem(name);
+						if (name == setting_auto_load_Kmax_attribute_.toString())
+							combo_KmaxAttribute->setCurrentIndex(combo_KmaxAttribute->count() - 1);
 						combo_KminAttribute->addItem(name);
+						if (name == setting_auto_load_Kmin_attribute_.toString())
+							combo_KminAttribute->setCurrentIndex(combo_KminAttribute->count() - 1);
 						combo_KnormalAttribute->addItem(name);
+						if (name == setting_auto_load_Knormal_attribute_.toString())
+							combo_KnormalAttribute->setCurrentIndex(combo_KnormalAttribute->count() - 1);
 					}
 					else if (type == scalar_type_name)
 					{
 						combo_kmaxAttribute->addItem(name);
+						if (name == setting_auto_load_kmax_attribute_.toString())
+							combo_kmaxAttribute->setCurrentIndex(combo_kmaxAttribute->count() - 1);
 						combo_kminAttribute->addItem(name);
+						if (name == setting_auto_load_kmin_attribute_.toString())
+							combo_kminAttribute->setCurrentIndex(combo_kminAttribute->count() - 1);
 					}
 				}
 			}
@@ -160,4 +204,5 @@ void ComputeCurvature_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, c
 }
 
 } // namespace plugin_sdp
+
 } // namespace schnapps

@@ -33,13 +33,14 @@
 
 namespace schnapps
 {
+
 namespace plugin_sdp
 {
 
 bool Plugin_SurfaceDifferentialProperties::enable()
 {
-	compute_normal_dialog_ = new ComputeNormal_Dialog(schnapps_);
-	compute_curvature_dialog_ = new ComputeCurvature_Dialog(schnapps_);
+	compute_normal_dialog_ = new ComputeNormal_Dialog(schnapps_, this);
+	compute_curvature_dialog_ = new ComputeCurvature_Dialog(schnapps_, this);
 
 	compute_normal_action_ = new QAction("Compute Normal", this);
 	compute_curvature_action_ = new QAction("Compute Curvature", this);
@@ -165,7 +166,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal_from_dialog()
 		if (compute_normal_dialog_->enableVBO->isChecked())
 		{
 			MapHandlerGen* mhg = schnapps_->get_map(map_name);
-			if (mhg != NULL)
+			if (mhg)
 				mhg->create_vbo(normal_name);
 		}
 	}
@@ -360,4 +361,5 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 }
 
 } // namespace plugin_sdp
+
 } // namespace schnapps

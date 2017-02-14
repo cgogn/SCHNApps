@@ -47,12 +47,22 @@ class SCHNAPPS_PLUGIN_SDP_API ComputeCurvature_Dialog : public QDialog, public U
 	friend class Plugin_SurfaceDifferentialProperties;
 
 public:
-	ComputeCurvature_Dialog(SCHNApps* s);
+	ComputeCurvature_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
 
 private:
 
 	SCHNApps* schnapps_;
+	Plugin_SurfaceDifferentialProperties* plugin_;
+
 	MapHandler<CMap2>* selected_map_;
+
+	QVariant setting_auto_load_position_attribute_;
+	QVariant setting_auto_load_normal_attribute_;
+	QVariant setting_auto_load_Kmax_attribute_;
+	QVariant setting_auto_load_kmax_attribute_;
+	QVariant setting_auto_load_Kmin_attribute_;
+	QVariant setting_auto_load_kmin_attribute_;
+	QVariant setting_auto_load_Knormal_attribute_;
 
 private slots:
 
@@ -63,6 +73,7 @@ private slots:
 };
 
 } // namespace plugin_sdp
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_

@@ -28,7 +28,6 @@
 #include <schnapps/plugins/import/dll.h>
 #include <QAction>
 
-
 namespace schnapps
 {
 
@@ -86,14 +85,16 @@ private:
 
 private:
 
-	QVariant* setting_bbox_name_;
-	QVariant* setting_vbo_names_;
+	QVariant setting_bbox_name_;
+	QVariant setting_vbo_names_;
+
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
 	//	QAction* import_2D_image_action_;
 };
 
 } // namespace plugin_import
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_IMPORT_H_

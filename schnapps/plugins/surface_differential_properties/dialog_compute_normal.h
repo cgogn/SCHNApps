@@ -47,12 +47,17 @@ class SCHNAPPS_PLUGIN_SDP_API ComputeNormal_Dialog : public QDialog, public Ui::
 
 public:
 
-	ComputeNormal_Dialog(SCHNApps* s);
+	ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
 
 private:
 
 	SCHNApps* schnapps_;
+	Plugin_SurfaceDifferentialProperties* plugin_;
+
 	MapHandler<CMap2>* selected_map_;
+
+	QVariant setting_auto_load_position_attribute_;
+	QVariant setting_auto_load_normal_attribute_;
 
 private slots:
 
@@ -63,6 +68,7 @@ private slots:
 };
 
 } // namespace plugin_sdp
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_

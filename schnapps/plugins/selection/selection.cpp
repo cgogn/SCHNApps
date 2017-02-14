@@ -30,6 +30,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_selection
 {
 
@@ -820,4 +821,5 @@ void Plugin_Selection::update_dock_tab()
 }
 
 } // namespace plugin_selection
+
 } // namespace schnapps

@@ -561,10 +561,13 @@ public:
 	void set_bb_vertex_attribute(const QString& attribute_name) override
 	{
 		bb_vertex_attribute_ = get_map()->template get_attribute<VEC3, Vertex::ORBIT>(attribute_name.toStdString());
-		compute_bb();
-		this->update_bb_drawer();
-		emit(bb_vertex_attribute_changed(attribute_name));
-		emit(bb_changed());
+		if (bb_vertex_attribute_.is_valid())
+		{
+			compute_bb();
+			this->update_bb_drawer();
+			emit(bb_vertex_attribute_changed(attribute_name));
+			emit(bb_changed());
+		}
 	}
 
 	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name) override

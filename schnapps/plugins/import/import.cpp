@@ -33,6 +33,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_import
 {
 
@@ -46,8 +47,15 @@ bool Plugin_Import::enable()
 
 	//	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
 	//	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
-	setting_bbox_name_ = add_setting("Bounding box attribute", "position");
-	setting_vbo_names_ = add_setting("Compute VBO", QVariantList({"position", "normal", "color"}));
+
+	setting_bbox_name_ = get_setting("Bounding box attribute");
+	if (!setting_bbox_name_.isValid())
+		setting_bbox_name_ = add_setting("Bounding box attribute", "position");
+
+	setting_vbo_names_ = get_setting("Compute VBO");
+	if (!setting_vbo_names_.isValid())
+		setting_vbo_names_ = add_setting("Compute VBO", QVariantList({"position", "normal", "color"}));
+
 	return true;
 }
 
@@ -72,13 +80,10 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 			cgogn::io::import_surface<VEC3>(*map, filename.toStdString());
 			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
 			{
-				if (setting_bbox_name_)
-					mh->set_bb_vertex_attribute(setting_bbox_name_->toString());
+				mh->set_bb_vertex_attribute(setting_bbox_name_.toString());
 
-				if (setting_vbo_names_)
-					for (const QVariant& var :setting_vbo_names_->toList())
-						mhg->create_vbo(var.toString());
-
+				for (const QVariant& var : setting_vbo_names_.toList())
+					mhg->create_vbo(var.toString());
 			}
 			//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
 			//			{
@@ -122,8 +127,10 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
 			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
 			{
-				mh->set_bb_vertex_attribute("position");
-				mhg->create_vbo("position");
+				mh->set_bb_vertex_attribute(setting_bbox_name_.toString());
+
+				for (const QVariant& var : setting_vbo_names_.toList())
+					mhg->create_vbo(var.toString());
 			}
 
 		}
@@ -145,4 +152,5 @@ void Plugin_Import::import_volume_mesh_from_file_dialog()
 }
 
 } // namespace plugin_import
+
 } // namespace schnapps

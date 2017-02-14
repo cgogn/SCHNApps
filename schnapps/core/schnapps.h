@@ -379,14 +379,14 @@ signals:
 
 	void schnapps_closing();
 
-
 public:
+
 	inline const QVariant get_setting(const QString& module_name, const QString& name) const
 	{
 		return settings_->get_setting(module_name, name);
 	}
 
-	inline QVariant* add_setting(const QString& module_name, const QString& name, const QVariant& val)
+	inline QVariant add_setting(const QString& module_name, const QString& name, const QVariant& val)
 	{
 		return settings_->add_setting(module_name,name,val);
 	}

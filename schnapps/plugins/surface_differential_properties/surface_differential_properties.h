@@ -99,12 +99,12 @@ public slots:
 	 * @brief compute curvatures of a mesh
 	 * @param map_name name of 2d map
 	 * @param position_attribute_name name of input position attribute
-	 * @param normal_attribute_name name of input normal attributes
-	 * @param Kmax_attribute_name ?? result attribute name
-	 * @param kmax_attribute_name ?? result attribute name
-	 * @param Kmin_attribute_name ?? result attribute name
-	 * @param kmin_attribute_name ?? result attribute name
-	 * @param Knormal_attribute_name ?? result attribute aname
+	 * @param normal_attribute_name name of input normal attribute
+	 * @param Kmax_attribute_name name of output maximum curvature direction attribute
+	 * @param kmax_attribute_name name of output maximum curvature magnitude attribute
+	 * @param Kmin_attribute_name name of output minimum curvature direction attribute
+	 * @param kmin_attribute_name name of output minimum curvature magnitude attribute
+	 * @param Knormal_attribute_name name of output normal direction attribute
 	 * @param compute_kmean compute the mean curvature
 	 * @param compute_kgaussian compute the gaussian curvature
 	 * @param auto_update automatically update the output attributes when input attribute change.
@@ -171,6 +171,7 @@ private:
 };
 
 } // namespace plugin_sdp
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_

@@ -84,11 +84,11 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 #else
 	register_plugins_directory(app_path + QString("/../lib"));
 #endif
-	settings_ = Settings::from_file("settings.json");
+
+	settings_ = Settings::from_file(app_path + QString("/../lib/settings.json"));
 	settings_->set_widget(window->settings_widget_.get());
 	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
 		this->register_plugins_directory(plugin_dir_v.toString());
-
 	for (const QVariant& plugin_v : get_core_setting("Load modules").toList())
 		this->enable_plugin(plugin_v.toString());
 }
@@ -98,9 +98,7 @@ SCHNApps::~SCHNApps()
 	settings_->to_file("settings.json");
 	// first safely unload every plugins (this has to be done before the views get deleted)
 	while(!plugins_.empty())
-	{
 		this->disable_plugin(plugins_.begin()->first);
-	}
 }
 
 /*********************************************************

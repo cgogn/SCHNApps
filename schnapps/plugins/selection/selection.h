@@ -248,7 +248,9 @@ public slots:
 				view->update();
 		}
 	}
+
 private:
+
 	void initialize_gl()
 	{
 		shader_point_sprite_param_selection_sphere_ = cgogn::rendering::ShaderPointSprite::generate_param();
@@ -281,9 +283,6 @@ private:
 		drawer_selected_volumes_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 		drawer_rend_selected_volumes_ = drawer_selected_volumes_->generate_renderer();
 	}
-
-
-private:
 
 	MapHandlerGen* map_;
 	std::unique_ptr<MapHandlerGen::Attribute_T<VEC3>> position_;
@@ -404,6 +403,7 @@ private:
 };
 
 } // namespace plugin_selection
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SELECTION_H_

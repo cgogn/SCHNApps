@@ -42,6 +42,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_surface_render
 {
 
@@ -83,7 +84,6 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 	{
 		initialize_gl();
 	}
-
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
@@ -182,6 +182,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 	}
 
 private:
+
 	inline void initialize_gl()
 	{
 		shader_flat_param_ = cgogn::rendering::ShaderFlat::generate_param();
@@ -212,8 +213,6 @@ private:
 		set_normal_vbo(normal_vbo_);
 		set_color_vbo(color_vbo_);
 	}
-
-private:
 
 	std::unique_ptr<cgogn::rendering::ShaderFlat::Param>		shader_flat_param_;
 	std::unique_ptr<cgogn::rendering::ShaderFlatColor::Param>	shader_flat_color_param_;
@@ -392,13 +391,14 @@ private:
 	SurfaceRender_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 
-	QVariant* setting_auto_enable_on_selected_view_;
-	QVariant* setting_auto_load_position_attribute_;
-	QVariant* setting_auto_load_normal_attribute_;
-	QVariant* setting_auto_load_color_attribute_;
+	QVariant setting_auto_enable_on_selected_view_;
+	QVariant setting_auto_load_position_attribute_;
+	QVariant setting_auto_load_normal_attribute_;
+	QVariant setting_auto_load_color_attribute_;
 };
 
 } // namespace plugin_surface_render
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
