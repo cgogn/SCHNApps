@@ -83,14 +83,15 @@ void Plugin_SurfaceModelisation::decimate_from_dialog()
 	{
 		const QString& map_name = currentItems[0]->text();
 		QString position_name = decimation_dialog_->combo_positionAttribute->currentText();
-		decimate(map_name, position_name, 1000u);
+		int v = decimation_dialog_->slider_percentVertices->value();
+		decimate(map_name, position_name, (100 - v) / 100.);
 	}
 }
 
 void Plugin_SurfaceModelisation::decimate(
 	const QString& map_name,
 	const QString& position_attribute_name,
-	uint32 nb)
+	double percentVerticesToRemove)
 {
 	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
 	if (!mh)
@@ -100,7 +101,8 @@ void Plugin_SurfaceModelisation::decimate(
 	if (!position.is_valid())
 		return;
 
-	cgogn::modeling::decimate<VEC3>(*mh->get_map(), position, cgogn::modeling::EdgeTraversor_QEM_T, cgogn::modeling::EdgeApproximator_QEM_T, nb);
+	uint32 nbv = mh->nb_cells(Vertex_Cell);
+	cgogn::modeling::decimate<VEC3>(*mh->get_map(), position, cgogn::modeling::EdgeTraversor_QEM_T, cgogn::modeling::EdgeApproximator_QEM_T, percentVerticesToRemove * nbv);
 
 	mh->notify_connectivity_change();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);

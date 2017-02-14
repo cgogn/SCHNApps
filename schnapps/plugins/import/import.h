@@ -55,7 +55,7 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	public slots:
+public slots:
 
 	/**
 		* @brief import a surface mesh from a file
@@ -71,6 +71,7 @@ private:
 
 	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
 	void import_volume_mesh_from_file_dialog();
+
 	//	/**
 	//	 * @brief import a 2D image into a surface mesh from a file
 	//	 * @param filename file name of mesh file

@@ -82,7 +82,7 @@ public slots:
 	void decimate(
 		const QString& map_name,
 		const QString& position_attribute_name,
-		uint32_t nb
+		double percentVerticesToRemove
 	);
 
 private:
