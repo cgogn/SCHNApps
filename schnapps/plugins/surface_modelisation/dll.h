@@ -20,19 +20,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SDP_DLL_H_
-#define SCHNAPPS_PLUGIN_SDP_DLL_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DLL_H_
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DLL_H_
 
 #ifdef WIN32
-#ifndef SCHNAPPS_PLUGIN_SDP_API
-#if defined SCHNAPPS_PLUGIN_SDP_DLL_EXPORT
-#define SCHNAPPS_PLUGIN_SDP_API __declspec(dllexport)
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API
+#if defined SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API __declspec(dllexport)
 #else
-#define SCHNAPPS_PLUGIN_SDP_API __declspec(dllimport)
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API __declspec(dllimport)
 #endif
 #endif
 #else
-#define SCHNAPPS_PLUGIN_SDP_API
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API
 #endif
 
-#endif // SCHNAPPS_PLUGIN_SDP_DLL_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DLL_H_

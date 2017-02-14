@@ -39,12 +39,13 @@ class MapHandlerGen;
 
 namespace plugin_sdp
 {
+
 /**
  * @brief Plugin that manages the computation of differential properties
  * - Normals
  * - Curvatures
  */
-class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties: public PluginProcessing
+class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

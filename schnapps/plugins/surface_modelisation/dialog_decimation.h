@@ -1,6 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -20,19 +21,53 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SDP_DLL_H_
-#define SCHNAPPS_PLUGIN_SDP_DLL_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_DECIMATION_H_
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_DECIMATION_H_
 
-#ifdef WIN32
-#ifndef SCHNAPPS_PLUGIN_SDP_API
-#if defined SCHNAPPS_PLUGIN_SDP_DLL_EXPORT
-#define SCHNAPPS_PLUGIN_SDP_API __declspec(dllexport)
-#else
-#define SCHNAPPS_PLUGIN_SDP_API __declspec(dllimport)
-#endif
-#endif
-#else
-#define SCHNAPPS_PLUGIN_SDP_API
-#endif
+#include "dll.h"
+#include <ui_dialog_decimation.h>
 
-#endif // SCHNAPPS_PLUGIN_SDP_DLL_H_
+#include <schnapps/core/map_handler.h>
+
+namespace schnapps
+{
+
+class SCHNApps;
+
+namespace plugin_surface_modelisation
+{
+
+class Plugin_SurfaceModelisation;
+
+class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Decimation_Dialog : public QDialog, public Ui::Decimation_Dialog
+{
+	Q_OBJECT
+
+	friend class Plugin_SurfaceModelisation;
+
+public:
+
+	Decimation_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
+
+private:
+
+	SCHNApps* schnapps_;
+	Plugin_SurfaceModelisation* plugin_;
+
+	MapHandler<CMap2>* selected_map_;
+
+	QVariant setting_auto_load_position_attribute_;
+
+private slots:
+
+	void selected_map_changed();
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+};
+
+} // namespace plugin_surface_modelisation
+
+} // namespace schnapps
+
+#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_DECIMATION_H_

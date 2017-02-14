@@ -28,6 +28,7 @@
 #include <cgogn/core/utils/numerics.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 #include <unsupported/Eigen/AlignedVector3>
+
 namespace cgogn
 {
 
