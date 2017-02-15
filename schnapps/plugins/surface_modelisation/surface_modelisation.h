@@ -67,9 +67,6 @@ private slots:
 	// slots called from action signals
 	void open_decimation_dialog();
 
-	// slots called from dialog signals
-	void decimate_from_dialog();
-
 public slots:
 
 	/**

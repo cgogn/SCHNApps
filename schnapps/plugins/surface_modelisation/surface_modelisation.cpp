@@ -39,14 +39,9 @@ bool Plugin_SurfaceModelisation::enable()
 	decimation_dialog_ = new Decimation_Dialog(schnapps_, this);
 
 	decimation_action_ = new QAction("Decimation", this);
-
 	decimation_action_ = schnapps_->add_menu_action("Surface;Modelisation;Decimation", "decimate mesh");
 
 	connect(decimation_action_, SIGNAL(triggered()), this, SLOT(open_decimation_dialog()));
-
-	connect(decimation_dialog_, SIGNAL(accepted()), this, SLOT(decimate_from_dialog()));
-	connect(decimation_dialog_->button_apply, SIGNAL(clicked()), this, SLOT(decimate_from_dialog()));
-
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
 	return true;
@@ -74,18 +69,6 @@ void Plugin_SurfaceModelisation::schnapps_closing()
 void Plugin_SurfaceModelisation::open_decimation_dialog()
 {
 	decimation_dialog_->show();
-}
-
-void Plugin_SurfaceModelisation::decimate_from_dialog()
-{
-	QList<QListWidgetItem*> currentItems = decimation_dialog_->list_maps->selectedItems();
-	if(!currentItems.empty())
-	{
-		const QString& map_name = currentItems[0]->text();
-		QString position_name = decimation_dialog_->combo_positionAttribute->currentText();
-		int v = decimation_dialog_->slider_percentVertices->value();
-		decimate(map_name, position_name, (100 - v) / 100.);
-	}
 }
 
 void Plugin_SurfaceModelisation::decimate(
