@@ -21,89 +21,53 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
-#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
-
-#include <schnapps/core/plugin_processing.h>
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
 
 #include "dll.h"
-#include <dialog_decimation.h>
-#include <dialog_subdivision.h>
+#include <ui_dialog_subdivision.h>
 
-#include <QAction>
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+class SCHNApps;
 
 namespace plugin_surface_modelisation
 {
 
-/**
- * @brief Plugin that exposes some surface modelisation algorithms
- */
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Plugin_SurfaceModelisation : public PluginProcessing
+class Plugin_SurfaceModelisation;
+
+class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Subdivision_Dialog : public QDialog, public Ui::Subdivision_Dialog
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
 
 public:
 
-	Plugin_SurfaceModelisation() {}
-
-	~Plugin_SurfaceModelisation() {}
+	Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
 
 private:
 
-	virtual bool enable();
-	virtual void disable();
+	SCHNApps* schnapps_;
+	Plugin_SurfaceModelisation* plugin_;
+
+	MapHandler<CMap2>* selected_map_;
+
+	QVariant setting_auto_load_position_attribute_;
 
 private slots:
 
-	// slots called from SCHNApps signals
-	void schnapps_closing();
-
-	// slots called from action signals
-	void open_decimation_dialog();
-	void open_subdivision_dialog();
-
-public slots:
-
-	/**
-	 * @brief decimate a mesh through edge collapses
-	 * @param map_name name of the 2d map (mesh)
-	 * @param position_attribute_name name of position attribute used for computation
-	 * @param percentVerticesToRemove % of the number of vertices to remove
-	 */
-	void decimate(
-		const QString& map_name,
-		const QString& position_attribute_name,
-		double percentVerticesToRemove
-	);
-
-	void subdivide_loop(
-		const QString& map_name,
-		const QString& position_attribute_name
-	);
-
-	void subdivide_catmull_clark(
-		const QString& map_name,
-		const QString& position_attribute_name
-	);
-
-private:
-
-	Decimation_Dialog* decimation_dialog_;
-	Subdivision_Dialog* subdivision_dialog_;
-
-	QAction* decimation_action_;
-	QAction* subdivision_action_;
+	void subdivide_loop();
+	void subdivide_catmull_clark();
+	void selected_map_changed();
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 };
 
 } // namespace plugin_surface_modelisation
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_

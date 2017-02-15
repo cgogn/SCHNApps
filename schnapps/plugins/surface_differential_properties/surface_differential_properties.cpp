@@ -42,9 +42,6 @@ bool Plugin_SurfaceDifferentialProperties::enable()
 	compute_normal_dialog_ = new ComputeNormal_Dialog(schnapps_, this);
 	compute_curvature_dialog_ = new ComputeCurvature_Dialog(schnapps_, this);
 
-	compute_normal_action_ = new QAction("Compute Normal", this);
-	compute_curvature_action_ = new QAction("Compute Curvature", this);
-
 	compute_normal_action_ = schnapps_->add_menu_action("Surface;Differential Properties;Compute Normal", "compute vertex normals");
 	compute_curvature_action_ = schnapps_->add_menu_action("Surface;Differential Properties;Compute Curvature", "compute vertex curvatures");
 
@@ -63,13 +60,13 @@ bool Plugin_SurfaceDifferentialProperties::enable()
 
 void Plugin_SurfaceDifferentialProperties::disable()
 {
-	disconnect(compute_normal_action_, SIGNAL(triggered()), this, SLOT(open_compute_normal_dialog()));
-	disconnect(compute_curvature_action_, SIGNAL(triggered()), this, SLOT(open_compute_curvature_dialog()));
+	disconnect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
 	disconnect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	disconnect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
-	disconnect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
+	disconnect(compute_normal_action_, SIGNAL(triggered()), this, SLOT(open_compute_normal_dialog()));
+	disconnect(compute_curvature_action_, SIGNAL(triggered()), this, SLOT(open_compute_curvature_dialog()));
 
 	schnapps_->remove_menu_action(compute_normal_action_);
 	schnapps_->remove_menu_action(compute_curvature_action_);

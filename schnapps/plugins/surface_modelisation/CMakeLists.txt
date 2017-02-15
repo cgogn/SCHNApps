@@ -11,11 +11,13 @@ set(HEADER_FILES
 	dll.h
 	surface_modelisation.h
 	dialog_decimation.h
+	dialog_subdivision.h
 )
 
 set(SOURCE_FILES
 	surface_modelisation.cpp
 	dialog_decimation.cpp
+	dialog_subdivision.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
