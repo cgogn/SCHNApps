@@ -43,8 +43,6 @@ class SCHNAPPS_PLUGIN_SDP_API ComputeNormal_Dialog : public QDialog, public Ui::
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceDifferentialProperties;
-
 public:
 
 	ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
@@ -61,6 +59,7 @@ private:
 
 private slots:
 
+	void compute_normal();
 	void selected_map_changed();
 	void map_added(MapHandlerGen* map);
 	void map_removed(MapHandlerGen* map);

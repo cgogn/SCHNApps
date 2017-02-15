@@ -43,8 +43,6 @@ class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Decimation_Dialog : public QDialo
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceModelisation;
-
 public:
 
 	Decimation_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);

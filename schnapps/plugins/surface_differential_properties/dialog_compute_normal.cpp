@@ -50,13 +50,37 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferenti
 		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal");
 
 	normal_attribute_name->setText(setting_auto_load_normal_attribute_.toString());
-
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
+	connect(this, SIGNAL(accepted()), this, SLOT(compute_normal()));
+	connect(button_apply, SIGNAL(clicked()), this, SLOT(compute_normal()));
+
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+}
+
+void ComputeNormal_Dialog::compute_normal()
+{
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+
+		QString position_name = combo_positionAttribute->currentText();
+
+		QString normal_name;
+		if (normal_attribute_name->text().isEmpty())
+			normal_name = combo_normalAttribute->currentText();
+		else
+			normal_name = normal_attribute_name->text();
+
+		bool create_vbo = enableVBO->isChecked();
+		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
+
+		plugin_->compute_normal(map_name, position_name, normal_name, create_vbo, auto_update);
+	}
 }
 
 void ComputeNormal_Dialog::selected_map_changed()

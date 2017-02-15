@@ -53,7 +53,6 @@ Decimation_Dialog::Decimation_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p)
 	connect(this, SIGNAL(accepted()), this, SLOT(decimate()));
 	connect(button_apply, SIGNAL(clicked()), this, SLOT(decimate()));
 
-
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 }
 

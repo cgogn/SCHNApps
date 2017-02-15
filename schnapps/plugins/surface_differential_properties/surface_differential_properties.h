@@ -76,10 +76,6 @@ private slots:
 	void open_compute_normal_dialog();
 	void open_compute_curvature_dialog();
 
-	// slots called from dialogs signals
-	void compute_normal_from_dialog();
-	void compute_curvature_from_dialog();
-
 public slots:
 
 	/**
@@ -87,12 +83,14 @@ public slots:
 	 * @param map_name name of the 2d map (mesh)
 	 * @param position_attribute_name name of position attribute used for computation
 	 * @param normal_attribute_name name of result attribute
+	 * @param create_vbo create a vbo for the computed normal attribute
 	 * @param auto_update automatically update the normal attribute when position attribute change.
 	 */
 	void compute_normal(
 		const QString& map_name,
 		const QString& position_attribute_name = "position",
 		const QString& normal_attribute_name = "normal",
+		bool create_vbo = true,
 		bool auto_update = true
 	);
 

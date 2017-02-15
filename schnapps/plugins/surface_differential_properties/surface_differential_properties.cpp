@@ -51,12 +51,6 @@ bool Plugin_SurfaceDifferentialProperties::enable()
 	connect(compute_normal_action_, SIGNAL(triggered()), this, SLOT(open_compute_normal_dialog()));
 	connect(compute_curvature_action_, SIGNAL(triggered()), this, SLOT(open_compute_curvature_dialog()));
 
-	connect(compute_normal_dialog_, SIGNAL(accepted()), this, SLOT(compute_normal_from_dialog()));
-	connect(compute_normal_dialog_->button_apply, SIGNAL(clicked()), this, SLOT(compute_normal_from_dialog()));
-
-	connect(compute_curvature_dialog_, SIGNAL(accepted()), this, SLOT(compute_curvature_from_dialog()));
-	connect(compute_curvature_dialog_->button_apply, SIGNAL(clicked()), this, SLOT(compute_curvature_from_dialog()));
-
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
@@ -71,12 +65,6 @@ void Plugin_SurfaceDifferentialProperties::disable()
 {
 	disconnect(compute_normal_action_, SIGNAL(triggered()), this, SLOT(open_compute_normal_dialog()));
 	disconnect(compute_curvature_action_, SIGNAL(triggered()), this, SLOT(open_compute_curvature_dialog()));
-
-	disconnect(compute_normal_dialog_, SIGNAL(accepted()), this, SLOT(compute_normal_from_dialog()));
-	disconnect(compute_normal_dialog_->button_apply, SIGNAL(clicked()), this, SLOT(compute_normal_from_dialog()));
-
-	disconnect(compute_curvature_dialog_, SIGNAL(accepted()), this, SLOT(compute_curvature_from_dialog()));
-	disconnect(compute_curvature_dialog_->button_apply, SIGNAL(clicked()), this, SLOT(compute_curvature_from_dialog()));
 
 	disconnect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	disconnect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
@@ -143,93 +131,11 @@ void Plugin_SurfaceDifferentialProperties::open_compute_curvature_dialog()
 	compute_curvature_dialog_->show();
 }
 
-void Plugin_SurfaceDifferentialProperties::compute_normal_from_dialog()
-{
-	QList<QListWidgetItem*> currentItems = compute_normal_dialog_->list_maps->selectedItems();
-	if(!currentItems.empty())
-	{
-		const QString& map_name = currentItems[0]->text();
-
-		QString position_name = compute_normal_dialog_->combo_positionAttribute->currentText();
-
-		QString normal_name;
-		if (compute_normal_dialog_->normal_attribute_name->text().isEmpty())
-			normal_name = compute_normal_dialog_->combo_normalAttribute->currentText();
-		else
-			normal_name = compute_normal_dialog_->normal_attribute_name->text();
-
-		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
-
-		compute_normal(map_name, position_name, normal_name, auto_update);
-
-		// create VBO if asked
-		if (compute_normal_dialog_->enableVBO->isChecked())
-		{
-			MapHandlerGen* mhg = schnapps_->get_map(map_name);
-			if (mhg)
-				mhg->create_vbo(normal_name);
-		}
-	}
-}
-
-void Plugin_SurfaceDifferentialProperties::compute_curvature_from_dialog()
-{
-	QList<QListWidgetItem*> currentItems = compute_curvature_dialog_->list_maps->selectedItems();
-	if (!currentItems.empty())
-	{
-		const QString& map_name = currentItems[0]->text();
-
-		QString position_name = compute_curvature_dialog_->combo_positionAttribute->currentText();
-		QString normal_name = compute_curvature_dialog_->combo_normalAttribute->currentText();
-
-		QString Kmax_name;
-		if (compute_curvature_dialog_->Kmax_attribute_name->text().isEmpty())
-			Kmax_name = compute_curvature_dialog_->combo_KmaxAttribute->currentText();
-		else
-			Kmax_name = compute_curvature_dialog_->Kmax_attribute_name->text();
-
-		QString kmax_name;
-		if (compute_curvature_dialog_->kmax_attribute_name->text().isEmpty())
-			kmax_name = compute_curvature_dialog_->combo_kmaxAttribute->currentText();
-		else
-			kmax_name = compute_curvature_dialog_->kmax_attribute_name->text();
-
-		QString Kmin_name;
-		if (compute_curvature_dialog_->Kmin_attribute_name->text().isEmpty())
-			Kmin_name = compute_curvature_dialog_->combo_KminAttribute->currentText();
-		else
-			Kmin_name = compute_curvature_dialog_->Kmin_attribute_name->text();
-
-		QString kmin_name;
-		if (compute_curvature_dialog_->kmin_attribute_name->text().isEmpty())
-			kmin_name = compute_curvature_dialog_->combo_kminAttribute->currentText();
-		else
-			kmin_name = compute_curvature_dialog_->kmin_attribute_name->text();
-
-		QString Knormal_name;
-		if (compute_curvature_dialog_->Knormal_attribute_name->text().isEmpty())
-			Knormal_name = compute_curvature_dialog_->combo_KnormalAttribute->currentText();
-		else
-			Knormal_name = compute_curvature_dialog_->Knormal_attribute_name->text();
-
-		bool compute_kmean = compute_curvature_dialog_->check_computeKmean->checkState() == Qt::Checked;
-		bool compute_kgaussian = compute_curvature_dialog_->check_computeKgaussian->checkState() == Qt::Checked;
-		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
-
-		compute_curvature(
-			map_name,
-			position_name, normal_name,
-			Kmax_name, kmax_name, Kmin_name, kmin_name, Knormal_name,
-			compute_kmean, compute_kgaussian,
-			auto_update
-		);
-	}
-}
-
 void Plugin_SurfaceDifferentialProperties::compute_normal(
 	const QString& map_name,
 	const QString& position_attribute_name,
 	const QString& normal_attribute_name,
+	bool create_vbo,
 	bool auto_update)
 {
 	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
@@ -243,13 +149,16 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	CMap2::VertexAttribute<VEC3> normal = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 	if (!normal.is_valid())
 	{
-//		if there is another attribute with the same name but with a different type, we remove it.
+		// if there is another attribute with the same name but with a different type, we remove it
 		if (mh->has_attribute(CMap2::Vertex::ORBIT, normal_attribute_name))
 			mh->remove_attribute(CellType::Vertex_Cell, normal_attribute_name);
 		normal = mh->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 	}
 
 	cgogn::geometry::compute_normal<VEC3>(*mh->get_map(), position, normal);
+
+	if (create_vbo)
+		mh->create_vbo(normal_attribute_name);
 
 	compute_normal_last_parameters_[map_name] =
 		ComputeNormalParameters(position_attribute_name, normal_attribute_name, auto_update);

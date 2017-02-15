@@ -50,10 +50,6 @@ bool Plugin_SurfaceModelisation::enable()
 void Plugin_SurfaceModelisation::disable()
 {
 	disconnect(decimation_action_, SIGNAL(triggered()), this, SLOT(open_decimation_dialog()));
-
-	disconnect(decimation_dialog_, SIGNAL(accepted()), this, SLOT(decimate_from_dialog()));
-	disconnect(decimation_dialog_->button_apply, SIGNAL(clicked()), this, SLOT(decimate_from_dialog()));
-
 	disconnect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
 	schnapps_->remove_menu_action(decimation_action_);

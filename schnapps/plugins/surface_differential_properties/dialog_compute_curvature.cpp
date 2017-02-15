@@ -79,7 +79,64 @@ ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s, Plugin_SurfaceDiff
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
+	connect(this, SIGNAL(accepted()), this, SLOT(compute_curvature()));
+	connect(button_apply, SIGNAL(clicked()), this, SLOT(compute_curvature()));
+
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+}
+
+void ComputeCurvature_Dialog::compute_curvature()
+{
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+
+		QString position_name = combo_positionAttribute->currentText();
+		QString normal_name = combo_normalAttribute->currentText();
+
+		QString Kmax_name;
+		if (Kmax_attribute_name->text().isEmpty())
+			Kmax_name = combo_KmaxAttribute->currentText();
+		else
+			Kmax_name = Kmax_attribute_name->text();
+
+		QString kmax_name;
+		if (kmax_attribute_name->text().isEmpty())
+			kmax_name = combo_kmaxAttribute->currentText();
+		else
+			kmax_name = kmax_attribute_name->text();
+
+		QString Kmin_name;
+		if (Kmin_attribute_name->text().isEmpty())
+			Kmin_name = combo_KminAttribute->currentText();
+		else
+			Kmin_name = Kmin_attribute_name->text();
+
+		QString kmin_name;
+		if (kmin_attribute_name->text().isEmpty())
+			kmin_name = combo_kminAttribute->currentText();
+		else
+			kmin_name = kmin_attribute_name->text();
+
+		QString Knormal_name;
+		if (Knormal_attribute_name->text().isEmpty())
+			Knormal_name = combo_KnormalAttribute->currentText();
+		else
+			Knormal_name = Knormal_attribute_name->text();
+
+		bool compute_kmean = check_computeKmean->checkState() == Qt::Checked;
+		bool compute_kgaussian = check_computeKgaussian->checkState() == Qt::Checked;
+		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
+
+		plugin_->compute_curvature(
+			map_name,
+			position_name, normal_name,
+			Kmax_name, kmax_name, Kmin_name, kmin_name, Knormal_name,
+			compute_kmean, compute_kgaussian,
+			auto_update
+		);
+	}
 }
 
 void ComputeCurvature_Dialog::selected_map_changed()
