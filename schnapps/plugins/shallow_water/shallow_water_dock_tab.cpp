@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
 *                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -21,30 +21,39 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <empty_plugin.h>
+#include <shallow_water_dock_tab.h>
+#include <shallow_water.h>
+
 #include <schnapps/core/schnapps.h>
+#include <schnapps/core/map_handler.h>
+#include <schnapps/core/view.h>
 
 namespace schnapps
 {
 
-namespace plugin_empty_plugin
+namespace plugin_shallow_water
 {
 
-Plugin_EmptyPlugin::Plugin_EmptyPlugin()
-{}
-
-Plugin_EmptyPlugin::~Plugin_EmptyPlugin()
-{}
-
-bool Plugin_EmptyPlugin::enable()
+ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) :
+	schnapps_(s),
+	plugin_(p)
 {
-	return true;
+	setupUi(this);
+
+	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
+	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start()));
 }
 
-void Plugin_EmptyPlugin::disable()
+void ShallowWater_DockTab::init()
 {
+	plugin_->init();
 }
 
-} // namespace plugin_empty_plugin
+void ShallowWater_DockTab::start()
+{
+	plugin_->start();
+}
+
+} // namespace plugin_shallow_water
 
 } // namespace schnapps

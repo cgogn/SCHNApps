@@ -37,9 +37,9 @@ namespace plugin_empty_plugin
 /**
 * @brief Empty plugin example
 */
-class SCHNAPPS_PLUGIN_EMPTY_PLUGIN_API EmptyPlugin : public PluginProcessing
+class SCHNAPPS_PLUGIN_EMPTY_PLUGIN_API Plugin_EmptyPlugin : public PluginProcessing
 // OR
-//class SCHNAPPS_PLUGIN_EMPTY_PLUGIN_API EmptyPlugin : public PluginInteraction
+//class SCHNAPPS_PLUGIN_EMPTY_PLUGIN_API Plugin_EmptyPlugin : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -47,19 +47,22 @@ class SCHNAPPS_PLUGIN_EMPTY_PLUGIN_API EmptyPlugin : public PluginProcessing
 
 public:
 
-	EmptyPlugin();
-	~EmptyPlugin() override;
+	Plugin_EmptyPlugin();
+	~Plugin_EmptyPlugin() override;
 
 private:
 
 	bool enable() override;
 	void disable() override;
 
-	public slots:
-	private slots:
+public slots:
+
+private slots:
+
 };
 
 } // namespace plugin_empty_plugin
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_

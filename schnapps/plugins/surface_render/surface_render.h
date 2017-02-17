@@ -281,7 +281,6 @@ private:
 	void wheelEvent(View*, QWheelEvent*) override {}
 	void resizeGL(View* /*view*/, int /*width*/, int /*height*/) override {}
 
-
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
 

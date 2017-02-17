@@ -1,7 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,30 +20,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <empty_plugin.h>
-#include <schnapps/core/schnapps.h>
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_H_
 
-namespace schnapps
-{
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_API
+#if defined SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_API
+#endif
 
-namespace plugin_empty_plugin
-{
-
-Plugin_EmptyPlugin::Plugin_EmptyPlugin()
-{}
-
-Plugin_EmptyPlugin::~Plugin_EmptyPlugin()
-{}
-
-bool Plugin_EmptyPlugin::enable()
-{
-	return true;
-}
-
-void Plugin_EmptyPlugin::disable()
-{
-}
-
-} // namespace plugin_empty_plugin
-
-} // namespace schnapps
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_H_

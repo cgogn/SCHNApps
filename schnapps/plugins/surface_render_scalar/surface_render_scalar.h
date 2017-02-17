@@ -36,6 +36,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_surface_render_scalar
 {
 
@@ -123,6 +124,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 	}
 
 private:
+
 	void initialize_gl()
 	{
 		shader_scalar_per_vertex_param_ = cgogn::rendering::ShaderScalarPerVertex::generate_param();
@@ -136,8 +138,6 @@ private:
 		set_position_vbo(position_vbo_);
 		set_scalar_vbo(scalar_vbo_);
 	}
-
-private:
 
 	MapHandler<CMap2>* map_;
 
@@ -253,6 +253,7 @@ private:
 };
 
 } // namespace plugin_surface_render_scalar
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
