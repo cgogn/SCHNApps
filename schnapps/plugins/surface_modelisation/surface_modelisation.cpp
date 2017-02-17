@@ -71,6 +71,7 @@ void Plugin_SurfaceModelisation::disable()
 void Plugin_SurfaceModelisation::schnapps_closing()
 {
 	decimation_dialog_->close();
+	subdivision_dialog_->close();
 }
 
 void Plugin_SurfaceModelisation::open_decimation_dialog()
