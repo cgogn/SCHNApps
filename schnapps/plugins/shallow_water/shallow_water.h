@@ -103,9 +103,11 @@ private:
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 
+	CMap2::VertexAttribute<SCALAR> water_height_;
+
 	CMap2::FaceAttribute<SCALAR> h_;        // water height
-	CMap2::FaceAttribute<SCALAR> q_;        // water flow
 	CMap2::FaceAttribute<SCALAR> h_tmp_;
+	CMap2::FaceAttribute<SCALAR> q_;        // water flow
 	CMap2::FaceAttribute<SCALAR> q_tmp_;
 	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
 	CMap2::FaceAttribute<SCALAR> length_;   // cell length
