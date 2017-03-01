@@ -77,6 +77,7 @@ public slots:
 private slots:
 
 	void update_dock_tab();
+	void execute_time_step();
 
 private:
 
@@ -96,14 +97,23 @@ private:
 		SCALAR hmin, SCALAR g
 	);
 
+	std::pair<CMap2::Edge, CMap2::Edge> get_LR_edges(CMap2::Face f);
+	std::pair<CMap2::Face, CMap2::Face> get_LR_faces(CMap2::Edge e);
+
 	ShallowWater_DockTab* dock_tab_;
 
+	SCALAR t_;
+	SCALAR dt_;
+	QTimer* timer_;
+
 	MapHandler<CMap2>* map_;
+	CMap2* map2_;
 	CMap2::Edge boundaryL_, boundaryR_;
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 
 	CMap2::VertexAttribute<SCALAR> water_height_;
+	CMap2::VertexAttribute<VEC3> water_position_;
 
 	CMap2::FaceAttribute<SCALAR> h_;        // water height
 	CMap2::FaceAttribute<SCALAR> h_tmp_;

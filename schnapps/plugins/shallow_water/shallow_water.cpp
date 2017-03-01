@@ -44,12 +44,65 @@ bool Plugin_ShallowWater::enable()
 
 	update_dock_tab();
 
+	const unsigned int nbc = 200u;
+
+	map_ = static_cast<MapHandler<CMap2>*>(schnapps_->add_map("shallow_water", 2));
+	map2_ = static_cast<CMap2*>(map_->get_map());
+
+	position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+
+	water_height_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("water_height");
+	water_position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("water_position");
+
+	h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("hauteur");
+	h_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("hauteur_tmp");
+	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("debit");
+	q_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("debit_tmp");
+	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
+	length_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("length");
+	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
+
+	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
+	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
+	s0L_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s0L");
+	s0R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s0R");
+
+	cgogn::modeling::SquareGrid<CMap2> grid(*map2_, nbc, 1);
+	grid.embed_into_grid(position_, float(nbc), 5.0f, 0.0f);
+
+	map2_->copy_attribute(water_position_, position_);
+
+	boundaryL_ = CMap2::Edge(grid.vertex_table_[nbc+1].dart);
+	boundaryR_ = CMap2::Edge(grid.vertex_table_[nbc].dart);
+
+	cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
+
+	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
+	{
+		CMap2::Edge e1(f.dart);
+		CMap2::Edge e2(map2_->phi1(f.dart));
+		if (map2_->is_incident_to_boundary(e1))
+		{
+			length_[f] = cgogn::geometry::length<VEC3>(*map2_, e1, position_);
+			phi_[f] = cgogn::geometry::length<VEC3>(*map2_, e2, position_);
+		}
+		else
+		{
+			phi_[f] = cgogn::geometry::length<VEC3>(*map2_, e1, position_);
+			length_[f] = cgogn::geometry::length<VEC3>(*map2_, e2, position_);
+		}
+	});
+
+	timer_ = new QTimer(this);
+	connect(timer_, SIGNAL(timeout()), this, SLOT(execute_time_step()));
+
 	return true;
 }
 
 void Plugin_ShallowWater::disable()
 {
 	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
+	schnapps_->remove_map("shallow_water");
 	delete dock_tab_;
 }
 
@@ -70,54 +123,22 @@ void Plugin_ShallowWater::view_unlinked(View*)
 
 void Plugin_ShallowWater::init()
 {
-	const unsigned int nbc = 200u;
-
-	map_ = static_cast<MapHandler<CMap2>*>(schnapps_->add_map("shallow_water", 2));
-	CMap2* map2 = static_cast<CMap2*>(map_->get_map());
-
-	position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
-
-	water_height_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("water_height");
-
-	h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("hauteur");
-	h_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("hauteur_tmp");
-	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("debit");
-	q_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("debit_tmp");
-	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
-	length_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("length");
-	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
-
-	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
-	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
-	s0L_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s0L");
-	s0R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s0R");
-
-	cgogn::modeling::SquareGrid<CMap2> grid(*map2, nbc, 1);
-	grid.embed_into_grid(position_, float(nbc), 5.0f, 0.0f);
-	boundaryL_ = CMap2::Edge(grid.vertex_table_[nbc+1].dart);
-	boundaryR_ = CMap2::Edge(grid.vertex_table_[nbc].dart);
-
-	cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2, position_, centroid_);
-
-	map2->parallel_foreach_cell([&] (CMap2::Face f, uint32)
+	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
 	{
-		CMap2::Edge e1(f.dart);
-		CMap2::Edge e2(map2->phi1(f.dart));
-		if (map2->is_incident_to_boundary(e1))
-		{
-			length_[f] = cgogn::geometry::length<VEC3>(*map2, e1, position_);
-			phi_[f] = cgogn::geometry::length<VEC3>(*map2, e2, position_);
-		}
-		else
-		{
-			phi_[f] = cgogn::geometry::length<VEC3>(*map2, e1, position_);
-			length_[f] = cgogn::geometry::length<VEC3>(*map2, e2, position_);
-		}
-
-		// left half of the cells has initial water height of 10
-		if (centroid_[f][0] < 0)
+		if (centroid_[f][0] < -75.)
 			h_[f] = 10.;
-		// right half of the cells has initial water height of 1
+		else if (centroid_[f][0] < -50.)
+			h_[f] = 1.;
+		else if (centroid_[f][0] < -25.)
+			h_[f] = 10.;
+		else if (centroid_[f][0] < -0.)
+			h_[f] = 1.;
+		else if (centroid_[f][0] < 25.)
+			h_[f] = 10.;
+		else if (centroid_[f][0] < 50.)
+			h_[f] = 1.;
+		else if (centroid_[f][0] < 75.)
+			h_[f] = 10.;
 		else
 			h_[f] = 1.;
 
@@ -125,129 +146,148 @@ void Plugin_ShallowWater::init()
 		q_[f] = 0.;
 	});
 
-	map2->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
+	map2_->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
 	{
 		SCALAR h = 0;
 		uint32 nbf = 0;
-		map2->foreach_incident_face(v, [&] (CMap2::Face f) { h += h_[f]; ++nbf; });
+		map2_->foreach_incident_face(v, [&] (CMap2::Face f) { h += h_[f]; ++nbf; });
 		h /= nbf;
 		water_height_[v] = h;
+		water_position_[v][2] = h;
 	});
 
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_height");
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
 }
 
 void Plugin_ShallowWater::start()
 {
-	CMap2* map2 = static_cast<CMap2*>(map_->get_map());
+	t_ = 0.;
+	dt_ = 0.05;
+	timer_->start(0);
+}
 
-	SCALAR dt = 0.01;
-	SCALAR t = 0.;
+void Plugin_ShallowWater::execute_time_step()
+{
+	f1_[boundaryL_] = 0.;
+	f2_[boundaryL_] = 5e-1 * 9.81 * phi_[0] * (h_[0] * h_[0]);
+	s0L_[boundaryL_] = 0.;
+	s0R_[boundaryL_] = 0.;
 
-	while (t < 5.)
-	{
-		f1_[boundaryL_] = 0.;
-		f2_[boundaryL_] = 5e-1 * 9.81 * phi_[0] * (h_[0] * h_[0]);
-		s0L_[boundaryL_] = 0.;
-		s0R_[boundaryL_] = 0.;
-
-		map2->parallel_foreach_cell(
-			[&] (CMap2::Edge e, uint32)
-			{
-				CMap2::Face fL, fR;
-				if (position_[CMap2::Vertex(e.dart)][0] < position_[CMap2::Vertex(map2->phi_1(e.dart))][0])
-				{
-					fL = CMap2::Face(map2->phi2(e.dart));
-					fR = CMap2::Face(e.dart);
-				}
-				else
-				{
-					fL = CMap2::Face(e.dart);
-					fR = CMap2::Face(map2->phi2(e.dart));
-				}
-				struct Flux F = Solv_HLL(0., 0., phi_[fL], phi_[fR], h_[fL], h_[fR], q_[fL], q_[fR], 1e-3, 9.81);
-				f1_[e] = F.F1;
-				f2_[e] = F.F2;
-				s0L_[e] = F.S0L;
-				s0R_[e] = F.S0R;
-			},
-			[&] (CMap2::Edge e) { return !map2->is_incident_to_boundary(e); }
-		);
-
-		f1_[boundaryR_] = f1_[CMap2::Edge(map2->phi1(map2->phi1(boundaryR_.dart)))];
-		f2_[boundaryR_] = f2_[CMap2::Edge(map2->phi1(map2->phi1(boundaryR_.dart)))];
-		s0L_[boundaryR_] = 0.;
-		s0R_[boundaryR_] = 0.;
-
-		map2->parallel_foreach_cell(
-			[&] (CMap2::Face f, uint32)
-			{
-				CMap2::Edge eL, eR;
-				CMap2::Edge e(f.dart);
-				if (map2->is_incident_to_boundary(e))
-				{
-					if (map2->same_cell(e, boundaryL_))
-					{
-						eL = e;
-						eR = CMap2::Edge(map2->phi1(map2->phi1(eL.dart)));
-					}
-					else if (map2->same_cell(e, boundaryR_))
-					{
-						eR = e;
-						eL = CMap2::Edge(map2->phi1(map2->phi1(eR.dart)));
-					}
-					else
-					{
-						if (position_[CMap2::Vertex(f.dart)][0] < position_[CMap2::Vertex(map2->phi1(f.dart))][0])
-						{
-							eL = CMap2::Edge(map2->phi_1(f.dart));
-							eR = CMap2::Edge(map2->phi1(f.dart));
-						}
-						else
-						{
-							eL = CMap2::Edge(map2->phi1(f.dart));
-							eR = CMap2::Edge(map2->phi_1(f.dart));
-						}
-					}
-				}
-				else
-				{
-					if (position_[CMap2::Vertex(f.dart)][0] < position_[CMap2::Vertex(map2->phi_1(f.dart))][0])
-					{
-						eL = CMap2::Edge(f.dart);
-						eR = CMap2::Edge(map2->phi1(map2->phi1(f.dart)));
-					}
-					else
-					{
-						eL = CMap2::Edge(map2->phi1(map2->phi1(f.dart)));
-						eR = CMap2::Edge(f.dart);
-					}
-				}
-
-				h_tmp_[f] = h_[f] + (dt / (length_[f] * phi_[f])) * (f1_[eL] - f1_[eR]);
-				q_tmp_[f] = q_[f] + (dt / (length_[f] * phi_[f])) * (f2_[eL] - s0L_[eL] - (f2_[eR] - s0R_[eR]));
-			}
-		);
-
-		map2->swap_attributes(h_, h_tmp_);
-		map2->swap_attributes(q_, q_tmp_);
-
-		t += dt;
-
-		map2->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Edge e, uint32)
 		{
-			SCALAR h = 0;
-			uint32 nbf = 0;
-			map2->foreach_incident_face(v, [&] (CMap2::Face f) { h += h_[f]; ++nbf; });
-			h /= nbf;
-			water_height_[v] = h;
-		});
+			std::pair<CMap2::Face, CMap2::Face> faces = get_LR_faces(e);
+			CMap2::Face fL = faces.first;
+			CMap2::Face fR = faces.second;
+			struct Flux F = Solv_HLL(0., 0., phi_[fL], phi_[fR], h_[fL], h_[fR], q_[fL], q_[fR], 1e-3, 9.81);
+			f1_[e] = F.F1;
+			f2_[e] = F.F2;
+			s0L_[e] = F.S0L;
+			s0R_[e] = F.S0R;
+		},
+		[&] (CMap2::Edge e) { return !map2_->is_incident_to_boundary(e); }
+	);
 
-		map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_height");
+	f1_[boundaryR_] = f1_[CMap2::Edge(map2_->phi1(map2_->phi1(boundaryR_.dart)))];
+	f2_[boundaryR_] = f2_[CMap2::Edge(map2_->phi1(map2_->phi1(boundaryR_.dart)))];
+	s0L_[boundaryR_] = s0L_[CMap2::Edge(map2_->phi1(map2_->phi1(boundaryR_.dart)))];
+	s0R_[boundaryR_] = s0R_[CMap2::Edge(map2_->phi1(map2_->phi1(boundaryR_.dart)))];
 
-		for (View* v : this->get_linked_views())
-			v->update();
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Face f, uint32)
+		{
+			std::pair<CMap2::Edge, CMap2::Edge> edges = get_LR_edges(f);
+			CMap2::Edge eL = edges.first;
+			CMap2::Edge eR = edges.second;
+			h_tmp_[f] = h_[f] + (dt_ / (length_[f] * phi_[f])) * (f1_[eL] - f1_[eR]);
+			q_tmp_[f] = q_[f] + (dt_ / (length_[f] * phi_[f])) * (f2_[eL] - s0L_[eL] - (f2_[eR] - s0R_[eR]));
+		}
+	);
+
+	map2_->swap_attributes(h_, h_tmp_);
+	map2_->swap_attributes(q_, q_tmp_);
+
+	map2_->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
+	{
+		SCALAR h = 0;
+		uint32 nbf = 0;
+		map2_->foreach_incident_face(v, [&] (CMap2::Face f) { h += h_[f]; ++nbf; });
+		h /= nbf;
+		water_height_[v] = h;
+		water_position_[v][2] = h;
+	});
+
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_height");
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
+
+	t_ += dt_;
+	if (t_ > 30.)
+		timer_->stop();
+}
+
+std::pair<CMap2::Edge, CMap2::Edge> Plugin_ShallowWater::get_LR_edges(CMap2::Face f)
+{
+	CMap2::Edge eL, eR;
+	CMap2::Edge e(f.dart);
+	if (map2_->is_incident_to_boundary(e))
+	{
+		if (map2_->same_cell(e, boundaryL_))
+		{
+			eL = e;
+			eR = CMap2::Edge(map2_->phi1(map2_->phi1(eL.dart)));
+		}
+		else if (map2_->same_cell(e, boundaryR_))
+		{
+			eR = e;
+			eL = CMap2::Edge(map2_->phi1(map2_->phi1(eR.dart)));
+		}
+		else
+		{
+			if (position_[CMap2::Vertex(f.dart)][0] < position_[CMap2::Vertex(map2_->phi1(f.dart))][0])
+			{
+				eL = CMap2::Edge(map2_->phi_1(f.dart));
+				eR = CMap2::Edge(map2_->phi1(f.dart));
+			}
+			else
+			{
+				eL = CMap2::Edge(map2_->phi1(f.dart));
+				eR = CMap2::Edge(map2_->phi_1(f.dart));
+			}
+		}
 	}
+	else
+	{
+		if (position_[CMap2::Vertex(f.dart)][0] < position_[CMap2::Vertex(map2_->phi_1(f.dart))][0])
+		{
+			eL = CMap2::Edge(f.dart);
+			eR = CMap2::Edge(map2_->phi1(map2_->phi1(f.dart)));
+		}
+		else
+		{
+			eL = CMap2::Edge(map2_->phi1(map2_->phi1(f.dart)));
+			eR = CMap2::Edge(f.dart);
+		}
+	}
+
+	return std::make_pair(eL, eR);
+}
+
+std::pair<CMap2::Face, CMap2::Face> Plugin_ShallowWater::get_LR_faces(CMap2::Edge e)
+{
+	CMap2::Face fL, fR;
+	if (position_[CMap2::Vertex(e.dart)][0] < position_[CMap2::Vertex(map2_->phi_1(e.dart))][0])
+	{
+		fL = CMap2::Face(map2_->phi2(e.dart));
+		fR = CMap2::Face(e.dart);
+	}
+	else
+	{
+		fL = CMap2::Face(e.dart);
+		fR = CMap2::Face(map2_->phi2(e.dart));
+	}
+
+	return std::make_pair(fL, fR);
 }
 
 void Plugin_ShallowWater::update_dock_tab()
