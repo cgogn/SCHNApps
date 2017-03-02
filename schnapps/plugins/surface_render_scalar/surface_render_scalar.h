@@ -73,7 +73,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 		scalar_vbo_ = v;
 		if (scalar_vbo_ && scalar_vbo_->vector_dimension() == 1)
 		{
-			const MapHandler<CMap2>::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, MapHandler<CMap2>::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
+			const CMap2::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, CMap2::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
 			if (!attr.is_valid())
 			{
 				cgogn_log_warning("plugin_surface_render_scalar|MapParameters::set_scalar_vbo") << "The attribute \"" << scalar_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(SCALAR()) << ".";
@@ -139,7 +139,7 @@ private:
 		set_scalar_vbo(scalar_vbo_);
 	}
 
-	MapHandler<CMap2>* map_;
+	CMap2Handler* map_;
 
 	std::unique_ptr<cgogn::rendering::ShaderScalarPerVertex::Param> shader_scalar_per_vertex_param_;
 
@@ -200,6 +200,8 @@ private slots:
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
+	void linked_map_attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
+
 	void viewer_initialized();
 
 	void update_dock_tab();

@@ -157,7 +157,7 @@ void ComputeCurvature_Dialog::selected_map_changed()
 
 		const QString& map_name = currentItems[0]->text();
 		MapHandlerGen* mhg = schnapps_->get_map(map_name);
-		selected_map_ = dynamic_cast<MapHandler<CMap2>*>(mhg);
+		selected_map_ = dynamic_cast<CMap2Handler*>(mhg);
 
 		if (selected_map_)
 		{

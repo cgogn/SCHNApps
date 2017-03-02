@@ -39,7 +39,7 @@ MapParameters& Plugin_SurfaceRenderVector::get_parameters(View* view, MapHandler
 	if (view_param_set.count(map) == 0)
 	{
 		MapParameters& p = view_param_set[map];
-		p.map_ = static_cast<MapHandler<CMap2>*>(map);
+		p.map_ = static_cast<CMap2Handler*>(map);
 		return p;
 	}
 	else

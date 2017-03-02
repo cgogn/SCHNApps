@@ -34,9 +34,8 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map)
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, CMap3Handler* output_volume_map)
 {
-
 	using Kernel		= CGAL::Exact_predicates_inexact_constructions_kernel;
 	using Polyhedron	= CGAL::Polyhedron_3<Kernel>;
 	using Domain		= CGAL::Polyhedral_mesh_domain_3<Polyhedron, Kernel>;
@@ -65,7 +64,7 @@ SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, Map
 	}
 }
 
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map)
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, CMap3Handler* output_volume_map)
 {
 	using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
 #if CGAL_VERSION_NR >= CGAL_VERSION_NUMBER(4,8,0)
@@ -113,4 +112,5 @@ SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, con
 }
 
 } // namespace plugin_meshgen
+
 } // namespace schnapps

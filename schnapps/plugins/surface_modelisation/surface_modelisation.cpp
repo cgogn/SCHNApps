@@ -89,7 +89,7 @@ void Plugin_SurfaceModelisation::decimate(
 	const QString& position_attribute_name,
 	double percentVerticesToRemove)
 {
-	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
 	if (!mh)
 		return;
 
@@ -110,7 +110,7 @@ void Plugin_SurfaceModelisation::subdivide_loop(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
 	if (!mh)
 		return;
 
@@ -130,7 +130,7 @@ void Plugin_SurfaceModelisation::subdivide_catmull_clark(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
 	if (!mh)
 		return;
 

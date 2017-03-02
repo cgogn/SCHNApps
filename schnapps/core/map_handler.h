@@ -54,7 +54,9 @@ class SCHNAPPS_CORE_API MapHandlerGen : public QObject
 	friend class View;
 
 public:
+
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
 	template<typename T>
 	using ChunkArrayContainer = MapBaseData::ChunkArrayContainer<T>;
 	using ChunkArrayGen = cgogn::MapBaseData::ChunkArrayGen;

@@ -52,7 +52,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceDifferentialProperties* plugin_;
 
-	MapHandler<CMap2>* selected_map_;
+	CMap2Handler* selected_map_;
 
 	QVariant setting_auto_load_position_attribute_;
 	QVariant setting_auto_load_normal_attribute_;

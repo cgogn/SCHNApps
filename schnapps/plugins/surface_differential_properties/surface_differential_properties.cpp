@@ -135,7 +135,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	bool create_vbo,
 	bool auto_update)
 {
-	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
 	if (!mh)
 		return;
 
@@ -176,7 +176,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 	bool compute_kgaussian,
 	bool auto_update)
 {
-	MapHandler<CMap2>* mh = dynamic_cast<MapHandler<CMap2>*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
 	if (!mh)
 		return;
 

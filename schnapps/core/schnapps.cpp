@@ -340,11 +340,11 @@ MapHandlerGen* SCHNApps::add_map(const QString &name, unsigned int dimension)
 	switch(dimension)
 	{
 		case 2 : {
-			maps_.insert(std::make_pair(final_name, cgogn::make_unique<MapHandler<CMap2>>(final_name, this)));
+			maps_.insert(std::make_pair(final_name, cgogn::make_unique<CMap2Handler>(final_name, this)));
 			break;
 		}
 		case 3 : {
-			maps_.insert(std::make_pair(final_name, cgogn::make_unique<MapHandler<CMap3>>(final_name, this)));
+			maps_.insert(std::make_pair(final_name, cgogn::make_unique<CMap3Handler>(final_name, this)));
 			break;
 		}
 	}

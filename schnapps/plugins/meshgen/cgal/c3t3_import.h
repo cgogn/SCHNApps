@@ -116,11 +116,11 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 }
 
 
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, MapHandler<CMap2>* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, MapHandler<CMap3>* output_volume_map);
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, MapHandler<CMap3>* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, CMap3Handler* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, CMap3Handler* output_volume_map);
 
 template<typename Domain_>
-void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, MapHandler<CMap3>* output_volume_map)
+void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, CMap3Handler* output_volume_map)
 {
 	using namespace CGAL::parameters;
 	using Triangulation_ = typename CGAL::Mesh_triangulation_3<Domain_>::type;
@@ -169,6 +169,7 @@ void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criter
 }
 
 } // namespace plugin_meshgen
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_MESHGEN_C3T3_IMPORT_H

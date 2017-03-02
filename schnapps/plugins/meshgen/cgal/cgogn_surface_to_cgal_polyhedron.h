@@ -37,24 +37,29 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-class SCHNAPPS_PLUGIN_MESHGEN_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS> {
+class SCHNAPPS_PLUGIN_MESHGEN_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS>
+{
 public:
+
 	using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
 	using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
 	using HalfedgeDS = Polyhedron::HalfedgeDS;
 	using Vertex = HalfedgeDS::Vertex;
 	using Point = Vertex::Point ;
 
-	PolyhedronBuilder(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
-	void operator()( HalfedgeDS& hds);
+	PolyhedronBuilder(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
+	void operator()(HalfedgeDS& hds);
+
 private:
-	MapHandler<CMap2>* map_;
+
+	CMap2Handler* map_;
 	const CMap2::VertexAttribute<VEC3> position_attribute_;
 };
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 
 } // namespace plugin_meshgen
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H

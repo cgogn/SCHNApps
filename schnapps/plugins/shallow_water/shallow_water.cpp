@@ -46,7 +46,7 @@ bool Plugin_ShallowWater::enable()
 
 	const unsigned int nbc = 200u;
 
-	map_ = static_cast<MapHandler<CMap2>*>(schnapps_->add_map("shallow_water", 2));
+	map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water", 2));
 	map2_ = static_cast<CMap2*>(map_->get_map());
 
 	position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
@@ -68,7 +68,7 @@ bool Plugin_ShallowWater::enable()
 	s0R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s0R");
 
 	cgogn::modeling::SquareGrid<CMap2> grid(*map2_, nbc, 1);
-	grid.embed_into_grid(position_, float(nbc), 5.0f, 0.0f);
+	grid.embed_into_grid(position_, float(nbc), 25.0f, 0.0f);
 
 	map2_->copy_attribute(water_position_, position_);
 
@@ -164,7 +164,8 @@ void Plugin_ShallowWater::start()
 {
 	t_ = 0.;
 	dt_ = 0.05;
-	timer_->start(0);
+	if (!timer_->isActive())
+		timer_->start(0);
 }
 
 void Plugin_ShallowWater::execute_time_step()

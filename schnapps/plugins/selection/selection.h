@@ -100,9 +100,9 @@ public:
 	void set_position_attribute(const QString& attribute_name)
 	{
 		if (map_->dimension() == 2)
-			position_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name));
+			position_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name));
 		else
-			position_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap3>::Vertex::ORBIT>(attribute_name));
+			position_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, CMap3Handler::Vertex::ORBIT>(attribute_name));
 	}
 
 	const MapHandlerGen::Attribute_T<VEC3>& get_normal_attribute() const { return *normal_; }
@@ -110,9 +110,9 @@ public:
 	void set_normal_attribute(const QString& attribute_name)
 	{
 		if (map_->dimension() == 2)
-			normal_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name));
+			normal_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name));
 		else
-			normal_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap3>::Vertex::ORBIT>(attribute_name));
+			normal_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, CMap3Handler::Vertex::ORBIT>(attribute_name));
 	}
 
 	const QColor& get_color() const { return color_; }

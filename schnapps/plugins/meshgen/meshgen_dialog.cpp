@@ -140,13 +140,13 @@ void VolumeMeshFromSurfaceDialog::generator_changed(const QString& generator)
 
 void VolumeMeshFromSurfaceDialog::map_added(MapHandlerGen* mhg)
 {
-	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
+	if (mhg && dynamic_cast<CMap2Handler*>(mhg))
 		export_dialog_->comboBoxMapSelection->addItem(mhg->get_name());
 }
 
 void VolumeMeshFromSurfaceDialog::map_removed(MapHandlerGen* mhg)
 {
-	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
+	if (mhg && dynamic_cast<CMap2Handler*>(mhg))
 		export_dialog_->comboBoxMapSelection->removeItem(export_dialog_->comboBoxMapSelection->findText(mhg->get_name()));
 }
 
@@ -170,7 +170,7 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 	MapHandlerGen* mhg = schnapps_->get_map(map_name);
 	QSignalBlocker blocker(export_dialog_->comboBox_generator);
 	export_dialog_->comboBox_generator->clear();
-	if (mhg && dynamic_cast<MapHandler<CMap2>*>(mhg))
+	if (mhg && dynamic_cast<CMap2Handler*>(mhg))
 	{
 		QStringList list;
 		list << "-select-" << "cgal" << "netgen" << "tetgen";

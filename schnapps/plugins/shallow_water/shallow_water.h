@@ -106,7 +106,7 @@ private:
 	SCALAR dt_;
 	QTimer* timer_;
 
-	MapHandler<CMap2>* map_;
+	CMap2Handler* map_;
 	CMap2* map2_;
 	CMap2::Edge boundaryL_, boundaryR_;
 

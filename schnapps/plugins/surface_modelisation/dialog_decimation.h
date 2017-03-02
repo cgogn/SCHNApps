@@ -52,7 +52,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceModelisation* plugin_;
 
-	MapHandler<CMap2>* selected_map_;
+	CMap2Handler* selected_map_;
 
 	QVariant setting_auto_load_position_attribute_;
 

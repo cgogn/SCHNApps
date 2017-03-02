@@ -74,7 +74,7 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 2);
 		if (mhg)
 		{
-			MapHandler<CMap2>* mh = static_cast<MapHandler<CMap2>*>(mhg);
+			CMap2Handler* mh = static_cast<CMap2Handler*>(mhg);
 			CMap2* map = mh->get_map();
 
 			cgogn::io::import_surface<VEC3>(*map, filename.toStdString());
@@ -121,7 +121,7 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 3);
 		if (mhg)
 		{
-			MapHandler<CMap3>* mh = static_cast<MapHandler<CMap3>*>(mhg);
+			CMap3Handler* mh = static_cast<CMap3Handler*>(mhg);
 			CMap3* map = mh->get_map();
 
 			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
