@@ -40,39 +40,46 @@ ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s, Plugin_SurfaceDiff
 {
 	setupUi(this);
 
-	setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute");
-	if (!setting_auto_load_position_attribute_.isValid())
-		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position");
+	if (plugin_->get_setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute").toString();
+	else
+		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
 
-	setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute");
-	if (!setting_auto_load_normal_attribute_.isValid())
-		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal");
+	if (plugin_->get_setting("Auto load normal attribute").isValid())
+		setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute").toString();
+	else
+		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal").toString();
 
-	setting_auto_load_Kmax_attribute_ = plugin_->get_setting("Auto load Kmax attribute");
-	if (!setting_auto_load_Kmax_attribute_.isValid())
-		setting_auto_load_Kmax_attribute_ = plugin_->add_setting("Auto load Kmax attribute", "Kmax");
+	if (plugin_->get_setting("Auto load Kmax attribute").isValid())
+		setting_auto_load_Kmax_attribute_ = plugin_->get_setting("Auto load Kmax attribute").toString();
+	else
+		setting_auto_load_Kmax_attribute_ = plugin_->add_setting("Auto load Kmax attribute", "Kmax").toString();
 
-	setting_auto_load_kmax_attribute_ = plugin_->get_setting("Auto load kmax attribute");
-	if (!setting_auto_load_kmax_attribute_.isValid())
-		setting_auto_load_kmax_attribute_ = plugin_->add_setting("Auto load kmax attribute", "kmax");
+	if (plugin_->get_setting("Auto load kmax attribute").isValid())
+		setting_auto_load_kmax_attribute_ = plugin_->get_setting("Auto load kmax attribute").toString();
+	else
+		setting_auto_load_kmax_attribute_ = plugin_->add_setting("Auto load kmax attribute", "kmax").toString();
 
-	setting_auto_load_Kmin_attribute_ = plugin_->get_setting("Auto load Kmin attribute");
-	if (!setting_auto_load_Kmin_attribute_.isValid())
-		setting_auto_load_Kmin_attribute_ = plugin_->add_setting("Auto load Kmin attribute", "Kmin");
+	if (plugin_->get_setting("Auto load Kmin attribute").isValid())
+		setting_auto_load_Kmin_attribute_ = plugin_->get_setting("Auto load Kmin attribute").toString();
+	else
+		setting_auto_load_Kmin_attribute_ = plugin_->add_setting("Auto load Kmin attribute", "Kmin").toString();
 
-	setting_auto_load_kmin_attribute_ = plugin_->get_setting("Auto load kmin attribute");
-	if (!setting_auto_load_kmin_attribute_.isValid())
-		setting_auto_load_kmin_attribute_ = plugin_->add_setting("Auto load kmin attribute", "kmin");
+	if (plugin_->get_setting("Auto load kmin attribute").isValid())
+		setting_auto_load_kmin_attribute_ = plugin_->get_setting("Auto load kmin attribute").toString();
+	else
+		setting_auto_load_kmin_attribute_ = plugin_->add_setting("Auto load kmin attribute", "kmin").toString();
 
-	setting_auto_load_Knormal_attribute_ = plugin_->get_setting("Auto load Knormal attribute");
-	if (!setting_auto_load_Knormal_attribute_.isValid())
-		setting_auto_load_Knormal_attribute_ = plugin_->add_setting("Auto load Knormal attribute", "Knormal");
+	if (plugin_->get_setting("Auto load Knormal attribute").isValid())
+		setting_auto_load_Knormal_attribute_ = plugin_->get_setting("Auto load Knormal attribute").toString();
+	else
+		setting_auto_load_Knormal_attribute_ = plugin_->add_setting("Auto load Knormal attribute", "Knormal").toString();
 
-	Kmax_attribute_name->setText(setting_auto_load_Kmax_attribute_.toString());
-	kmax_attribute_name->setText(setting_auto_load_kmax_attribute_.toString());
-	Kmin_attribute_name->setText(setting_auto_load_Kmin_attribute_.toString());
-	kmin_attribute_name->setText(setting_auto_load_kmin_attribute_.toString());
-	Knormal_attribute_name->setText(setting_auto_load_Knormal_attribute_.toString());
+	Kmax_attribute_name->setText(setting_auto_load_Kmax_attribute_);
+	kmax_attribute_name->setText(setting_auto_load_kmax_attribute_);
+	Kmin_attribute_name->setText(setting_auto_load_Kmin_attribute_);
+	kmin_attribute_name->setText(setting_auto_load_kmin_attribute_);
+	Knormal_attribute_name->setText(setting_auto_load_Knormal_attribute_);
 
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
@@ -178,28 +185,28 @@ void ComputeCurvature_Dialog::selected_map_changed()
 					if (type == vec3_type_name)
 					{
 						combo_positionAttribute->addItem(name);
-						if (name == setting_auto_load_position_attribute_.toString())
+						if (name == setting_auto_load_position_attribute_)
 							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
 						combo_normalAttribute->addItem(name);
-						if (name == setting_auto_load_normal_attribute_.toString())
+						if (name == setting_auto_load_normal_attribute_)
 							combo_normalAttribute->setCurrentIndex(combo_normalAttribute->count() - 1);
 						combo_KmaxAttribute->addItem(name);
-						if (name == setting_auto_load_Kmax_attribute_.toString())
+						if (name == setting_auto_load_Kmax_attribute_)
 							combo_KmaxAttribute->setCurrentIndex(combo_KmaxAttribute->count() - 1);
 						combo_KminAttribute->addItem(name);
-						if (name == setting_auto_load_Kmin_attribute_.toString())
+						if (name == setting_auto_load_Kmin_attribute_)
 							combo_KminAttribute->setCurrentIndex(combo_KminAttribute->count() - 1);
 						combo_KnormalAttribute->addItem(name);
-						if (name == setting_auto_load_Knormal_attribute_.toString())
+						if (name == setting_auto_load_Knormal_attribute_)
 							combo_KnormalAttribute->setCurrentIndex(combo_KnormalAttribute->count() - 1);
 					}
 					else if (type == scalar_type_name)
 					{
 						combo_kmaxAttribute->addItem(name);
-						if (name == setting_auto_load_kmax_attribute_.toString())
+						if (name == setting_auto_load_kmax_attribute_)
 							combo_kmaxAttribute->setCurrentIndex(combo_kmaxAttribute->count() - 1);
 						combo_kminAttribute->addItem(name);
-						if (name == setting_auto_load_kmin_attribute_.toString())
+						if (name == setting_auto_load_kmin_attribute_)
 							combo_kminAttribute->setCurrentIndex(combo_kminAttribute->count() - 1);
 					}
 				}

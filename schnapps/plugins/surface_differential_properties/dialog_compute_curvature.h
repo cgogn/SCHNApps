@@ -54,13 +54,13 @@ private:
 
 	CMap2Handler* selected_map_;
 
-	QVariant setting_auto_load_position_attribute_;
-	QVariant setting_auto_load_normal_attribute_;
-	QVariant setting_auto_load_Kmax_attribute_;
-	QVariant setting_auto_load_kmax_attribute_;
-	QVariant setting_auto_load_Kmin_attribute_;
-	QVariant setting_auto_load_kmin_attribute_;
-	QVariant setting_auto_load_Knormal_attribute_;
+	QString setting_auto_load_position_attribute_;
+	QString setting_auto_load_normal_attribute_;
+	QString setting_auto_load_Kmax_attribute_;
+	QString setting_auto_load_kmax_attribute_;
+	QString setting_auto_load_Kmin_attribute_;
+	QString setting_auto_load_kmin_attribute_;
+	QString setting_auto_load_Knormal_attribute_;
 
 private slots:
 

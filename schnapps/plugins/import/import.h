@@ -86,8 +86,8 @@ public slots:
 
 private:
 
-	QVariant setting_bbox_name_;
-	QVariant setting_vbo_names_;
+	QString setting_bbox_name_;
+	QStringList setting_vbo_names_;
 
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
