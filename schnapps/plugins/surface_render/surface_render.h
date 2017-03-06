@@ -390,10 +390,10 @@ private:
 	SurfaceRender_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 
-	QVariant setting_auto_enable_on_selected_view_;
-	QVariant setting_auto_load_position_attribute_;
-	QVariant setting_auto_load_normal_attribute_;
-	QVariant setting_auto_load_color_attribute_;
+	bool setting_auto_enable_on_selected_view_;
+	QString setting_auto_load_position_attribute_;
+	QString setting_auto_load_normal_attribute_;
+	QString setting_auto_load_color_attribute_;
 };
 
 } // namespace plugin_surface_render

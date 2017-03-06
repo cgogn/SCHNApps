@@ -41,9 +41,10 @@ Decimation_Dialog::Decimation_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p)
 {
 	setupUi(this);
 
-	setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute");
-	if (!setting_auto_load_position_attribute_.isValid())
-		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position");
+	if (plugin_->get_setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute").toString();
+	else
+		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
 
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
@@ -100,7 +101,7 @@ void Decimation_Dialog::selected_map_changed()
 					if (type == vec3_type_name)
 					{
 						combo_positionAttribute->addItem(name);
-						if (name == setting_auto_load_position_attribute_.toString())
+						if (name == setting_auto_load_position_attribute_)
 							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
 					}
 				}

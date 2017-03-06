@@ -41,15 +41,17 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferenti
 {
 	setupUi(this);
 
-	setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute");
-	if (!setting_auto_load_position_attribute_.isValid())
-		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position");
+	if (plugin_->get_setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute").toString();
+	else
+		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
 
-	setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute");
-	if (!setting_auto_load_normal_attribute_.isValid())
-		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal");
+	if (plugin_->get_setting("Auto load normal attribute").isValid())
+		setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute").toString();
+	else
+		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal").toString();
 
-	normal_attribute_name->setText(setting_auto_load_normal_attribute_.toString());
+	normal_attribute_name->setText(setting_auto_load_normal_attribute_);
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
@@ -116,10 +118,10 @@ void ComputeNormal_Dialog::selected_map_changed()
 					if (type == vec3_type_name)
 					{
 						combo_positionAttribute->addItem(name);
-						if (name == setting_auto_load_position_attribute_.toString())
+						if (name == setting_auto_load_position_attribute_)
 							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
 						combo_normalAttribute->addItem(name);
-						if (name == setting_auto_load_normal_attribute_.toString())
+						if (name == setting_auto_load_normal_attribute_)
 							combo_normalAttribute->setCurrentIndex(combo_normalAttribute->count() - 1);
 					}
 				}
