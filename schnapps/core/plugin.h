@@ -68,7 +68,8 @@ public slots:
 	inline SCHNApps* get_schnapps() const { return schnapps_; }
 
 	const QVariant get_setting(const QString& name) const;
-	QVariant* add_setting(const QString& name, const QVariant& default_value);
+
+	QVariant add_setting(const QString& name, const QVariant& default_value);
 
 private:
 

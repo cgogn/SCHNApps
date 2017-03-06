@@ -21,81 +21,53 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
 
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/import/dll.h>
-#include <QAction>
+#include "dll.h"
+#include <ui_dialog_subdivision.h>
+
+#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-class MapHandlerGen; // forward declaration of class
+class SCHNApps;
 
-namespace plugin_import
+namespace plugin_surface_modelisation
 {
 
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
+class Plugin_SurfaceModelisation;
+
+class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Subdivision_Dialog : public QDialog, public Ui::Subdivision_Dialog
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
 
 public:
 
-	inline Plugin_Import() {}
-	~Plugin_Import() override {}
+	Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	SCHNApps* schnapps_;
+	Plugin_SurfaceModelisation* plugin_;
 
-public slots:
+	CMap2Handler* selected_map_;
 
-	/**
-		* @brief import a surface mesh from a file
-		* @param filename file name of mesh file
-		* @return a new MapHandlerGen that handles the mesh
-		*/
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
+	QString setting_auto_load_position_attribute_;
 
-	/**
-		* @brief import a surface mesh by opening a FileDialog
-		*/
-	void import_surface_mesh_from_file_dialog();
+private slots:
 
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh from a file
-	//	 * @param filename file name of mesh file
-	//	 * @return a new MapHandlerGen that handles the mesh
-	//	 */
-	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-	//	 */
-	//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
-
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-	//	QAction* import_2D_image_action_;
+	void subdivide_loop();
+	void subdivide_catmull_clark();
+	void selected_map_changed();
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 };
 
-} // namespace plugin_import
+} // namespace plugin_surface_modelisation
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_

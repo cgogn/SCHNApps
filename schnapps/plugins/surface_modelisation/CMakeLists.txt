@@ -1,23 +1,23 @@
-project(plugin_surface_differential_properties
+project(plugin_surface_modelisation
 	LANGUAGES CXX
 )
 
 find_package(cgogn_core REQUIRED)
-find_package(cgogn_geometry REQUIRED)
+find_package(cgogn_modeling REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
 	dll.h
-	surface_differential_properties.h
-	dialog_compute_normal.h
-	dialog_compute_curvature.h
+	surface_modelisation.h
+	dialog_decimation.h
+	dialog_subdivision.h
 )
 
 set(SOURCE_FILES
-	surface_differential_properties.cpp
-	dialog_compute_normal.cpp
-	dialog_compute_curvature.cpp
+	surface_modelisation.cpp
+	dialog_decimation.cpp
+	dialog_subdivision.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
@@ -26,7 +26,7 @@ set(CMAKE_AUTOUIC ON)
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SDP_DLL_EXPORT")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SURFACE_MODELISATION_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${QOGLViewer_INCLUDE_DIRS}
@@ -39,7 +39,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
-	${cgogn_geometry_LIBRARIES}
+	${cgogn_modeling_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
 )

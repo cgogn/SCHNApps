@@ -30,6 +30,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_surface_render
 {
 
@@ -53,10 +54,25 @@ MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* m
 
 bool Plugin_SurfaceRender::enable()
 {
-	setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true);
-	setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position");
-	setting_auto_load_normal_attribute_ = add_setting("Auto load normal attribute", "normal");
-	setting_auto_load_color_attribute_ = add_setting("Auto load color attribute", "color");
+	if (get_setting("Auto enable on selected view").isValid())
+		setting_auto_enable_on_selected_view_ = get_setting("Auto enable on selected view").toBool();
+	else
+		setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true).toBool();
+
+	if (get_setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = get_setting("Auto load position attribute").toString();
+	else
+		setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position").toString();
+
+	if (get_setting("Auto load normal attribute").isValid())
+		setting_auto_load_normal_attribute_ = get_setting("Auto load normal attribute").toString();
+	else
+		setting_auto_load_normal_attribute_ = add_setting("Auto load normal attribute", "normal").toString();
+
+	if (get_setting("Auto load color attribute").isValid())
+		setting_auto_load_color_attribute_ = get_setting("Auto load color attribute").toString();
+	else
+		setting_auto_load_color_attribute_ = add_setting("Auto load color attribute", "color").toString();
 
 	dock_tab_ = new SurfaceRender_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render");
@@ -198,9 +214,9 @@ void Plugin_SurfaceRender::map_linked(MapHandlerGen *map)
 		View* view = schnapps_->get_selected_view();
 		if (view)
 		{
-			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_->toString());
-			set_normal_vbo(view->get_name(), map->get_name(), setting_auto_load_normal_attribute_->toString());
-			set_color_vbo(view->get_name(), map->get_name(), setting_auto_load_color_attribute_->toString());
+			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_);
+			set_normal_vbo(view->get_name(), map->get_name(), setting_auto_load_normal_attribute_);
+			set_color_vbo(view->get_name(), map->get_name(), setting_auto_load_color_attribute_);
 		}
 
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
@@ -236,11 +252,11 @@ void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 			dock_tab_->add_color_vbo(vbo_name);
 			if (view)
 			{
-				if (!get_parameters(view, map).get_position_vbo() && vbo_name == setting_auto_load_position_attribute_->toString())
+				if (!get_parameters(view, map).get_position_vbo() && vbo_name == setting_auto_load_position_attribute_)
 					set_position_vbo(view->get_name(), map->get_name(), vbo_name);
-				if (!get_parameters(view, map).get_normal_vbo() && vbo_name == setting_auto_load_normal_attribute_->toString())
+				if (!get_parameters(view, map).get_normal_vbo() && vbo_name == setting_auto_load_normal_attribute_)
 					set_normal_vbo(view->get_name(), map->get_name(), vbo_name);
-				if (!get_parameters(view, map).get_color_vbo() && vbo_name == setting_auto_load_color_attribute_->toString())
+				if (!get_parameters(view, map).get_color_vbo() && vbo_name == setting_auto_load_color_attribute_)
 					set_color_vbo(view->get_name(), map->get_name(), vbo_name);
 			}
 		}
@@ -309,7 +325,7 @@ void Plugin_SurfaceRender::viewer_initialized()
 
 void Plugin_SurfaceRender::enable_on_selected_view(Plugin* p)
 {
-	if ((this == p) && schnapps_->get_selected_view() && setting_auto_enable_on_selected_view_->toBool())
+	if ((this == p) && schnapps_->get_selected_view() && setting_auto_enable_on_selected_view_)
 		schnapps_->get_selected_view()->link_plugin(this);
 }
 
@@ -488,4 +504,5 @@ void Plugin_SurfaceRender::set_vertex_scale_factor(View* view, MapHandlerGen* ma
 }
 
 } // namespace plugin_surface_render
+
 } // namespace schnapps

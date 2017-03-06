@@ -77,6 +77,7 @@ private:
 };
 
 } // namespace plugin_surface_render_scalar
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_

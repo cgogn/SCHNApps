@@ -30,6 +30,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_surface_render_scalar
 {
 
@@ -231,4 +232,5 @@ void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, cons
 }
 
 } // namespace plugin_surface_render_scalar
+
 } // namespace schnapps

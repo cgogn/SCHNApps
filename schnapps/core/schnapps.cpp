@@ -80,27 +80,25 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	root_splitter_->addWidget(first_view_);
 
 #ifdef WIN32
-	register_plugins_directory(app_path);
+	register_plugins_directory(app_path_);
 #else
-	register_plugins_directory(app_path + QString("/../lib"));
+	register_plugins_directory(app_path_ + QString("/../lib"));
 #endif
-	settings_ = Settings::from_file("settings.json");
+
+	settings_ = Settings::from_file(app_path_ + QString("/../lib/settings.json"));
 	settings_->set_widget(window->settings_widget_.get());
 	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
 		this->register_plugins_directory(plugin_dir_v.toString());
-
 	for (const QVariant& plugin_v : get_core_setting("Load modules").toList())
 		this->enable_plugin(plugin_v.toString());
 }
 
 SCHNApps::~SCHNApps()
 {
-	settings_->to_file("settings.json");
+	settings_->to_file(app_path_ + QString("/../lib/settings.json"));
 	// first safely unload every plugins (this has to be done before the views get deleted)
-	while(!plugins_.empty())
-	{
+	while (!plugins_.empty())
 		this->disable_plugin(plugins_.begin()->first);
-	}
 }
 
 /*********************************************************
@@ -342,11 +340,11 @@ MapHandlerGen* SCHNApps::add_map(const QString &name, unsigned int dimension)
 	switch(dimension)
 	{
 		case 2 : {
-			maps_.insert(std::make_pair(final_name, cgogn::make_unique<MapHandler<CMap2>>(final_name, this)));
+			maps_.insert(std::make_pair(final_name, cgogn::make_unique<CMap2Handler>(final_name, this)));
 			break;
 		}
 		case 3 : {
-			maps_.insert(std::make_pair(final_name, cgogn::make_unique<MapHandler<CMap3>>(final_name, this)));
+			maps_.insert(std::make_pair(final_name, cgogn::make_unique<CMap3Handler>(final_name, this)));
 			break;
 		}
 	}

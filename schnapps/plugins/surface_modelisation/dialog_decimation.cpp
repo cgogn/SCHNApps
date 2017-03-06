@@ -21,9 +21,9 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dialog_compute_normal.h>
+#include <dialog_decimation.h>
 
-#include <surface_differential_properties.h>
+#include <surface_modelisation.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -31,10 +31,10 @@
 namespace schnapps
 {
 
-namespace plugin_sdp
+namespace plugin_surface_modelisation
 {
 
-ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p) :
+Decimation_Dialog::Decimation_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
 	schnapps_(s),
 	plugin_(p),
 	selected_map_(nullptr)
@@ -46,46 +46,30 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferenti
 	else
 		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
 
-	if (plugin_->get_setting("Auto load normal attribute").isValid())
-		setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute").toString();
-	else
-		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal").toString();
-
-	normal_attribute_name->setText(setting_auto_load_normal_attribute_);
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
-	connect(this, SIGNAL(accepted()), this, SLOT(compute_normal()));
-	connect(button_apply, SIGNAL(clicked()), this, SLOT(compute_normal()));
+	connect(this, SIGNAL(accepted()), this, SLOT(decimate()));
+	connect(button_apply, SIGNAL(clicked()), this, SLOT(decimate()));
 
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 }
 
-void ComputeNormal_Dialog::compute_normal()
+void Decimation_Dialog::decimate()
 {
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-
 		QString position_name = combo_positionAttribute->currentText();
-
-		QString normal_name;
-		if (normal_attribute_name->text().isEmpty())
-			normal_name = combo_normalAttribute->currentText();
-		else
-			normal_name = normal_attribute_name->text();
-
-		bool create_vbo = enableVBO->isChecked();
-		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
-
-		plugin_->compute_normal(map_name, position_name, normal_name, create_vbo, auto_update);
+		int v = slider_percentVertices->value();
+		plugin_->decimate(map_name, position_name, (100 - v) / 100.);
 	}
 }
 
-void ComputeNormal_Dialog::selected_map_changed()
+void Decimation_Dialog::selected_map_changed()
 {
 	if (selected_map_)
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
@@ -94,7 +78,6 @@ void ComputeNormal_Dialog::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		combo_positionAttribute->clear();
-		combo_normalAttribute->clear();
 
 		const QString& map_name = currentItems[0]->text();
 		MapHandlerGen* mhg = schnapps_->get_map(map_name);
@@ -120,9 +103,6 @@ void ComputeNormal_Dialog::selected_map_changed()
 						combo_positionAttribute->addItem(name);
 						if (name == setting_auto_load_position_attribute_)
 							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
-						combo_normalAttribute->addItem(name);
-						if (name == setting_auto_load_normal_attribute_)
-							combo_normalAttribute->setCurrentIndex(combo_normalAttribute->count() - 1);
 					}
 				}
 			}
@@ -133,7 +113,7 @@ void ComputeNormal_Dialog::selected_map_changed()
 		selected_map_ = nullptr;
 }
 
-void ComputeNormal_Dialog::map_added(MapHandlerGen* map)
+void Decimation_Dialog::map_added(MapHandlerGen* map)
 {
 	if (map->dimension() == 2)
 	{
@@ -142,7 +122,7 @@ void ComputeNormal_Dialog::map_added(MapHandlerGen* map)
 	}
 }
 
-void ComputeNormal_Dialog::map_removed(MapHandlerGen* map)
+void Decimation_Dialog::map_removed(MapHandlerGen* map)
 {
 	QList<QListWidgetItem*> items = list_maps->findItems(map->get_name(), Qt::MatchExactly);
 	if (!items.empty())
@@ -155,7 +135,7 @@ void ComputeNormal_Dialog::map_removed(MapHandlerGen* map)
 	}
 }
 
-void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
+void Decimation_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
@@ -168,11 +148,10 @@ void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, cons
 		if (attribute_type_name == vec3_type_name)
 		{
 			combo_positionAttribute->addItem(attribute_name);
-			combo_normalAttribute->addItem(attribute_name);
 		}
 	}
 }
 
-} // namespace plugin_sdp
+} // namespace plugin_surface_modelisation
 
 } // namespace schnapps

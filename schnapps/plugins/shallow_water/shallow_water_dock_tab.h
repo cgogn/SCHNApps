@@ -21,81 +21,46 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_DOCK_TAB_H_
 
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/import/dll.h>
-#include <QAction>
+#include "dll.h"
+#include <ui_shallow_water.h>
 
 namespace schnapps
 {
 
-class MapHandlerGen; // forward declaration of class
+class SCHNApps;
+class MapHandlerGen;
 
-namespace plugin_import
+namespace plugin_shallow_water
 {
 
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
+class Plugin_ShallowWater;
+
+class SCHNAPPS_PLUGIN_SHALLOW_WATER_API ShallowWater_DockTab : public QWidget, public Ui::ShallowWater_TabWidget
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+
+	friend class Plugin_ShallowWater;
 
 public:
 
-	inline Plugin_Import() {}
-	~Plugin_Import() override {}
+	ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p);
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	SCHNApps* schnapps_;
+	Plugin_ShallowWater* plugin_;
 
-public slots:
+private slots:
 
-	/**
-		* @brief import a surface mesh from a file
-		* @param filename file name of mesh file
-		* @return a new MapHandlerGen that handles the mesh
-		*/
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-		* @brief import a surface mesh by opening a FileDialog
-		*/
-	void import_surface_mesh_from_file_dialog();
-
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh from a file
-	//	 * @param filename file name of mesh file
-	//	 * @return a new MapHandlerGen that handles the mesh
-	//	 */
-	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-	//	 */
-	//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
-
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-	//	QAction* import_2D_image_action_;
+	void init();
+	void start();
 };
 
-} // namespace plugin_import
+} // namespace plugin_shallow_water
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_DOCK_TAB_H_

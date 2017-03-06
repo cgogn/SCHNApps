@@ -100,9 +100,9 @@ public:
 	void set_position_attribute(const QString& attribute_name)
 	{
 		if (map_->dimension() == 2)
-			position_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name));
+			position_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name));
 		else
-			position_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap3>::Vertex::ORBIT>(attribute_name));
+			position_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, CMap3Handler::Vertex::ORBIT>(attribute_name));
 	}
 
 	const MapHandlerGen::Attribute_T<VEC3>& get_normal_attribute() const { return *normal_; }
@@ -110,9 +110,9 @@ public:
 	void set_normal_attribute(const QString& attribute_name)
 	{
 		if (map_->dimension() == 2)
-			normal_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap2>::Vertex::ORBIT>(attribute_name));
+			normal_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap2Handler*>(map_)->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name));
 		else
-			normal_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, MapHandler<CMap3>::Vertex::ORBIT>(attribute_name));
+			normal_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(dynamic_cast<CMap3Handler*>(map_)->get_attribute<VEC3, CMap3Handler::Vertex::ORBIT>(attribute_name));
 	}
 
 	const QColor& get_color() const { return color_; }
@@ -248,7 +248,9 @@ public slots:
 				view->update();
 		}
 	}
+
 private:
+
 	void initialize_gl()
 	{
 		shader_point_sprite_param_selection_sphere_ = cgogn::rendering::ShaderPointSprite::generate_param();
@@ -281,9 +283,6 @@ private:
 		drawer_selected_volumes_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 		drawer_rend_selected_volumes_ = drawer_selected_volumes_->generate_renderer();
 	}
-
-
-private:
 
 	MapHandlerGen* map_;
 	std::unique_ptr<MapHandlerGen::Attribute_T<VEC3>> position_;
@@ -404,6 +403,7 @@ private:
 };
 
 } // namespace plugin_selection
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SELECTION_H_

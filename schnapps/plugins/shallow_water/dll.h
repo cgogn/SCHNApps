@@ -1,7 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,23 +20,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/core/plugin.h>
-#include <schnapps/core/schnapps.h>
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_H_
 
-namespace schnapps
-{
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_API
+#if defined SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_API
+#endif
 
-const QVariant Plugin::get_setting(const QString& name) const
-{
-	return schnapps_->get_setting(this->get_name(), name);
-}
-
-QVariant Plugin::add_setting(const QString& name, const QVariant& default_value)
-{
-	return schnapps_->add_setting(this->get_name(), name, default_value);
-}
-
-Plugin::~Plugin()
-{}
-
-} // namespace schnapps
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_DLL_H_

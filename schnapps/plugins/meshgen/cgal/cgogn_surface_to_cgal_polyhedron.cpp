@@ -33,7 +33,7 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-PolyhedronBuilder::PolyhedronBuilder(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute) :
+PolyhedronBuilder::PolyhedronBuilder(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute) :
 	map_(mh),
 	position_attribute_(position_attribute)
 {}
@@ -73,7 +73,7 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 	map_->remove_attribute(id_attribute);
 }
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(MapHandler<CMap2>* mh, const CMap2::VertexAttribute<VEC3>& position_attribute)
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute)
 {
 	if (!mh || !position_attribute.is_valid())
 		return nullptr;
@@ -84,4 +84,5 @@ SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3< CGAL::Exact_pred
 }
 
 } // namespace plugin_meshgen
+
 } // namespace schnapps

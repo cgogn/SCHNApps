@@ -30,6 +30,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_selection
 {
 
@@ -419,8 +420,8 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 				VEC3 A(P.x, P.y, P.z);
 				VEC3 B(Q.x, Q.y, Q.z);
 
-				CMap2* map2 = map->dimension() == 2 ? static_cast<MapHandler<CMap2>*>(map)->get_map() : nullptr;
-				CMap3* map3 = map->dimension() == 3 ? static_cast<MapHandler<CMap3>*>(map)->get_map() : nullptr;
+				CMap2* map2 = map->dimension() == 2 ? static_cast<CMap2Handler*>(map)->get_map() : nullptr;
+				CMap3* map3 = map->dimension() == 3 ? static_cast<CMap3Handler*>(map)->get_map() : nullptr;
 
 				switch(p.cells_set_->get_cell_type())
 				{
@@ -820,4 +821,5 @@ void Plugin_Selection::update_dock_tab()
 }
 
 } // namespace plugin_selection
+
 } // namespace schnapps

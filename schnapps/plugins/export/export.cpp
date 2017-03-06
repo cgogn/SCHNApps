@@ -61,12 +61,14 @@ void Plugin_Export::export_mesh()
 	if (mhg)
 	{
 		std::vector<std::pair<cgogn::Orbit, std::string>> other_attributes;
-		if (MapHandler<CMap2>* m2h = dynamic_cast<MapHandler<CMap2>*>(mhg))
+		if (CMap2Handler* m2h = dynamic_cast<CMap2Handler*>(mhg))
 		{
 			CMap2& cmap2 = *m2h->get_map();
 			cgogn::io::export_surface(cmap2, *(this->export_params_));
-		} else {
-			if (MapHandler<CMap3>* m3h = dynamic_cast<MapHandler<CMap3>*>(mhg))
+		}
+		else
+		{
+			if (CMap3Handler* m3h = dynamic_cast<CMap3Handler*>(mhg))
 			{
 				CMap3& cmap3 = *m3h->get_map();
 				cgogn::io::export_volume(cmap3, *(this->export_params_));

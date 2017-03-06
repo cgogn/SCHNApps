@@ -172,7 +172,7 @@ private:
 
 private:
 
-	MapHandler<CMap2>* map_;
+	CMap2Handler* map_;
 
 	std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>> shader_vector_per_vertex_param_list_;
 

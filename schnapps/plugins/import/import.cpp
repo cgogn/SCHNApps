@@ -33,6 +33,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_import
 {
 
@@ -46,8 +47,17 @@ bool Plugin_Import::enable()
 
 	//	import_2D_image_action_ = schnapps_->add_menu_action("Surface;Import 2D Image", "import 2D image");
 	//	connect(import_2D_image_action_, SIGNAL(triggered()), this, SLOT(import_2D_image_from_file_dialog()));
-	setting_bbox_name_ = add_setting("Bounding box attribute", "position");
-	setting_vbo_names_ = add_setting("Compute VBO", QVariantList({"position", "normal", "color"}));
+
+	if (get_setting("Bounding box attribute").isValid())
+		setting_bbox_name_ = get_setting("Bounding box attribute").toString();
+	else
+		setting_bbox_name_ = add_setting("Bounding box attribute", "position").toString();
+
+	if (get_setting("Compute VBO").isValid())
+		setting_vbo_names_ = get_setting("Compute VBO").toStringList();
+	else
+		setting_vbo_names_ = add_setting("Compute VBO", QStringList({"position", "normal", "color"})).toStringList();
+
 	return true;
 }
 
@@ -66,19 +76,16 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 2);
 		if (mhg)
 		{
-			MapHandler<CMap2>* mh = static_cast<MapHandler<CMap2>*>(mhg);
+			CMap2Handler* mh = static_cast<CMap2Handler*>(mhg);
 			CMap2* map = mh->get_map();
 
 			cgogn::io::import_surface<VEC3>(*map, filename.toStdString());
 			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
 			{
-				if (setting_bbox_name_)
-					mh->set_bb_vertex_attribute(setting_bbox_name_->toString());
+				mh->set_bb_vertex_attribute(setting_bbox_name_);
 
-				if (setting_vbo_names_)
-					for (const QVariant& var :setting_vbo_names_->toList())
-						mhg->create_vbo(var.toString());
-
+				for (const QString& vbo_name : setting_vbo_names_)
+					mhg->create_vbo(vbo_name);
 			}
 			//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
 			//			{
@@ -116,14 +123,16 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 3);
 		if (mhg)
 		{
-			MapHandler<CMap3>* mh = static_cast<MapHandler<CMap3>*>(mhg);
+			CMap3Handler* mh = static_cast<CMap3Handler*>(mhg);
 			CMap3* map = mh->get_map();
 
 			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
 			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
 			{
-				mh->set_bb_vertex_attribute("position");
-				mhg->create_vbo("position");
+				mh->set_bb_vertex_attribute(setting_bbox_name_);
+
+				for (const QString& vbo_name : setting_vbo_names_)
+					mhg->create_vbo(vbo_name);
 			}
 
 		}
@@ -145,4 +154,5 @@ void Plugin_Import::import_volume_mesh_from_file_dialog()
 }
 
 } // namespace plugin_import
+
 } // namespace schnapps

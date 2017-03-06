@@ -67,8 +67,8 @@ void Plugin_ExtractSurface::extract_surface_dialog()
 
 void Plugin_ExtractSurface::extract_surface(MapHandlerGen* in_map3, MapHandlerGen* out_map2, const QString& pos_att_name)
 {
-	MapHandler<CMap3>* mh3_in  = dynamic_cast<MapHandler<CMap3>*>(in_map3);
-	MapHandler<CMap2>* mh2_out = dynamic_cast<MapHandler<CMap2>*>(out_map2);
+	CMap3Handler* mh3_in  = dynamic_cast<CMap3Handler*>(in_map3);
+	CMap2Handler* mh2_out = dynamic_cast<CMap2Handler*>(out_map2);
 
 	if (!mh3_in || !mh2_out || pos_att_name.isEmpty())
 		return;

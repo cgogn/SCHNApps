@@ -30,20 +30,21 @@ namespace schnapps
 namespace plugin_empty_plugin
 {
 
-EmptyPlugin::EmptyPlugin()
+Plugin_EmptyPlugin::Plugin_EmptyPlugin()
 {}
 
-EmptyPlugin::~EmptyPlugin()
+Plugin_EmptyPlugin::~Plugin_EmptyPlugin()
 {}
 
-bool EmptyPlugin::enable()
+bool Plugin_EmptyPlugin::enable()
 {
 	return true;
 }
 
-void EmptyPlugin::disable()
+void Plugin_EmptyPlugin::disable()
 {
 }
 
 } // namespace plugin_empty_plugin
+
 } // namespace schnapps

@@ -53,10 +53,6 @@ Selection_DockTab::Selection_DockTab(SCHNApps* s, Plugin_Selection* p) :
 	connect(button_clear, SIGNAL(clicked()), this, SLOT(clear_clicked()));
 }
 
-
-
-
-
 void Selection_DockTab::position_attribute_changed(int index)
 {
 	if (!updating_ui_)

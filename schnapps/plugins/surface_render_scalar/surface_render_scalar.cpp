@@ -31,6 +31,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_surface_render_scalar
 {
 
@@ -42,7 +43,7 @@ MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandler
 	if (view_param_set.count(map) == 0)
 	{
 		MapParameters& p = view_param_set[map];
-		p.map_ = static_cast<MapHandler<CMap2>*>(map);
+		p.map_ = static_cast<CMap2Handler*>(map);
 		return p;
 	}
 	else
@@ -121,6 +122,7 @@ void Plugin_SurfaceRenderScalar::map_linked(MapHandlerGen *map)
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
+		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, QString)), Qt::UniqueConnection);
 	}
 }
 
@@ -133,6 +135,7 @@ void Plugin_SurfaceRenderScalar::map_unlinked(MapHandlerGen *map)
 		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
+		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, QString)));
 	}
 }
 
@@ -178,6 +181,26 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_removed(cgogn::rendering::VBO* v
 void Plugin_SurfaceRenderScalar::linked_map_bb_changed()
 {
 
+}
+
+void Plugin_SurfaceRenderScalar::linked_map_attribute_changed(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+
+		for (auto& it : parameter_set_)
+		{
+			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(map) > 0ul)
+			{
+				MapParameters& p = view_param_set[map];
+				cgogn::rendering::VBO* vbo = p.get_scalar_vbo();
+				if (vbo && QString::fromStdString(vbo->name()) == attribute_name)
+					p.set_scalar_vbo(vbo);
+			}
+		}
+	}
 }
 
 void Plugin_SurfaceRenderScalar::viewer_initialized()
@@ -282,4 +305,5 @@ void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* ma
 }
 
 } // namespace plugin_surface_render_scalar
+
 } // namespace schnapps

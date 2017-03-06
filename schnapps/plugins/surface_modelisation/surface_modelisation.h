@@ -21,25 +21,29 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
 
 #include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/import/dll.h>
+
+#include "dll.h"
+#include <dialog_decimation.h>
+#include <dialog_subdivision.h>
+
 #include <QAction>
 
 namespace schnapps
 {
 
-class MapHandlerGen; // forward declaration of class
+class MapHandlerGen;
 
-namespace plugin_import
+namespace plugin_surface_modelisation
 {
 
 /**
-* @brief Plugin for CGoGN mesh import
-*/
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
+ * @brief Plugin that exposes some surface modelisation algorithms
+ */
+class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Plugin_SurfaceModelisation : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -47,55 +51,59 @@ class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
 
 public:
 
-	inline Plugin_Import() {}
-	~Plugin_Import() override {}
+	Plugin_SurfaceModelisation() {}
+
+	~Plugin_SurfaceModelisation() {}
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	virtual bool enable();
+	virtual void disable();
+
+private slots:
+
+	// slots called from SCHNApps signals
+	void schnapps_closing();
+
+	// slots called from action signals
+	void open_decimation_dialog();
+	void open_subdivision_dialog();
 
 public slots:
 
 	/**
-		* @brief import a surface mesh from a file
-		* @param filename file name of mesh file
-		* @return a new MapHandlerGen that handles the mesh
-		*/
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
+	 * @brief decimate a mesh through edge collapses
+	 * @param map_name name of the 2d map (mesh)
+	 * @param position_attribute_name name of position attribute used for computation
+	 * @param percentVerticesToRemove % of the number of vertices to remove
+	 */
+	void decimate(
+		const QString& map_name,
+		const QString& position_attribute_name,
+		double percentVerticesToRemove
+	);
 
-	/**
-		* @brief import a surface mesh by opening a FileDialog
-		*/
-	void import_surface_mesh_from_file_dialog();
+	void subdivide_loop(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
 
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh from a file
-	//	 * @param filename file name of mesh file
-	//	 * @return a new MapHandlerGen that handles the mesh
-	//	 */
-	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-	//	 */
-	//	void import_2D_image_from_file_dialog();
+	void subdivide_catmull_clark(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
 
 private:
 
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
+	Decimation_Dialog* decimation_dialog_;
+	Subdivision_Dialog* subdivision_dialog_;
 
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-	//	QAction* import_2D_image_action_;
+	QAction* decimation_action_;
+	QAction* subdivision_action_;
 };
 
-} // namespace plugin_import
+} // namespace plugin_surface_modelisation
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_

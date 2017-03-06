@@ -27,15 +27,16 @@
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
 
 #include "dll.h"
+
+#include <QAction>
+#include <map>
+
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
 #include <volume_render_dock_tab.h>
-
-#include <QAction>
-#include <map>
 
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
@@ -46,7 +47,6 @@
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
 #include <cgogn/rendering/transparency_volume_drawer.h>
 #endif // (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-
 
 namespace schnapps
 {
@@ -142,9 +142,9 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		{
 			transparency_factor_ = transparency_factor_ % 255;
 			face_color_.setAlpha(transparency_factor_);
-		} else {
-			face_color_.setAlpha(255);
 		}
+		else
+			face_color_.setAlpha(255);
 		set_face_color(face_color_);
 	}
 
@@ -161,7 +161,9 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 			float32 d = -(position.dot(axis_z));
 			volume_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
 			topo_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
-		} else {
+		}
+		else
+		{
 			volume_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 			topo_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 		}
@@ -178,9 +180,8 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	}
 
 private:
-	void initialize_gl();
 
-private:
+	void initialize_gl();
 
 	MapHandler<CMap3>* map_;
 
@@ -355,12 +356,12 @@ private:
 	VolumeRender_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
 
-	QVariant* setting_auto_enable_on_selected_view_;
-	QVariant* setting_auto_load_position_attribute_;
+	bool setting_auto_enable_on_selected_view_;
+	QString setting_auto_load_position_attribute_;
 };
 
 } // namespace plugin_volume_render
-} // namespace schnapps
 
+} // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
