@@ -10,6 +10,7 @@ find_package(lm6 REQUIRED)
 find_package(ply REQUIRED)
 
 set(HEADER_FILES
+	dll.h
 	import.h
 )
 
@@ -22,6 +23,7 @@ set(CMAKE_AUTOMOC ON)
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMPORT_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${tinyxml2_INCLUDE_DIRS}

@@ -41,6 +41,14 @@ ControlDock_PluginTab::ControlDock_PluginTab(SCHNApps* s) :
 	connect(button_addPluginDirectory, SIGNAL(clicked()), this, SLOT(add_plugin_directory_clicked()));
 	connect(button_enablePlugins, SIGNAL(clicked()), this, SLOT(enable_selected_plugins_clicked()));
 	connect(button_disablePlugins, SIGNAL(clicked()), this, SLOT(disable_selected_plugins_clicked()));
+	connect(list_pluginsAvailable, &QListWidget::doubleClicked, [=](const QModelIndex& )
+	{
+		enable_selected_plugins_clicked();
+	});
+	connect(list_pluginsEnabled, &QListWidget::doubleClicked, [=](const QModelIndex& )
+	{
+		disable_selected_plugins_clicked();
+	});
 
 	// connect SCHNApps signals
 	connect(schnapps_, SIGNAL(plugin_available_added(QString)), this, SLOT(plugin_available_added(QString)));

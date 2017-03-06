@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_PLUGIN_H_
 
 #include <schnapps/core/dll.h>
+#include <schnapps/core/settings.h>
 
 #include <QtPlugin>
 
@@ -41,8 +42,8 @@ class SCHNAPPS_CORE_API Plugin : public QObject
 
 public:
 
-	inline Plugin()	{}
-	virtual inline ~Plugin() {}
+	inline Plugin() {}
+	virtual ~Plugin();
 
 	inline const QString& get_name() const { return name_; }
 
@@ -65,6 +66,10 @@ public slots:
 	 * @return the ptr
 	 */
 	inline SCHNApps* get_schnapps() const { return schnapps_; }
+
+	const QVariant get_setting(const QString& name) const;
+
+	QVariant add_setting(const QString& name, const QVariant& default_value);
 
 private:
 

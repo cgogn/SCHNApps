@@ -31,6 +31,9 @@
 namespace schnapps
 {
 
+namespace plugin_surface_render_scalar
+{
+
 SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p) :
 	schnapps_(s),
 	plugin_(p),
@@ -47,6 +50,7 @@ SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_Sur
 	connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
 	connect(slider_expansion, SIGNAL(valueChanged(int)), this, SLOT(expansion_changed(int)));
 	connect(check_showIsoLines, SIGNAL(toggled(bool)), this, SLOT(show_iso_lines_changed(bool)));
+	connect(slider_nbIsoLevels, SIGNAL(valueChanged(int)), this, SLOT(nb_iso_levels_changed(int)));
 }
 
 void SurfaceRenderScalar_DockTab::position_vbo_changed(int index)
@@ -79,6 +83,10 @@ void SurfaceRenderScalar_DockTab::selected_scalar_vbo_changed(QListWidgetItem* i
 			combo_colorMap->setCurrentIndex(p.get_color_map());
 			slider_expansion->setEnabled(true);
 			slider_expansion->setSliderPosition(p.get_expansion());
+			check_showIsoLines->setEnabled(true);
+			check_showIsoLines->setChecked(p.get_show_iso_lines());
+			slider_nbIsoLevels->setEnabled(true);
+			slider_nbIsoLevels->setSliderPosition(p.get_nb_iso_levels());
 			updating_ui_ = false;
 			view->update();
 		}
@@ -130,18 +138,33 @@ void SurfaceRenderScalar_DockTab::show_iso_lines_changed(bool b)
 	}
 }
 
+void SurfaceRenderScalar_DockTab::nb_iso_levels_changed(int i)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_nb_iso_levels(i);
+			view->update();
+		}
+	}
+}
 
 
 
 
-void SurfaceRenderScalar_DockTab::add_position_vbo(QString name)
+
+void SurfaceRenderScalar_DockTab::add_position_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	combo_positionVBO->addItem(name);
 	updating_ui_ = false;
 }
 
-void SurfaceRenderScalar_DockTab::remove_position_vbo(QString name)
+void SurfaceRenderScalar_DockTab::remove_position_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	int curIndex = combo_positionVBO->currentIndex();
@@ -152,14 +175,14 @@ void SurfaceRenderScalar_DockTab::remove_position_vbo(QString name)
 	updating_ui_ = false;
 }
 
-void SurfaceRenderScalar_DockTab::add_scalar_vbo(QString name)
+void SurfaceRenderScalar_DockTab::add_scalar_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	list_scalarVBO->addItem(name);
 	updating_ui_ = false;
 }
 
-void SurfaceRenderScalar_DockTab::remove_scalar_vbo(QString name)
+void SurfaceRenderScalar_DockTab::remove_scalar_vbo(const QString& name)
 {
 	updating_ui_ = true;
 	QList<QListWidgetItem*> vbo = list_scalarVBO->findItems(name, Qt::MatchExactly);
@@ -202,9 +225,12 @@ void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, cons
 
 	combo_colorMap->setDisabled(true);
 	slider_expansion->setDisabled(true);
-	check_showIsoLines->setChecked(p.get_show_iso_lines());
+	check_showIsoLines->setDisabled(true);
+	slider_nbIsoLevels->setDisabled(true);
 
 	updating_ui_ = false;
 }
+
+} // namespace plugin_surface_render_scalar
 
 } // namespace schnapps

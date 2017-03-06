@@ -30,6 +30,7 @@
 
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/core/utils/assert.h>
+#include <cgogn/core/utils/type_traits.h>
 
 #include <QDockWidget>
 #include <QTabWidget>
@@ -103,6 +104,8 @@ protected:
 
 	QDockWidget* plugin_dock_;
 	QTabWidget* plugin_dock_tab_widget_;
+
+	std::unique_ptr<QWidget> settings_widget_;
 
 	QVBoxLayout* central_layout_;
 };

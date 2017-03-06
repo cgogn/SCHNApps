@@ -25,18 +25,21 @@
 #define SCHNAPPS_PLUGIN_IMPORT_H_
 
 #include <schnapps/core/plugin_processing.h>
-
+#include <schnapps/plugins/import/dll.h>
 #include <QAction>
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+class MapHandlerGen; // forward declaration of class
+
+namespace plugin_import
+{
 
 /**
 * @brief Plugin for CGoGN mesh import
 */
-class Plugin_Import : public PluginProcessing
+class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -45,8 +48,7 @@ class Plugin_Import : public PluginProcessing
 public:
 
 	inline Plugin_Import() {}
-
-	~Plugin_Import() {}
+	~Plugin_Import() override {}
 
 private:
 
@@ -56,34 +58,43 @@ private:
 public slots:
 
 	/**
-	 * @brief import a surface mesh from a file
-	 * @param filename file name of mesh file
-	 * @return a new MapHandlerGen that handles the mesh
-	 */
+		* @brief import a surface mesh from a file
+		* @param filename file name of mesh file
+		* @return a new MapHandlerGen that handles the mesh
+		*/
 	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
 
 	/**
-	 * @brief import a surface mesh by opening a FileDialog
-	 */
+		* @brief import a surface mesh by opening a FileDialog
+		*/
 	void import_surface_mesh_from_file_dialog();
 
-//	/**
-//	 * @brief import a 2D image into a surface mesh from a file
-//	 * @param filename file name of mesh file
-//	 * @return a new MapHandlerGen that handles the mesh
-//	 */
-//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
+	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
+	void import_volume_mesh_from_file_dialog();
 
-//	/**
-//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-//	 */
-//	void import_2D_image_from_file_dialog();
+	//	/**
+	//	 * @brief import a 2D image into a surface mesh from a file
+	//	 * @param filename file name of mesh file
+	//	 * @return a new MapHandlerGen that handles the mesh
+	//	 */
+	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
+
+	//	/**
+	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
+	//	 */
+	//	void import_2D_image_from_file_dialog();
 
 private:
 
+	QString setting_bbox_name_;
+	QStringList setting_vbo_names_;
+
 	QAction* import_surface_mesh_action_;
-//	QAction* import_2D_image_action_;
+	QAction* import_volume_mesh_action_;
+	//	QAction* import_2D_image_action_;
 };
+
+} // namespace plugin_import
 
 } // namespace schnapps
 

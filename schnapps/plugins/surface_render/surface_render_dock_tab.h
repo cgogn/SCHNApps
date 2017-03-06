@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 
+#include "dll.h"
 #include <ui_surface_render.h>
 
 #include <QColorDialog>
@@ -33,11 +34,15 @@ namespace schnapps
 
 class SCHNApps;
 class MapHandlerGen;
+
+namespace plugin_surface_render
+{
+
 class Plugin_SurfaceRender;
 
 struct MapParameters;
 
-class SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_API SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
 	Q_OBJECT
 
@@ -69,7 +74,6 @@ private slots:
 	void color_vbo_changed(int index);
 	void render_vertices_changed(bool b);
 	void vertices_scale_factor_changed(int i);
-	void vertices_scale_factor_pressed();
 	void render_edges_changed(bool b);
 	void render_faces_changed(bool b);
 	void face_style_changed(QAbstractButton* b);
@@ -95,6 +99,7 @@ private:
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
+} // namespace plugin_surface_render
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_

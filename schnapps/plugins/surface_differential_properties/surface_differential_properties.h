@@ -26,6 +26,7 @@
 
 #include <schnapps/core/plugin_processing.h>
 
+#include "dll.h"
 #include <dialog_compute_normal.h>
 #include <dialog_compute_curvature.h>
 
@@ -36,12 +37,15 @@ namespace schnapps
 
 class MapHandlerGen;
 
+namespace plugin_sdp
+{
+
 /**
  * @brief Plugin that manages the computation of differential properties
  * - Normals
  * - Curvatures
  */
-class Plugin_SurfaceDifferentialProperties: public PluginProcessing
+class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -72,10 +76,6 @@ private slots:
 	void open_compute_normal_dialog();
 	void open_compute_curvature_dialog();
 
-	// slots called from dialogs signals
-	void compute_normal_from_dialog();
-	void compute_curvature_from_dialog();
-
 public slots:
 
 	/**
@@ -83,12 +83,14 @@ public slots:
 	 * @param map_name name of the 2d map (mesh)
 	 * @param position_attribute_name name of position attribute used for computation
 	 * @param normal_attribute_name name of result attribute
+	 * @param create_vbo create a vbo for the computed normal attribute
 	 * @param auto_update automatically update the normal attribute when position attribute change.
 	 */
 	void compute_normal(
 		const QString& map_name,
 		const QString& position_attribute_name = "position",
 		const QString& normal_attribute_name = "normal",
+		bool create_vbo = true,
 		bool auto_update = true
 	);
 
@@ -96,12 +98,12 @@ public slots:
 	 * @brief compute curvatures of a mesh
 	 * @param map_name name of 2d map
 	 * @param position_attribute_name name of input position attribute
-	 * @param normal_attribute_name name of input normal attributes
-	 * @param Kmax_attribute_name ?? result attribute name
-	 * @param kmax_attribute_name ?? result attribute name
-	 * @param Kmin_attribute_name ?? result attribute name
-	 * @param kmin_attribute_name ?? result attribute name
-	 * @param Knormal_attribute_name ?? result attribute aname
+	 * @param normal_attribute_name name of input normal attribute
+	 * @param Kmax_attribute_name name of output maximum curvature direction attribute
+	 * @param kmax_attribute_name name of output maximum curvature magnitude attribute
+	 * @param Kmin_attribute_name name of output minimum curvature direction attribute
+	 * @param kmin_attribute_name name of output minimum curvature magnitude attribute
+	 * @param Knormal_attribute_name name of output normal direction attribute
 	 * @param compute_kmean compute the mean curvature
 	 * @param compute_kgaussian compute the gaussian curvature
 	 * @param auto_update automatically update the output attributes when input attribute change.
@@ -166,6 +168,8 @@ private:
 
 	std::map<QString, ComputeCurvatureParameters> compute_curvature_last_parameters_;
 };
+
+} // namespace plugin_sdp
 
 } // namespace schnapps
 

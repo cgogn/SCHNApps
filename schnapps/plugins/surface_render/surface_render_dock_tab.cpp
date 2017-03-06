@@ -30,6 +30,8 @@
 
 namespace schnapps
 {
+namespace plugin_surface_render
+{
 
 SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p) :
 	schnapps_(s),
@@ -44,7 +46,6 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 	connect(combo_colorVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(color_vbo_changed(int)));
 	connect(check_renderVertices, SIGNAL(toggled(bool)), this, SLOT(render_vertices_changed(bool)));
 	connect(slider_verticesScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertices_scale_factor_changed(int)));
-	connect(slider_verticesScaleFactor, SIGNAL(sliderPressed()), this, SLOT(vertices_scale_factor_pressed()));
 	connect(check_renderEdges, SIGNAL(toggled(bool)), this, SLOT(render_edges_changed(bool)));
 	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(render_faces_changed(bool)));
 	connect(group_faceShading, SIGNAL(buttonClicked(QAbstractButton*)), this, SLOT(face_style_changed(QAbstractButton*)));
@@ -73,7 +74,6 @@ void SurfaceRender_DockTab::position_vbo_changed(int index)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
 			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
 			view->update();
 		}
@@ -119,26 +119,7 @@ void SurfaceRender_DockTab::render_vertices_changed(bool b)
 		if (view && map)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
-
-			if (b)
-				p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
-
 			p.render_vertices_ = b;
-			view->update();
-		}
-	}
-}
-
-void SurfaceRender_DockTab::vertices_scale_factor_pressed()
-{
-	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(map->nb_edges())));
 			view->update();
 		}
 	}
@@ -344,10 +325,6 @@ void SurfaceRender_DockTab::color_selected()
 	}
 }
 
-
-
-
-
 void SurfaceRender_DockTab::add_position_vbo(QString name)
 {
 	updating_ui_ = true;
@@ -404,6 +381,9 @@ void SurfaceRender_DockTab::remove_color_vbo(QString name)
 
 void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
+	if (!map)
+		return;
+
 	updating_ui_ = true;
 
 	combo_positionVBO->clear();
@@ -462,4 +442,5 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 	updating_ui_ = false;
 }
 
+} // namespace plugin_surface_render
 } // namespace schnapps

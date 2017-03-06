@@ -25,8 +25,9 @@
 #define SCHNAPPS_CORE_SCHNAPPS_H_
 
 #include <schnapps/core/dll.h>
-
+#include <schnapps/core/settings.h>
 #include <schnapps/core/schnapps_window.h>
+#include <schnapps/core/status_bar_output.h>
 
 #include <QObject>
 #include <QString>
@@ -100,9 +101,9 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_camera(const FUNC& f)
+	void foreach_camera(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, Camera*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, Camera*>::value, "Wrong function parameter type");
 		for (const auto& camera_it : cameras_)
 			f(camera_it.second.get());
 	}
@@ -143,9 +144,9 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_plugin(const FUNC& f)
+	void foreach_plugin(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, Plugin*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, Plugin*>::value, "Wrong function parameter type");
 		for (const auto& plugin_it : plugins_)
 			f(plugin_it.second.get());
 	}
@@ -154,17 +155,15 @@ public:
 
 	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
 
-private slots:
+public slots:
 
-	void enable_plugin_tab_widgets(PluginInteraction* plugin);
+	void enable_plugin_tab_widgets(Plugin* plugin);
 
-	void disable_plugin_tab_widgets(PluginInteraction* plugin);
+	void disable_plugin_tab_widgets(Plugin* plugin);
 
 	/*********************************************************
 	 * MANAGE MAPS
 	 *********************************************************/
-
-public slots:
 
 	/**
 	* @brief add a new empty map
@@ -182,9 +181,8 @@ public slots:
 	/**
 	* @brief Duplicate (copy) a map
 	* @param name of map to copy
-	* @param properties copy BB & VBO
 	*/
-//	MapHandlerGen* duplicate_map(const QString& name, bool properties);
+	MapHandlerGen* duplicate_map(const QString& name);
 
 	/**
 	* @brief Get a map object from its name
@@ -195,9 +193,9 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_map(const FUNC& f)
+	void foreach_map(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, MapHandlerGen*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, MapHandlerGen*>::value, "Wrong function parameter type");
 		for (const auto& map_it : maps_)
 			f(map_it.second.get());
 	}
@@ -272,9 +270,9 @@ public slots:
 public:
 
 	template <typename FUNC>
-	void foreach_view(const FUNC& f)
+	void foreach_view(const FUNC& f) const
 	{
-		static_assert(check_func_parameter_type(FUNC, View*), "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, View*>::value, "Wrong function parameter type");
 		for (const auto& view_it : views_)
 			f(view_it.second.get());
 	}
@@ -381,9 +379,29 @@ signals:
 
 	void schnapps_closing();
 
+public:
+
+	inline const QVariant get_setting(const QString& module_name, const QString& name) const
+	{
+		return settings_->get_setting(module_name, name);
+	}
+
+	inline QVariant add_setting(const QString& module_name, const QString& name, const QVariant& val)
+	{
+		return settings_->add_setting(module_name,name,val);
+	}
+
+	inline const QVariant get_core_setting(const QString& name) const
+	{
+		return settings_->get_setting("core", name);
+	}
+
 protected:
 
 	QString app_path_;
+
+	std::unique_ptr<Settings> settings_;
+	std::unique_ptr<StatusBarOutput> status_bar_output_;
 
 	std::map<QString, std::unique_ptr<Camera>> cameras_;
 

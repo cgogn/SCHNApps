@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
 
+#include "dll.h"
 #include <ui_dialog_compute_normal.h>
 
 #include <schnapps/core/map_handler.h>
@@ -32,30 +33,40 @@ namespace schnapps
 {
 
 class SCHNApps;
+
+namespace plugin_sdp
+{
+
 class Plugin_SurfaceDifferentialProperties;
 
-class ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
+class SCHNAPPS_PLUGIN_SDP_API ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceDifferentialProperties;
-
 public:
 
-	ComputeNormal_Dialog(SCHNApps* s);
+	ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
 
 private:
 
 	SCHNApps* schnapps_;
-	MapHandler<CMap2>* selected_map_;
+	Plugin_SurfaceDifferentialProperties* plugin_;
+
+	CMap2Handler* selected_map_;
+
+	QString setting_auto_load_position_attribute_;
+	QString setting_auto_load_normal_attribute_;
 
 private slots:
 
+	void compute_normal();
 	void selected_map_changed();
 	void map_added(MapHandlerGen* map);
 	void map_removed(MapHandlerGen* map);
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 };
+
+} // namespace plugin_sdp
 
 } // namespace schnapps
 

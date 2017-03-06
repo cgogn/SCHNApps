@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>SCHNAPPS_CORE_API</exportmacro>
  <class>SCHNAppsWindow</class>
  <widget class="QMainWindow" name="SCHNApps">
   <property name="geometry">
@@ -21,7 +22,7 @@
      <x>0</x>
      <y>0</y>
      <width>1106</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -29,7 +30,9 @@
      <string>File</string>
     </property>
     <addaction name="action_ToggleControlDock"/>
-	<addaction name="action_TogglePluginDock"/>
+    <addaction name="action_TogglePluginDock"/>
+    <addaction name="separator"/>
+    <addaction name="action_Settings"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
    </widget>
@@ -65,7 +68,12 @@
   </action>
   <action name="action_TogglePluginDock">
    <property name="text">
-	<string>Toggle Plugins Dock</string>
+    <string>Toggle Plugins Dock</string>
+   </property>
+  </action>
+  <action name="action_Settings">
+   <property name="text">
+    <string>Settings</string>
    </property>
   </action>
  </widget>

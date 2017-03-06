@@ -39,7 +39,7 @@ namespace schnapps
 
 using Vec3 = Eigen::Vector3d;
 
-unsigned int View::view_count_ = 0;
+uint32 View::view_count_ = 0;
 
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
@@ -106,11 +106,11 @@ View::~View()
 	this->setCamera(c);
 	current_camera_->unlink_view(this);
 
-	for (PluginInteraction* p : plugins_)
-		unlink_plugin(p);
+	while(!plugins_.empty())
+		unlink_plugin(*plugins_.begin());
 
-	for (MapHandlerGen* m : maps_)
-		unlink_map(m);
+	while(!maps_.empty())
+		unlink_map(*maps_.begin());
 
 	delete button_area_;
 	delete button_area_left_;
@@ -253,7 +253,6 @@ void View::link_map(MapHandlerGen* map)
 
 		emit(map_linked(map));
 
-		connect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
 		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if (map->is_selected_map())
@@ -285,7 +284,6 @@ void View::unlink_map(MapHandlerGen* map)
 
 		emit(map_unlinked(map));
 
-		disconnect(map, SIGNAL(selected_cells_changed(CellSelectorGen*)), this, SLOT(update()));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
 		if (map->is_selected_map())
@@ -371,6 +369,8 @@ void View::init()
 	cameras_button_ = new ViewButton(":icons/icons/cameras.png", this);
 	button_area_left_->add_button(cameras_button_);
 	connect(cameras_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_cameras_list_view(int, int, int, int)));
+
+	QOGLViewer::init(); // emit viewerInitialized signal
 }
 
 void View::preDraw()
@@ -397,6 +397,8 @@ void View::draw()
 		}
 	});
 
+	draw_buttons();
+
 	QMatrix4x4 pm;
 	current_camera_->getProjectionMatrix(pm);
 	QMatrix4x4 mm;
@@ -421,7 +423,7 @@ void View::draw()
 
 void View::postDraw()
 {
-	draw_buttons();
+//	draw_buttons();
 	if (is_selected_view())
 		draw_frame();
 
@@ -430,6 +432,9 @@ void View::postDraw()
 
 void View::resizeGL(int width, int height)
 {
+	for (PluginInteraction* plugin : plugins_)
+		plugin->resizeGL(this, width, height);
+
 	QOGLViewer::resizeGL(width, height);
 
 	if (button_area_)
@@ -473,19 +478,19 @@ void View::keyPressEvent(QKeyEvent* event)
 				msg_box.setDefaultButton(QMessageBox::Ok);
 				if (msg_box.exec() == QMessageBox::Ok)
 				{
-					schnapps_->status_bar_message("frame snapshot !!", 2000);
+					cgogn_log_info("View::keyPressEvent") << "frame snapshot !!";
 					connect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
 				}
 				else
 				{
-					schnapps_->status_bar_message("cancel frame snapshot", 2000);
+					cgogn_log_info("View::keyPressEvent") <<"Cancel frame snapshot.";
 					save_snapshots_ = false;
 				}
 			}
 			else
 			{
 				disconnect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
-				schnapps_->status_bar_message("Stop frame snapshot", 2000);
+				cgogn_log_info("View::keyPressEvent") <<"Stop frame snapshot.";
 			}
 
 		}
@@ -524,10 +529,10 @@ void View::mousePressEvent(QMouseEvent* event)
 	if (!is_selected_view())
 	{
 		schnapps_->set_selected_view(this);
-		schnapps_->status_bar_message(QString("Selecting ") + this->get_name(), 2000);
+		cgogn_log_info("View::mousePressEvent") << "Selecting view \"" << this->get_name().toStdString() << "\".";
 	}
 	else if (event->y() < 20)
-		schnapps_->status_bar_message(this->get_name(), 2000);
+		cgogn_log_info("View::mousePressEvent") << this->get_name().toStdString() << ".";
 
 	if (button_area_left_->is_clicked(event->x(), event->y()))
 		button_area_left_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
@@ -597,7 +602,11 @@ void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
 void View::map_added(MapHandlerGen* mh)
 {
 	if (mh)
+	{
 		dialog_maps_->add_item(mh->get_name());
+		if (schnapps_->get_core_setting("Add map to selected view").toBool())
+			dialog_maps_->list()->item(dialog_maps_->nb_items() -1)->setCheckState(Qt::Checked);
+	}
 }
 
 void View::map_removed(MapHandlerGen* mh)
@@ -675,7 +684,7 @@ void View::update_bb()
 			{
 				if (initialized)
 				{
-					for (unsigned int dim = 0; dim < 3; ++dim)
+					for (uint32 dim = 0; dim < 3; ++dim)
 					{
 						if (minbb[dim] < bb_min_[dim])
 							bb_min_[dim] = minbb[dim];
@@ -685,7 +694,7 @@ void View::update_bb()
 				}
 				else
 				{
-					for (unsigned int dim = 0; dim < 3; ++dim)
+					for (uint32 dim = 0; dim < 3; ++dim)
 					{
 						bb_min_[dim] = minbb[dim];
 						bb_max_[dim] = maxbb[dim];

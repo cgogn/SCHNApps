@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>SCHNAPPS_CORE_API</exportmacro>
  <class>ControlDock_MapTabWidget</class>
  <widget class="QWidget" name="ControlDock_MapTabWidget">
   <property name="geometry">
@@ -172,7 +173,7 @@
        <item row="2" column="0" colspan="3">
         <widget class="QListWidget" name="list_dartAttributes">
          <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
+          <enum>QAbstractItemView::SingleSelection</enum>
          </property>
         </widget>
        </item>
@@ -198,57 +199,12 @@
        <item row="3" column="0">
         <widget class="QLabel" name="label_dartSelectors">
          <property name="text">
-          <string>Selectors :</string>
+          <string>Cells sets :</string>
          </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="vertexInfo">
-      <attribute name="title">
-       <string>V</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_vertexNbCells">
-         <property name="text">
-          <string>0</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1" colspan="2">
-        <widget class="QLabel" name="label_vertexCells">
-         <property name="text">
-          <string>cells</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_vertexAttributes">
-         <property name="text">
-          <string>Attributes :</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="3">
-        <widget class="QListWidget" name="list_vertexAttributes">
-         <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="label_vertexSelectors">
-         <property name="text">
-          <string>Selectors :</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QPushButton" name="button_vertexAddSelector">
+       <item row="1" column="2">
+        <widget class="QPushButton" name="button_dartRemoveAttribute">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -262,7 +218,21 @@
           </size>
          </property>
          <property name="text">
-          <string>+</string>
+          <string>-</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="vertexInfo">
+      <attribute name="title">
+       <string>V</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_vertexSelectors">
+         <property name="text">
+          <string>Cells sets :</string>
          </property>
         </widget>
        </item>
@@ -289,6 +259,75 @@
         <widget class="QListWidget" name="list_vertexSelectors">
          <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QPushButton" name="button_vertexAddSelector">
+         <property name="minimumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>+</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_vertexAttributes">
+         <property name="text">
+          <string>Attributes :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_vertexNbCells">
+         <property name="text">
+          <string>0</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1" colspan="2">
+        <widget class="QLabel" name="label_vertexCells">
+         <property name="text">
+          <string>cells</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="3">
+        <widget class="QListWidget" name="list_vertexAttributes">
+         <property name="selectionMode">
+          <enum>QAbstractItemView::SingleSelection</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="button_vertexRemoveAttribute">
+         <property name="minimumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>-</string>
          </property>
         </widget>
        </item>
@@ -352,7 +391,7 @@
        <item row="2" column="0" colspan="3">
         <widget class="QListWidget" name="list_edgeAttributes">
          <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
+          <enum>QAbstractItemView::SingleSelection</enum>
          </property>
         </widget>
        </item>
@@ -378,7 +417,26 @@
        <item row="3" column="0">
         <widget class="QLabel" name="label_edgeSelectors">
          <property name="text">
-          <string>Selectors :</string>
+          <string>Cells sets :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="button_edgeRemoveAttribute">
+         <property name="minimumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>-</string>
          </property>
         </widget>
        </item>
@@ -418,7 +476,7 @@
        <item row="3" column="0">
         <widget class="QLabel" name="label_faceSelectors">
          <property name="text">
-          <string>Selectors :</string>
+          <string>Cells sets :</string>
          </property>
         </widget>
        </item>
@@ -444,7 +502,7 @@
        <item row="2" column="0" colspan="3">
         <widget class="QListWidget" name="list_faceAttributes">
          <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
+          <enum>QAbstractItemView::SingleSelection</enum>
          </property>
         </widget>
        </item>
@@ -469,6 +527,25 @@
         <widget class="QLabel" name="label_faceCells">
          <property name="text">
           <string>cells</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <widget class="QPushButton" name="button_faceRemoveAttribute">
+         <property name="minimumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>-</string>
          </property>
         </widget>
        </item>
@@ -508,7 +585,7 @@
        <item row="3" column="0">
         <widget class="QLabel" name="label_volumeSelectors">
          <property name="text">
-          <string>Selectors :</string>
+          <string>Cells sets :</string>
          </property>
         </widget>
        </item>
@@ -551,7 +628,7 @@
        <item row="2" column="0" colspan="4">
         <widget class="QListWidget" name="list_volumeAttributes">
          <property name="selectionMode">
-          <enum>QAbstractItemView::NoSelection</enum>
+          <enum>QAbstractItemView::SingleSelection</enum>
          </property>
         </widget>
        </item>
@@ -559,6 +636,25 @@
         <widget class="QLabel" name="label_volumeAttributes">
          <property name="text">
           <string>Attributes :</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="QPushButton" name="button_volumeRemoveAttribute">
+         <property name="minimumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>25</width>
+           <height>25</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>-</string>
          </property>
         </widget>
        </item>

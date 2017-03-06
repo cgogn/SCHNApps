@@ -21,6 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
+#define SCHNAPPS_CORE_MAPHANDLER_CPP_
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -30,12 +31,15 @@
 namespace schnapps
 {
 
+template class SCHNAPPS_CORE_API MapHandler<CMap2>;
+template class SCHNAPPS_CORE_API MapHandler<CMap3>;
+
 MapHandlerGen::MapHandlerGen(const QString& name, SCHNApps* schnapps, std::unique_ptr<MapBaseData> map) :
 	name_(name),
 	schnapps_(schnapps),
 	map_(std::move(map)),
-	show_bb_(true),
 	bb_diagonal_size_(.0f),
+	show_bb_(true),
 	bb_color_(Qt::green)
 {
 	connect(&frame_, SIGNAL(manipulated()), this, SLOT(frame_changed()));
@@ -212,6 +216,39 @@ void MapHandlerGen::delete_vbo(const QString &name)
 }
 
 /*********************************************************
+ * MANAGE CELLS SETS
+ *********************************************************/
+
+CellsSetGen* MapHandlerGen::get_cells_set(CellType ct, const QString& name)
+{
+	if (cells_sets_[ct].count(name) > 0ul)
+		return cells_sets_[ct].at(name).get();
+	else
+		return nullptr;
+}
+
+void MapHandlerGen::update_mutually_exclusive_cells_sets(CellType ct)
+{
+	std::vector<CellsSetGen*> mex;
+	foreach_cells_set(ct, [&] (CellsSetGen* cs)
+	{
+		if (cs->is_mutually_exclusive())
+			mex.push_back(cs);
+	});
+	foreach_cells_set(ct, [&] (CellsSetGen* cs)
+	{
+		cs->set_mutually_exclusive_sets(mex);
+	});
+}
+
+void MapHandlerGen::viewer_initialized()
+{
+	View* view = dynamic_cast<View*>(sender());
+	if (view)
+		bb_drawer_renderer_[view] = bb_drawer_.generate_renderer();
+}
+
+/*********************************************************
  * MANAGE LINKED VIEWS
  *********************************************************/
 
@@ -222,13 +259,17 @@ void MapHandlerGen::link_view(View* view)
 		views_.push_back(view);
 		view->makeCurrent();
 		bb_drawer_renderer_[view] = bb_drawer_.generate_renderer();
+		connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 	}
 }
 
 void MapHandlerGen::unlink_view(View* view)
 {
 	if (is_linked_to_view(view))
+	{
+		disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 		views_.remove(view);
+	}
 }
 
 /*********************************************************
@@ -251,13 +292,7 @@ void MapHandlerGen::notify_connectivity_change()
 	render_.set_primitive_dirty(cgogn::rendering::POINTS);
 	render_.set_primitive_dirty(cgogn::rendering::LINES);
 	render_.set_primitive_dirty(cgogn::rendering::TRIANGLES);
-//	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
-
-//	for(unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
-//	{
-//		foreach (CellSelectorGen* cs, m_cellSelectors[orbit])
-//			cs->rebuild();
-//	}
+	render_.set_primitive_dirty(cgogn::rendering::BOUNDARY);
 
 	emit(connectivity_changed());
 

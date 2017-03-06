@@ -24,6 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 
+#include "dll.h"
 #include <ui_surface_render_scalar.h>
 
 namespace schnapps
@@ -31,11 +32,15 @@ namespace schnapps
 
 class SCHNApps;
 class MapHandlerGen;
+
+namespace plugin_surface_render_scalar
+{
+
 class Plugin_SurfaceRenderScalar;
 
 struct MapParameters;
 
-class SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
 {
 	Q_OBJECT
 
@@ -59,16 +64,19 @@ private slots:
 	void color_map_changed(int index);
 	void expansion_changed(int i);
 	void show_iso_lines_changed(bool b);
+	void nb_iso_levels_changed(int i);
 
 private:
 
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_scalar_vbo(QString name);
-	void remove_scalar_vbo(QString name);
+	void add_position_vbo(const QString& name);
+	void remove_position_vbo(const QString& name);
+	void add_scalar_vbo(const QString& name);
+	void remove_scalar_vbo(const QString& name);
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
+
+} // namespace plugin_surface_render_scalar
 
 } // namespace schnapps
 

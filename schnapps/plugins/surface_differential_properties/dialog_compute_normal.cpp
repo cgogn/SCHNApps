@@ -31,20 +31,58 @@
 namespace schnapps
 {
 
-ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s) :
+namespace plugin_sdp
+{
+
+ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p) :
 	schnapps_(s),
+	plugin_(p),
 	selected_map_(nullptr)
 {
 	setupUi(this);
 
-	normal_attribute_name->setText("normal");
+	if (plugin_->get_setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute").toString();
+	else
+		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
 
+	if (plugin_->get_setting("Auto load normal attribute").isValid())
+		setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute").toString();
+	else
+		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal").toString();
+
+	normal_attribute_name->setText(setting_auto_load_normal_attribute_);
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
+	connect(this, SIGNAL(accepted()), this, SLOT(compute_normal()));
+	connect(button_apply, SIGNAL(clicked()), this, SLOT(compute_normal()));
+
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+}
+
+void ComputeNormal_Dialog::compute_normal()
+{
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+
+		QString position_name = combo_positionAttribute->currentText();
+
+		QString normal_name;
+		if (normal_attribute_name->text().isEmpty())
+			normal_name = combo_normalAttribute->currentText();
+		else
+			normal_name = normal_attribute_name->text();
+
+		bool create_vbo = enableVBO->isChecked();
+		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
+
+		plugin_->compute_normal(map_name, position_name, normal_name, create_vbo, auto_update);
+	}
 }
 
 void ComputeNormal_Dialog::selected_map_changed()
@@ -60,7 +98,7 @@ void ComputeNormal_Dialog::selected_map_changed()
 
 		const QString& map_name = currentItems[0]->text();
 		MapHandlerGen* mhg = schnapps_->get_map(map_name);
-		selected_map_ = dynamic_cast<MapHandler<CMap2>*>(mhg);
+		selected_map_ = dynamic_cast<CMap2Handler*>(mhg);
 
 		if (selected_map_)
 		{
@@ -80,7 +118,11 @@ void ComputeNormal_Dialog::selected_map_changed()
 					if (type == vec3_type_name)
 					{
 						combo_positionAttribute->addItem(name);
+						if (name == setting_auto_load_position_attribute_)
+							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
 						combo_normalAttribute->addItem(name);
+						if (name == setting_auto_load_normal_attribute_)
+							combo_normalAttribute->setCurrentIndex(combo_normalAttribute->count() - 1);
 					}
 				}
 			}
@@ -130,5 +172,7 @@ void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, cons
 		}
 	}
 }
+
+} // namespace plugin_sdp
 
 } // namespace schnapps

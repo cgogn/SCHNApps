@@ -48,8 +48,8 @@ public:
 	QString title() { return QString("Maps"); }
 
 	MapHandlerGen* get_selected_map() { return selected_map_; }
-//	unsigned int get_current_orbit();
-//	CellSelectorGen* get_selected_selector(unsigned int orbit) { return selected_selector_[orbit]; }
+
+	CellType get_current_cell_type();
 
 	void set_selected_map(const QString& map_name);
 
@@ -65,10 +65,10 @@ private slots:
 	void bb_vertex_attribute_changed(int index);
 	void vertex_attribute_check_state_changed(QListWidgetItem* item);
 
-//	void selected_selector_changed();
-//	void selector_check_state_changed(QListWidgetItem* item);
-//	void add_selector();
-//	void remove_selector();
+	void cells_set_check_state_changed(QListWidgetItem* item);
+	void add_cells_set();
+	void remove_cells_set();
+	void remove_attribute();
 
 	// slots called from SCHNApps signals
 	void map_added(MapHandlerGen* m);
@@ -76,12 +76,13 @@ private slots:
 
 	// slots called from selected MapHandler signals
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
 	void selected_map_bb_vertex_attribute_changed(const QString& name);
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void selected_map_connectivity_changed();
-//	void selected_map_cell_selector_added(unsigned int orbit, const QString& name);
-//	void selected_map_cell_selector_removed(unsigned int orbit, const QString& name);
+	void selected_map_cells_set_added(CellType ct, const QString& name);
+	void selected_map_cells_set_removed(CellType ct, const QString& name);
 
 private:
 
@@ -91,7 +92,6 @@ protected:
 
 	SCHNApps* schnapps_;
 	MapHandlerGen* selected_map_;
-//	CellSelectorGen* selected_selector_[NB_ORBITS];
 	bool updating_ui_;
 };
 
