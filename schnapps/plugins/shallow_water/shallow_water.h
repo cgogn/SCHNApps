@@ -129,7 +129,7 @@ private:
 	CMap2::FaceAttribute<SCALAR> length_;   // cell length
 	CMap2::FaceAttribute<SCALAR> phi_;      // cell width
 
-	CMap2::FaceAttribute<uint32> depth_;    // subdivision depth
+	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
 
 	CMap2::EdgeAttribute<SCALAR> f1_;
 	CMap2::EdgeAttribute<SCALAR> f2_;

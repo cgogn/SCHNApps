@@ -63,7 +63,7 @@ bool Plugin_ShallowWater::enable()
 	length_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("length");
 	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
 
-	depth_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("subdivision_depth");
+	subd_code_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("subdivision_code");
 
 	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
 	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
@@ -95,7 +95,7 @@ bool Plugin_ShallowWater::enable()
 			length_[f] = cgogn::geometry::length<VEC3>(*map2_, e2, position_);
 		}
 
-		depth_[f] = 0;
+		subd_code_[f] = 1;
 	});
 
 	init();
@@ -132,20 +132,20 @@ void Plugin_ShallowWater::init()
 {
 	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
 	{
-//		if (centroid_[f][0] < -75.)
-//			h_[f] = 10.;
-//		else if (centroid_[f][0] < -50.)
-//			h_[f] = 1.;
-//		else if (centroid_[f][0] < -25.)
-//			h_[f] = 8.;
-		if (centroid_[f][0] < 0.)
-			h_[f] = 10.;
-//		else if (centroid_[f][0] < 25.)
-//			h_[f] = 5.;
-//		else if (centroid_[f][0] < 50.)
-//			h_[f] = 1.;
-//		else if (centroid_[f][0] < 75.)
-//			h_[f] = 10.;
+		if (centroid_[f][0] < -75.)
+			h_[f] = 15.;
+		else if (centroid_[f][0] < -50.)
+			h_[f] = 3.;
+		else if (centroid_[f][0] < -25.)
+			h_[f] = 8.;
+		else if (centroid_[f][0] < 0.)
+			h_[f] = 1.;
+		else if (centroid_[f][0] < 25.)
+			h_[f] = 15.;
+		else if (centroid_[f][0] < 50.)
+			h_[f] = 1.;
+		else if (centroid_[f][0] < 75.)
+			h_[f] = 6.;
 		else
 			h_[f] = 1.;
 
@@ -271,8 +271,11 @@ void Plugin_ShallowWater::try_subdivision()
 			if (!map2_->is_incident_to_boundary(eL) && !map2_->is_incident_to_boundary(eR))
 			{
 				SCALAR g = std::abs(h_[CMap2::Face(map2_->phi2(eL.dart))] - h_[CMap2::Face(map2_->phi2(eR.dart))]);
-				if (g > 1.)
+				if (g > 1. && subd_code_[f] < (1 << 3))
+				{
 					subdivide_face(f);
+					connectivity_changed_ = true;
+				}
 			}
 		},
 		cache
@@ -281,26 +284,34 @@ void Plugin_ShallowWater::try_subdivision()
 
 void Plugin_ShallowWater::try_simplification()
 {
-	map2_->foreach_cell([&] (CMap2::Face f)
-	{
-		std::pair<CMap2::Edge, CMap2::Edge> edges = get_LR_edges(f);
-		CMap2::Edge eL = edges.first;
-		CMap2::Edge eR = edges.second;
-
-		if (!map2_->is_incident_to_boundary(eR))
+	map2_->foreach_cell(
+		[&] (CMap2::Face f)
 		{
-			SCALAR g = std::abs(h_[f] - h_[CMap2::Face(map2_->phi2(eR.dart))]);
-			if (g < 0.05)
-				remove_edge(eR);
-		}
-	});
+			std::pair<CMap2::Edge, CMap2::Edge> edges = get_LR_edges(f);
+			CMap2::Edge eL = edges.first;
+			CMap2::Edge eR = edges.second;
+
+			if (!map2_->is_incident_to_boundary(eR))
+			{
+				CMap2::Face f2(map2_->phi2(eR.dart));
+				if (subd_code_[f2] == subd_code_[f] + 1)
+				{
+					SCALAR g = std::abs(h_[f] - h_[f2]);
+					if (g < 0.05)
+					{
+						remove_edge(eR);
+						connectivity_changed_ = true;
+					}
+				}
+			}
+		},
+		[&] (CMap2::Face f) { return subd_code_[f] % 2 == 0; }
+	);
 }
 
 void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 {
-	uint32 old_depth = depth_[f];
-	if (old_depth > 3)
-		return;
+	uint32 old_subd_code = subd_code_[f];
 
 	SCALAR old_h = h_[f];
 	SCALAR old_q = q_[f];
@@ -313,13 +324,11 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 	CMap2::Vertex v2 = map2_->cut_edge(CMap2::Edge(map2_->phi1(eR.dart)));
 	CMap2::Edge e = map2_->cut_face(v1.dart, v2.dart);
 
-	connectivity_changed_ = true;
-
 	CMap2::Face fL(eL.dart);
 	CMap2::Face fR(eR.dart);
 
-	depth_[fL] = old_depth + 1;
-	depth_[fR] = old_depth + 1;
+	subd_code_[fL] = old_subd_code * 2;
+	subd_code_[fR] = old_subd_code * 2 + 1;
 
 	position_[v1] = 0.5 * (position_[CMap2::Vertex(eR.dart)] + position_[CMap2::Vertex(map2_->phi1(eL.dart))]);
 	position_[v2] = 0.5 * (position_[CMap2::Vertex(eL.dart)] + position_[CMap2::Vertex(map2_->phi1(eR.dart))]);
@@ -348,11 +357,8 @@ void Plugin_ShallowWater::remove_edge(CMap2::Edge e)
 	CMap2::Face f1(e.dart);
 	CMap2::Face f2(map2_->phi2(e.dart));
 
-	uint32 old_depth_1 = depth_[f1];
-	uint32 old_depth_2 = depth_[f2];
-
-	if (old_depth_1 != old_depth_2 || old_depth_1 == 0)
-		return;
+	uint32 old_subd_code_1 = subd_code_[f1];
+	uint32 old_subd_code_2 = subd_code_[f2];
 
 	SCALAR old_h_1 = h_[f1];
 	SCALAR old_h_2 = h_[f2];
@@ -374,9 +380,7 @@ void Plugin_ShallowWater::remove_edge(CMap2::Edge e)
 	builder.template set_orbit_embedding<CMap2::Vertex>(v1, map2_->embedding(v1));
 	builder.template set_orbit_embedding<CMap2::Vertex>(v2, map2_->embedding(v2));
 
-	connectivity_changed_ = true;
-
-	depth_[f] = old_depth_1 - 1;
+	subd_code_[f] = old_subd_code_1 / 2;
 
 	h_[f] = old_h_1;
 	q_[f] = old_q_1;
