@@ -56,7 +56,7 @@ private:
 private slots:
 
 	void init();
-	void start();
+	void start_stop();
 };
 
 } // namespace plugin_shallow_water

@@ -41,7 +41,7 @@ ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) 
 	setupUi(this);
 
 	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
-	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start()));
+	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
 }
 
 void ShallowWater_DockTab::init()
@@ -49,9 +49,18 @@ void ShallowWater_DockTab::init()
 	plugin_->init();
 }
 
-void ShallowWater_DockTab::start()
+void ShallowWater_DockTab::start_stop()
 {
-	plugin_->start();
+	if (!plugin_->is_running())
+	{
+		plugin_->start();
+		button_start_stop->setText("Stop");
+	}
+	else
+	{
+		plugin_->stop();
+		button_start_stop->setText("Start");
+	}
 }
 
 } // namespace plugin_shallow_water
