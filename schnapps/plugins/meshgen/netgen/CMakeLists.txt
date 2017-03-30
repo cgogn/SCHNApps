@@ -92,6 +92,10 @@ add_library(${PROJECT_NAME} SHARED ${NETGEN_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/libsrc/include>)
 
+if(NOT MSVC)
+	target_compile_options(${PROJECT_NAME} PUBLIC "-std=c++11")
+endif(NOT MSVC)
+
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DNGINTERFACE_EXPORTS")
