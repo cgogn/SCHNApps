@@ -47,9 +47,13 @@ if(CGAL_FOUND)
 endif(CGAL_FOUND)
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
 
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
+#set(CMAKE_AUTOUIC ON)
+# automoc bug  with cmake 3.0 ????
+file(GLOB UIS "." "*.ui")
+qt5_wrap_ui( UI_HEADERS ${UIS} )
+
+add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES} ${UI_HEADERS})
 
 if(CGAL_FOUND)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DPLUGIN_MESHGEN_WITH_CGAL")

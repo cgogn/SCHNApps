@@ -3,6 +3,7 @@ project(plugin_merge
 )
 
 find_package(cgogn_core REQUIRED)
+find_package(cgogn_geometry REQUIRED) # for Eigen
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
 set(HEADER_FILES
@@ -34,6 +35,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
+	${cgogn_geometry_LIBRARIES}
 	${Qt5Core_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 )
