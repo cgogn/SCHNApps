@@ -1,14 +1,14 @@
 add_subdirectory(core)
 add_subdirectory(plugins)
 
-project(schnapps
+project(${SCHNAPPS_EXEC_NAME}
 	LANGUAGES CXX
 )
 
 find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
 find_package(cgogn_core REQUIRED)
 
-add_executable(${PROJECT_NAME} main.cpp)
+add_executable(${PROJECT_NAME} MACOSX_BUNDLE main.cpp)
 
 # with Qt >5.7 & CMake < 3.1 need c++11 option
 if(NOT MSVC)

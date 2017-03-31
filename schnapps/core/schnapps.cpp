@@ -79,13 +79,19 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	set_selected_view(first_view_);
 	root_splitter_->addWidget(first_view_);
 
-#ifdef WIN32
+#if defined (WIN32)
 	register_plugins_directory(app_path_);
+#elif defined (__APPLE__)
+	register_plugins_directory(app_path_ + QString("/lib"));
 #else
 	register_plugins_directory(app_path_ + QString("/../lib"));
 #endif
 
+#if defined (__APPLE__)
+	settings_ = Settings::from_file(app_path_ + QString("/lib/settings.json"));
+#else
 	settings_ = Settings::from_file(app_path_ + QString("/../lib/settings.json"));
+#endif
 	settings_->set_widget(window->settings_widget_.get());
 	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
 		this->register_plugins_directory(plugin_dir_v.toString());
