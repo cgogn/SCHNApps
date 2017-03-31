@@ -101,7 +101,11 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 
 SCHNApps::~SCHNApps()
 {
+#if defined (__APPLE__)
+	settings_->to_file(app_path_ + QString("/lib/settings.json"));
+#else
 	settings_->to_file(app_path_ + QString("/../lib/settings.json"));
+#endif
 	// first safely unload every plugins (this has to be done before the views get deleted)
 	while (!plugins_.empty())
 		this->disable_plugin(plugins_.begin()->first);
