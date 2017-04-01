@@ -23,3 +23,8 @@ target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${Qt5Widgets_LIBRARIES}
 )
+
+
+if (MSVC AND (NOT CMAKE_VERSION VERSION_LESS 3.6))
+	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+endif()

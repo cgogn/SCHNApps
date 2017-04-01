@@ -81,15 +81,12 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 
 #if defined (WIN32)
 	register_plugins_directory(app_path_);
+	settings_ = Settings::from_file(app_path_ + QString("/settings.json"));
 #elif defined (__APPLE__)
 	register_plugins_directory(app_path_ + QString("/lib"));
-#else
-	register_plugins_directory(app_path_ + QString("/../lib"));
-#endif
-
-#if defined (__APPLE__)
 	settings_ = Settings::from_file(app_path_ + QString("/lib/settings.json"));
 #else
+	register_plugins_directory(app_path_ + QString("/../lib"));
 	settings_ = Settings::from_file(app_path_ + QString("/../lib/settings.json"));
 #endif
 	settings_->set_widget(window->settings_widget_.get());

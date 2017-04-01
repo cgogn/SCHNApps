@@ -68,8 +68,6 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
-	$<BUILD_INTERFACE:${CGAL_INCLUDE_DIRS}>
-	$<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -82,9 +80,18 @@ target_link_libraries(${PROJECT_NAME}
 	${cgogn_io_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
-	${CGAL_LIBRARIES}
-	${Boost_LIBRARIES}
 )
+
+if(CGAL_FOUND)
+	target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CGAL_INCLUDE_DIRS}>)
+	target_link_libraries(${PROJECT_NAME} ${CGAL_LIBRARIES})
+endif()
+
+if(Boost_FOUND)
+	target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>)
+	target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+endif()
+
 
 #In this section we copy boost's and CGAL's DLLs in schnapp's directory
 if(WIN32)

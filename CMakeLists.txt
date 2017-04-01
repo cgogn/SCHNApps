@@ -44,7 +44,7 @@ endif()
 
 
 if(MSVC)
-	add_flags(CMAKE_CXX_FLAGS "/bigobj")
+	add_compile_options("/bigobj")
 endif()
 
 add_subdirectory(${SCHNAPPS_SOURCE_DIR}/schnapps)
