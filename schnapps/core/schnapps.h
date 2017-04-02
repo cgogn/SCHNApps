@@ -59,7 +59,7 @@ class SCHNAPPS_CORE_API SCHNApps : public QObject
 
 public:
 
-	SCHNApps(const QString& app_path, SCHNAppsWindow* window);
+	SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window);
 	~SCHNApps();
 
 public slots:
@@ -399,6 +399,7 @@ public:
 protected:
 
 	QString app_path_;
+	QString settings_path_;
 
 	std::unique_ptr<Settings> settings_;
 	std::unique_ptr<StatusBarOutput> status_bar_output_;

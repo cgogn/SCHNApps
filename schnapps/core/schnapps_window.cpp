@@ -28,7 +28,7 @@
 namespace schnapps
 {
 
-SCHNAppsWindow::SCHNAppsWindow(const QString& app_path) :
+SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_path) :
 	QMainWindow()
 {
 	this->setupUi(this);
@@ -81,7 +81,7 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path) :
 	settings_widget_ = cgogn::make_unique<SettingsWidget>();
 	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
-	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, this);
+	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, this);
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()

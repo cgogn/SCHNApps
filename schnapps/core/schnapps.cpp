@@ -52,8 +52,9 @@
 namespace schnapps
 {
 
-SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
+SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window) :
 	app_path_(app_path),
+	settings_path_(settings_path),
 	first_view_(nullptr),
 	selected_view_(nullptr),
 	window_(window)
@@ -81,14 +82,13 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 
 #if defined (WIN32)
 	register_plugins_directory(app_path_);
-	settings_ = Settings::from_file(app_path_ + QString("/settings.json"));
 #elif defined (__APPLE__)
 	register_plugins_directory(app_path_ + QString("/lib"));
-	settings_ = Settings::from_file(app_path_ + QString("/lib/settings.json"));
 #else
 	register_plugins_directory(app_path_ + QString("/../lib"));
-	settings_ = Settings::from_file(app_path_ + QString("/../lib/settings.json"));
 #endif
+
+	settings_ = Settings::from_file(settings_path_);
 	settings_->set_widget(window->settings_widget_.get());
 	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
 		this->register_plugins_directory(plugin_dir_v.toString());
@@ -98,11 +98,8 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 
 SCHNApps::~SCHNApps()
 {
-#if defined (__APPLE__)
-	settings_->to_file(app_path_ + QString("/lib/settings.json"));
-#else
-	settings_->to_file(app_path_ + QString("/../lib/settings.json"));
-#endif
+	settings_->to_file(settings_path_);
+
 	// first safely unload every plugins (this has to be done before the views get deleted)
 	while (!plugins_.empty())
 		this->disable_plugin(plugins_.begin()->first);
@@ -252,6 +249,9 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 				(*pi->get_linked_views().begin())->unlink_plugin(pi);
 		}
 
+		// because plugin_name no more valid after unloading
+		std::string destroyed_name = plugin_name.toStdString();
+
 		// call disable() method and dereference plugin
 		plugin->disable();
 		plugins_.erase(plugin_name);
@@ -259,7 +259,7 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		QPluginLoader loader(plugin->get_file_path());
 		loader.unload();
 
-		cgogn_log_info("SCHNApps::disable_plugin") << plugin_name.toStdString()  << " successfully unloaded.";
+		cgogn_log_info("SCHNApps::disable_plugin") << destroyed_name << " successfully unloaded.";
 		emit(plugin_disabled(plugin.get()));
 	}
 }
