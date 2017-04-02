@@ -40,6 +40,7 @@ SCHNAPPS_CORE_API std::string cell_type_name(CellType ct)
 		case Face_Cell: return "Face"; break;
 		case Volume_Cell: return "Volume"; break;
 		case Unknown: return "UNKNOWN"; break;
+		default : return "UNKNOWN"; break;
 	}
 #ifdef NDEBUG
 	return "UNKNOWN";  // little trick to  avoid warning on VS

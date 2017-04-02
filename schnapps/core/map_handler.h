@@ -672,7 +672,7 @@ public:
 			return res;
 
 		const auto& names = cont->names();
-		res.reserve(names.size());
+		res.reserve(int32(names.size()));
 		for (const auto& name : names)
 			res.push_back(QString::fromStdString(name));
 		return res;
@@ -942,8 +942,8 @@ private:
 };
 
 #ifndef SCHNAPPS_CORE_MAPHANDLER_CPP_
-extern template class SCHNAPPS_CORE_API MapHandler<CMap2>;
-extern template class SCHNAPPS_CORE_API MapHandler<CMap3>;
+template class SCHNAPPS_CORE_API MapHandler<CMap2>;
+template class SCHNAPPS_CORE_API MapHandler<CMap3>;
 #endif // SCHNAPPS_CORE_MAPHANDLER_CPP_
 
 } // namespace schnapps
