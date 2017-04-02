@@ -94,6 +94,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 if(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PUBLIC "-std=c++11")
+else(NOT MSVC)
+	target_compile_options(${PROJECT_NAME} PUBLIC "/W0") # it is not our code !
 endif(NOT MSVC)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
