@@ -97,6 +97,8 @@ protected:
 
 	void closeEvent(QCloseEvent *event);
 
+	void keyPressEvent(QKeyEvent* event);
+
 	std::unique_ptr<SCHNApps> schnapps_;
 
 	QDockWidget* control_dock_;

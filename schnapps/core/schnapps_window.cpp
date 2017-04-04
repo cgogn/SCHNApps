@@ -24,6 +24,8 @@
 #include <schnapps/core/schnapps_window.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/settings_widget.h>
+#include<QKeyEvent>
+
 
 namespace schnapps
 {
@@ -184,6 +186,26 @@ void SCHNAppsWindow::closeEvent(QCloseEvent *event)
 {
 	schnapps_->schnapps_window_closing();
 	QMainWindow::closeEvent(event);
+}
+
+void SCHNAppsWindow::keyPressEvent(QKeyEvent* event)
+{
+	switch (event->key())
+	{
+	case Qt::Key_V:
+		schnapps_->cycle_selected_view();
+		break;
+	case Qt::Key_Escape:
+		{
+			QMessageBox msg_box;
+			msg_box.setText("Really quit SCHNApps ?");
+			msg_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+			msg_box.setDefaultButton(QMessageBox::Ok);
+			if (msg_box.exec() == QMessageBox::Ok)
+				schnapps_->close_window();
+		}
+		break;
+	}
 }
 
 } // namespace schnapps
