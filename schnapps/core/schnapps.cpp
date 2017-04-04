@@ -495,6 +495,28 @@ void SCHNApps::set_selected_view(const QString& name)
 		set_selected_view(v);
 }
 
+
+void SCHNApps::cycle_selected_view()
+{
+	//auto it = views_.find(selected_view_->get_name());
+	//if ((it == views_.end()) && (!views_.empty()))
+	//	set_selected_view(views_.begin()->second.get());
+	//else
+	//{
+	//	it++;
+	//	if (it == views_.end())
+	//		set_selected_view(views_.begin()->second.get());
+	//	else
+	//		set_selected_view(it->second.get());
+	//}
+	auto it = views_.find(selected_view_->get_name());
+	it++;
+	if (it == views_.end())
+		set_selected_view(views_.begin()->second.get());
+	else
+		set_selected_view(it->second.get());
+}
+
 View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 {
 	View* new_view = add_view();

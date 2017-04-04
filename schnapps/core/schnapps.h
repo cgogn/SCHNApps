@@ -280,6 +280,11 @@ public:
 public slots:
 
 	/**
+	* @brief selected view cycle thru the views 
+	*/
+	void cycle_selected_view();
+
+	/**
 	* @brief get the selected view
 	*/
 	inline View* get_selected_view() const { return selected_view_; }
