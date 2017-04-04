@@ -98,6 +98,11 @@ SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAp
 
 SCHNApps::~SCHNApps()
 {
+	// make a copy of overwrite settings
+	QFile old(settings_path_);
+	QString copy_name = settings_path_.left(settings_path_.length()-5) + ".back.json";
+	old.copy(copy_name);
+
 	settings_->to_file(settings_path_);
 
 	// first safely unload every plugins (this has to be done before the views get deleted)
@@ -498,23 +503,12 @@ void SCHNApps::set_selected_view(const QString& name)
 
 void SCHNApps::cycle_selected_view()
 {
-	//auto it = views_.find(selected_view_->get_name());
-	//if ((it == views_.end()) && (!views_.empty()))
-	//	set_selected_view(views_.begin()->second.get());
-	//else
-	//{
-	//	it++;
-	//	if (it == views_.end())
-	//		set_selected_view(views_.begin()->second.get());
-	//	else
-	//		set_selected_view(it->second.get());
-	//}
 	auto it = views_.find(selected_view_->get_name());
 	it++;
 	if (it == views_.end())
-		set_selected_view(views_.begin()->second.get());
-	else
-		set_selected_view(it->second.get());
+		it = views_.begin();
+
+	set_selected_view(it->second.get());
 }
 
 View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
@@ -645,6 +639,19 @@ void SCHNApps::status_bar_message(const QString& msg, int msec)
 void SCHNApps::set_window_size(int w, int h)
 {
 	window_->resize(w, h);
+}
+
+
+/*********************************************************
+ * EXPORT SETTINGS
+ *********************************************************/
+
+void SCHNApps::export_settings()
+{
+	QString filename = QFileDialog::getSaveFileName(nullptr, "Export", settings_path_, "Settings Files (*.json)");
+	if (! filename.isEmpty())
+		settings_->to_file(filename);
+
 }
 
 } // namespace schnapps

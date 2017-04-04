@@ -22,7 +22,7 @@
      <x>0</x>
      <y>0</y>
      <width>1106</width>
-     <height>25</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -33,6 +33,7 @@
     <addaction name="action_TogglePluginDock"/>
     <addaction name="separator"/>
     <addaction name="action_Settings"/>
+    <addaction name="action_Export_settings"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
    </widget>
@@ -74,6 +75,11 @@
   <action name="action_Settings">
    <property name="text">
     <string>Settings</string>
+   </property>
+  </action>
+  <action name="action_Export_settings">
+   <property name="text">
+    <string>Export settings</string>
    </property>
   </action>
  </widget>

@@ -84,6 +84,8 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_
 	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
 	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, this);
+
+	connect(action_Export_settings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()

@@ -365,6 +365,10 @@ public slots:
 	void schnapps_window_closing();
 	SCHNAppsWindow* get_window() { return window_; }
 
+
+public slots:
+	void export_settings();
+
 signals:
 
 	void camera_added(Camera*);
