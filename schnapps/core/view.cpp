@@ -438,7 +438,7 @@ void View::resizeGL(int width, int height)
 	QOGLViewer::resizeGL(width, height);
 
 	if (button_area_)
-		button_area_->set_top_right_position(width / this->pixel_ratio(), 0);
+		button_area_->set_top_right_position(width, 0);
 
 	if (button_area_left_)
 		button_area_left_->set_top_left_position(0, 0);
@@ -466,6 +466,9 @@ void View::keyPressEvent(QKeyEvent* event)
 
 	switch (event->key())
 	{
+		case Qt::Key_V:
+			schnapps_->cycle_selected_view();
+			break;
 		case Qt::Key_S:
 		{
 			save_snapshots_ = !save_snapshots_;

@@ -88,6 +88,7 @@ private:
 
 	QString setting_bbox_name_;
 	QStringList setting_vbo_names_;
+	QString setting_default_path_;
 
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;

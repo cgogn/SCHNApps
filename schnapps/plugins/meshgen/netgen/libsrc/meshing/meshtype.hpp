@@ -8,6 +8,8 @@
 /* Date:   01. Okt. 95                                                    */
 /**************************************************************************/
 
+using namespace std;
+
 namespace netgen
 {
 
@@ -354,7 +356,7 @@ namespace netgen
         {
 #ifdef DEBUG
           if (typ != QUAD && typ != QUAD6 && typ != QUAD8)
-            PrintSysError ("element2d::GetNV not implemented for typ", typ);
+            PrintSysError ("element2d::GetNV not implemented for typ", int(typ));
 #endif
           return 4;
         }
@@ -621,7 +623,7 @@ namespace netgen
 	  return 8;
         default: // not a 3D element
 #ifdef DEBUG
-          PrintSysError ("Element3d::GetNV not implemented for typ ", typ);
+          PrintSysError ("Element3d::GetNV not implemented for typ ", int(typ));
 #endif
             return -1;
         }
@@ -685,7 +687,7 @@ namespace netgen
         case HEX: return 6;
 	default:
 #ifdef DEBUG
-	  PrintSysError ("element3d::GetNFaces not implemented for typ", typ)
+	  PrintSysError ("element3d::GetNFaces not implemented for typ", int(typ))
 #endif
 	    ;
 	}

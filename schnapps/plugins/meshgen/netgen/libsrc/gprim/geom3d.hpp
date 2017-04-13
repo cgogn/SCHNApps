@@ -433,7 +433,7 @@ namespace netgen
 #ifdef DEBUG
     else
       {
-	cerr << "Vec div by 0, v = " << (*this) << endl;
+		std::cerr << "Vec div by 0, v = " << (*this) << std::endl;
 	//      MyError ("Vec3d::operator /=: Divisioin by zero");
       }
 #endif

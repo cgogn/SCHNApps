@@ -8,6 +8,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(lm6 REQUIRED)
 find_package(ply REQUIRED)
+find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
 	dll.h
@@ -30,7 +31,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	${lm6_INCLUDE_DIRS}
 	${ply_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )

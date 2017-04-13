@@ -24,11 +24,13 @@
 #include <schnapps/core/schnapps_window.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/settings_widget.h>
+#include<QKeyEvent>
+
 
 namespace schnapps
 {
 
-SCHNAppsWindow::SCHNAppsWindow(const QString& app_path) :
+SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_path) :
 	QMainWindow()
 {
 	this->setupUi(this);
@@ -81,7 +83,9 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path) :
 	settings_widget_ = cgogn::make_unique<SettingsWidget>();
 	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
-	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, this);
+	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, this);
+
+	connect(action_Export_settings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()
@@ -184,6 +188,26 @@ void SCHNAppsWindow::closeEvent(QCloseEvent *event)
 {
 	schnapps_->schnapps_window_closing();
 	QMainWindow::closeEvent(event);
+}
+
+void SCHNAppsWindow::keyPressEvent(QKeyEvent* event)
+{
+	switch (event->key())
+	{
+	case Qt::Key_V:
+		schnapps_->cycle_selected_view();
+		break;
+	case Qt::Key_Escape:
+		{
+			QMessageBox msg_box;
+			msg_box.setText("Really quit SCHNApps ?");
+			msg_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+			msg_box.setDefaultButton(QMessageBox::Ok);
+			if (msg_box.exec() == QMessageBox::Ok)
+				schnapps_->close_window();
+		}
+		break;
+	}
 }
 
 } // namespace schnapps

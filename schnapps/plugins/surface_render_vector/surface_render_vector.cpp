@@ -168,7 +168,8 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 			MapParameters& map_param = view_param_set[map];
 			if (map_param.get_position_vbo() == vbo)
 				map_param.set_position_vbo(nullptr);
-			if (map_param.get_vector_vbo_index(vbo) >= 0ul)
+			//if (map_param.get_vector_vbo_index(vbo) >= 0ul)
+			if (map_param.get_vector_vbo_index(vbo) != UINT32_MAX)
 				map_param.remove_vector_vbo(vbo);
 		}
 	}

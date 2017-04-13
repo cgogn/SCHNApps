@@ -59,7 +59,7 @@ class SCHNAPPS_CORE_API SCHNApps : public QObject
 
 public:
 
-	SCHNApps(const QString& app_path, SCHNAppsWindow* window);
+	SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window);
 	~SCHNApps();
 
 public slots:
@@ -280,6 +280,11 @@ public:
 public slots:
 
 	/**
+	* @brief selected view cycle thru the views 
+	*/
+	void cycle_selected_view();
+
+	/**
 	* @brief get the selected view
 	*/
 	inline View* get_selected_view() const { return selected_view_; }
@@ -360,6 +365,10 @@ public slots:
 	void schnapps_window_closing();
 	SCHNAppsWindow* get_window() { return window_; }
 
+
+public slots:
+	void export_settings();
+
 signals:
 
 	void camera_added(Camera*);
@@ -399,6 +408,7 @@ public:
 protected:
 
 	QString app_path_;
+	QString settings_path_;
 
 	std::unique_ptr<Settings> settings_;
 	std::unique_ptr<StatusBarOutput> status_bar_output_;

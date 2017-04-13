@@ -88,7 +88,10 @@ public:
 	}
 
 	CellType cell_type_;
+#pragma warning(push)
+#pragma warning(disable:4251)
 	FuncType func_;
+#pragma warning(pop)
 };
 
 class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API VolumeOperation final
@@ -105,7 +108,10 @@ public:
 	std::vector<std::string> get_operations() const;
 
 private:
+#pragma warning(push)
+#pragma warning(disable:4251)
 	std::unordered_map<std::string, MapOperator> func_map_;
+#pragma warning(pop)
 };
 
 } // namespace plugin_volume_modelisation
