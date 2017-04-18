@@ -191,9 +191,9 @@ Plugin_VolumeMeshFromSurface::MapHandler3*Plugin_VolumeMeshFromSurface::generate
 	nglib::Ng_GenerateVolumeMesh (netgen_structure.get(), mp);
 	delete mp;
 
-	NetgenStructureVolumeImport netgen_import(netgen_structure.get());
 	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("netgen_export", 3));
-	netgen_import.create_map(*handler_map3->get_map());
+	NetgenStructureVolumeImport netgen_import(netgen_structure.get(), *handler_map3->get_map());
+	netgen_import.create_map();
 
 	handler_map3->attribute_added(CMap3::Vertex::ORBIT, "position");
 	handler_map3->set_bb_vertex_attribute("position");
@@ -214,10 +214,9 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 
 	tetgen::tetrahedralize(tetgen_args.c_str(), tetgen_input.get(), &tetgen_output);
 
-	TetgenStructureVolumeImport tetgen_import(&tetgen_output);
-
 	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("tetgen_export", 3));
-	tetgen_import.create_map(*handler_map3->get_map());
+	TetgenStructureVolumeImport tetgen_import(&tetgen_output, *handler_map3->get_map());
+	tetgen_import.create_map();
 
 	handler_map3->attribute_added(CMap3::Vertex::ORBIT, "position");
 	handler_map3->set_bb_vertex_attribute("position");

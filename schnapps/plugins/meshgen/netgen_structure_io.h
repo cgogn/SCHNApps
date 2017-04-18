@@ -43,22 +43,23 @@ namespace plugin_meshgen
 
 class NetgenParameters;
 
-class SCHNAPPS_PLUGIN_MESHGEN_API NetgenStructureVolumeImport : public cgogn::io::VolumeImport<VEC3>
+class SCHNAPPS_PLUGIN_MESHGEN_API NetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
 {
 public:
 
-	using Inherit = cgogn::io::VolumeImport<VEC3>;
+	using Inherit = cgogn::io::VolumeImport<CMap3, VEC3>;
 	using Self = NetgenStructureVolumeImport;
 	using Scalar = SCALAR;
 	template <typename T>
 	using ChunkArray = typename Inherit::template ChunkArray<T>;
 
-	explicit NetgenStructureVolumeImport(void** netgen_data);
+	explicit NetgenStructureVolumeImport(void** netgen_data, CMap3& map);
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(NetgenStructureVolumeImport);
 
 	void import_netgen_structure();
 
 private:
+
 	void** volume_mesh_structure_;
 };
 
@@ -66,6 +67,7 @@ SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<void*, std::function<void(void**)>> 
 SCHNAPPS_PLUGIN_MESHGEN_API nglib::Ng_Meshing_Parameters* setup_netgen_parameters(const NetgenParameters& params);
 
 } // namespace plugin_meshgen
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H

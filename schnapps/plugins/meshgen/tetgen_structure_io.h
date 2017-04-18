@@ -30,7 +30,6 @@
 #include <cgogn/io/volume_import.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 
-
 namespace tetgen
 {
 class tetgenio;
@@ -42,29 +41,31 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<VEC3>
+class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
 {
 public:
 
-	using Inherit = cgogn::io::VolumeImport<VEC3>;
+	using Inherit = cgogn::io::VolumeImport<CMap3, VEC3>;
 	using Self = TetgenStructureVolumeImport;
 	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
 	template <typename T>
 	using ChunkArray = typename Inherit::template ChunkArray<T>;
 	using tetgenio = tetgen::tetgenio;
 
-	explicit TetgenStructureVolumeImport(tetgenio * tetgen_output);
+	explicit TetgenStructureVolumeImport(tetgenio* tetgen_output, CMap3& map);
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
 
 	bool import_tetgen_structure();
 
 private:
+
 	tetgenio* volume_;
 };
 
 SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
 
 } // namespace plugin_meshgen
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
