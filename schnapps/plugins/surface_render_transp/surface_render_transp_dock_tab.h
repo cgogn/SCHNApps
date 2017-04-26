@@ -60,8 +60,6 @@ private:
 	QColorDialog* color_dial_;
 	int current_color_dial_;
 
-	QColor vertex_color_;
-	QColor edge_color_;
 	QColor front_color_;
 	QColor back_color_;
 
@@ -76,6 +74,7 @@ private slots:
 	void front_color_clicked();
 	void back_color_clicked();
 	void both_color_clicked();
+	void opaque_value_changed(int v);
 	void color_selected();
 
 private:

@@ -37,6 +37,10 @@ namespace plugin_surface_render_transp
 Plugin_SurfaceRenderTransp::~Plugin_SurfaceRenderTransp()
 {}
 
+Plugin_SurfaceRenderTransp::Plugin_SurfaceRenderTransp()
+{}
+
+
 MapParameters& Plugin_SurfaceRenderTransp::get_parameters(View* view, MapHandlerGen* map)
 {
 	view->makeCurrent();
@@ -92,24 +96,42 @@ void Plugin_SurfaceRenderTransp::disable()
 
 void Plugin_SurfaceRenderTransp::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	if (map->dimension() == 2)
-	{
-		//save map
-		const MapParameters& p = get_parameters(view, map);
-	}
+//	cgogn_log_info("Plugin_SurfaceRenderTransp::draw_map") << "ok";
 }
 
-void Plugin_SurfaceRenderTransp::draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv)
+void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
 	const std::list<MapHandlerGen*>& maps = view->get_linked_maps();
+	if (maps.empty())
+		return;
 
-	cgogn::rendering::SurfaceTransparencyDrawer trdr = transp_drawer_set_[view];
+	auto& view_param_set = parameter_set_[view];
 
-	trdr->draw_flat(proj,mv, [&]
+	auto  it_trdr = transp_drawer_set_.find(view);
+	if (it_trdr ==  transp_drawer_set_.end())
+		 it_trdr = (transp_drawer_set_.insert(std::make_pair(view,new cgogn::rendering::SurfaceTransparencyDrawer()))).first;
+
+	it_trdr->second->draw( [&] ()
 	{
 		for (const auto& m: maps)
 		{
-			m->draw(cgogn::rendering::TRIANGLES);
+			QMatrix4x4 mmv = mv * m->get_frame_matrix() * m->get_transformation_matrix();
+			auto& p = view_param_set[m];
+			if (p.is_drawable())
+			{
+				if (p.face_style_ == MapParameters::FLAT)
+				{
+					p.shader_flat_param_->bind(proj,mmv);
+					m->draw(cgogn::rendering::TRIANGLES);
+					p.shader_flat_param_->release();
+				}
+				if (p.face_style_ == MapParameters::PHONG)
+				{
+					p.shader_phong_param_->bind(proj,mmv);
+					m->draw(cgogn::rendering::TRIANGLES);
+					p.shader_phong_param_->release();
+				}
+			}
 		}
 	});
 
@@ -117,9 +139,11 @@ void Plugin_SurfaceRenderTransp::draw(View*, const QMatrix4x4& proj, const QMatr
 
 void Plugin_SurfaceRenderTransp::resizeGL(View* view, int width, int height)
 {
-	transp_drawer_->resize(view->devicePixelRatio()*width,view->devicePixelRatio()*height,this);
-//	QOGLViewer::resizeGL(width,height);
+	auto  it_trdr = transp_drawer_set_.find(view);
+	if (it_trdr !=  transp_drawer_set_.end())
+		it_trdr->second->resize(view->devicePixelRatio()*width,view->devicePixelRatio()*height,view);
 }
+
 void Plugin_SurfaceRenderTransp::view_linked(View* view)
 {
 	update_dock_tab();
@@ -234,7 +258,6 @@ void Plugin_SurfaceRenderTransp::viewer_initialized()
 		auto& view_param_set = parameter_set_[view];
 		for (auto & p : view_param_set)
 			p.second.initialize_gl();
-		transp_drawer_set_[view]= new cgogn::rendering::SurfaceTransparencyDrawer();
 	}
 }
 

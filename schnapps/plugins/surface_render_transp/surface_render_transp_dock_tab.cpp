@@ -50,9 +50,8 @@ SurfaceRenderTransp_DockTab::SurfaceRenderTransp_DockTab(SCHNApps* s, Plugin_Sur
 	connect(backColorButton, SIGNAL(clicked()), this, SLOT(back_color_clicked()));
 	connect(bothColorButton, SIGNAL(clicked()), this, SLOT(both_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
+	connect(opaqueSlider,SIGNAL(valueChanged(int)),this,SLOT(opaque_value_changed(int)));
 }
-
-
 
 
 
@@ -99,6 +98,8 @@ void SurfaceRenderTransp_DockTab::face_style_changed(QAbstractButton* b)
 				p.face_style_ = MapParameters::FLAT;
 			else if (radio_phongShading->isChecked())
 				p.face_style_ = MapParameters::PHONG;
+			else if (radio_noneShading->isChecked())
+				p.face_style_ = MapParameters::NONE;
 			view->update();
 		}
 	}
@@ -135,7 +136,7 @@ void SurfaceRenderTransp_DockTab::color_selected()
 
 	if (current_color_dial_ == 3)
 	{
-		front_color_ = col;
+		front_color_ = QColor(col.red(),col.green(),col.blue(),opaqueSlider->value());
 		frontColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		if (view && map)
 		{
@@ -147,7 +148,7 @@ void SurfaceRenderTransp_DockTab::color_selected()
 
 	if (current_color_dial_ == 4)
 	{
-		back_color_ = col;
+		back_color_ = QColor(col.red(),col.green(),col.blue(),opaqueSlider->value());
 		backColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		if (view && map)
 		{
@@ -159,8 +160,8 @@ void SurfaceRenderTransp_DockTab::color_selected()
 
 	if (current_color_dial_ == 5)
 	{
-		front_color_ = col;
-		back_color_ = col;
+		front_color_ = QColor(col.red(),col.green(),col.blue(),opaqueSlider->value());
+		back_color_ = front_color_;
 		bothColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		frontColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		backColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
@@ -173,6 +174,26 @@ void SurfaceRenderTransp_DockTab::color_selected()
 		}
 	}
 }
+
+void SurfaceRenderTransp_DockTab::opaque_value_changed(int v)
+{
+	if (!updating_ui_)
+	{
+		front_color_.setAlpha(opaqueSlider->value());
+		back_color_.setAlpha(opaqueSlider->value());
+
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_front_color(front_color_);
+			p.set_back_color(back_color_);
+			view->update();
+		}
+	}
+}
+
 
 void SurfaceRenderTransp_DockTab::add_position_vbo(QString name)
 {
@@ -243,6 +264,7 @@ void SurfaceRenderTransp_DockTab::update_map_parameters(MapHandlerGen* map, cons
 
 	radio_flatShading->setChecked(p.face_style_ == MapParameters::FLAT);
 	radio_phongShading->setChecked(p.face_style_ == MapParameters::PHONG);
+	radio_noneShading->setChecked(p.face_style_ == MapParameters::NONE);
 
 	front_color_ = p.get_front_color();
 	frontColorButton->setStyleSheet("QPushButton { background-color:" + front_color_.name() + " }");
@@ -250,6 +272,8 @@ void SurfaceRenderTransp_DockTab::update_map_parameters(MapHandlerGen* map, cons
 
 	back_color_ = p.get_back_color();
 	backColorButton->setStyleSheet("QPushButton { background-color:" + back_color_.name() + " }");
+
+	opaqueSlider->setValue(front_color_.alpha());
 
 	updating_ui_ = false;
 }
