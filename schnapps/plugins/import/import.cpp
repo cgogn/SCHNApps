@@ -113,6 +113,13 @@ void Plugin_Import::import_surface_mesh_from_file_dialog()
 {
 	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", setting_default_path_, "Surface mesh Files (*.ply *.off *.stl *.trian *.vtk *.vtp *.vtu *.obj *.msh *.mesh *.meshb)");
 	QStringList::Iterator it = filenames.begin();
+
+	if  (it != filenames.end())
+	{
+		QFileInfo info(*it);
+		setting_default_path_ = info.path();
+	}
+
 	while (it != filenames.end())
 	{
 		import_surface_mesh_from_file(*it);
@@ -151,6 +158,13 @@ void Plugin_Import::import_volume_mesh_from_file_dialog()
 {
 	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", setting_default_path_, "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
 	QStringList::Iterator it = filenames.begin();
+
+	if  (it != filenames.end())
+	{
+		QFileInfo info(*it);
+		setting_default_path_ = info.path();
+	}
+
 	while (it != filenames.end())
 	{
 		import_volume_mesh_from_file(*it);
