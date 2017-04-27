@@ -109,7 +109,10 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 
 	auto  it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr ==  transp_drawer_set_.end())
-		 it_trdr = (transp_drawer_set_.insert(std::make_pair(view,new cgogn::rendering::SurfaceTransparencyDrawer()))).first;
+	{
+		it_trdr = (transp_drawer_set_.insert(std::make_pair(view,new cgogn::rendering::SurfaceTransparencyDrawer()))).first;
+		it_trdr->second->resize(view->devicePixelRatio()*view->width(),view->devicePixelRatio()*view->height(),view);
+	}
 
 	it_trdr->second->draw( [&] ()
 	{
