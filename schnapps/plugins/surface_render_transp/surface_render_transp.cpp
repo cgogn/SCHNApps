@@ -79,6 +79,8 @@ bool Plugin_SurfaceRenderTransp::enable()
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
+	connect(schnapps_, SIGNAL(view_splitted(View*)), this, SLOT(splitted_view(View*)));
+
 	update_dock_tab();
 
 	return true;
@@ -110,7 +112,8 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 	auto  it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr ==  transp_drawer_set_.end())
 	{
-		it_trdr = (transp_drawer_set_.insert(std::make_pair(view,new cgogn::rendering::SurfaceTransparencyDrawer()))).first;
+		auto ptr = new cgogn::rendering::SurfaceTransparencyDrawer();
+		it_trdr = (transp_drawer_set_.insert(std::make_pair(view,ptr))).first;
 		it_trdr->second->resize(view->devicePixelRatio()*view->width(),view->devicePixelRatio()*view->height(),view);
 	}
 
@@ -143,7 +146,7 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 void Plugin_SurfaceRenderTransp::resizeGL(View* view, int width, int height)
 {
 	auto  it_trdr = transp_drawer_set_.find(view);
-	if (it_trdr !=  transp_drawer_set_.end())
+	if (it_trdr != transp_drawer_set_.end())
 		it_trdr->second->resize(view->devicePixelRatio()*width,view->devicePixelRatio()*height,view);
 }
 
@@ -167,6 +170,13 @@ void Plugin_SurfaceRenderTransp::view_unlinked(View* view)
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
+
+	auto  it_trdr = transp_drawer_set_.find(view);
+	if (it_trdr != transp_drawer_set_.end())
+	{
+		delete it_trdr->second;
+		transp_drawer_set_.erase(it_trdr);
+	}
 }
 
 void Plugin_SurfaceRenderTransp::map_linked(MapHandlerGen *map)
@@ -282,6 +292,16 @@ void Plugin_SurfaceRenderTransp::update_dock_tab()
 	}
 	else
 		schnapps_->disable_plugin_tab_widgets(this);
+}
+
+void Plugin_SurfaceRenderTransp::splitted_view(View * view)
+{
+	auto  it_trdr = transp_drawer_set_.find(view);
+	if (it_trdr != transp_drawer_set_.end())
+	{
+		delete it_trdr->second;
+		transp_drawer_set_.erase(it_trdr);
+	}
 }
 
 /******************************************************************************/

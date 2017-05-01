@@ -514,8 +514,10 @@ void SCHNApps::cycle_selected_view()
 View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 {
 	View* new_view = add_view();
-
 	View* view = views_.at(name).get();
+
+	emit(view_splitted(view));
+
 	QSplitter* parent = static_cast<QSplitter*>(view->parentWidget());
 
 	if (parent == root_splitter_ && !root_splitter_initialized_)
@@ -551,6 +553,9 @@ View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 		sz[1] = tot - sz[0];
 		spl->setSizes(sz);
 	}
+
+	view->update_bb();
+	new_view->update_bb();
 
 	return new_view;
 }

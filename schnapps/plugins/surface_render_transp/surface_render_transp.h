@@ -193,6 +193,7 @@ private slots:
 	void enable_on_selected_view(Plugin* p);
 
 	void update_dock_tab();
+	void splitted_view(View* view);
 
 public slots:
 
