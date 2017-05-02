@@ -79,7 +79,8 @@ bool Plugin_SurfaceRenderTransp::enable()
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
-	connect(schnapps_, SIGNAL(view_splitted(View*)), this, SLOT(splitted_view(View*)));
+	connect(schnapps_, SIGNAL(view_removed(View*)), this, SLOT(removed_view(View*)));
+	connect(schnapps_, SIGNAL(view_splitted(View*)), this, SLOT(removed_view(View*)));
 
 	update_dock_tab();
 
@@ -294,7 +295,7 @@ void Plugin_SurfaceRenderTransp::update_dock_tab()
 		schnapps_->disable_plugin_tab_widgets(this);
 }
 
-void Plugin_SurfaceRenderTransp::splitted_view(View * view)
+void Plugin_SurfaceRenderTransp::removed_view(View * view)
 {
 	auto  it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr != transp_drawer_set_.end())

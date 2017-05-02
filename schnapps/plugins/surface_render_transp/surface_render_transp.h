@@ -63,8 +63,8 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API MapParameters
 		shader_phong_param_(nullptr),
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
-		front_color_(85, 168, 190, 130),
-		back_color_(85, 168, 190, 130),
+		front_color_(85, 168, 190, 128),
+		back_color_(85, 168, 190, 128),
 		face_style_(FLAT)
 	{
 		initialize_gl();
@@ -193,7 +193,7 @@ private slots:
 	void enable_on_selected_view(Plugin* p);
 
 	void update_dock_tab();
-	void splitted_view(View* view);
+	void removed_view(View* view);
 
 public slots:
 
