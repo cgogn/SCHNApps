@@ -193,7 +193,7 @@ private slots:
 	void enable_on_selected_view(Plugin* p);
 
 	void update_dock_tab();
-	void removed_view(View* view);
+	void reset_drawer_of_view(View* view);
 
 public slots:
 

@@ -385,7 +385,7 @@ signals:
 	void view_added(View*);
 	void view_removed(View*);
 	void selected_view_changed(View*, View*);
-	void view_splitted(View*);
+	void view_split(View*);
 
 	void schnapps_closing();
 

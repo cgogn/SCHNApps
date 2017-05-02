@@ -516,7 +516,7 @@ View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 	View* new_view = add_view();
 	View* view = views_.at(name).get();
 
-	emit(view_splitted(view));
+	emit(view_split(view));
 
 	QSplitter* parent = static_cast<QSplitter*>(view->parentWidget());
 
