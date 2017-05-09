@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
-#define SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_
 
 #include "dll.h"
 #include <schnapps/core/plugin_processing.h>
@@ -33,13 +33,13 @@
 namespace schnapps
 {
 
-namespace plugin_shallow_water
+namespace plugin_shallow_water_2
 {
 
 /**
 * @brief Shallow water simulation
 */
-class SCHNAPPS_PLUGIN_SHALLOW_WATER_API Plugin_ShallowWater : public PluginProcessing
+class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API Plugin_ShallowWater : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -68,28 +68,12 @@ private slots:
 	void try_subdivision();
 	void try_simplification();
 	void subdivide_face(CMap2::Face f);
-	void remove_edge(CMap2::Edge e);
+	void simplify_face(CMap2::Face f);
+
+	uint32 face_level(CMap2::Face f);
+	cgogn::Dart oldest_dart(CMap2::Face f);
 
 private:
-
-	struct Flux
-	{
-		SCALAR F1;
-		SCALAR F2;
-		SCALAR S0L;
-		SCALAR S0R;
-	};
-
-	struct Flux Solv_HLL(
-		SCALAR zbL, SCALAR zbR,
-		SCALAR PhiL, SCALAR PhiR,
-		SCALAR hL, SCALAR hR,
-		SCALAR qL, SCALAR qR,
-		SCALAR hmin, SCALAR g
-	);
-
-	std::pair<CMap2::Edge, CMap2::Edge> get_LR_edges(CMap2::Face f);
-	std::pair<CMap2::Face, CMap2::Face> get_LR_faces(CMap2::Edge e);
 
 	ShallowWater_DockTab* dock_tab_;
 
@@ -100,30 +84,15 @@ private:
 
 	CMap2Handler* map_;
 	CMap2* map2_;
-	CMap2::Edge boundaryL_, boundaryR_;
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
-	CMap2::VertexAttribute<VEC3> water_position_;
-	CMap2::VertexAttribute<SCALAR> scalar_value_;
 
-	CMap2::FaceAttribute<SCALAR> h_;        // water height
-	CMap2::FaceAttribute<SCALAR> h_tmp_;
-	CMap2::FaceAttribute<SCALAR> q_;        // water flow
-	CMap2::FaceAttribute<SCALAR> q_tmp_;
-	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
-	CMap2::FaceAttribute<SCALAR> length_;   // cell length
-	CMap2::FaceAttribute<SCALAR> phi_;      // cell width
-
-	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
-
-	CMap2::EdgeAttribute<SCALAR> f1_;
-	CMap2::EdgeAttribute<SCALAR> f2_;
-	CMap2::EdgeAttribute<SCALAR> s0L_;
-	CMap2::EdgeAttribute<SCALAR> s0R_;
+	CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
+	CMap2::FaceAttribute<uint32> subd_code_; // subdivision code
 };
 
-} // namespace plugin_shallow_water
+} // namespace plugin_shallow_water_2
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_

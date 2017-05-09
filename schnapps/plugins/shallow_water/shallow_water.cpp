@@ -41,10 +41,6 @@ bool Plugin_ShallowWater::enable()
 	dock_tab_ = new ShallowWater_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Shallow Water");
 
-	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
-
-	update_dock_tab();
-
 	const unsigned int nbc = 100u;
 
 	map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water", 2));
@@ -111,21 +107,6 @@ void Plugin_ShallowWater::disable()
 	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
 	schnapps_->remove_map("shallow_water");
 	delete dock_tab_;
-}
-
-void Plugin_ShallowWater::draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{
-
-}
-
-void Plugin_ShallowWater::view_linked(View*)
-{
-	update_dock_tab();
-}
-
-void Plugin_ShallowWater::view_unlinked(View*)
-{
-	update_dock_tab();
 }
 
 void Plugin_ShallowWater::init()
@@ -452,15 +433,6 @@ std::pair<CMap2::Face, CMap2::Face> Plugin_ShallowWater::get_LR_faces(CMap2::Edg
 	}
 
 	return std::make_pair(fL, fR);
-}
-
-void Plugin_ShallowWater::update_dock_tab()
-{
-	View* view = schnapps_->get_selected_view();
-	if (view->is_linked_to_plugin(this))
-		schnapps_->enable_plugin_tab_widgets(this);
-	else
-		schnapps_->disable_plugin_tab_widgets(this);
 }
 
 struct Plugin_ShallowWater::Flux Plugin_ShallowWater::Solv_HLL(
