@@ -66,7 +66,8 @@ std::unique_ptr<void*, std::function<void (void**)> > export_netgen(CMap2& map, 
 	return res;
 }
 
-NetgenStructureVolumeImport::NetgenStructureVolumeImport(void** netgen_data) : Inherit(),
+NetgenStructureVolumeImport::NetgenStructureVolumeImport(void** netgen_data, CMap3& map) :
+	Inherit(map),
 	volume_mesh_structure_(netgen_data)
 {
 	import_netgen_structure();

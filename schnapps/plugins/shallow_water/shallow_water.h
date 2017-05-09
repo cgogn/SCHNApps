@@ -73,11 +73,17 @@ public slots:
 
 	void init();
 	void start();
+	void stop();
+	bool is_running();
 
 private slots:
 
 	void update_dock_tab();
 	void execute_time_step();
+	void try_subdivision();
+	void try_simplification();
+	void subdivide_face(CMap2::Face f);
+	void remove_edge(CMap2::Edge e);
 
 private:
 
@@ -105,15 +111,15 @@ private:
 	SCALAR t_;
 	SCALAR dt_;
 	QTimer* timer_;
+	bool connectivity_changed_;
 
 	CMap2Handler* map_;
 	CMap2* map2_;
 	CMap2::Edge boundaryL_, boundaryR_;
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
-
-	CMap2::VertexAttribute<SCALAR> water_height_;
 	CMap2::VertexAttribute<VEC3> water_position_;
+	CMap2::VertexAttribute<SCALAR> scalar_value_;
 
 	CMap2::FaceAttribute<SCALAR> h_;        // water height
 	CMap2::FaceAttribute<SCALAR> h_tmp_;
@@ -122,6 +128,8 @@ private:
 	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
 	CMap2::FaceAttribute<SCALAR> length_;   // cell length
 	CMap2::FaceAttribute<SCALAR> phi_;      // cell width
+
+	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
 
 	CMap2::EdgeAttribute<SCALAR> f1_;
 	CMap2::EdgeAttribute<SCALAR> f2_;

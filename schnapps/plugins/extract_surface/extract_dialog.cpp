@@ -72,7 +72,7 @@ void ExtractDialog::selected_map_changed(const QString& map_name)
 
 	if (MapHandlerGen* mhg = schnapps_->get_map(map_name))
 	{
-		const auto* vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
+		const auto* vert_att_cont = mhg->attribute_container(CellType::Vertex_Cell);
 		for (const auto& att_name : vert_att_cont->names())
 		{
 			this->comboBoxPositionAttribute->addItem(QString::fromStdString(att_name));
@@ -91,4 +91,5 @@ void ExtractDialog::extract_validated()
 }
 
 } // namespace plugin_extract_surface
+
 } // namespace schnapps
