@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/core/schnapps.h>
-
+#include <schnapps/core/schnapps_window.h>
 #include <schnapps/core/camera.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/plugin.h>
@@ -615,6 +615,19 @@ void SCHNApps::set_split_view_positions(QString positions)
 		spl->restoreState(ba);
 		liste.pop_front();
 	}
+}
+
+/*********************************************************
+ * MANAGE MENU ACTIONS
+ *********************************************************/
+QAction* SCHNApps::add_menu_action(const QString& menu_path, const QString& action_text)
+{
+	return window_->add_menu_action(menu_path, action_text);
+}
+
+void SCHNApps::remove_menu_action(QAction* action)
+{
+	window_->remove_menu_action(action);
 }
 
 /*********************************************************
