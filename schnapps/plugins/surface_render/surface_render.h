@@ -360,11 +360,13 @@ private:
 	void add_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
 	void remove_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
 
-private slots:
+	void map_linked(View* view, MapHandlerGen* map);
+	void map_unlinked(View* view, MapHandlerGen* map);
 
-	// slots called from View signals
-	void map_linked(MapHandlerGen* map);
-	void map_unlinked(MapHandlerGen* map);
+	QMetaObject::Connection connection_map_linked_;
+	QMetaObject::Connection connection_map_unlinked_;
+
+private slots:
 
 	// slots called from MapHandler signals
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
@@ -470,7 +472,7 @@ private:
 	QString setting_auto_load_normal_attribute_;
 	QString setting_auto_load_color_attribute_;
 
-	Plugin* plug_transp_;
+	PluginInteraction* plug_transp_;
 };
 
 } // namespace plugin_surface_render

@@ -84,7 +84,7 @@ bool Plugin_SurfaceRender::enable()
 
 	update_dock_tab();
 
-	plug_transp_=schnapps_->enable_plugin("surface_render_transp");
+	plug_transp_ = reinterpret_cast<PluginInteraction*>(schnapps_->enable_plugin("surface_render_transp"));
 
 	return true;
 }
@@ -188,56 +188,42 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 
 void Plugin_SurfaceRender::view_linked(View* view)
 {
-	view->link_plugin(reinterpret_cast<PluginInteraction*>(plug_transp_));
+	view->link_plugin(plug_transp_);
 
 	update_dock_tab();
 
-	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connection_map_linked_ = connect(view, &View::map_linked, [=] (MapHandlerGen* m) { this->map_linked(view,m);});
+	connection_map_unlinked_ = connect(view, &View::map_unlinked, [=] (MapHandlerGen* m) { map_unlinked(view,m);});
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
+	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(view,map); }
 }
 
 void Plugin_SurfaceRender::view_unlinked(View* view)
 {
 	update_dock_tab();
 
-	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(connection_map_linked_);
+	disconnect(connection_map_unlinked_);
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps())
-	{
-		if (map->dimension() == 2)
-		{
-			disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
-			disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
-			disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
+	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(view,map); }
 
-			MapParameters& p = get_parameters(view, map);
-			remove_transparency(view, map, p);
-		}
-	}
 	parameter_set_.erase(view);
 }
 
-void Plugin_SurfaceRender::map_linked(MapHandlerGen *map)
+void Plugin_SurfaceRender::map_linked(View* view, MapHandlerGen *map)
 {
 	update_dock_tab();
 
 	if (map->dimension() == 2)
 	{
-		View* view = schnapps_->get_selected_view();
-		if (view)
-		{
-			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_);
-			set_normal_vbo(view->get_name(), map->get_name(), setting_auto_load_normal_attribute_);
-			set_color_vbo(view->get_name(), map->get_name(), setting_auto_load_color_attribute_);
+		set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_);
+		set_normal_vbo(view->get_name(), map->get_name(), setting_auto_load_normal_attribute_);
+		set_color_vbo(view->get_name(), map->get_name(), setting_auto_load_color_attribute_);
 
-			MapParameters& p = get_parameters(view, map);
-			add_transparency(view, map, p);
-		}
+		MapParameters& p = get_parameters(view, map);
+		add_transparency(view, map, p);
 
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
@@ -245,7 +231,7 @@ void Plugin_SurfaceRender::map_linked(MapHandlerGen *map)
 	}
 }
 
-void Plugin_SurfaceRender::map_unlinked(MapHandlerGen *map)
+void Plugin_SurfaceRender::map_unlinked(View* view, MapHandlerGen *map)
 {
 	update_dock_tab();
 
@@ -255,12 +241,8 @@ void Plugin_SurfaceRender::map_unlinked(MapHandlerGen *map)
 		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 
-		View* view = schnapps_->get_selected_view();
-		if (view)
-		{
-			MapParameters& p = get_parameters(view, map);
-			remove_transparency(view, map, p);
-		}
+		MapParameters& p = get_parameters(view, map);
+		remove_transparency(view, map, p);
 	}
 }
 

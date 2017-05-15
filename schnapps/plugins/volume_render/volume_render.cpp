@@ -81,7 +81,7 @@ bool Plugin_VolumeRender::enable()
 
 	update_dock_tab();
 
-	plug_transp_=schnapps_->enable_plugin("surface_render_transp");
+	plug_transp_ = reinterpret_cast<PluginInteraction*>(schnapps_->enable_plugin("surface_render_transp"));
 
 	return true;
 }
@@ -195,39 +195,27 @@ void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
 
 void Plugin_VolumeRender::view_linked(View* view)
 {
-	view->link_plugin(reinterpret_cast<PluginInteraction*>(plug_transp_));
+	view->link_plugin(plug_transp_);
 
 	update_dock_tab();
 
-	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connection_map_linked_ = connect(view, &View::map_linked, [=] (MapHandlerGen* m) { this->map_linked(view,m);});
+	connection_map_unlinked_ = connect(view, &View::map_unlinked, [=] (MapHandlerGen* m) { map_unlinked(view,m);});
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
+	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(view,map); }
 }
 
 void Plugin_VolumeRender::view_unlinked(View* view)
 {
 	update_dock_tab();
 
-	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(connection_map_linked_);
+	disconnect(connection_map_unlinked_);
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps())
-	{
-		if (map->dimension() == 3)
-		{
-			disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
-			disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
-			disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
-			disconnect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()));
-			disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(linked_attribute_changed(cgogn::Orbit, QString)));
-			MapParameters& p = get_parameters(view, map);
-			if (p.use_transparency_)
-				plugin_surface_render_transp::remove_tr_vol(plug_transp_, view, map, p.get_transp_drawer_rend());
-		}
-	}
+	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(view,map); }
+
 	parameter_set_.erase(view);
 }
 
@@ -260,21 +248,17 @@ void Plugin_VolumeRender::connectivity_changed(MapHandlerGen* map)
 	}
 }
 
-void Plugin_VolumeRender::map_linked(MapHandlerGen* map)
+void Plugin_VolumeRender::map_linked(View* view, MapHandlerGen* map)
 {
 	update_dock_tab();
 
 	if (map->dimension() == 3)
 	{
-		View* view = schnapps_->get_selected_view();
-		if (view)
-		{
-			std::cout <<"Plugin_VolumeRender::map_linked" << view->get_name().toStdString() << std::endl;
-			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_);
-			MapParameters& p = get_parameters(view, map);
-			if (p.use_transparency_)
-					plugin_surface_render_transp::add_tr_vol(plug_transp_,view,map,p.get_transp_drawer_rend());
-		}
+		set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_);
+		MapParameters& p = get_parameters(view, map);
+		if (p.use_transparency_)
+				plugin_surface_render_transp::add_tr_vol(plug_transp_,view,map,p.get_transp_drawer_rend());
+
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
@@ -283,7 +267,7 @@ void Plugin_VolumeRender::map_linked(MapHandlerGen* map)
 	}
 }
 
-void Plugin_VolumeRender::map_unlinked(MapHandlerGen* map)
+void Plugin_VolumeRender::map_unlinked(View* view, MapHandlerGen* map)
 {
 	update_dock_tab();
 
@@ -294,13 +278,10 @@ void Plugin_VolumeRender::map_unlinked(MapHandlerGen* map)
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 		disconnect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()));
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit,QString)), this, SLOT(linked_attribute_changed(cgogn::Orbit,QString)));
-		View* view = schnapps_->get_selected_view();
-		if (view)
-		{
-			MapParameters& p = get_parameters(view, map);
-			if (p.use_transparency_)
-					plugin_surface_render_transp::remove_tr_vol(plug_transp_,view,map,p.get_transp_drawer_rend());
-		}
+
+		MapParameters& p = get_parameters(view, map);
+		if (p.use_transparency_)
+			plugin_surface_render_transp::remove_tr_vol(plug_transp_,view,map,p.get_transp_drawer_rend());
 	}
 }
 
@@ -413,7 +394,6 @@ void Plugin_VolumeRender::viewer_initialized()
 	View* view = dynamic_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
-		std::cout << "Plugin_VolumeRender::viewer_initialized  " << std::hex << view << std::endl;
 		auto& view_param_set = parameter_set_[view];
 		for (auto & p : view_param_set)
 		{

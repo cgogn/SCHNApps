@@ -281,11 +281,14 @@ private:
 
 	void connectivity_changed(MapHandlerGen* mh);
 
-private slots:
+	void map_linked(View* view, MapHandlerGen* map);
+	void map_unlinked(View* view, MapHandlerGen* map);
 
-	// slots called from View signals
-	void map_linked(MapHandlerGen* map);
-	void map_unlinked(MapHandlerGen* map);
+	QMetaObject::Connection connection_map_linked_;
+	QMetaObject::Connection connection_map_unlinked_;
+
+
+private slots:
 
 	// slots called from MapHandler signals
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
@@ -376,7 +379,7 @@ private:
 	bool setting_auto_enable_on_selected_view_;
 	QString setting_auto_load_position_attribute_;
 
-	Plugin* plug_transp_;
+	PluginInteraction* plug_transp_;
 };
 
 } // namespace plugin_volume_render
