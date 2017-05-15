@@ -29,7 +29,6 @@
 #include <cgogn/geometry/algos/selection.h>
 
 #include <cgogn/rendering/transparency_volume_drawer.h>
-#include <schnapps/plugins/volume_render/volume_transp.h>
 
 
 namespace schnapps

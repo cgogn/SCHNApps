@@ -11,7 +11,6 @@ set(HEADER_FILES
 	dll.h
 	volume_render.h
 	volume_render_dock_tab.h
-	volume_transp.h
 )
 
 set(SOURCE_FILES
