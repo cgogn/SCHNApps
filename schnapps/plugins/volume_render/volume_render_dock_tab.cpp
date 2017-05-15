@@ -23,8 +23,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_render_dock_tab.h>
-#include <volume_render.h>
+#include "volume_render_dock_tab.h"
+#include "volume_render.h"
+
+#include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
+
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -147,6 +150,14 @@ void VolumeRender_DockTab::render_faces_changed(bool b)
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.render_faces_ = b;
 			view->update();
+
+			if (p.use_transparency_)
+			{
+				if (b)
+					plugin_surface_render_transp::add_tr_vol(plugin_->plug_transp_,view,map,p.get_transp_drawer_rend());
+				else
+					plugin_surface_render_transp::remove_tr_vol(plugin_->plug_transp_,view,map,p.get_transp_drawer_rend());
+			}
 		}
 	}
 }
@@ -163,6 +174,13 @@ void VolumeRender_DockTab::transparency_rendering_changed(bool b)
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_transparency_enabled(b);
 			plugin_->connectivity_changed(map);
+			if (p.render_faces_)
+			{
+				if (b)
+					plugin_surface_render_transp::add_tr_vol(plugin_->plug_transp_,view,map,p.get_transp_drawer_rend());
+				else
+					plugin_surface_render_transp::remove_tr_vol(plugin_->plug_transp_,view,map,p.get_transp_drawer_rend());
+			}
 			view->update();
 		}
 	}

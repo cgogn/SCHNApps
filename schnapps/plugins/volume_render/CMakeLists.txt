@@ -11,6 +11,7 @@ set(HEADER_FILES
 	dll.h
 	volume_render.h
 	volume_render_dock_tab.h
+	volume_transp.h
 )
 
 set(SOURCE_FILES
@@ -36,6 +37,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
+	plugin_surface_render_transp
 	${cgogn_core_LIBRARIES}
 	${cgogn_rendering_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}

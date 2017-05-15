@@ -36,7 +36,7 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
-#include <volume_render_dock_tab.h>
+#include <schnapps/plugins/volume_render/volume_render_dock_tab.h>
 
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
@@ -86,9 +86,10 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	void set_face_color(const QColor& c)
 	{
 		face_color_ = c;
-		volume_drawer_rend_->set_face_color(c);
+		volume_drawer_rend_->set_face_color(face_color_);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
-		volume_transparency_drawer_rend_->set_color(c);
+		face_color_.setAlpha(transparency_factor_);
+		volume_transparency_drawer_rend_->set_color(face_color_);
 #endif
 	}
 
@@ -161,12 +162,21 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 			float32 d = -(position.dot(axis_z));
 			volume_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
 			topo_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
+	#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+			volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
+	#endif
+
 		}
 		else
 		{
 			volume_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 			topo_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
+	#if (QT_VERSION >= QT_VERSION_CHECK(5, 6, 0))
+			volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
+	#endif
+
 		}
+
 	}
 
 	void plane_clip_from_frame()
@@ -177,6 +187,11 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt,axis_z);
 		const float d = -(position.dot(axis_z));
 		plane_clipping_ = QVector4D(axis_z[0],axis_z[1],axis_z[2],d);
+	}
+
+	cgogn::rendering::VolumeTransparencyDrawer::Renderer* get_transp_drawer_rend()
+	{
+		return volume_transparency_drawer_rend_.get();
 	}
 
 private:
@@ -241,6 +256,8 @@ public:
 
 	~Plugin_VolumeRender() {}
 
+	void get_transparent_maps(View* view, std::vector<std::pair<MapHandlerGen*, cgogn::rendering::VolumeTransparencyDrawer::Renderer*>>& trmaps);
+
 private:
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
@@ -257,7 +274,7 @@ private:
 	void mouseRelease(View*, QMouseEvent*) override;
 	void mouseMove(View*, QMouseEvent*) override;
 	inline void wheelEvent(View*, QWheelEvent*) override {}
-	void resizeGL(View* view, int width, int height) override;
+	void resizeGL(View* view, int width, int height) override {}
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
@@ -358,6 +375,8 @@ private:
 
 	bool setting_auto_enable_on_selected_view_;
 	QString setting_auto_load_position_attribute_;
+
+	Plugin* plug_transp_;
 };
 
 } // namespace plugin_volume_render

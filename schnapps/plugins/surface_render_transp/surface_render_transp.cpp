@@ -21,12 +21,16 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_transp.h>
+#include "surface_render_transp.h"
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
 #include <cgogn/geometry/algos/selection.h>
+
+#include <cgogn/rendering/transparency_volume_drawer.h>
+#include <schnapps/plugins/volume_render/volume_transp.h>
+
 
 namespace schnapps
 {
@@ -41,75 +45,21 @@ Plugin_SurfaceRenderTransp::Plugin_SurfaceRenderTransp()
 {}
 
 
-MapParameters& Plugin_SurfaceRenderTransp::get_parameters(View* view, MapHandlerGen* map)
-{
-	view->makeCurrent();
-
-	auto& view_param_set = parameter_set_[view];
-	if (view_param_set.count(map) == 0)
-	{
-		MapParameters& p = view_param_set[map];
-		return p;
-	}
-	else
-		return view_param_set[map];
-}
 
 bool Plugin_SurfaceRenderTransp::enable()
 {
-	if (get_setting("Auto enable on selected view").isValid())
-		setting_auto_enable_on_selected_view_ = get_setting("Auto enable on selected view").toBool();
-	else
-		setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true).toBool();
-
-	if (get_setting("Auto load position attribute").isValid())
-		setting_auto_load_position_attribute_ = get_setting("Auto load position attribute").toString();
-	else
-		setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position").toString();
-
-	if (get_setting("Auto load normal attribute").isValid())
-		setting_auto_load_normal_attribute_ = get_setting("Auto load normal attribute").toString();
-	else
-		setting_auto_load_normal_attribute_ = add_setting("Auto load normal attribute", "normal").toString();
-
-	dock_tab_ = new SurfaceRenderTransp_DockTab(this->schnapps_, this);
-	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render Transp");
-
-	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
-	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
-	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
-
-	connect(schnapps_, SIGNAL(view_removed(View*)), this, SLOT(reset_drawer_of_view(View*)));
-	connect(schnapps_, SIGNAL(view_split(View*)), this, SLOT(reset_drawer_of_view(View*)));
-
-	update_dock_tab();
-
 	return true;
 }
 
 void Plugin_SurfaceRenderTransp::disable()
 {
-	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
-	delete dock_tab_;
-
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
-	disconnect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 }
 
 void Plugin_SurfaceRenderTransp::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{
-//	cgogn_log_info("Plugin_SurfaceRenderTransp::draw_map") << "ok";
-}
+{}
 
 void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	const std::list<MapHandlerGen*>& maps = view->get_linked_maps();
-	if (maps.empty())
-		return;
-
-	auto& view_param_set = parameter_set_[view];
-
 	auto  it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr ==  transp_drawer_set_.end())
 	{
@@ -118,27 +68,46 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 		it_trdr->second->resize(view->devicePixelRatio()*view->width(),view->devicePixelRatio()*view->height(),view);
 	}
 
+	auto it2f = tr2maps_flat_.find(view);
+	auto it2p = tr2maps_phong_.find(view);
+	auto it3 = tr3maps_.find(view);
+
 	it_trdr->second->draw( [&] ()
 	{
-		for (const auto& m: maps)
+		// surfaces
+		if (view->is_linked_to_plugin("surface_render"))
 		{
-			QMatrix4x4 mmv = mv * m->get_frame_matrix() * m->get_transformation_matrix();
-			auto& p = view_param_set[m];
-			if (p.is_drawable())
-			{
-				if (p.face_style_ == MapParameters::FLAT)
+			if (it2f != tr2maps_flat_.end())
+				for (const auto& pm : it2f->second)
 				{
-					p.shader_flat_param_->bind(proj,mmv);
+					const auto& m = pm.first;
+					QMatrix4x4 mmv = mv * m->get_frame_matrix() * m->get_transformation_matrix();
+					pm.second->bind(proj,mmv);
 					m->draw(cgogn::rendering::TRIANGLES);
-					p.shader_flat_param_->release();
+					pm.second->release();
 				}
-				if (p.face_style_ == MapParameters::PHONG)
+
+			if (it2p != tr2maps_phong_.end())
+				for (const auto& pm : it2p->second)
 				{
-					p.shader_phong_param_->bind(proj,mmv);
+					const auto& m = pm.first;
+					QMatrix4x4 mmv = mv * m->get_frame_matrix() * m->get_transformation_matrix();
+					pm.second->bind(proj,mmv);
 					m->draw(cgogn::rendering::TRIANGLES);
-					p.shader_phong_param_->release();
+					pm.second->release();
 				}
-			}
+		}
+		// volumes
+		if (view->is_linked_to_plugin("volume_render"))
+		{
+			if (it3 != tr3maps_.end())
+				for (const auto& pm : it3->second)
+				{
+					const auto& m = pm.first;
+					QMatrix4x4 mmv = mv * m->get_frame_matrix() * m->get_transformation_matrix();
+					cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend = pm.second;
+					rend->draw_faces(proj, mmv, view);
+				}
 		}
 	});
 
@@ -153,24 +122,12 @@ void Plugin_SurfaceRenderTransp::resizeGL(View* view, int width, int height)
 
 void Plugin_SurfaceRenderTransp::view_linked(View* view)
 {
-	update_dock_tab();
-
-	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
-
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
 }
 
 void Plugin_SurfaceRenderTransp::view_unlinked(View* view)
 {
-	update_dock_tab();
-
-	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
-
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
 
 	auto  it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr != transp_drawer_set_.end())
@@ -179,124 +136,11 @@ void Plugin_SurfaceRenderTransp::view_unlinked(View* view)
 		transp_drawer_set_.erase(it_trdr);
 	}
 }
-
-void Plugin_SurfaceRenderTransp::map_linked(MapHandlerGen *map)
-{
-	update_dock_tab();
-
-	if (map->dimension() == 2)
-	{
-		View* view = schnapps_->get_selected_view();
-		if (view)
-		{
-			set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_);
-			set_normal_vbo(view->get_name(), map->get_name(), setting_auto_load_normal_attribute_);
-		}
-
-		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-	}
-}
-
-void Plugin_SurfaceRenderTransp::map_unlinked(MapHandlerGen *map)
-{
-	update_dock_tab();
-
-	if (map->dimension() == 2)
-	{
-		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
-		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
-	}
-}
-
-void Plugin_SurfaceRenderTransp::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
-{
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
-
-	if (map && map->is_selected_map())
-	{
-		const QString vbo_name = QString::fromStdString(vbo->name());
-		if (vbo->vector_dimension() == 3)
-		{
-			View* view = schnapps_->get_selected_view();
-			dock_tab_->add_position_vbo(vbo_name);
-			dock_tab_->add_normal_vbo(vbo_name);
-			if (view)
-			{
-				if (!get_parameters(view, map).get_position_vbo() && vbo_name == setting_auto_load_position_attribute_)
-					set_position_vbo(view->get_name(), map->get_name(), vbo_name);
-				if (!get_parameters(view, map).get_normal_vbo() && vbo_name == setting_auto_load_normal_attribute_)
-					set_normal_vbo(view->get_name(), map->get_name(), vbo_name);
-			}
-		}
-	}
-}
-
-void Plugin_SurfaceRenderTransp::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
-{
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
-
-	if (map && map->is_selected_map())
-	{
-		if (vbo->vector_dimension() == 3)
-		{
-			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->name()));
-			dock_tab_->remove_normal_vbo(QString::fromStdString(vbo->name()));
-		}
-	}
-
-	for (auto& it : parameter_set_)
-	{
-		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-		if (view_param_set.count(map) > 0ul)
-		{
-			MapParameters& p = view_param_set[map];
-			if (p.get_position_vbo() == vbo)
-				p.set_position_vbo(nullptr);
-			if (p.get_normal_vbo() == vbo)
-				p.set_normal_vbo(nullptr);
-		}
-	}
-
-	for (View* view : map->get_linked_views())
-		view->update();
-}
-
 
 
 void Plugin_SurfaceRenderTransp::viewer_initialized()
 {
 	View* view = dynamic_cast<View*>(sender());
-	if (view && (this->parameter_set_.count(view) > 0))
-	{
-		auto& view_param_set = parameter_set_[view];
-		for (auto & p : view_param_set)
-			p.second.initialize_gl();
-	}
-}
-
-void Plugin_SurfaceRenderTransp::enable_on_selected_view(Plugin* p)
-{
-	if ((this == p) && schnapps_->get_selected_view() && setting_auto_enable_on_selected_view_)
-		schnapps_->get_selected_view()->link_plugin(this);
-}
-
-void Plugin_SurfaceRenderTransp::update_dock_tab()
-{
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
-	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		schnapps_->enable_plugin_tab_widgets(this);
-		const MapParameters& p = get_parameters(view, map);
-		dock_tab_->update_map_parameters(map, p);
-	}
-	else
-		schnapps_->disable_plugin_tab_widgets(this);
-}
-
-void Plugin_SurfaceRenderTransp::reset_drawer_of_view(View * view)
-{
 	auto  it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr != transp_drawer_set_.end())
 	{
@@ -305,45 +149,102 @@ void Plugin_SurfaceRenderTransp::reset_drawer_of_view(View * view)
 	}
 }
 
-/******************************************************************************/
-/*                             PUBLIC INTERFACE                               */
-/******************************************************************************/
 
-
-void Plugin_SurfaceRenderTransp::set_face_style(View* view, MapHandlerGen* map, MapParameters::FaceShadingStyle s)
+void Plugin_SurfaceRenderTransp::add_tr_flat(View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		MapParameters& p = get_parameters(view, map);
-		p.face_style_ = s;
-		if (view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
-		view->update();
-	}
+	auto& pairs = tr2maps_flat_[view];
+	auto p = std::make_pair(map,param);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it == pairs.end())
+		pairs.push_back(p);
 }
 
-void Plugin_SurfaceRenderTransp::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
+void Plugin_SurfaceRenderTransp::add_tr_phong(View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		MapParameters& p = get_parameters(view, map);
-		p.set_position_vbo(vbo);
-		if (view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
-		view->update();
-	}
+	auto& pairs = tr2maps_phong_[view];
+	auto p = std::make_pair(map,param);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it == pairs.end())
+		pairs.push_back(p);
 }
 
-void Plugin_SurfaceRenderTransp::set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
+void Plugin_SurfaceRenderTransp::add_tr_vol(View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		MapParameters& p = get_parameters(view, map);
-		p.set_normal_vbo(vbo);
-		if (view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
-		view->update();
-	}
+	auto& pairs = tr3maps_[view];
+	auto p = std::make_pair(map,rend);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it == pairs.end())
+		pairs.push_back(p);
+}
+
+
+
+void Plugin_SurfaceRenderTransp::remove_tr_flat(View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param)
+{
+	auto& pairs = tr2maps_flat_[view];
+	auto p = std::make_pair(map,param);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it != pairs.end())
+		pairs.erase(it);
+}
+
+void Plugin_SurfaceRenderTransp::remove_tr_phong(View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param)
+{
+	auto& pairs = tr2maps_phong_[view];
+	auto p = std::make_pair(map,param);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it != pairs.end())
+		pairs.erase(it);
+}
+
+void Plugin_SurfaceRenderTransp::remove_tr_vol(View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
+{
+	auto& pairs = tr3maps_[view];
+	auto p = std::make_pair(map,rend);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it != pairs.end())
+		pairs.erase(it);
+}
+
+
+
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param)
+{
+	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
+	trplug->add_tr_flat(view,map,param);
+}
+
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param)
+{
+	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
+	trplug->add_tr_phong(view,map,param);
+}
+
+
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
+{
+	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
+	trplug->add_tr_vol(view,map,rend);
+}
+
+
+
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param)
+{
+	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
+	trplug->remove_tr_flat(view,map,param);
+}
+
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param)
+{
+	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
+	trplug->remove_tr_phong(view,map,param);
+}
+
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
+{
+	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
+	trplug->remove_tr_vol(view,map,rend);
 }
 
 } // namespace plugin_surface_render_transp

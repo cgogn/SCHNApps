@@ -48,6 +48,8 @@
 #include <QFile>
 #include <QByteArray>
 #include <QAction>
+#include <list>
+
 
 namespace schnapps
 {
@@ -106,8 +108,18 @@ SCHNApps::~SCHNApps()
 	settings_->to_file(settings_path_);
 
 	// first safely unload every plugins (this has to be done before the views get deleted)
-	while (!plugins_.empty())
-		this->disable_plugin(plugins_.begin()->first);
+
+	std::list<QString> plugins_ordered;
+	for (auto& pp : plugins_)
+	{
+		if (pp.second->auto_activate())
+			plugins_ordered.push_back(pp.first);
+		else
+			plugins_ordered.push_front(pp.first);
+	}
+
+	for (const auto& p : plugins_ordered)
+		this->disable_plugin(p);
 }
 
 /*********************************************************
@@ -514,10 +526,8 @@ void SCHNApps::cycle_selected_view()
 View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 {
 	View* new_view = add_view();
+
 	View* view = views_.at(name).get();
-
-	emit(view_split(view));
-
 	QSplitter* parent = static_cast<QSplitter*>(view->parentWidget());
 
 	if (parent == root_splitter_ && !root_splitter_initialized_)

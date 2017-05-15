@@ -47,6 +47,8 @@ public:
 
 	inline const QString& get_name() const { return name_; }
 
+	virtual inline bool auto_activate() { return false; }
+
 public slots:
 
 	/**
