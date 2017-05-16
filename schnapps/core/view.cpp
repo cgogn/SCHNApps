@@ -196,7 +196,8 @@ void View::link_plugin(PluginInteraction* plugin)
 		emit(plugin_linked(plugin));
 
 		updating_ui_ = true;
-		dialog_plugins_->check(plugin->get_name(), Qt::Checked);
+		if (!plugin->auto_activate())
+			dialog_plugins_->check(plugin->get_name(), Qt::Checked);
 		updating_ui_ = false;
 
 		this->update();
@@ -220,7 +221,8 @@ void View::unlink_plugin(PluginInteraction* plugin)
 		emit(plugin_unlinked(plugin));
 
 		updating_ui_ = true;
-		dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
+		if (!plugin->auto_activate())
+			dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
 		updating_ui_ = false;
 
 		this->update();
@@ -631,13 +633,13 @@ void View::map_check_state_changed(QListWidgetItem* item)
 
 void View::plugin_enabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin))
+	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->add_item(plugin->get_name());
 }
 
 void View::plugin_disabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin))
+	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->remove_item(plugin->get_name());
 }
 

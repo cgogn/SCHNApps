@@ -21,11 +21,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_
 
 #include "dll.h"
-#include <ui_surface_render.h>
+#include <ui_surface_render_transp.h>
 
 #include <QColorDialog>
 
@@ -35,33 +35,31 @@ namespace schnapps
 class SCHNApps;
 class MapHandlerGen;
 
-namespace plugin_surface_render
+namespace plugin_surface_render_transp
 {
 
-class Plugin_SurfaceRender;
+class Plugin_SurfaceRenderTransp;
 
 struct MapParameters;
 
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_API SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API SurfaceRenderTransp_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRender;
+	friend class Plugin_SurfaceRenderTransp;
 
 public:
 
-	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
+	SurfaceRenderTransp_DockTab(SCHNApps* s, Plugin_SurfaceRenderTransp* p);
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_SurfaceRender* plugin_;
+	Plugin_SurfaceRenderTransp* plugin_;
 
 	QColorDialog* color_dial_;
 	int current_color_dial_;
 
-	QColor vertex_color_;
-	QColor edge_color_;
 	QColor front_color_;
 	QColor back_color_;
 
@@ -71,24 +69,13 @@ private slots:
 
 	void position_vbo_changed(int index);
 	void normal_vbo_changed(int index);
-	void color_vbo_changed(int index);
-	void render_vertices_changed(bool b);
-	void vertices_scale_factor_changed(int i);
-	void render_edges_changed(bool b);
-	void render_faces_changed(bool b);
 	void face_style_changed(QAbstractButton* b);
-	void render_boundary_changed(bool b);
-	void render_backface_changed(bool b);
 
-	void vertex_color_clicked();
-	void edge_color_clicked();
 	void front_color_clicked();
 	void back_color_clicked();
 	void both_color_clicked();
+	void opaque_value_changed(int v);
 	void color_selected();
-
-	void transparency_factor_changed(int n);
-	void transparency_rendering_changed(bool b);
 
 private:
 
@@ -96,13 +83,11 @@ private:
 	void remove_position_vbo(QString name);
 	void add_normal_vbo(QString name);
 	void remove_normal_vbo(QString name);
-	void add_color_vbo(QString name);
-	void remove_color_vbo(QString name);
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
-} // namespace plugin_surface_render
+} // namespace plugin_surface_render_transp
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_

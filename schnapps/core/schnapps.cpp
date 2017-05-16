@@ -48,6 +48,8 @@
 #include <QFile>
 #include <QByteArray>
 #include <QAction>
+#include <list>
+
 
 namespace schnapps
 {
@@ -106,8 +108,18 @@ SCHNApps::~SCHNApps()
 	settings_->to_file(settings_path_);
 
 	// first safely unload every plugins (this has to be done before the views get deleted)
-	while (!plugins_.empty())
-		this->disable_plugin(plugins_.begin()->first);
+
+	std::list<QString> plugins_ordered;
+	for (auto& pp : plugins_)
+	{
+		if (pp.second->auto_activate())
+			plugins_ordered.push_back(pp.first);
+		else
+			plugins_ordered.push_front(pp.first);
+	}
+
+	for (const auto& p : plugins_ordered)
+		this->disable_plugin(p);
 }
 
 /*********************************************************
@@ -551,6 +563,9 @@ View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 		sz[1] = tot - sz[0];
 		spl->setSizes(sz);
 	}
+
+	view->update_bb();
+	new_view->update_bb();
 
 	return new_view;
 }

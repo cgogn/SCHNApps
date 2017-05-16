@@ -21,88 +21,34 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
 
-#include "dll.h"
-#include <ui_surface_render.h>
 
-#include <QColorDialog>
+#include <schnapps/plugins/surface_render_transp/dll.h>
+#include <cgogn/rendering/transparency_shaders/shader_transparent_flat.h>
+#include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>
+#include <cgogn/rendering/transparency_volume_drawer.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
+class Plugin;
+class View;
 class MapHandlerGen;
 
-namespace plugin_surface_render
+namespace plugin_surface_render_transp
 {
 
-class Plugin_SurfaceRender;
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
 
-struct MapParameters;
+} // namespace plugin_surface_render_transp_transp
 
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_API SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
-{
-	Q_OBJECT
-
-	friend class Plugin_SurfaceRender;
-
-public:
-
-	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_SurfaceRender* plugin_;
-
-	QColorDialog* color_dial_;
-	int current_color_dial_;
-
-	QColor vertex_color_;
-	QColor edge_color_;
-	QColor front_color_;
-	QColor back_color_;
-
-	bool updating_ui_;
-
-private slots:
-
-	void position_vbo_changed(int index);
-	void normal_vbo_changed(int index);
-	void color_vbo_changed(int index);
-	void render_vertices_changed(bool b);
-	void vertices_scale_factor_changed(int i);
-	void render_edges_changed(bool b);
-	void render_faces_changed(bool b);
-	void face_style_changed(QAbstractButton* b);
-	void render_boundary_changed(bool b);
-	void render_backface_changed(bool b);
-
-	void vertex_color_clicked();
-	void edge_color_clicked();
-	void front_color_clicked();
-	void back_color_clicked();
-	void both_color_clicked();
-	void color_selected();
-
-	void transparency_factor_changed(int n);
-	void transparency_rendering_changed(bool b);
-
-private:
-
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_normal_vbo(QString name);
-	void remove_normal_vbo(QString name);
-	void add_color_vbo(QString name);
-	void remove_color_vbo(QString name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
-};
-
-} // namespace plugin_surface_render
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_

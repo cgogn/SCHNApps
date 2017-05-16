@@ -34,10 +34,20 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME}
-	schnapps_core
-	${cgogn_core_LIBRARIES}
-	${cgogn_rendering_LIBRARIES}
-	${Qt5Widgets_LIBRARIES}
-	${QOGLViewer_LIBRARIES}
-)
+
+if (USE_TRANSP)
+	target_link_libraries(${PROJECT_NAME}
+		schnapps_core
+		plugin_surface_render_transp
+		${cgogn_core_LIBRARIES}
+		${cgogn_rendering_LIBRARIES}
+		${Qt5Widgets_LIBRARIES}
+		${QOGLViewer_LIBRARIES})
+else()
+	target_link_libraries(${PROJECT_NAME}
+		schnapps_core
+		${cgogn_core_LIBRARIES}
+		${cgogn_rendering_LIBRARIES}
+		${Qt5Widgets_LIBRARIES}
+		${QOGLViewer_LIBRARIES})
+endif()
