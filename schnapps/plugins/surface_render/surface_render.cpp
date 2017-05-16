@@ -25,7 +25,9 @@
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
+#ifdef USE_TRANSP
 #include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
+#endif
 
 #include <cgogn/geometry/algos/selection.h>
 
@@ -84,8 +86,9 @@ bool Plugin_SurfaceRender::enable()
 
 	update_dock_tab();
 
+#ifdef USE_TRANSP
 	plug_transp_ = reinterpret_cast<PluginInteraction*>(schnapps_->enable_plugin("surface_render_transp"));
-
+#endif
 	return true;
 }
 
@@ -108,8 +111,12 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 
 		if ((p.render_faces_) &&(!p.use_transparency_))
 		{
-			glEnable(GL_POLYGON_OFFSET_FILL);
-			glPolygonOffset(1.0f, 1.0f);
+			// apply polygon offset only when needed (edges over faces
+			if (p.render_edges_)
+			{
+				glEnable(GL_POLYGON_OFFSET_FILL);
+				glPolygonOffset(0.5f, 1.0f);
+			}
 			if (p.get_position_vbo())
 			{
 				if (p.get_color_vbo())
@@ -188,12 +195,13 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 
 void Plugin_SurfaceRender::view_linked(View* view)
 {
+#ifdef USE_TRANSP
 	view->link_plugin(plug_transp_);
-
+#endif
 	update_dock_tab();
 
-	connection_map_linked_ = connect(view, &View::map_linked, [=] (MapHandlerGen* m) { this->map_linked(view,m);});
-	connection_map_unlinked_ = connect(view, &View::map_unlinked, [=] (MapHandlerGen* m) { map_unlinked(view,m);});
+	connection_map_linked_[view] = connect(view, &View::map_linked, [=] (MapHandlerGen* m) { this->map_linked(view,m);});
+	connection_map_unlinked_[view] = connect(view, &View::map_unlinked, [=] (MapHandlerGen* m) { map_unlinked(view,m);});
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(view,map); }
@@ -203,8 +211,10 @@ void Plugin_SurfaceRender::view_unlinked(View* view)
 {
 	update_dock_tab();
 
-	disconnect(connection_map_linked_);
-	disconnect(connection_map_unlinked_);
+	disconnect(connection_map_linked_[view]);
+	connection_map_linked_.erase(view);
+	disconnect(connection_map_unlinked_[view]);
+	connection_map_unlinked_.erase(view);
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
 	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(view,map); }
@@ -223,8 +233,9 @@ void Plugin_SurfaceRender::map_linked(View* view, MapHandlerGen *map)
 		set_color_vbo(view->get_name(), map->get_name(), setting_auto_load_color_attribute_);
 
 		MapParameters& p = get_parameters(view, map);
+#ifdef USE_TRANSP
 		add_transparency(view, map, p);
-
+#endif
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
@@ -242,7 +253,9 @@ void Plugin_SurfaceRender::map_unlinked(View* view, MapHandlerGen *map)
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 
 		MapParameters& p = get_parameters(view, map);
+#ifdef USE_TRANSP
 		remove_transparency(view, map, p);
+#endif
 	}
 }
 
@@ -331,14 +344,19 @@ void Plugin_SurfaceRender::viewer_initialized()
 		{
 			MapParameters& mp = p.second;
 			MapHandlerGen* map = p.first;
+#ifdef USE_TRANSP
 			remove_transparency(view, map, mp);
+#endif
 			mp.initialize_gl();
+#ifdef USE_TRANSP
 			add_transparency(view, map, mp);
+#endif
 		}
 	}
 	update_dock_tab();
 }
 
+#ifdef USE_TRANSP
 void Plugin_SurfaceRender::add_transparency(View* view,MapHandlerGen* map, MapParameters& mp)
 {
 	if (mp.use_transparency_)
@@ -360,7 +378,7 @@ void Plugin_SurfaceRender::remove_transparency(View* view, MapHandlerGen* map, M
 			plugin_surface_render_transp::remove_tr_phong(plug_transp_, view, map, mp.get_transp_phong_param());
 	}
 }
-
+#endif
 
 
 void Plugin_SurfaceRender::enable_on_selected_view(Plugin* p)

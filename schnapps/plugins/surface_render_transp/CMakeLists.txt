@@ -1,10 +1,12 @@
+find_package(Qt5 COMPONENTS Widgets REQUIRED)
+if (Qt5Widgets_VERSION VERSION_GREATER 5.5.99)
+
 project(plugin_surface_render_transp
-	LANGUAGES CXX
-)
+	LANGUAGES CXX)
+
 
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_rendering REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
@@ -40,3 +42,5 @@ target_link_libraries(${PROJECT_NAME}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
 )
+
+endif()
