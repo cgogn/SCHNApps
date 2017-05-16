@@ -21,82 +21,34 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
 
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/import/dll.h>
-#include <QAction>
+
+#include <schnapps/plugins/surface_render_transp/dll.h>
+#include <cgogn/rendering/transparency_shaders/shader_transparent_flat.h>
+#include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>
+#include <cgogn/rendering/transparency_volume_drawer.h>
 
 namespace schnapps
 {
 
-class MapHandlerGen; // forward declaration of class
+class Plugin;
+class View;
+class MapHandlerGen;
 
-namespace plugin_import
+namespace plugin_surface_render_transp
 {
 
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
-{
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
+SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
 
-public:
-
-	inline Plugin_Import() {}
-	~Plugin_Import() override {}
-
-private:
-
-	bool enable() override;
-	void disable() override;
-
-public slots:
-
-	/**
-		* @brief import a surface mesh from a file
-		* @param filename file name of mesh file
-		* @return a new MapHandlerGen that handles the mesh
-		*/
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-		* @brief import a surface mesh by opening a FileDialog
-		*/
-	void import_surface_mesh_from_file_dialog();
-
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh from a file
-	//	 * @param filename file name of mesh file
-	//	 * @return a new MapHandlerGen that handles the mesh
-	//	 */
-	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-	//	 */
-	//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
-	QString setting_default_path_;
-
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-	//	QAction* import_2D_image_action_;
-};
-
-} // namespace plugin_import
+} // namespace plugin_surface_render_transp_transp
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_

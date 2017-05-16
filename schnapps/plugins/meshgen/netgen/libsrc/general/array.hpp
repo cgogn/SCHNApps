@@ -105,7 +105,7 @@ namespace netgen
     {
 #ifdef DEBUG
       if (i-BASE < 0 || i-BASE >= size)
-	cout << "array<" << typeid(T).name() << "> out of range, i = " << i << ", s = " << size << std::endl;
+	std::cout << "array<" << typeid(T).name() << "> out of range, i = " << i << ", s = " << size << std::endl;
 #endif
 
       return data[i-BASE]; 
@@ -124,7 +124,7 @@ namespace netgen
     {
 #ifdef DEBUG
       if (i < 1 || i > size)
-	cout << "Array<" << typeid(T).name() 
+		  std::cout << "Array<" << typeid(T).name()
 	     << ">::Elem out of range, i = " << i
 	     << ", s = " << size << std::endl;
 #endif
@@ -137,7 +137,7 @@ namespace netgen
     {
 #ifdef DEBUG
       if (i < 1 || i > size)
-	cout << "Array<" << typeid(T).name() << ">::Get out of range, i = " << i
+		  std::cout << "Array<" << typeid(T).name() << ">::Get out of range, i = " << i
 	     << ", s = " << size << std::endl;
 #endif
 
@@ -149,7 +149,7 @@ namespace netgen
     { 
 #ifdef DEBUG
       if (i < 1 || i > size)
-	cout << "Array<" << typeid(T).name() << ">::Set out of range, i = " << i
+	std::cout << "Array<" << typeid(T).name() << ">::Set out of range, i = " << i
 	     << ", s = " << size << std::endl;
 #endif
 

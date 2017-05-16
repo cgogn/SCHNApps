@@ -21,82 +21,73 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_
 
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/import/dll.h>
-#include <QAction>
+#include "dll.h"
+#include <ui_surface_render_transp.h>
+
+#include <QColorDialog>
 
 namespace schnapps
 {
 
-class MapHandlerGen; // forward declaration of class
+class SCHNApps;
+class MapHandlerGen;
 
-namespace plugin_import
+namespace plugin_surface_render_transp
 {
 
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
+class Plugin_SurfaceRenderTransp;
+
+struct MapParameters;
+
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API SurfaceRenderTransp_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
 	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+
+	friend class Plugin_SurfaceRenderTransp;
 
 public:
 
-	inline Plugin_Import() {}
-	~Plugin_Import() override {}
+	SurfaceRenderTransp_DockTab(SCHNApps* s, Plugin_SurfaceRenderTransp* p);
 
 private:
 
-	bool enable() override;
-	void disable() override;
+	SCHNApps* schnapps_;
+	Plugin_SurfaceRenderTransp* plugin_;
 
-public slots:
+	QColorDialog* color_dial_;
+	int current_color_dial_;
 
-	/**
-		* @brief import a surface mesh from a file
-		* @param filename file name of mesh file
-		* @return a new MapHandlerGen that handles the mesh
-		*/
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
+	QColor front_color_;
+	QColor back_color_;
 
-	/**
-		* @brief import a surface mesh by opening a FileDialog
-		*/
-	void import_surface_mesh_from_file_dialog();
+	bool updating_ui_;
 
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
+private slots:
 
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh from a file
-	//	 * @param filename file name of mesh file
-	//	 * @return a new MapHandlerGen that handles the mesh
-	//	 */
-	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
+	void position_vbo_changed(int index);
+	void normal_vbo_changed(int index);
+	void face_style_changed(QAbstractButton* b);
 
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-	//	 */
-	//	void import_2D_image_from_file_dialog();
+	void front_color_clicked();
+	void back_color_clicked();
+	void both_color_clicked();
+	void opaque_value_changed(int v);
+	void color_selected();
 
 private:
 
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
-	QString setting_default_path_;
+	void add_position_vbo(QString name);
+	void remove_position_vbo(QString name);
+	void add_normal_vbo(QString name);
+	void remove_normal_vbo(QString name);
 
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-	//	QAction* import_2D_image_action_;
+	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
-} // namespace plugin_import
-
+} // namespace plugin_surface_render_transp
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_

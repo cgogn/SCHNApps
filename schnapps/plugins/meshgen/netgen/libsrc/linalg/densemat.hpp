@@ -7,6 +7,7 @@
 /* Date:   01. Oct. 94                                                    */
 /**************************************************************************/
 
+
 /** 
     Data type dense matrix
 */
@@ -66,11 +67,11 @@ public:
       }
     if (!height) 
       {
-	cout << "DenseMatrix::Mult height = 0" << std::endl;
+		std::cout << "DenseMatrix::Mult height = 0" << std::endl;
       }
     if (!width) 
       {
-	cout << "DenseMatrix::Mult width = 0" << std::endl;
+		std::cout << "DenseMatrix::Mult width = 0" << std::endl;
       }
     
     if (width != v.Size())

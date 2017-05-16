@@ -196,7 +196,8 @@ void View::link_plugin(PluginInteraction* plugin)
 		emit(plugin_linked(plugin));
 
 		updating_ui_ = true;
-		dialog_plugins_->check(plugin->get_name(), Qt::Checked);
+		if (!plugin->auto_activate())
+			dialog_plugins_->check(plugin->get_name(), Qt::Checked);
 		updating_ui_ = false;
 
 		this->update();
@@ -220,7 +221,8 @@ void View::unlink_plugin(PluginInteraction* plugin)
 		emit(plugin_unlinked(plugin));
 
 		updating_ui_ = true;
-		dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
+		if (!plugin->auto_activate())
+			dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
 		updating_ui_ = false;
 
 		this->update();
@@ -438,7 +440,7 @@ void View::resizeGL(int width, int height)
 	QOGLViewer::resizeGL(width, height);
 
 	if (button_area_)
-		button_area_->set_top_right_position(width / this->pixel_ratio(), 0);
+		button_area_->set_top_right_position(width, 0);
 
 	if (button_area_left_)
 		button_area_left_->set_top_left_position(0, 0);
@@ -466,6 +468,9 @@ void View::keyPressEvent(QKeyEvent* event)
 
 	switch (event->key())
 	{
+		case Qt::Key_V:
+			schnapps_->cycle_selected_view();
+			break;
 		case Qt::Key_S:
 		{
 			save_snapshots_ = !save_snapshots_;
@@ -628,13 +633,13 @@ void View::map_check_state_changed(QListWidgetItem* item)
 
 void View::plugin_enabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin))
+	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->add_item(plugin->get_name());
 }
 
 void View::plugin_disabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin))
+	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->remove_item(plugin->get_name());
 }
 

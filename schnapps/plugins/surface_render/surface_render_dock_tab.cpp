@@ -21,8 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_dock_tab.h>
-#include <surface_render.h>
+#include "surface_render_dock_tab.h"
+#include "surface_render.h"
+
+#ifdef USE_TRANSP
+#include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
+#endif
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -59,6 +63,15 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 	connect(backColorButton, SIGNAL(clicked()), this, SLOT(back_color_clicked()));
 	connect(bothColorButton, SIGNAL(clicked()), this, SLOT(both_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
+
+	checkBox_transparency->setChecked(false);
+	slider_transparency->setDisabled(true);
+#ifdef USE_TRANSP
+	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_factor_changed(int)));
+	connect(checkBox_transparency, SIGNAL(toggled(bool)), this, SLOT(transparency_rendering_changed(bool)));
+#else
+	checkBox_transparency->setDisabled(true);
+#endif
 }
 
 
@@ -156,6 +169,15 @@ void SurfaceRender_DockTab::render_faces_changed(bool b)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.render_faces_ = b;
+#ifdef USE_TRANSP
+			if (p.use_transparency_)
+			{
+				if (b)
+					plugin_->add_transparency(view, map, p);
+				else
+					plugin_->remove_transparency(view, map, p);
+			}
+#endif
 			view->update();
 		}
 	}
@@ -430,7 +452,51 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 	back_color_ = p.get_back_color();
 	backColorButton->setStyleSheet("QPushButton { background-color:" + back_color_.name() + " }");
 
+	checkBox_transparency->setChecked(p.use_transparency_);
+	slider_transparency->setValue(p.get_transparency_factor());
+	slider_transparency->setEnabled(p.use_transparency_);
+
 	updating_ui_ = false;
+}
+
+void SurfaceRender_DockTab::transparency_factor_changed(int n)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_transparency_factor(n);
+			view->update();
+		}
+	}
+}
+
+void SurfaceRender_DockTab::transparency_rendering_changed(bool b)
+{
+#ifdef USE_TRANSP
+	if (!updating_ui_)
+	{
+		slider_transparency->setEnabled(b);
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_transparency_enabled(b);
+			if (p.render_faces_)
+			{
+				if (b)
+					plugin_->add_transparency(view, map, p);
+				else
+					plugin_->remove_transparency(view, map, p);
+			}
+			view->update();
+		}
+	}
+#endif
 }
 
 } // namespace plugin_surface_render

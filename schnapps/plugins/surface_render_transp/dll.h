@@ -1,7 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,52 +20,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "types.h"
-#include <functional>
-#include <unordered_map>
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DLL_H_
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DLL_H_
 
-#include <cgogn/core/utils/logger.h>
-
-namespace schnapps
-{
-
-SCHNAPPS_CORE_API std::string cell_type_name(CellType ct)
-{
-	switch (ct)
-	{
-		case Dart_Cell: return "Dart"; break;
-		case Vertex_Cell: return "Vertex"; break;
-		case Edge_Cell: return "Edge"; break;
-		case Face_Cell: return "Face"; break;
-		case Volume_Cell: return "Volume"; break;
-		case Unknown: return "UNKNOWN"; break;
-		default : return "UNKNOWN"; break;
-	}
-#ifdef NDEBUG
-	return "UNKNOWN";  // little trick to  avoid warning on VS
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API
+#if defined SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API __declspec(dllimport)
 #endif
-}
+#endif
+#else
+#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API
+#endif
 
-SCHNAPPS_CORE_API CellType cell_type(const std::string& name)
-{
-	static const std::unordered_map<std::string, std::function<CellType()>> map =
-	{
-	{cell_type_name(CellType::Dart_Cell), [&]() { return CellType::Dart_Cell; }},
-	{cell_type_name(CellType::Vertex_Cell), [&]() { return CellType::Vertex_Cell; }},
-	{cell_type_name(CellType::Edge_Cell), [&]() { return CellType::Edge_Cell; }},
-	{cell_type_name(CellType::Face_Cell), [&]() { return CellType::Face_Cell; }},
-	{cell_type_name(CellType::Volume_Cell), [&]() { return CellType::Volume_Cell; }}
-	};
-
-	auto it = map.find(name);
-	if (it != map.end())
-		return (it->second)();
-	else
-	{
-		cgogn_log_warning("cell_type") << "There is no CellType named \"" << name << "\".";
-		return CellType::Unknown;
-	}
-
-}
-} // namespace schnapps
-
+#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DLL_H_

@@ -21,82 +21,21 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_CORE_SCHNAPPS_WINDOW_FACTORY_H_
+#define SCHNAPPS_CORE_SCHNAPPS_WINDOW_FACTORY_H_
 
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/import/dll.h>
-#include <QAction>
+#include <schnapps/core/dll.h>
+#include <QMainWindow>
+#include <QString>
+
 
 namespace schnapps
 {
-
-class MapHandlerGen; // forward declaration of class
-
-namespace plugin_import
-{
-
 /**
-* @brief Plugin for CGoGN mesh import
+* factory of SCHNApps_Window (avoid include of schnapps_window.h)
+* definition in schnapps_window.cpp
 */
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
-{
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
+SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(const QString& app_path, const QString& settings_path);
+}
 
-public:
-
-	inline Plugin_Import() {}
-	~Plugin_Import() override {}
-
-private:
-
-	bool enable() override;
-	void disable() override;
-
-public slots:
-
-	/**
-		* @brief import a surface mesh from a file
-		* @param filename file name of mesh file
-		* @return a new MapHandlerGen that handles the mesh
-		*/
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-		* @brief import a surface mesh by opening a FileDialog
-		*/
-	void import_surface_mesh_from_file_dialog();
-
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
-	void import_volume_mesh_from_file_dialog();
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh from a file
-	//	 * @param filename file name of mesh file
-	//	 * @return a new MapHandlerGen that handles the mesh
-	//	 */
-	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
-
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-	//	 */
-	//	void import_2D_image_from_file_dialog();
-
-private:
-
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
-	QString setting_default_path_;
-
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-	//	QAction* import_2D_image_action_;
-};
-
-} // namespace plugin_import
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_CORE_SCHNAPPS_FACTORY_H_

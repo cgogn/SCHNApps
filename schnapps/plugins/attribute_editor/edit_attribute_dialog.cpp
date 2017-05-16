@@ -172,18 +172,18 @@ void EditAttributeDialog::edit_attribute_validated()
 				for ( ; r < rend; ++r)
 				{
 					const uint32 emb = attribute_tableWidget->verticalHeaderItem(r)->text().toUInt();
-					std::stringstream sstream;
+					std::stringstream sstream1;
 					for (int32 c = 0; c < nbc; ++c)
-						sstream << attribute_tableWidget->item(r,c)->text().toStdString()  << " ";
+						sstream1 << attribute_tableWidget->item(r,c)->text().toStdString()  << " ";
 
-					ca->import_element(emb, sstream);
+					ca->import_element(emb, sstream1);
 					{
-						sstream = std::stringstream();
-						ca->export_element(emb, sstream, false, false);
+						std::stringstream sstream2; // g++-4.9 do not support sstream=std::stringstream(); so use another variable
+						ca->export_element(emb, sstream2, false, false);
 						for (int32 c = 0; c < nbc; ++c)
 						{
 							std::string val;
-							sstream >> val;
+							sstream2 >> val;
 							attribute_tableWidget->item(r,c)->setText(QString::fromStdString(val));
 						}
 					}

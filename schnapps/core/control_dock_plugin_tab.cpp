@@ -92,7 +92,11 @@ void ControlDock_PluginTab::disable_selected_plugins_clicked()
 	{
 		QList<QListWidgetItem*> items = list_pluginsEnabled->selectedItems();
 		for (QListWidgetItem* item : items)
-			schnapps_->disable_plugin(item->text());
+		{
+			Plugin* plug = schnapps_->get_plugin(item->text());
+			if (plug && !plug->auto_activate())
+				schnapps_->disable_plugin(item->text());
+		}
 	}
 }
 
