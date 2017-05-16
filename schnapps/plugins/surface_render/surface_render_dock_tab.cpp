@@ -205,6 +205,10 @@ void SurfaceRender_DockTab::face_style_changed(QAbstractButton* b)
 				p.face_style_ = MapParameters::FLAT;
 			else if (radio_phongShading->isChecked())
 				p.face_style_ = MapParameters::PHONG;
+
+			if (p.use_transparency_)
+				plugin_->change_transparency(view,map,p);
+
 			view->update();
 		}
 	}
