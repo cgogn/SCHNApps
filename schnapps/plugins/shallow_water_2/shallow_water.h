@@ -70,7 +70,6 @@ private slots:
 	void subdivide_face(CMap2::Face f);
 	void simplify_face(CMap2::Face f);
 
-	uint32 face_level(CMap2::Face f);
 	cgogn::Dart oldest_dart(CMap2::Face f);
 
 private:
@@ -88,7 +87,8 @@ private:
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 
 	CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
-	CMap2::FaceAttribute<uint32> subd_code_; // subdivision code
+	CMap2::FaceAttribute<uint8> face_level_; // face level
+	CMap2::FaceAttribute<uint8> face_type_; // face type : 0 -> corner, 1 -> center
 };
 
 } // namespace plugin_shallow_water_2

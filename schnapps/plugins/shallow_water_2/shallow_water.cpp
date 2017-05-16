@@ -49,14 +49,16 @@ bool Plugin_ShallowWater::enable()
 	position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
 
 	dart_level_ = map_->add_attribute<uint8, CMap2::CDart::ORBIT>("dart_level");
-	subd_code_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("subdivision_code");
+	face_level_ = map_->add_attribute<uint8, CMap2::Face::ORBIT>("face_level");
+	face_type_ = map_->add_attribute<uint8, CMap2::Face::ORBIT>("face_type");
 
 	cgogn::modeling::TriangularGrid<CMap2> grid(*map2_, nbc, nbc);
 	grid.embed_into_grid(position_, 200.0f, 200.0f, 0.0f);
 
 	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
 	{
-		subd_code_[f] = 0;
+		face_level_[f] = 0;
+		face_type_[f] = 0;
 		map2_->foreach_dart_of_orbit(f, [&] (cgogn::Dart d) { dart_level_[d] = 0; });
 	});
 
@@ -122,8 +124,8 @@ void Plugin_ShallowWater::execute_time_step()
 		// update quantities on faces
 	});
 
-	try_simplification();
-	try_subdivision();
+//	try_simplification();
+//	try_subdivision();
 
 	if (connectivity_changed_)
 		map_->notify_connectivity_change();
@@ -161,21 +163,57 @@ void Plugin_ShallowWater::try_simplification()
 				connectivity_changed_ = true;
 			}
 		},
-		// manage only central triangles
-		[&] (CMap2::Face f) { return subd_code_[f] % 4 == 0; }
+		[&] (CMap2::Face f) -> bool // check connectivity condition
+		{
+			if (face_level_[f] == 0)
+				return false;
+
+			if (map2_->codegree(f) != 3)
+				return false;
+
+			switch (face_type_[f])
+			{
+				case 0: {
+					cgogn::Dart it = oldest_dart(f);
+					it = map2_->phi<12>(it); // central face
+					if (map2_->codegree(CMap2::Face(it)) != 3)
+						return false;
+					cgogn::Dart it2 = map2_->phi<12>(it); // corner face 1
+					if (map2_->codegree(CMap2::Face(it2)) != 3)
+						return false;
+					it2 = map2_->phi2(map2_->phi_1(it)); // corner face 2
+					if (map2_->codegree(CMap2::Face(it2)) != 3)
+						return false;
+					break;
+				}
+				case 1: {
+					cgogn::Dart it = f.dart;
+					if (map2_->codegree(CMap2::Face(map2_->phi2(it))) != 3) // corner face 1
+						return false;
+					it = map2_->phi1(it);
+					if (map2_->codegree(CMap2::Face(map2_->phi2(it))) != 3) // corner face 2
+						return false;
+					it = map2_->phi1(it);
+					if (map2_->codegree(CMap2::Face(map2_->phi2(it))) != 3) // corner face 3
+						return false;
+					break;
+				}
+			}
+
+			return true;
+		}
 	);
 }
 
 void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 {
 	f.dart = oldest_dart(f);
-	uint32 fl = face_level(f);
-	uint32 fc = subd_code_[f];
+	uint32 fl = face_level_[f];
 
 	// check neighbours level
 	map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
 	{
-		if (face_level(af) < fl)
+		if (face_level_[af] < fl)
 			subdivide_face(af);
 	});
 
@@ -201,35 +239,38 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 	CMap2::Edge e = map2_->cut_face(it, it2);
 	dart_level_[e.dart] = fl+1;
 	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	subd_code_[CMap2::Face(it)] = 4*fc + 1;
+	face_level_[CMap2::Face(it)] = fl+1;
+	face_type_[CMap2::Face(it)] = 0;
+
 	it = map2_->template phi<11>(it2);
 	e = map2_->cut_face(it, it2);
 	dart_level_[e.dart] = fl+1;
 	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	subd_code_[CMap2::Face(it2)] = 4*fc + 2;
+	face_level_[CMap2::Face(it2)] = fl+1;
+	face_type_[CMap2::Face(it2)] = 0;
+
 	it2 = map2_->template phi<11>(it);
 	e = map2_->cut_face(it, it2);
 	dart_level_[e.dart] = fl+1;
 	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	subd_code_[CMap2::Face(it)] = 4*fc + 3;
-	subd_code_[CMap2::Face(it2)] = 4*fc + 4;
+	face_level_[CMap2::Face(it)] = fl+1;
+	face_type_[CMap2::Face(it)] = 0;
+	face_level_[CMap2::Face(it2)] = fl+1;
+	face_type_[CMap2::Face(it2)] = 1;
 }
 
 void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 {
-
-}
-
-uint32 Plugin_ShallowWater::face_level(CMap2::Face f)
-{
-	uint32 code = subd_code_[f];
-	if (code == 0) return 0;
-	if (code < 5) return 1;
-	if (code < 21) return 2;
-	if (code < 85) return 3;
-	if (code < 341) return 4;
-	if (code < 1365) return 5;
-	if (code < 5461) return 6;
+	cgogn::Dart it = f.dart;
+	if (face_type_[f] == 0)
+		it = map2_->phi<12>(oldest_dart(f)); // put it in the central face
+	cgogn::Dart next = map2_->phi1(it);
+	map2_->merge_incident_faces(CMap2::Edge(it));
+	it = next;
+	next = map2_->phi1(it);
+	map2_->merge_incident_faces(CMap2::Edge(it));
+	it = next;
+	map2_->merge_incident_faces(CMap2::Edge(it));
 }
 
 cgogn::Dart Plugin_ShallowWater::oldest_dart(CMap2::Face f)
