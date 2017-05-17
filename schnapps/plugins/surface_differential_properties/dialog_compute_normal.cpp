@@ -107,7 +107,7 @@ void ComputeNormal_Dialog::selected_map_changed()
 			{
 				QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+				const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
 				const std::vector<std::string>& names = container.names();
 				const std::vector<std::string>& type_names = container.type_names();
 
@@ -162,7 +162,7 @@ void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, cons
 		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
 		const CMap2* map2 = selected_map_->get_map();
-		const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2::ChunkArrayContainer<cgogn::numerics::uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
 		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
 
 		if (attribute_type_name == vec3_type_name)
