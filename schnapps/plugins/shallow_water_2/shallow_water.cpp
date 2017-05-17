@@ -49,16 +49,14 @@ bool Plugin_ShallowWater::enable()
 	position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
 
 	dart_level_ = map_->add_attribute<uint8, CMap2::CDart::ORBIT>("dart_level");
-	face_level_ = map_->add_attribute<uint8, CMap2::Face::ORBIT>("face_level");
-	face_type_ = map_->add_attribute<uint8, CMap2::Face::ORBIT>("face_type");
+	face_subd_id_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("face_subdivision_id");
 
 	cgogn::modeling::TriangularGrid<CMap2> grid(*map2_, nbc, nbc);
 	grid.embed_into_grid(position_, 200.0f, 200.0f, 0.0f);
 
 	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
 	{
-		face_level_[f] = 0;
-		face_type_[f] = 0;
+		face_subd_id_[f] = 0;
 		map2_->foreach_dart_of_orbit(f, [&] (cgogn::Dart d) { dart_level_[d] = 0; });
 	});
 
@@ -137,7 +135,10 @@ void Plugin_ShallowWater::execute_time_step()
 void Plugin_ShallowWater::try_subdivision()
 {
 	CMap2::CellCache cache(*map2_);
-	cache.build<CMap2::Face>();
+	cache.build<CMap2::Face>([&] (CMap2::Face f)
+	{
+		return face_level(f) < 6;
+	});
 
 	map2_->foreach_cell(
 		[&] (CMap2::Face f)
@@ -165,15 +166,15 @@ void Plugin_ShallowWater::try_simplification()
 		},
 		[&] (CMap2::Face f) -> bool // check connectivity condition
 		{
-			if (face_level_[f] == 0)
+			if (face_level(f) == 0)
 				return false;
 
 			if (map2_->codegree(f) != 3)
 				return false;
 
-			switch (face_type_[f])
+			switch (face_type(f))
 			{
-				case 0: {
+				case CORNER: {
 					cgogn::Dart it = oldest_dart(f);
 					it = map2_->phi<12>(it); // central face
 					if (map2_->codegree(CMap2::Face(it)) != 3)
@@ -186,7 +187,7 @@ void Plugin_ShallowWater::try_simplification()
 						return false;
 					break;
 				}
-				case 1: {
+				case CENTRAL: {
 					cgogn::Dart it = f.dart;
 					if (map2_->codegree(CMap2::Face(map2_->phi2(it))) != 3) // corner face 1
 						return false;
@@ -208,12 +209,13 @@ void Plugin_ShallowWater::try_simplification()
 void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 {
 	f.dart = oldest_dart(f);
-	uint32 fl = face_level_[f];
+	uint8 fl = face_level(f);
+	uint8 fid = face_subd_id_[f];
 
 	// check neighbours level
 	map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
 	{
-		if (face_level_[af] < fl)
+		if (face_level(af) < fl)
 			subdivide_face(af);
 	});
 
@@ -239,31 +241,44 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 	CMap2::Edge e = map2_->cut_face(it, it2);
 	dart_level_[e.dart] = fl+1;
 	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	face_level_[CMap2::Face(it)] = fl+1;
-	face_type_[CMap2::Face(it)] = 0;
+	face_subd_id_[CMap2::Face(it)] = 4*fid+1;
 
 	it = map2_->template phi<11>(it2);
 	e = map2_->cut_face(it, it2);
 	dart_level_[e.dart] = fl+1;
 	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	face_level_[CMap2::Face(it2)] = fl+1;
-	face_type_[CMap2::Face(it2)] = 0;
+	face_subd_id_[CMap2::Face(it2)] = 4*fid+2;
 
 	it2 = map2_->template phi<11>(it);
 	e = map2_->cut_face(it, it2);
 	dart_level_[e.dart] = fl+1;
 	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	face_level_[CMap2::Face(it)] = fl+1;
-	face_type_[CMap2::Face(it)] = 0;
-	face_level_[CMap2::Face(it2)] = fl+1;
-	face_type_[CMap2::Face(it2)] = 1;
+	face_subd_id_[CMap2::Face(it)] = 4*fid+3;
+	face_subd_id_[CMap2::Face(it2)] = 4*fid+4;
 }
 
 void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 {
+	// if we are here, f is simplifiable (part of a group of 4 triangle faces)
+	uint32 fid = face_subd_id_[f];
+	uint8 fl = face_level(f);
+
+	cgogn::Dart resF;
+
 	cgogn::Dart it = f.dart;
-	if (face_type_[f] == 0)
-		it = map2_->phi<12>(oldest_dart(f)); // put it in the central face
+	switch (face_type(f))
+	{
+		case CORNER: {
+			cgogn::Dart od = oldest_dart(f);
+			it = map2_->phi<12>(od); // put 'it' in the central face
+			resF = od;
+			break;
+		}
+		case CENTRAL:
+			resF = map2_->phi_1(map2_->phi2(f.dart));
+			break;
+	}
+
 	cgogn::Dart next = map2_->phi1(it);
 	map2_->merge_incident_faces(CMap2::Edge(it));
 	it = next;
@@ -271,6 +286,18 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 	map2_->merge_incident_faces(CMap2::Edge(it));
 	it = next;
 	map2_->merge_incident_faces(CMap2::Edge(it));
+
+	face_subd_id_[resF] = uint32((fid-1)/4);
+
+	// simplify edges (if possible)
+	it = resF;
+	do
+	{
+		cgogn::Dart next = map2_->phi<11>(it);
+		if (face_level(map2_->phi2(it)) == fl-1)
+			map2_->merge_incident_edges(CMap2::Vertex(map2_->phi1(it)));
+		it = next;
+	} while (it != resF);
 }
 
 cgogn::Dart Plugin_ShallowWater::oldest_dart(CMap2::Face f)
@@ -283,6 +310,26 @@ cgogn::Dart Plugin_ShallowWater::oldest_dart(CMap2::Face f)
 			res = d;
 	});
 	return res;
+}
+
+uint8 Plugin_ShallowWater::face_level(CMap2::Face f)
+{
+	uint32 id = face_subd_id_[f];
+	if (id == 0) return 0;
+	if (id < 5) return 1;
+	if (id < 21) return 2;
+	if (id < 85) return 3;
+	if (id < 341) return 4;
+	if (id < 1365) return 5;
+	if (id < 5461) return 6;
+}
+
+Plugin_ShallowWater::FaceType Plugin_ShallowWater::face_type(CMap2::Face f)
+{
+	if (face_subd_id_[f] % 4 == 0)
+		return CENTRAL;
+	else
+		return CORNER;
 }
 
 } // namespace plugin_shallow_water_2

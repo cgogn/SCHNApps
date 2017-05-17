@@ -65,14 +65,24 @@ public slots:
 private slots:
 
 	void execute_time_step();
+
+private:
+
+	enum FaceType: uint8
+	{
+		CORNER = 0,
+		CENTRAL
+	};
+
 	void try_subdivision();
 	void try_simplification();
 	void subdivide_face(CMap2::Face f);
 	void simplify_face(CMap2::Face f);
 
 	cgogn::Dart oldest_dart(CMap2::Face f);
+	uint8 face_level(CMap2::Face f);
+	FaceType face_type(CMap2::Face f);
 
-private:
 
 	ShallowWater_DockTab* dock_tab_;
 
@@ -87,8 +97,7 @@ private:
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 
 	CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
-	CMap2::FaceAttribute<uint8> face_level_; // face level
-	CMap2::FaceAttribute<uint8> face_type_; // face type : 0 -> corner, 1 -> center
+	CMap2::FaceAttribute<uint32> face_subd_id_; // face subdivision id
 };
 
 } // namespace plugin_shallow_water_2
