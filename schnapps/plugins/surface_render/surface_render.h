@@ -194,6 +194,11 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		render_back_faces_ = b;
 		shader_phong_param_->double_side_ = b;
 		shader_phong_color_param_->double_side_ = b;
+		shader_flat_param_->bf_culling_ = !b;
+#ifdef USE_TRANSP
+		shader_transp_phong_param_->bf_culling_ = !b;
+		shader_transp_flat_param_->bf_culling_ = !b;
+#endif
 	}
 
 	float32 get_vertex_base_size() const { return vertex_base_size_; }
@@ -370,6 +375,7 @@ private:
 #ifdef USE_TRANSP
 	void add_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
 	void remove_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
+	void change_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
 #endif
 	void map_linked(View* view, MapHandlerGen* map);
 	void map_unlinked(View* view, MapHandlerGen* map);
