@@ -245,7 +245,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 		if (!kmean.is_valid())
 			kmean = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("kmean");
 
-		const CMap2::ChunkArrayContainer<uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
 		for (uint32 i = container.begin(); i != container.end(); container.next(i))
 			kmean[i] = (kmin[i] + kmax[i]) / 2.0;
 
@@ -258,7 +258,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 		if (!kgaussian.is_valid())
 			kgaussian = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("kgaussian");
 
-		const CMap2::ChunkArrayContainer<uint32>& container = map2->const_attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
 		for (uint32 i = container.begin(); i != container.end(); container.next(i))
 			kgaussian[i] = kmin[i] * kmax[i];
 

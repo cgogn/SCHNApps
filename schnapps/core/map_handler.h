@@ -280,7 +280,7 @@ public:
 	virtual bool is_embedded(CellType ct) const = 0;
 	virtual uint32 embedding(cgogn::Dart d,CellType ct) const = 0;
 
-	virtual const ChunkArrayContainer<uint32>* const_attribute_container(CellType ct) const = 0;
+	virtual const ChunkArrayContainer<uint32>* attribute_container(CellType ct) const = 0;
 
 	void notify_attribute_change(cgogn::Orbit, const QString&);
 
@@ -421,17 +421,17 @@ public:
 		}
 	}
 
-	const ChunkArrayContainer<uint32>* const_attribute_container(CellType ct) const override
+	const ChunkArrayContainer<uint32>* attribute_container(CellType ct) const override
 	{
 		switch (ct)
 		{
-			case CellType::Dart_Cell: return &(get_map()->const_attribute_container(CDart::ORBIT));
-			case CellType::Vertex_Cell: return &(get_map()->const_attribute_container(Vertex::ORBIT));
-			case CellType::Edge_Cell: return &(get_map()->const_attribute_container(Edge::ORBIT));
-			case CellType::Face_Cell: return &(get_map()->const_attribute_container(Face::ORBIT));
-			case CellType::Volume_Cell: return &(get_map()->const_attribute_container(Volume::ORBIT));
+			case CellType::Dart_Cell: return &(get_map()->attribute_container(CDart::ORBIT));
+			case CellType::Vertex_Cell: return &(get_map()->attribute_container(Vertex::ORBIT));
+			case CellType::Edge_Cell: return &(get_map()->attribute_container(Edge::ORBIT));
+			case CellType::Face_Cell: return &(get_map()->attribute_container(Face::ORBIT));
+			case CellType::Volume_Cell: return &(get_map()->attribute_container(Volume::ORBIT));
 			default:
-				cgogn_log_warning("MapHandler::const_attribute_container") << "Invalid CellType \"" << cell_type_name(ct) << "\".";
+				cgogn_log_warning("MapHandler::attribute_container") << "Invalid CellType \"" << cell_type_name(ct) << "\".";
 				return nullptr;
 		}
 	}
@@ -667,7 +667,7 @@ public:
 	virtual QStringList get_attribute_names(CellType ct) const override
 	{
 		QStringList res;
-		const ChunkArrayContainer<uint32>* cont = const_attribute_container(ct);
+		const ChunkArrayContainer<uint32>* cont = attribute_container(ct);
 		if (!cont)
 			return res;
 
