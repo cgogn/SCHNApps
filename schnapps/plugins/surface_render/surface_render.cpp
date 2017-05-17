@@ -234,7 +234,8 @@ void Plugin_SurfaceRender::map_linked(View* view, MapHandlerGen *map)
 
 		MapParameters& p = get_parameters(view, map);
 #ifdef USE_TRANSP
-		add_transparency(view, map, p);
+		if (p.use_transparency_)
+			add_transparency(view, map, p);
 #endif
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
@@ -254,7 +255,8 @@ void Plugin_SurfaceRender::map_unlinked(View* view, MapHandlerGen *map)
 
 		MapParameters& p = get_parameters(view, map);
 #ifdef USE_TRANSP
-		remove_transparency(view, map, p);
+		if (p.use_transparency_)
+			remove_transparency(view, map, p);
 #endif
 	}
 }
@@ -345,11 +347,13 @@ void Plugin_SurfaceRender::viewer_initialized()
 			MapParameters& mp = p.second;
 			MapHandlerGen* map = p.first;
 #ifdef USE_TRANSP
-			remove_transparency(view, map, mp);
+			if (mp.use_transparency_)
+				remove_transparency(view, map, mp);
 #endif
 			mp.initialize_gl();
 #ifdef USE_TRANSP
-			add_transparency(view, map, mp);
+			if (mp.use_transparency_)
+				add_transparency(view, map, mp);
 #endif
 		}
 	}
@@ -359,23 +363,31 @@ void Plugin_SurfaceRender::viewer_initialized()
 #ifdef USE_TRANSP
 void Plugin_SurfaceRender::add_transparency(View* view,MapHandlerGen* map, MapParameters& mp)
 {
-	if (mp.use_transparency_)
-	{
-		if (mp.face_style_ == MapParameters::FLAT)
-			plugin_surface_render_transp::add_tr_flat(plug_transp_, view, map, mp.get_transp_flat_param());
-		if (mp.face_style_ == MapParameters::PHONG)
-			plugin_surface_render_transp::add_tr_phong(plug_transp_, view, map, mp.get_transp_phong_param());
-	}
+	if (mp.face_style_ == MapParameters::FLAT)
+		plugin_surface_render_transp::add_tr_flat(plug_transp_, view, map, mp.get_transp_flat_param());
+	if (mp.face_style_ == MapParameters::PHONG)
+		plugin_surface_render_transp::add_tr_phong(plug_transp_, view, map, mp.get_transp_phong_param());
 }
 
 void Plugin_SurfaceRender::remove_transparency(View* view, MapHandlerGen* map, MapParameters& mp)
 {
-	if (mp.use_transparency_)
+	if (mp.face_style_ == MapParameters::FLAT)
+		plugin_surface_render_transp::remove_tr_flat(plug_transp_, view, map, mp.get_transp_flat_param());
+	if (mp.face_style_ == MapParameters::PHONG)
+		plugin_surface_render_transp::remove_tr_phong(plug_transp_, view, map, mp.get_transp_phong_param());
+}
+
+void Plugin_SurfaceRender::change_transparency(View* view, MapHandlerGen* map, MapParameters& mp)
+{
+	if (mp.face_style_ == MapParameters::FLAT)
 	{
-		if (mp.face_style_ == MapParameters::FLAT)
-			plugin_surface_render_transp::remove_tr_flat(plug_transp_, view, map, mp.get_transp_flat_param());
-		if (mp.face_style_ == MapParameters::PHONG)
-			plugin_surface_render_transp::remove_tr_phong(plug_transp_, view, map, mp.get_transp_phong_param());
+		plugin_surface_render_transp::remove_tr_phong(plug_transp_, view, map, mp.get_transp_phong_param());
+		plugin_surface_render_transp::add_tr_flat(plug_transp_, view, map, mp.get_transp_flat_param());
+	}
+	else if (mp.face_style_ == MapParameters::PHONG)
+	{
+		plugin_surface_render_transp::remove_tr_flat(plug_transp_, view, map, mp.get_transp_flat_param());
+		plugin_surface_render_transp::add_tr_phong(plug_transp_, view, map, mp.get_transp_phong_param());
 	}
 }
 #endif
