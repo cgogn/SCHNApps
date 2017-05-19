@@ -294,7 +294,7 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 	do
 	{
 		cgogn::Dart next = map2_->phi<11>(it);
-		if (face_level(map2_->phi2(it)) == fl-1)
+		if (face_level(CMap2::Face(map2_->phi2(it))) == fl-1)
 			map2_->merge_incident_edges(CMap2::Vertex(map2_->phi1(it)));
 		it = next;
 	} while (it != resF);
