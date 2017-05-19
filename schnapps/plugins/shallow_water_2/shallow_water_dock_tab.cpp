@@ -1,8 +1,7 @@
-﻿/*******************************************************************************
+/*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin MeshGen                                                               *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -22,50 +21,48 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
-#define SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
+#include <shallow_water_dock_tab.h>
+#include <shallow_water.h>
 
-#include "dll.h"
+#include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
-#include <cgogn/io/volume_import.h>
-#include <cgogn/geometry/types/geometry_traits.h>
-
-namespace tetgen
-{
-class tetgenio;
-}
+#include <schnapps/core/view.h>
 
 namespace schnapps
 {
 
-namespace plugin_meshgen
+namespace plugin_shallow_water_2
 {
 
-class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
+ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) :
+	schnapps_(s),
+	plugin_(p)
 {
-public:
+	setupUi(this);
 
-	using Inherit = cgogn::io::VolumeImport<CMap3, VEC3>;
-	using Self = TetgenStructureVolumeImport;
-	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
-	template <typename T>
-	using ChunkArray = typename Inherit::template ChunkArray<T>;
-	using tetgenio = tetgen::tetgenio;
+	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
+	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
+}
 
-	explicit TetgenStructureVolumeImport(tetgenio* tetgen_output, CMap3& map);
-	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
+void ShallowWater_DockTab::init()
+{
+	plugin_->init();
+}
 
-	bool import_tetgen_structure();
+void ShallowWater_DockTab::start_stop()
+{
+	if (!plugin_->is_running())
+	{
+		plugin_->start();
+		button_start_stop->setText("Stop");
+	}
+	else
+	{
+		plugin_->stop();
+		button_start_stop->setText("Start");
+	}
+}
 
-private:
-
-	tetgenio* volume_;
-};
-
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
-
-} // namespace plugin_meshgen
+} // namespace plugin_shallow_water_2
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H

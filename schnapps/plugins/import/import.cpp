@@ -92,16 +92,6 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 				for (const QString& vbo_name : setting_vbo_names_)
 					mhg->create_vbo(vbo_name);
 			}
-			//			for (unsigned int orbit = VERTEX; orbit <= VOLUME; orbit++)
-			//			{
-			//				AttributeContainer& cont = map->getAttributeContainer(orbit);
-			//				std::vector<std::string> names;
-			//				std::vector<std::string> types;
-			//				cont.getAttributesNames(names);
-			//				cont.getAttributesTypes(types);
-			//				for(unsigned int i = 0; i < names.size(); ++i)
-			//					mhg->registerAttribute(orbit, QString::fromStdString(names[i]), QString::fromStdString(types[i]));
-			//			}
 		}
 		return mhg;
 	}
@@ -146,7 +136,6 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 				for (const QString& vbo_name : setting_vbo_names_)
 					mhg->create_vbo(vbo_name);
 			}
-
 		}
 		return mhg;
 	}

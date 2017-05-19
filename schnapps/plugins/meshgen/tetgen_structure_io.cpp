@@ -48,7 +48,7 @@ SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap
 	output->numberofpoints = map.template nb_cells<Vertex::ORBIT>();
 	output->pointlist = new TetgenReal[output->numberofpoints * 3];
 
-	//for each vertex
+	// for each vertex
 
 	map.foreach_cell([&output, &map, &pos] (Vertex v)
 	{
@@ -62,7 +62,7 @@ SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap
 	output->numberoffacets = map.template nb_cells<Face::ORBIT>();
 	output->facetlist = new tetgenio::facet[output->numberoffacets] ;
 
-	//for each facet
+	// for each facet
 	uint32 i = 0u;
 	map.foreach_cell([&output, &i, &map] (Face face)
 	{
@@ -87,9 +87,10 @@ SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap
 	return output;
 }
 
-TetgenStructureVolumeImport::TetgenStructureVolumeImport(tetgenio* tetgen_output)
+TetgenStructureVolumeImport::TetgenStructureVolumeImport(tetgenio* tetgen_output, CMap3& map) :
+	Inherit(map),
+	volume_(tetgen_output)
 {
-	volume_ = tetgen_output;
 	import_tetgen_structure();
 }
 
@@ -102,11 +103,11 @@ bool TetgenStructureVolumeImport::import_tetgen_structure()
 	if (nb_vertices == 0u || nb_volumes== 0u)
 	{
 		cgogn_log_warning("TetgenStructureVolumeImport") << "Error while importing data.";
-		this->clear();
 		return false;
 	}
 
 	ChunkArray<VEC3>* position = this->position_attribute();
+
 	//create vertices
 	std::vector<uint32> vertices_indices;
 	float64* p = volume_->pointlist ;
@@ -123,7 +124,7 @@ bool TetgenStructureVolumeImport::import_tetgen_structure()
 	int* t = volume_->tetrahedronlist ;
 	for(uint32 i = 0u; i < nb_volumes; ++i)
 	{
-		std::array<uint32,4> ids;
+		std::array<uint32, 4> ids;
 		for(uint32 j = 0u; j < 4u; j++)
 			ids[j] = uint32(vertices_indices[t[j] - volume_->firstnumber]);
 		this->add_tetra(ids[0], ids[1], ids[2], ids[3], true);
@@ -134,4 +135,5 @@ bool TetgenStructureVolumeImport::import_tetgen_structure()
 }
 
 } // namespace plugin_meshgen
+
 } // namespace schnapps

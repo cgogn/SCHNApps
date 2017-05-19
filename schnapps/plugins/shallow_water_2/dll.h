@@ -1,8 +1,6 @@
-﻿/*******************************************************************************
+/*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin MeshGen                                                               *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -22,50 +20,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
-#define SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_H_
 
-#include "dll.h"
-#include <schnapps/core/map_handler.h>
-#include <cgogn/io/volume_import.h>
-#include <cgogn/geometry/types/geometry_traits.h>
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API
+#if defined SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API
+#endif
 
-namespace tetgen
-{
-class tetgenio;
-}
-
-namespace schnapps
-{
-
-namespace plugin_meshgen
-{
-
-class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
-{
-public:
-
-	using Inherit = cgogn::io::VolumeImport<CMap3, VEC3>;
-	using Self = TetgenStructureVolumeImport;
-	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
-	template <typename T>
-	using ChunkArray = typename Inherit::template ChunkArray<T>;
-	using tetgenio = tetgen::tetgenio;
-
-	explicit TetgenStructureVolumeImport(tetgenio* tetgen_output, CMap3& map);
-	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
-
-	bool import_tetgen_structure();
-
-private:
-
-	tetgenio* volume_;
-};
-
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
-
-} // namespace plugin_meshgen
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_H_

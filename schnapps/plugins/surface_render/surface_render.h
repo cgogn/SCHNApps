@@ -392,7 +392,7 @@ private slots:
 
 public slots:
 
-	void set_render_vertices(View* view, MapHandlerGen* map, bool b);
+	void set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
 	inline void set_render_vertices(const QString& view_name, const QString& map_name, bool b)
 	{
 		set_render_vertices(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
