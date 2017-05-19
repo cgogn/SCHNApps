@@ -4,6 +4,14 @@ project(SCHNApps
 	LANGUAGES CXX
 )
 
+#### CGOGN_PATH
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/CMakeOptions.txt)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeOptions.txt)
+else()
+    message(FATAL_ERROR "No local options file specifying CGOGN directory: CMakeOptions.txt (see CMakeOptions.txt.sample)")
+endif()
+
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 set(CGAL_DONT_OVERRIDE_CMAKE_FLAGS TRUE CACHE BOOL "preserve cmake flags" FORCE)
 
@@ -24,8 +32,6 @@ set(SCHNAPPS_SOURCE_DIR ${SCHNAPPS_PATH})
 
 set(SCHNAPPS_EXEC_NAME schnapps)
 
-#### CGOGN_PATH 
-set(CGOGN_BUILD_OR_INSTALL_PATH "${SCHNAPPS_PATH}/../CGoGN_2-build" CACHE PATH "CGoGN build or install dir")
 
 if (EXISTS "${CGOGN_BUILD_OR_INSTALL_PATH}")
 	set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${CGOGN_BUILD_OR_INSTALL_PATH})
