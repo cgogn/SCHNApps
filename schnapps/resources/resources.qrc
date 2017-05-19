@@ -14,5 +14,6 @@
         <file>icons/arrow_up.png</file>
         <file>icons/minus.png</file>
         <file>icons/plus.png</file>
+        <file>icons/color.png</file>
     </qresource>
 </RCC>

@@ -44,6 +44,7 @@ uint32 View::view_count_ = 0;
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
 	schnapps_(s),
+	background_color_(0.1f, 0.1f, 0.2f, 0.0f),
 	current_camera_(nullptr),
 	bb_min_(0.0, 0.0, 0.0),
 	bb_max_(0.0, 0.0, 0.0),
@@ -64,6 +65,8 @@ View::View(const QString& name, SCHNApps* s) :
 	updating_ui_(false)
 {
 	++view_count_;
+
+	this->setAutoFillBackground(true);
 
 	this->setSnapshotFormat("BMP");
 	this->setSnapshotFileName(name_);
@@ -98,6 +101,9 @@ View::View(const QString& name, SCHNApps* s) :
 	dialog_cameras_->check(current_camera_->get_name(), Qt::Checked);
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(close_dialogs()));
+
+	color_dial_ = new QColorDialog(background_color_, nullptr);
+	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
 }
 
 View::~View()
@@ -326,7 +332,8 @@ void View::init()
 	this->setCamera(current_camera_);
 //	delete c;
 
-	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
+	glClearColor(background_color_.redF(), background_color_.greenF(), background_color_.blueF(), background_color_.alphaF());
+
 
 	frame_drawer_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 	frame_drawer_renderer_ = frame_drawer_->generate_renderer();
@@ -344,6 +351,10 @@ void View::init()
 
 	button_area_ = new ViewButtonArea(this);
 	button_area_->set_top_right_position(this->width(), 0);
+
+	color_button_ = new ViewButton(":icons/icons/color.png", this);
+	button_area_->add_button(color_button_);
+	connect(color_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_color_view(int, int, int, int)));
 
 	Vsplit_button_ = new ViewButton(":icons/icons/Vsplit.png", this);
 	button_area_->add_button(Vsplit_button_);
@@ -385,6 +396,8 @@ void View::preDraw()
 
 void View::draw()
 {
+	glClearColor(background_color_.redF(), background_color_.greenF(), background_color_.blueF(), background_color_.alphaF());
+
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -724,6 +737,11 @@ void View::update_bb()
 	emit(bb_changed());
 }
 
+void View::color_selected()
+{
+	background_color_ = color_dial_->currentColor();
+}
+
 void View::ui_vertical_split_view(int, int, int, int)
 {
 	schnapps_->split_view(name_, Qt::Horizontal);
@@ -737,6 +755,12 @@ void View::ui_horizontal_split_view(int, int, int, int)
 void View::ui_close_view(int, int, int, int)
 {
 	schnapps_->remove_view(name_);
+}
+
+void View::ui_color_view(int, int, int, int)
+{
+	color_dial_->show();
+	color_dial_->setCurrentColor(background_color_);
 }
 
 void View::ui_maps_list_view(int, int, int globalX, int globalY)
