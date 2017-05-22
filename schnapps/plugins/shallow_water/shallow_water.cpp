@@ -55,9 +55,11 @@ bool Plugin_ShallowWater::enable()
 	h_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("hauteur_tmp");
 	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("debit");
 	q_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("debit_tmp");
+
 	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
 	length_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("length");
 	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
+	zb_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("zb");
 
 	subd_code_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("subdivision_code");
 
@@ -114,21 +116,45 @@ void Plugin_ShallowWater::init()
 	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
 	{
 		if (centroid_[f][0] < -75.)
-			h_[f] = 15.;
+		{
+			h_[f] = 10.;
+			zb_[f] = 0.;
+		}
 		else if (centroid_[f][0] < -50.)
-			h_[f] = 3.;
+		{
+			h_[f] = 30.;
+			zb_[f] = 0.;
+		}
 		else if (centroid_[f][0] < -25.)
-			h_[f] = 8.;
+		{
+			h_[f] = 10.;
+			zb_[f] = 0.;
+		}
 		else if (centroid_[f][0] < 0.)
-			h_[f] = 1.;
+		{
+			h_[f] = 10.;
+			zb_[f] = 0.;
+		}
 		else if (centroid_[f][0] < 25.)
-			h_[f] = 15.;
+		{
+			h_[f] = 10.;
+			zb_[f] = 5.;
+		}
 		else if (centroid_[f][0] < 50.)
-			h_[f] = 1.;
+		{
+			h_[f] = 10.;
+			zb_[f] = 0.;
+		}
 		else if (centroid_[f][0] < 75.)
-			h_[f] = 6.;
+		{
+			h_[f] = 10.;
+			zb_[f] = 0.;
+		}
 		else
-			h_[f] = 1.;
+		{
+			h_[f] = 10.;
+			zb_[f] = 0.;
+		}
 
 		// initial water flow is 0 for all cells
 		q_[f] = 0.;
@@ -139,12 +165,19 @@ void Plugin_ShallowWater::init()
 
 	map2_->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
 	{
-		SCALAR h = 0;
+		SCALAR wh = 0, bh = 0;
 		uint32 nbf = 0;
-		map2_->foreach_incident_face(v, [&] (CMap2::Face f) { h += h_[f]; ++nbf; });
-		h /= nbf;
-		water_position_[v][2] = h;
-		scalar_value_[v] = h;
+		map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+		{
+			wh += h_[f];
+			bh += zb_[f];
+			++nbf;
+		});
+		wh /= nbf;
+		bh /= nbf;
+		water_position_[v][2] = wh;
+		position_[v][2] = bh;
+		scalar_value_[v] = wh-bh;
 	});
 
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value");
@@ -189,7 +222,7 @@ void Plugin_ShallowWater::execute_time_step()
 			std::pair<CMap2::Face, CMap2::Face> faces = get_LR_faces(e);
 			CMap2::Face fL = faces.first;
 			CMap2::Face fR = faces.second;
-			struct Flux F = Solv_HLL(0., 0., phi_[fL], phi_[fR], h_[fL], h_[fR], q_[fL], q_[fR], 1e-3, 9.81);
+			struct Flux F = Solv_HLL(zb_[fL], zb_[fR], phi_[fL], phi_[fR], h_[fL], h_[fR], q_[fL], q_[fR], 1e-3, 9.81);
 			f1_[e] = F.F1;
 			f2_[e] = F.F2;
 			s0L_[e] = F.S0L;
@@ -220,12 +253,19 @@ void Plugin_ShallowWater::execute_time_step()
 
 	map2_->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
 	{
-		SCALAR h = 0;
+		SCALAR wh = 0, bh = 0;
 		uint32 nbf = 0;
-		map2_->foreach_incident_face(v, [&] (CMap2::Face f) { h += h_[f]; ++nbf; });
-		h /= nbf;
-		water_position_[v][2] = h;
-		scalar_value_[v] = h;
+		map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+		{
+			wh += h_[f];
+			bh += zb_[f];
+			++nbf;
+		});
+		wh /= nbf;
+		bh /= nbf;
+		water_position_[v][2] = wh;
+		position_[v][2] = bh;
+		scalar_value_[v] = wh-bh;
 	});
 
 	if (connectivity_changed_)
@@ -296,6 +336,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 
 	SCALAR old_h = h_[f];
 	SCALAR old_q = q_[f];
+	SCALAR old_zb = zb_[f];
 
 	std::pair<CMap2::Edge, CMap2::Edge> edges = get_LR_edges(f);
 	CMap2::Edge eL = edges.first;
@@ -331,6 +372,9 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 
 	phi_[fL] = cgogn::geometry::length<VEC3>(*map2_, eL, position_);
 	phi_[fR] = cgogn::geometry::length<VEC3>(*map2_, eR, position_);
+
+	zb_[fL] = old_zb;
+	zb_[fR] = old_zb;
 }
 
 void Plugin_ShallowWater::remove_edge(CMap2::Edge e)
@@ -345,6 +389,8 @@ void Plugin_ShallowWater::remove_edge(CMap2::Edge e)
 	SCALAR old_h_2 = h_[f2];
 	SCALAR old_q_1 = q_[f1];
 	SCALAR old_q_2 = q_[f2];
+	SCALAR old_zb_1 = zb_[f1];
+	SCALAR old_zb_2 = zb_[f2];
 
 	cgogn::Dart d1 = map2_->phi_1(e.dart);
 	cgogn::Dart d2 = map2_->phi_1(map2_->phi2(e.dart));
@@ -365,6 +411,7 @@ void Plugin_ShallowWater::remove_edge(CMap2::Edge e)
 
 	h_[f] = old_h_1;
 	q_[f] = old_q_1;
+	zb_[f] = old_zb_1;
 
 	centroid_[f] = cgogn::geometry::centroid<VEC3>(*map2_, f, position_);
 	length_[f] = cgogn::geometry::length<VEC3>(*map2_, CMap2::Edge(d1), position_);
