@@ -1,7 +1,0 @@
-# Example of CMakeOptions.txt file
-
-set(CGOGN_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../cgogn)
-set(CGOGN_BUILD_DIR ${CGOGN_ROOT_DIR}/build)
-set(CGOGN_RELEASE_BUILD_DIR ${CGOGN_BUILD_DIR}/release)
-set(CGOGN_DEBUG_BUILD_DIR ${CGOGN_BUILD_DIR}/debug)
-
