@@ -332,7 +332,6 @@ void View::init()
 	this->setCamera(current_camera_);
 //	delete c;
 
-	glClearColor(background_color_.redF(), background_color_.greenF(), background_color_.blueF(), background_color_.alphaF());
 
 
 	frame_drawer_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
@@ -396,8 +395,6 @@ void View::preDraw()
 
 void View::draw()
 {
-	glClearColor(background_color_.redF(), background_color_.greenF(), background_color_.blueF(), background_color_.alphaF());
-
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
@@ -740,6 +737,8 @@ void View::update_bb()
 void View::color_selected()
 {
 	background_color_ = color_dial_->currentColor();
+	this->makeCurrent();
+	glClearColor(background_color_.redF(), background_color_.greenF(), background_color_.blueF(), background_color_.alphaF());
 }
 
 void View::ui_vertical_split_view(int, int, int, int)
