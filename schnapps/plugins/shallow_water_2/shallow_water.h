@@ -70,8 +70,9 @@ private:
 
 	enum FaceType: uint8
 	{
-		CORNER = 0,
-		CENTRAL
+		TRI_CORNER = 0,
+		TRI_CENTRAL,
+		QUAD
 	};
 
 	void try_subdivision();
@@ -98,6 +99,7 @@ private:
 
 	CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
 	CMap2::FaceAttribute<uint32> face_subd_id_; // face subdivision id
+	CMap2::FaceAttribute<bool> tri_face_; // face is triangle or not
 };
 
 } // namespace plugin_shallow_water_2

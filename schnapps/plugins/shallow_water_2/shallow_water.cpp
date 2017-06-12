@@ -27,8 +27,11 @@
 #include <schnapps/core/camera.h>
 
 #include <cgogn/modeling/tiling/triangular_grid.h>
+
 #include <cgogn/geometry/algos/centroid.h>
 #include <cgogn/geometry/algos/length.h>
+
+#include <cgogn/io/map_import.h>
 
 namespace schnapps
 {
@@ -46,19 +49,41 @@ bool Plugin_ShallowWater::enable()
 	map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water_2", 2));
 	map2_ = static_cast<CMap2*>(map_->get_map());
 
-	position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+	cgogn::io::import_surface<VEC3>(*map2_, "/home/kraemer/Desktop/2D.2dm");
+
+	position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+	for (VEC3& p : position_)
+	{
+		p[2] *= 100.;
+	}
 
 	dart_level_ = map_->add_attribute<uint8, CMap2::CDart::ORBIT>("dart_level");
 	face_subd_id_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("face_subdivision_id");
+	tri_face_ = map_->add_attribute<bool, CMap2::Face::ORBIT>("tri_face");
 
-	cgogn::modeling::TriangularGrid<CMap2> grid(*map2_, nbc, nbc);
-	grid.embed_into_grid(position_, 200.0f, 200.0f, 0.0f);
+//	cgogn::modeling::TriangularGrid<CMap2> grid(*map2_, nbc, nbc);
+//	grid.embed_into_grid(position_, 200.0f, 200.0f, 0.0f);
 
-	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
+	CMap2::CellCache cache(*map2_);
+	cache.build<CMap2::Face>();
+	map2_->foreach_cell([&] (CMap2::Face f)
 	{
+		if (map2_->codegree(f) == 3)
+		{
+			tri_face_[f] = true;
+		}
+		else
+		{
+			tri_face_[f] = false;
+		}
+//		cgogn::Dart d = map2_->phi<11>(f.dart);
+//		map2_->cut_face(f.dart, d);
 		face_subd_id_[f] = 0;
+//		face_subd_id_[CMap2::Face(d)] = 0;
 		map2_->foreach_dart_of_orbit(f, [&] (cgogn::Dart d) { dart_level_[d] = 0; });
-	});
+//		map2_->foreach_dart_of_orbit(CMap2::Face(d), [&] (cgogn::Dart d) { dart_level_[d] = 0; });
+	},
+	cache);
 
 	init();
 
@@ -164,17 +189,16 @@ void Plugin_ShallowWater::try_simplification()
 				connectivity_changed_ = true;
 			}
 		},
-		[&] (CMap2::Face f) -> bool // check connectivity condition
+		[&] (CMap2::Face f) -> bool // check simplification condition
 		{
 			if (face_level(f) == 0)
 				return false;
 
-			if (map2_->codegree(f) != 3)
-				return false;
-
 			switch (face_type(f))
 			{
-				case CORNER: {
+				case TRI_CORNER: {
+					if (map2_->codegree(f) != 3)
+						return false;
 					cgogn::Dart it = oldest_dart(f);
 					it = map2_->phi<12>(it); // central face
 					if (map2_->codegree(CMap2::Face(it)) != 3)
@@ -187,7 +211,9 @@ void Plugin_ShallowWater::try_simplification()
 						return false;
 					break;
 				}
-				case CENTRAL: {
+				case TRI_CENTRAL: {
+					if (map2_->codegree(f) != 3)
+						return false;
 					cgogn::Dart it = f.dart;
 					if (map2_->codegree(CMap2::Face(map2_->phi2(it))) != 3) // corner face 1
 						return false;
@@ -197,6 +223,10 @@ void Plugin_ShallowWater::try_simplification()
 					it = map2_->phi1(it);
 					if (map2_->codegree(CMap2::Face(map2_->phi2(it))) != 3) // corner face 3
 						return false;
+					break;
+				}
+				case QUAD: {
+					return false;
 					break;
 				}
 			}
@@ -235,26 +265,37 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 		it = next;
 	} while (it != f.dart);
 
-	// cut face into 4 triangles
-	it = map2_->phi1(it);
-	cgogn::Dart it2 = map2_->template phi<11>(it);
-	CMap2::Edge e = map2_->cut_face(it, it2);
-	dart_level_[e.dart] = fl+1;
-	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	face_subd_id_[CMap2::Face(it)] = 4*fid+1;
+	if (tri_face_[f])
+	{
+		// cut face into 4 triangles
+		it = map2_->phi1(it);
+		cgogn::Dart it2 = map2_->template phi<11>(it);
+		CMap2::Edge e = map2_->cut_face(it, it2);
+		dart_level_[e.dart] = fl+1;
+		dart_level_[map2_->phi2(e.dart)] = fl+1;
+		face_subd_id_[CMap2::Face(it)] = 4*fid+1;
+		tri_face_[CMap2::Face(it)] = true;
 
-	it = map2_->template phi<11>(it2);
-	e = map2_->cut_face(it, it2);
-	dart_level_[e.dart] = fl+1;
-	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	face_subd_id_[CMap2::Face(it2)] = 4*fid+2;
+		it = map2_->template phi<11>(it2);
+		e = map2_->cut_face(it, it2);
+		dart_level_[e.dart] = fl+1;
+		dart_level_[map2_->phi2(e.dart)] = fl+1;
+		face_subd_id_[CMap2::Face(it2)] = 4*fid+2;
+		tri_face_[CMap2::Face(it2)] = true;
 
-	it2 = map2_->template phi<11>(it);
-	e = map2_->cut_face(it, it2);
-	dart_level_[e.dart] = fl+1;
-	dart_level_[map2_->phi2(e.dart)] = fl+1;
-	face_subd_id_[CMap2::Face(it)] = 4*fid+3;
-	face_subd_id_[CMap2::Face(it2)] = 4*fid+4;
+		it2 = map2_->template phi<11>(it);
+		e = map2_->cut_face(it, it2);
+		dart_level_[e.dart] = fl+1;
+		dart_level_[map2_->phi2(e.dart)] = fl+1;
+		face_subd_id_[CMap2::Face(it)] = 4*fid+3;
+		tri_face_[CMap2::Face(it)] = true;
+		face_subd_id_[CMap2::Face(it2)] = 4*fid+4;
+		tri_face_[CMap2::Face(it2)] = true;
+	}
+	else
+	{
+		// cut face into 4 quads
+	}
 }
 
 void Plugin_ShallowWater::simplify_face(CMap2::Face f)
@@ -268,13 +309,13 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 	cgogn::Dart it = f.dart;
 	switch (face_type(f))
 	{
-		case CORNER: {
+		case TRI_CORNER: {
 			cgogn::Dart od = oldest_dart(f);
 			it = map2_->phi<12>(od); // put 'it' in the central face
 			resF = od;
 			break;
 		}
-		case CENTRAL:
+		case TRI_CENTRAL:
 			resF = map2_->phi_1(map2_->phi2(f.dart));
 			break;
 	}
@@ -326,10 +367,12 @@ uint8 Plugin_ShallowWater::face_level(CMap2::Face f)
 
 Plugin_ShallowWater::FaceType Plugin_ShallowWater::face_type(CMap2::Face f)
 {
-	if (face_subd_id_[f] % 4 == 0)
-		return CENTRAL;
+	if (!tri_face_[f])
+		return QUAD;
+	else if (face_subd_id_[f] % 4 == 0)
+		return TRI_CENTRAL;
 	else
-		return CORNER;
+		return TRI_CORNER;
 }
 
 } // namespace plugin_shallow_water_2

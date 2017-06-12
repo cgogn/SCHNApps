@@ -8,7 +8,6 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(lm6 REQUIRED)
 find_package(ply REQUIRED)
-find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
 	dll.h
