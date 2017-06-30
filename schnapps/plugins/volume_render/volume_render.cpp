@@ -126,9 +126,16 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 		{
 			if (p.get_position_vbo())
 			{
-				p.shader_simple_color_param_->bind(proj, mv);
-				map->draw(cgogn::rendering::LINES);
-				p.shader_simple_color_param_->release();
+				if(p.volume_drawer_rend_)
+				{
+					p.volume_drawer_rend_->draw_edges(proj, mv, view);
+				}
+				else
+				{
+					p.shader_simple_color_param_->bind(proj, mv);
+					map->draw(cgogn::rendering::LINES);
+					p.shader_simple_color_param_->release();
+				}
 			}
 		}
 
