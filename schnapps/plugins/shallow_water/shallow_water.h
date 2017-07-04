@@ -64,6 +64,7 @@ public slots:
 
 private slots:
 
+	void update_time_step();
 	void execute_time_step();
 	void try_subdivision();
 	void try_simplification();

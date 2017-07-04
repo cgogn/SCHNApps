@@ -191,7 +191,7 @@ void Plugin_ShallowWater::init()
 	);
 
 	t_ = 0.;
-	dt_ = 0.01;
+	dt_ = 0.1;
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Vertex v, uint32)
@@ -240,9 +240,30 @@ bool Plugin_ShallowWater::is_running()
 	return timer_->isActive();
 }
 
+void Plugin_ShallowWater::update_time_step()
+{
+	std::vector<SCALAR> min_dt_per_thread(cgogn::nb_threads());
+	for (SCALAR& d : min_dt_per_thread) d = 0.1;
+
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Face f, uint32 idx)
+		{
+			SCALAR swept = std::fabs(q_[f]) / std::max(h_[f], 1e-10) + std::sqrt(9.81 * h_[f]);
+			double dt = length_[f] / std::max(swept, 1e-10);
+			min_dt_per_thread[idx] = dt < min_dt_per_thread[idx] ? dt : min_dt_per_thread[idx];
+		},
+		*qtrav_
+	);
+
+	dt_ = *(std::min_element(min_dt_per_thread.begin(), min_dt_per_thread.end()));
+}
+
 void Plugin_ShallowWater::execute_time_step()
 {
 	connectivity_changed_ = false;
+
+	update_time_step();
+//	std::cout << dt_ << std::endl;
 
 	f1_[boundaryL_] = 0.;
 	f2_[boundaryL_] = 5e-1 * 9.81 * phi_[CMap2::Face(boundaryL_.dart)] * (h_[CMap2::Face(boundaryL_.dart)] * h_[CMap2::Face(boundaryL_.dart)]);
@@ -332,7 +353,7 @@ void Plugin_ShallowWater::try_subdivision()
 			if (!map2_->is_incident_to_boundary(eL) && !map2_->is_incident_to_boundary(eR))
 			{
 				SCALAR g = std::abs(h_[CMap2::Face(map2_->phi2(eL.dart))] - h_[CMap2::Face(map2_->phi2(eR.dart))]);
-				if (g > 1. && subd_code_[f] < (1 << 3))
+				if (g > 1. && subd_code_[f] < (1 << 4))
 				{
 					subdivide_face(f);
 					connectivity_changed_ = true;
