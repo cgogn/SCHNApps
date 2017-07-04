@@ -64,6 +64,7 @@ public slots:
 
 private slots:
 
+	void update_time_step();
 	void execute_time_step();
 	void try_subdivision();
 	void try_simplification();
@@ -88,13 +89,9 @@ private:
 		SCALAR hmin, SCALAR g
 	);
 
-	std::pair<CMap2::Edge, CMap2::Edge> get_LR_edges(CMap2::Face f);
-	std::pair<CMap2::Face, CMap2::Face> get_LR_faces(CMap2::Edge e);
-
     void calcul_cste_solution_exacte();
     void solution_exacte(SCALAR x, SCALAR& h, SCALAR& q);
     void mesure_ecart();
-    void optimal_dt(SCALAR dt_in);
 
 	ShallowWater_DockTab* dock_tab_;
 
@@ -124,8 +121,9 @@ private:
 	CMap2Handler* map_;
 	CMap2* map2_;
 	CMap2::Edge boundaryL_, boundaryR_;
+	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
 
-	CMap2::VertexAttribute<VEC3> position_; // vertices position
+    CMap2::VertexAttribute<VEC3> position_; // vertices position
     CMap2::VertexAttribute<VEC3> water_position_;
     CMap2::VertexAttribute<SCALAR> scalar_value_water_position_;
     CMap2::VertexAttribute<SCALAR> scalar_value_flow_velocity_;
@@ -135,9 +133,10 @@ private:
 	CMap2::FaceAttribute<SCALAR> h_tmp_;
 	CMap2::FaceAttribute<SCALAR> q_;        // water flow
 	CMap2::FaceAttribute<SCALAR> q_tmp_;
+
 	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
-	CMap2::FaceAttribute<SCALAR> length_;   // cell length
-	CMap2::FaceAttribute<SCALAR> phi_;      // cell width    
+    CMap2::FaceAttribute<SCALAR> length_;   // cell length
+    CMap2::FaceAttribute<SCALAR> phi_;      // cell width
 
 	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
 

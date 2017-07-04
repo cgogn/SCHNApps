@@ -3,6 +3,7 @@ project(plugin_shallow_water_2
 )
 
 find_package(cgogn_core REQUIRED)
+find_package(cgogn_io REQUIRED)
 find_package(cgogn_modeling REQUIRED)
 find_package(cgogn_geometry REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
@@ -36,8 +37,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
+	${cgogn_io_LIBRARIES}
 	${cgogn_modeling_LIBRARIES}
-	${cgogn_geoemtry_LIBRARIES}
+	${cgogn_geometry_LIBRARIES}
 	${Qt5Core_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 )

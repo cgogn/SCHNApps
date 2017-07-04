@@ -37,7 +37,7 @@ target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
 	${cgogn_modeling_LIBRARIES}
-	${cgogn_geoemtry_LIBRARIES}
+	${cgogn_geometry_LIBRARIES}
 	${Qt5Core_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 )
