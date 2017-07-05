@@ -70,6 +70,24 @@ public:
 
 	inline const QString& get_name() const { return name_; }
 
+//	class UpdateFreezer
+//	{
+//	public:
+//		UpdateFreezer() { enable_freeze_update(); }
+//		~UpdateFreezer() { disable_freeze_update(); }
+//		void disable() { disable_freeze_update(); }
+//	};
+
+	static void enable_freeze_update() { freeze_update_ = true; }
+	static void disable_freeze_update()
+	{
+		freeze_update_ = false;
+//		schnapps_->foreach_view([] (View* v)
+//		{
+//			v->update();
+//		});
+	}
+
 public slots:
 
 	/**
@@ -278,6 +296,8 @@ protected:
 
 	QString name_;
 	SCHNApps* schnapps_;
+
+	static bool freeze_update_;
 
 	Camera* current_camera_;
 	std::list<PluginInteraction*> plugins_;

@@ -297,11 +297,15 @@ void Plugin_ShallowWater::execute_time_step()
 		scalar_value_[v] = wh-bh;
 	});
 
+	View::enable_freeze_update();
+
 	if (connectivity_changed_)
 		map_->notify_connectivity_change();
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value");
+
+	View::disable_freeze_update();
 
 	t_ += dt_;
 }
