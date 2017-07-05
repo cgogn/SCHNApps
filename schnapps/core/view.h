@@ -24,6 +24,8 @@
 #ifndef SCHNAPPS_CORE_VIEW_H_
 #define SCHNAPPS_CORE_VIEW_H_
 
+#include <QColorDialog>
+
 #include <schnapps/core/dll.h>
 #include <schnapps/core/types.h>
 
@@ -272,9 +274,12 @@ private slots:
 
 	void update_bb();
 
+	void color_selected();
+
 	void ui_vertical_split_view(int x, int y, int globalX, int globalY);
 	void ui_horizontal_split_view(int x, int y, int globalX, int globalY);
 	void ui_close_view(int x, int y, int globalX, int globalY);
+	void ui_color_view(int x, int y, int globalX, int globalY);
 
 	void ui_maps_list_view(int x, int y, int globalX, int globalY);
 	void ui_plugins_list_view(int x, int y, int globalX, int globalY);
@@ -299,6 +304,9 @@ protected:
 
 	static bool freeze_update_;
 
+	QColorDialog* color_dial_;
+	QColor background_color_;
+
 	Camera* current_camera_;
 	std::list<PluginInteraction*> plugins_;
 	std::list<MapHandlerGen*> maps_;
@@ -309,6 +317,7 @@ protected:
 	ViewButtonArea* button_area_;
 
 	ViewButton* close_button_;
+	ViewButton* color_button_;
 	ViewButton* Vsplit_button_;
 	ViewButton* Hsplit_button_;
 

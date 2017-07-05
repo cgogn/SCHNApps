@@ -77,6 +77,8 @@ bool Plugin_ShallowWater::enable()
 	boundaryL_ = CMap2::Edge(grid.vertex_table_[nbc+1].dart);
 	boundaryR_ = CMap2::Edge(grid.vertex_table_[nbc].dart);
 
+	qtrav_->build<CMap2::Vertex>();
+
 	qtrav_->build<CMap2::Edge>([&] (CMap2::Edge e) -> cgogn::Dart {
 		if (map2_->is_incident_to_boundary(e))
 			return map2_->is_boundary(e.dart) ? map2_->phi2(e.dart) : e.dart;
@@ -88,6 +90,7 @@ bool Plugin_ShallowWater::enable()
 				return map2_->phi2(e.dart);
 		}
 	});
+
 	qtrav_->build<CMap2::Face>([&] (CMap2::Face f) -> cgogn::Dart {
 		CMap2::Edge e(f.dart);
 		if (map2_->is_incident_to_boundary(e))
@@ -137,72 +140,78 @@ void Plugin_ShallowWater::disable()
 
 void Plugin_ShallowWater::init()
 {
-	map2_->parallel_foreach_cell([&] (CMap2::Face f, uint32)
-	{
-		if (centroid_[f][0] < -75.)
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Face f, uint32)
 		{
-			h_[f] = 10.;
-			zb_[f] = 0.;
-		}
-		else if (centroid_[f][0] < -50.)
-		{
-			h_[f] = 30.;
-			zb_[f] = 0.;
-		}
-		else if (centroid_[f][0] < -25.)
-		{
-			h_[f] = 10.;
-			zb_[f] = 0.;
-		}
-		else if (centroid_[f][0] < 0.)
-		{
-			h_[f] = 10.;
-			zb_[f] = 0.;
-		}
-		else if (centroid_[f][0] < 25.)
-		{
-			h_[f] = 10.;
-			zb_[f] = 0.;
-		}
-		else if (centroid_[f][0] < 50.)
-		{
-			h_[f] = 10.;
-			zb_[f] = 0.;
-		}
-		else if (centroid_[f][0] < 75.)
-		{
-			h_[f] = 10.;
-			zb_[f] = 0.;
-		}
-		else
-		{
-			h_[f] = 10.;
-			zb_[f] = 0.;
-		}
+			if (centroid_[f][0] < -75.)
+			{
+				h_[f] = 10.;
+				zb_[f] = 0.;
+			}
+			else if (centroid_[f][0] < -50.)
+			{
+				h_[f] = 30.;
+				zb_[f] = 0.;
+			}
+			else if (centroid_[f][0] < -25.)
+			{
+				h_[f] = 10.;
+				zb_[f] = 0.;
+			}
+			else if (centroid_[f][0] < 0.)
+			{
+				h_[f] = 10.;
+				zb_[f] = 0.;
+			}
+			else if (centroid_[f][0] < 25.)
+			{
+				h_[f] = 10.;
+				zb_[f] = 0.;
+			}
+			else if (centroid_[f][0] < 50.)
+			{
+				h_[f] = 10.;
+				zb_[f] = 0.;
+			}
+			else if (centroid_[f][0] < 75.)
+			{
+				h_[f] = 10.;
+				zb_[f] = 0.;
+			}
+			else
+			{
+				h_[f] = 10.;
+				zb_[f] = 0.;
+			}
 
-		// initial water flow is 0 for all cells
-		q_[f] = 0.;
-	});
+			// initial water flow is 0 for all cells
+			q_[f] = 0.;
+		},
+		*qtrav_
+	);
 
 	t_ = 0.;
-	dt_ = 0.01;
+	dt_ = 0.1;
 
-	map2_->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
-	{
-		SCALAR wh = 0, bh = 0;
-		uint32 nbf = 0;
-		map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Vertex v, uint32)
 		{
-			wh += h_[f];
-			bh += zb_[f];
-			++nbf;
-		});
-		wh /= nbf;
-		bh /= nbf;
-		water_position_[v][2] = wh;
-		position_[v][2] = bh;
-		scalar_value_[v] = wh-bh;
-	});
+			SCALAR wh = 0, bh = 0;
+			uint32 nbf = 0;
+			map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+			{
+				wh += h_[f];
+				bh += zb_[f];
+				++nbf;
+			});
+			wh /= nbf;
+			bh /= nbf;
+			water_position_[v][2] = wh;
+			position_[v][2] = bh;
+			scalar_value_[v] = wh-bh;
+		},
+		*qtrav_
+	);
 
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value");
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
@@ -231,9 +240,30 @@ bool Plugin_ShallowWater::is_running()
 	return timer_->isActive();
 }
 
+void Plugin_ShallowWater::update_time_step()
+{
+	std::vector<SCALAR> min_dt_per_thread(cgogn::nb_threads());
+	for (SCALAR& d : min_dt_per_thread) d = 0.1;
+
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Face f, uint32 idx)
+		{
+			SCALAR swept = std::fabs(q_[f]) / std::max(h_[f], 1e-10) + std::sqrt(9.81 * h_[f]);
+			double dt = length_[f] / std::max(swept, 1e-10);
+			min_dt_per_thread[idx] = dt < min_dt_per_thread[idx] ? dt : min_dt_per_thread[idx];
+		},
+		*qtrav_
+	);
+
+	dt_ = *(std::min_element(min_dt_per_thread.begin(), min_dt_per_thread.end()));
+}
+
 void Plugin_ShallowWater::execute_time_step()
 {
 	connectivity_changed_ = false;
+
+	update_time_step();
+//	std::cout << dt_ << std::endl;
 
 	f1_[boundaryL_] = 0.;
 	f2_[boundaryL_] = 5e-1 * 9.81 * phi_[CMap2::Face(boundaryL_.dart)] * (h_[CMap2::Face(boundaryL_.dart)] * h_[CMap2::Face(boundaryL_.dart)]);
@@ -280,22 +310,25 @@ void Plugin_ShallowWater::execute_time_step()
 	try_simplification();
 	try_subdivision();
 
-	map2_->parallel_foreach_cell([&] (CMap2::Vertex v, uint32)
-	{
-		SCALAR wh = 0, bh = 0;
-		uint32 nbf = 0;
-		map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Vertex v, uint32)
 		{
-			wh += h_[f];
-			bh += zb_[f];
-			++nbf;
-		});
-		wh /= nbf;
-		bh /= nbf;
-		water_position_[v][2] = wh;
-		position_[v][2] = bh;
-		scalar_value_[v] = wh-bh;
-	});
+			SCALAR wh = 0, bh = 0;
+			uint32 nbf = 0;
+			map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+			{
+				wh += h_[f];
+				bh += zb_[f];
+				++nbf;
+			});
+			wh /= nbf;
+			bh /= nbf;
+			water_position_[v][2] = wh;
+			position_[v][2] = bh;
+			scalar_value_[v] = wh-bh;
+		},
+		*qtrav_
+	);
 
 	View::enable_freeze_update();
 
@@ -324,7 +357,7 @@ void Plugin_ShallowWater::try_subdivision()
 			if (!map2_->is_incident_to_boundary(eL) && !map2_->is_incident_to_boundary(eR))
 			{
 				SCALAR g = std::abs(h_[CMap2::Face(map2_->phi2(eL.dart))] - h_[CMap2::Face(map2_->phi2(eR.dart))]);
-				if (g > 1. && subd_code_[f] < (1 << 3))
+				if (g > 1. && subd_code_[f] < (1 << 4))
 				{
 					subdivide_face(f);
 					connectivity_changed_ = true;
@@ -378,6 +411,9 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f)
 	CMap2::Vertex v1 = map2_->cut_edge(CMap2::Edge(map2_->phi1(eL.dart)));
 	CMap2::Vertex v2 = map2_->cut_edge(CMap2::Edge(map2_->phi1(eR.dart)));
 	CMap2::Edge e = map2_->cut_face(v2.dart, v1.dart);
+
+	qtrav_->update(v1);
+	qtrav_->update(v2);
 
 	qtrav_->update(CMap2::Edge(map2_->phi2(e.dart)));
 	qtrav_->update(CMap2::Edge(map2_->phi1(e.dart)));
