@@ -71,6 +71,11 @@ private slots:
 	void subdivide_face(CMap2::Face f);
 	void remove_edge(CMap2::Edge e);
 
+    void exact_solution_constant_calcul();
+    void exact_solution(SCALAR x, SCALAR& h, SCALAR& u);
+    void difference_measure();
+    float parameters();
+
 private:
 
 	struct Flux
@@ -87,33 +92,30 @@ private:
 		SCALAR hL, SCALAR hR,
 		SCALAR qL, SCALAR qR,
 		SCALAR hmin, SCALAR g
-	);
-
-    void calcul_cste_solution_exacte();
-    void solution_exacte(SCALAR x, SCALAR& h, SCALAR& q);
-    void mesure_ecart();
+	);    
 
 	ShallowWater_DockTab* dock_tab_;
 
 	SCALAR t_;
 	SCALAR dt_;
 
-    SCALAR hR;
-    SCALAR hL;
-    SCALAR uR;
-    SCALAR uL;
-    SCALAR err_h_2;
-    SCALAR err_q_2;
-    SCALAR err_h_max;
-    SCALAR err_q_max;
-    SCALAR hEtoile;
-    SCALAR uEtoile;
-    SCALAR ecart_h;
-    SCALAR ecart_q;
-    unsigned int nbr_mailles;
-    SCALAR dt_max;
-    const SCALAR g = 9.81;
-    unsigned int nbr_iterations_temps;
+    SCALAR initial_right_water_position_;
+    SCALAR initial_left_water_position_;
+    SCALAR initial_right_flow_velocity_;
+    SCALAR initial_left_flow_velocity_;
+    SCALAR error_h_2_;
+    SCALAR error_u_2_;
+    SCALAR error_h_max_;
+    SCALAR error_u_max_;
+    SCALAR h_exact_solution_;
+    SCALAR u_exact_solution_;
+    SCALAR h_difference_;
+    SCALAR q_difference_;
+    unsigned int nbr_cell_;
+    unsigned int nbr_time_step_;
+
+    SCALAR dt_max_;
+    clock_t t_begin_, t_end_;
 
 	QTimer* timer_;
 	bool connectivity_changed_;
@@ -140,13 +142,14 @@ private:
 
 	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
 
-    CMap2::FaceAttribute<SCALAR> erreur_h_;
-    CMap2::FaceAttribute<SCALAR> erreur_q_;
+    CMap2::FaceAttribute<SCALAR> error_h_;
+    CMap2::FaceAttribute<SCALAR> error_u_;
 
 	CMap2::EdgeAttribute<SCALAR> f1_;
 	CMap2::EdgeAttribute<SCALAR> f2_;
 	CMap2::EdgeAttribute<SCALAR> s0L_;
 	CMap2::EdgeAttribute<SCALAR> s0R_;
+
 };
 
 } // namespace plugin_shallow_water
