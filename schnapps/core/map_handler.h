@@ -117,7 +117,7 @@ public:
 
 	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
 
-	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const = 0;
+	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
 
 	/**********************************************************
 	 * MANAGE FRAME                                           *
@@ -482,25 +482,25 @@ public:
 		const cgogn::Orbit orb = orbit(ct);
 		switch (orb)
 		{
-			case CDart::ORBIT: get_map()->foreach_cell([&](CDart d) { func(d.dart); }); break;
-			case Vertex::ORBIT: get_map()->foreach_cell([&](Vertex v) { func(v.dart); }); break;
-			case Edge::ORBIT: get_map()->foreach_cell([&](Edge e) { func(e.dart); }); break;
-			case Face::ORBIT: get_map()->foreach_cell([&](Face f) { func(f.dart); }); break;
-			case Volume::ORBIT: get_map()->foreach_cell([&](Volume w) { func(w.dart); }); break;
+			case CDart::ORBIT: get_map()->foreach_cell([&] (CDart d) { func(d.dart); }); break;
+			case Vertex::ORBIT: get_map()->foreach_cell([&] (Vertex v) { func(v.dart); }); break;
+			case Edge::ORBIT: get_map()->foreach_cell([&] (Edge e) { func(e.dart); }); break;
+			case Face::ORBIT: get_map()->foreach_cell([&] (Face f) { func(f.dart); }); break;
+			case Volume::ORBIT: get_map()->foreach_cell([&] (Volume w) { func(w.dart); }); break;
 			default: break;
 		}
 	}
 
-	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const override
+	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const override
 	{
 		const cgogn::Orbit orb = orbit(ct);
 		switch (orb)
 		{
-			case CDart::ORBIT: get_map()->parallel_foreach_cell([&](CDart d, uint32 th) { func(d.dart, th); }); break;
-			case Vertex::ORBIT: get_map()->parallel_foreach_cell([&](Vertex v, uint32 th) { func(v.dart, th); }); break;
-			case Edge::ORBIT: get_map()->parallel_foreach_cell([&](Edge e, uint32 th) { func(e.dart, th); }); break;
-			case Face::ORBIT: get_map()->parallel_foreach_cell([&](Face f, uint32 th) { func(f.dart, th); }); break;
-			case Volume::ORBIT: get_map()->parallel_foreach_cell([&](Volume w, uint32 th) { func(w.dart, th); }); break;
+			case CDart::ORBIT: get_map()->parallel_foreach_cell([&] (CDart d) { func(d.dart); }); break;
+			case Vertex::ORBIT: get_map()->parallel_foreach_cell([&] (Vertex v) { func(v.dart); }); break;
+			case Edge::ORBIT: get_map()->parallel_foreach_cell([&] (Edge e) { func(e.dart); }); break;
+			case Face::ORBIT: get_map()->parallel_foreach_cell([&] (Face f) { func(f.dart); }); break;
+			case Volume::ORBIT: get_map()->parallel_foreach_cell([&] (Volume w) { func(w.dart); }); break;
 			default: break;
 		}
 	}

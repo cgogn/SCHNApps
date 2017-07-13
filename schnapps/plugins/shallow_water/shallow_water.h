@@ -69,13 +69,17 @@ public slots:
 private slots:
 
 	void update_draw_data();
-
 	void update_time_step();
 	void execute_time_step();
 	void try_subdivision();
 	void try_simplification();
-	void subdivide_face(CMap2::Face f);
+	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
 	void remove_edge(CMap2::Edge e);
+
+    void exact_solution_constant_calcul();
+    void exact_solution(SCALAR x, SCALAR& h, SCALAR& u);
+    void difference_measure();
+    float parameters();
 
 private:
 
@@ -93,30 +97,47 @@ private:
 		SCALAR hL, SCALAR hR,
 		SCALAR qL, SCALAR qR,
 		SCALAR hmin, SCALAR g
-	);
-
-//	std::pair<CMap2::Edge, CMap2::Edge> get_LR_edges(CMap2::Face f);
-//	std::pair<CMap2::Face, CMap2::Face> get_LR_faces(CMap2::Edge e);
+	);    
 
 	ShallowWater_DockTab* dock_tab_;
 
 	SCALAR t_;
 	SCALAR dt_;
+
 	QTimer* draw_timer_;
 	std::chrono::high_resolution_clock::time_point start_time_;
 	std::future<void> simu_future_;
 	std::atomic_bool simu_running_;
 	std::mutex simu_data_access_;
 
+    SCALAR initial_right_water_position_;
+    SCALAR initial_left_water_position_;
+    SCALAR initial_right_flow_velocity_;
+    SCALAR initial_left_flow_velocity_;
+    SCALAR error_h_2_;
+    SCALAR error_u_2_;
+    SCALAR error_h_max_;
+    SCALAR error_u_max_;
+    SCALAR h_exact_solution_;
+    SCALAR u_exact_solution_;
+    SCALAR h_difference_;
+    SCALAR q_difference_;
+    unsigned int nbr_cell_;
+    unsigned int nbr_time_step_;
+
+    SCALAR dt_max_;
+    clock_t t_begin_, t_end_;
+
 	CMap2Handler* map_;
 	CMap2* map2_;
 	CMap2::Edge boundaryL_, boundaryR_;
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
 
-	CMap2::VertexAttribute<VEC3> position_; // vertices position
-	CMap2::VertexAttribute<VEC3> water_position_;
-
-	CMap2::VertexAttribute<SCALAR> scalar_value_;
+    CMap2::VertexAttribute<VEC3> position_; // vertices position
+    CMap2::VertexAttribute<VEC3> water_position_;
+    CMap2::VertexAttribute<SCALAR> scalar_value_water_position_;
+    CMap2::VertexAttribute<SCALAR> scalar_value_flow_velocity_;
+    CMap2::VertexAttribute<VEC3> flow_velocity_;
 
 	CMap2::FaceAttribute<SCALAR> h_;        // water height
 	CMap2::FaceAttribute<SCALAR> h_tmp_;
@@ -124,11 +145,13 @@ private:
 	CMap2::FaceAttribute<SCALAR> q_tmp_;
 
 	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
-	CMap2::FaceAttribute<SCALAR> length_;   // cell length
-	CMap2::FaceAttribute<SCALAR> phi_;      // cell width
-	CMap2::FaceAttribute<SCALAR> zb_;       // cell bottom height
+    CMap2::FaceAttribute<SCALAR> length_;   // cell length
+    CMap2::FaceAttribute<SCALAR> phi_;      // cell width
 
 	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
+
+    CMap2::FaceAttribute<SCALAR> error_h_;
+    CMap2::FaceAttribute<SCALAR> error_u_;
 
 	CMap2::EdgeAttribute<SCALAR> f1_;
 	CMap2::EdgeAttribute<SCALAR> f2_;

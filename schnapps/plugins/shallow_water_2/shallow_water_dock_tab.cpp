@@ -51,7 +51,7 @@ void ShallowWater_DockTab::init()
 
 void ShallowWater_DockTab::start_stop()
 {
-	if (!plugin_->is_running())
+	if (!plugin_->is_simu_running())
 	{
 		plugin_->start();
 		button_start_stop->setText("Stop");
