@@ -186,10 +186,9 @@ void Plugin_ShallowWater::init()
 
     // constantes pour la solution exacte
     exact_solution_constant_calcul();
-    qDebug() << h_exact_solution_ << u_exact_solution_;
 
-    t_ = 0.;
-    dt_ = 0.01;
+    t_ = 0.;    
+    dt_max_ = (initial_left_water_position_-initial_right_water_position_)/100.;
     nbr_time_step_ = 0;
 
     map2_->parallel_foreach_cell(
@@ -391,14 +390,14 @@ void Plugin_ShallowWater::execute_time_step()
         *qtrav_
     );
 
-    /*if (connectivity_changed_)
+    if (connectivity_changed_)
         map_->notify_connectivity_change();
 
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_water_position");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_flow_velocity");
-    map_->notify_attribute_change(CMap2::Vertex::ORBIT, "flow_velocity");*/
+    map_->notify_attribute_change(CMap2::Vertex::ORBIT, "flow_velocity");
 
     if(t_ >= 1.)
     //if(nbr_time_step_ == 1)
@@ -450,6 +449,7 @@ void Plugin_ShallowWater::try_subdivision()
                  * en fonction du sens de la vague
                  * et des hauteurs relatives d'eau
                  * avec les différences de valeurs positives ou négatives
+                 * car l'onde se deplace de au plus une cellule à chaque pas de temps
                  */
                 CMap2::Face fR(map2_->phi2(eR.dart));
                 SCALAR diff_h_right = h_[f] - h_[fR];
@@ -790,18 +790,17 @@ float Plugin_ShallowWater::parameters()
 {
     float size;
     SCALAR c;
-    std::ifstream file_valeurs("parametres.txt",std::ios::in);
-    file_valeurs >> initial_left_water_position_;
-    file_valeurs >> initial_right_water_position_;
-    file_valeurs >> initial_left_flow_velocity_;
-    file_valeurs >> initial_right_flow_velocity_;
-    file_valeurs >> h_difference_;
-    file_valeurs >> q_difference_;
-    file_valeurs >> size;
-    file_valeurs >> c; // erreur <= erreur avec c*100000 mailles fixes
-    file_valeurs.close();
+    std::ifstream file("parametres.txt",std::ios::in);
+    file >> initial_left_water_position_;
+    file >> initial_right_water_position_;
+    file >> initial_left_flow_velocity_;
+    file >> initial_right_flow_velocity_;
+    file >> h_difference_;
+    file >> q_difference_;
+    file >> size;
+    file >> c;
+    file.close();
     nbr_cell_ = c*(initial_left_water_position_-initial_right_water_position_)*size/2;
-    dt_max_ = (initial_left_water_position_-initial_right_water_position_)/1000.;
     return size;
 }
 
