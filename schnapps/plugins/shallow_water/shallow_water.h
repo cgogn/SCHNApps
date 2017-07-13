@@ -71,6 +71,11 @@ private slots:
 	void subdivide_face(CMap2::Face f);
 	void remove_edge(CMap2::Edge e);
 
+    void exact_solution_constant_calcul();
+    void exact_solution(SCALAR x, SCALAR& h, SCALAR& u);
+    void difference_measure();
+    float parameters();
+
 private:
 
 	struct Flux
@@ -87,15 +92,31 @@ private:
 		SCALAR hL, SCALAR hR,
 		SCALAR qL, SCALAR qR,
 		SCALAR hmin, SCALAR g
-	);
-
-//	std::pair<CMap2::Edge, CMap2::Edge> get_LR_edges(CMap2::Face f);
-//	std::pair<CMap2::Face, CMap2::Face> get_LR_faces(CMap2::Edge e);
+	);    
 
 	ShallowWater_DockTab* dock_tab_;
 
 	SCALAR t_;
 	SCALAR dt_;
+
+    SCALAR initial_right_water_position_;
+    SCALAR initial_left_water_position_;
+    SCALAR initial_right_flow_velocity_;
+    SCALAR initial_left_flow_velocity_;
+    SCALAR error_h_2_;
+    SCALAR error_u_2_;
+    SCALAR error_h_max_;
+    SCALAR error_u_max_;
+    SCALAR h_exact_solution_;
+    SCALAR u_exact_solution_;
+    SCALAR h_difference_;
+    SCALAR q_difference_;
+    unsigned int nbr_cell_;
+    unsigned int nbr_time_step_;
+
+    SCALAR dt_max_;
+    clock_t t_begin_, t_end_;
+
 	QTimer* timer_;
 	bool connectivity_changed_;
 
@@ -104,10 +125,11 @@ private:
 	CMap2::Edge boundaryL_, boundaryR_;
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
 
-	CMap2::VertexAttribute<VEC3> position_; // vertices position
-	CMap2::VertexAttribute<VEC3> water_position_;
-
-	CMap2::VertexAttribute<SCALAR> scalar_value_;
+    CMap2::VertexAttribute<VEC3> position_; // vertices position
+    CMap2::VertexAttribute<VEC3> water_position_;
+    CMap2::VertexAttribute<SCALAR> scalar_value_water_position_;
+    CMap2::VertexAttribute<SCALAR> scalar_value_flow_velocity_;
+    CMap2::VertexAttribute<VEC3> flow_velocity_;
 
 	CMap2::FaceAttribute<SCALAR> h_;        // water height
 	CMap2::FaceAttribute<SCALAR> h_tmp_;
@@ -115,16 +137,19 @@ private:
 	CMap2::FaceAttribute<SCALAR> q_tmp_;
 
 	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
-	CMap2::FaceAttribute<SCALAR> length_;   // cell length
-	CMap2::FaceAttribute<SCALAR> phi_;      // cell width
-	CMap2::FaceAttribute<SCALAR> zb_;       // cell bottom height
+    CMap2::FaceAttribute<SCALAR> length_;   // cell length
+    CMap2::FaceAttribute<SCALAR> phi_;      // cell width
 
 	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
+
+    CMap2::FaceAttribute<SCALAR> error_h_;
+    CMap2::FaceAttribute<SCALAR> error_u_;
 
 	CMap2::EdgeAttribute<SCALAR> f1_;
 	CMap2::EdgeAttribute<SCALAR> f2_;
 	CMap2::EdgeAttribute<SCALAR> s0L_;
 	CMap2::EdgeAttribute<SCALAR> s0R_;
+
 };
 
 } // namespace plugin_shallow_water
