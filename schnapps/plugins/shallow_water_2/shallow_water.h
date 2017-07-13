@@ -60,10 +60,12 @@ public slots:
 	void init();
 	void start();
 	void stop();
-	bool is_running();
+	bool is_simu_running();
 
 private slots:
 
+	void update_draw_data();
+	void update_time_step();
 	void execute_time_step();
 
 private:
@@ -77,23 +79,27 @@ private:
 
 	void try_subdivision();
 	void try_simplification();
-	void subdivide_face(CMap2::Face f);
+	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
 	void simplify_face(CMap2::Face f);
 
 	cgogn::Dart oldest_dart(CMap2::Face f);
 	uint8 face_level(CMap2::Face f);
 	FaceType face_type(CMap2::Face f);
 
-
 	ShallowWater_DockTab* dock_tab_;
 
 	SCALAR t_;
 	SCALAR dt_;
-	QTimer* timer_;
-	bool connectivity_changed_;
+
+	QTimer* draw_timer_;
+	std::chrono::high_resolution_clock::time_point start_time_;
+	std::future<void> simu_future_;
+	std::atomic_bool simu_running_;
+	std::mutex simu_data_access_;
 
 	CMap2Handler* map_;
 	CMap2* map2_;
+	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 
