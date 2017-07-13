@@ -70,7 +70,7 @@ bool Plugin_ShallowWater::enable()
 	s0R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s0R");
 
 	cgogn::modeling::SquareGrid<CMap2> grid(*map2_, nbc, 1);
-	grid.embed_into_grid(position_, 200.0f, 25.0f, 0.0f);
+	grid.embed_into_grid(position_, 200.0f, 20.0f, 0.0f);
 
 	map2_->copy_attribute(water_position_, position_);
 
@@ -125,8 +125,8 @@ bool Plugin_ShallowWater::enable()
 
 	init();
 
-	timer_ = new QTimer(this);
-	connect(timer_, SIGNAL(timeout()), this, SLOT(execute_time_step()));
+	draw_timer_ = new QTimer(this);
+	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
 
 	return true;
 }
@@ -145,42 +145,42 @@ void Plugin_ShallowWater::init()
 		{
 			if (centroid_[f][0] < -75.)
 			{
-				h_[f] = 10.;
+				h_[f] = 1.;
 				zb_[f] = 0.;
 			}
 			else if (centroid_[f][0] < -50.)
 			{
-				h_[f] = 30.;
+				h_[f] = 10.;
 				zb_[f] = 0.;
 			}
 			else if (centroid_[f][0] < -25.)
 			{
-				h_[f] = 10.;
+				h_[f] = 1.;
 				zb_[f] = 0.;
 			}
-			else if (centroid_[f][0] < 0.)
+			else if (centroid_[f][0] < -0.)
 			{
-				h_[f] = 10.;
+				h_[f] = 8.;
 				zb_[f] = 0.;
 			}
 			else if (centroid_[f][0] < 25.)
 			{
-				h_[f] = 10.;
+				h_[f] = 15.;
 				zb_[f] = 0.;
 			}
 			else if (centroid_[f][0] < 50.)
 			{
-				h_[f] = 10.;
+				h_[f] = 5.;
 				zb_[f] = 0.;
 			}
 			else if (centroid_[f][0] < 75.)
 			{
-				h_[f] = 10.;
+				h_[f] = 1.;
 				zb_[f] = 0.;
 			}
 			else
 			{
-				h_[f] = 10.;
+				h_[f] = 1.;
 				zb_[f] = 0.;
 			}
 
@@ -191,7 +191,7 @@ void Plugin_ShallowWater::init()
 	);
 
 	t_ = 0.;
-	dt_ = 0.1;
+	dt_ = 0.001;
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Vertex v, uint32)
@@ -219,30 +219,79 @@ void Plugin_ShallowWater::init()
 
 void Plugin_ShallowWater::start()
 {
-	if (!timer_->isActive())
+	start_time_ = std::chrono::high_resolution_clock::now();
+
+	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	draw_timer_->start(20);
+	simu_running_ = true;
+	simu_future_ = cgogn::launch_thread([&] (uint32)
 	{
-		timer_->start(0);
-		schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
-	}
+		while (simu_running_)
+			execute_time_step();
+	});
 }
 
 void Plugin_ShallowWater::stop()
 {
-	if (timer_->isActive())
-	{
-		timer_->stop();
-		schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
-	}
+	std::chrono::high_resolution_clock::time_point t = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t - start_time_).count();
+	std::cout << "time -> " << duration << std::endl;
+	std::cout << "t -> " << t_ << std::endl;
+	std::cout << "dt -> " << dt_ << std::endl;
+
+	simu_running_ = false;
+	draw_timer_->stop();
+	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
 }
 
-bool Plugin_ShallowWater::is_running()
+bool Plugin_ShallowWater::is_simu_running()
 {
-	return timer_->isActive();
+	return draw_timer_->isActive();
+}
+
+void Plugin_ShallowWater::update_draw_data()
+{
+	map_->lock_topo_access();
+	simu_data_access_.lock();
+
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Vertex v, uint32)
+		{
+			SCALAR wh = 0, bh = 0;
+			uint32 nbf = 0;
+			map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+			{
+				wh += h_[f];
+				bh += zb_[f];
+				++nbf;
+			});
+			wh /= nbf;
+			bh /= nbf;
+			water_position_[v][2] = wh;
+			position_[v][2] = bh;
+			scalar_value_[v] = wh-bh;
+		},
+		*qtrav_
+	);
+
+	simu_data_access_.unlock();
+
+	map_->notify_connectivity_change();
+	map_->init_primitives(cgogn::rendering::POINTS);
+	map_->init_primitives(cgogn::rendering::LINES);
+	map_->init_primitives(cgogn::rendering::TRIANGLES);
+	map_->init_primitives(cgogn::rendering::BOUNDARY);
+
+	map_->unlock_topo_access();
+
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value");
 }
 
 void Plugin_ShallowWater::update_time_step()
 {
-	std::vector<SCALAR> min_dt_per_thread(cgogn::nb_threads());
+	std::vector<SCALAR> min_dt_per_thread(cgogn::thread_pool()->nb_workers());
 	for (SCALAR& d : min_dt_per_thread) d = 0.1;
 
 	map2_->parallel_foreach_cell(
@@ -260,10 +309,7 @@ void Plugin_ShallowWater::update_time_step()
 
 void Plugin_ShallowWater::execute_time_step()
 {
-	connectivity_changed_ = false;
-
-	update_time_step();
-//	std::cout << dt_ << std::endl;
+//	auto start = std::chrono::high_resolution_clock::now();
 
 	f1_[boundaryL_] = 0.;
 	f2_[boundaryL_] = 5e-1 * 9.81 * phi_[CMap2::Face(boundaryL_.dart)] * (h_[CMap2::Face(boundaryL_.dart)] * h_[CMap2::Face(boundaryL_.dart)]);
@@ -304,49 +350,38 @@ void Plugin_ShallowWater::execute_time_step()
 		*qtrav_
 	);
 
+	simu_data_access_.lock();
 	map2_->swap_attributes(h_, h_tmp_);
 	map2_->swap_attributes(q_, q_tmp_);
+	simu_data_access_.unlock();
 
+	map_->lock_topo_access();
 	try_simplification();
 	try_subdivision();
-
-	map2_->parallel_foreach_cell(
-		[&] (CMap2::Vertex v, uint32)
-		{
-			SCALAR wh = 0, bh = 0;
-			uint32 nbf = 0;
-			map2_->foreach_incident_face(v, [&] (CMap2::Face f)
-			{
-				wh += h_[f];
-				bh += zb_[f];
-				++nbf;
-			});
-			wh /= nbf;
-			bh /= nbf;
-			water_position_[v][2] = wh;
-			position_[v][2] = bh;
-			scalar_value_[v] = wh-bh;
-		},
-		*qtrav_
-	);
-
-	View::enable_freeze_update();
-
-	if (connectivity_changed_)
-		map_->notify_connectivity_change();
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value");
-
-	View::disable_freeze_update();
+	map_->unlock_topo_access();
 
 	t_ += dt_;
+//	if (t_ > 5.0)
+//		stop();
+
+//	auto end = std::chrono::high_resolution_clock::now();
+
+//	std::chrono::nanoseconds sleep_duration =
+//		std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::duration<SCALAR>(dt_))
+//		- std::chrono::duration_cast<std::chrono::nanoseconds>(end - start);
+
+//	if (sleep_duration > std::chrono::nanoseconds::zero())
+//		std::this_thread::sleep_for(sleep_duration);
+
+	update_time_step();
 }
 
 void Plugin_ShallowWater::try_subdivision()
 {
 	CMap2::CellCache cache(*map2_);
 	cache.build<CMap2::Face>(*qtrav_);
+
+//	CMap2::CellMarker<CMap2::Face::ORBIT> newf(*map2_);
 
 	map2_->foreach_cell(
 		[&] (CMap2::Face f)
@@ -358,13 +393,11 @@ void Plugin_ShallowWater::try_subdivision()
 			{
 				SCALAR g = std::abs(h_[CMap2::Face(map2_->phi2(eL.dart))] - h_[CMap2::Face(map2_->phi2(eR.dart))]);
 				if (g > 1. && subd_code_[f] < (1 << 4))
-				{
 					subdivide_face(f);
-					connectivity_changed_ = true;
-				}
 			}
 		},
 		cache
+//		*qtrav_
 	);
 }
 
@@ -385,11 +418,8 @@ void Plugin_ShallowWater::try_simplification()
 				if (subd_code_[f2] == subd_code_[f] + 1)
 				{
 					SCALAR g = std::abs(h_[f] - h_[f2]);
-					if (g < 0.05)
-					{
+					if (g < 0.01)
 						remove_edge(eR);
-						connectivity_changed_ = true;
-					}
 				}
 			}
 		},

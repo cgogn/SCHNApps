@@ -37,10 +37,7 @@
 namespace schnapps
 {
 
-using Vec3 = Eigen::Vector3d;
-
 uint32 View::view_count_ = 0;
-bool View::freeze_update_ = false;
 
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
@@ -333,8 +330,6 @@ void View::init()
 	this->setCamera(current_camera_);
 //	delete c;
 
-
-
 	frame_drawer_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 	frame_drawer_renderer_ = frame_drawer_->generate_renderer();
 
@@ -396,9 +391,6 @@ void View::preDraw()
 
 void View::draw()
 {
-	if (freeze_update_)
-		return;
-
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);

@@ -30,6 +30,8 @@
 
 #include <shallow_water_dock_tab.h>
 
+#include <chrono>
+
 namespace schnapps
 {
 
@@ -47,7 +49,9 @@ class SCHNAPPS_PLUGIN_SHALLOW_WATER_API Plugin_ShallowWater : public PluginProce
 
 public:
 
-	Plugin_ShallowWater() {}
+	Plugin_ShallowWater() :
+		simu_running_(false)
+	{}
 	~Plugin_ShallowWater() override {}
 
 private:
@@ -60,9 +64,11 @@ public slots:
 	void init();
 	void start();
 	void stop();
-	bool is_running();
+	bool is_simu_running();
 
 private slots:
+
+	void update_draw_data();
 
 	void update_time_step();
 	void execute_time_step();
@@ -96,8 +102,11 @@ private:
 
 	SCALAR t_;
 	SCALAR dt_;
-	QTimer* timer_;
-	bool connectivity_changed_;
+	QTimer* draw_timer_;
+	std::chrono::high_resolution_clock::time_point start_time_;
+	std::future<void> simu_future_;
+	std::atomic_bool simu_running_;
+	std::mutex simu_data_access_;
 
 	CMap2Handler* map_;
 	CMap2* map2_;
