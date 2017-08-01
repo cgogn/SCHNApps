@@ -60,13 +60,33 @@ public slots:
 	void init();
 	void start();
 	void stop();
-	bool is_running();
+	bool is_simu_running();
 
 private slots:
 
+	void update_draw_data();
+	void update_time_step();
 	void execute_time_step();
 
 private:
+
+    struct Str_Riemann_Flux
+    {
+        SCALAR F1;      /**< Flux de masse à travers l'interface **/
+        SCALAR F2;      /**< Flux de quantité de mouvement à travers l'interface dans la direction normale à l'interface **/
+        SCALAR F3;      /**< Flux de quantité de mouvement à travers l'interface dans la direction longitudinale à l'interface **/
+        SCALAR s2L;     /**< Quantité de mouvement associée well-balancing du terme source pour la maille gauche de l'interface **/
+        SCALAR s2R;     /**< Quantité de mouvement associée well-balancing du terme source pour la maille droite de l'interface **/
+    };
+
+    Str_Riemann_Flux Solv_HLLC(SCALAR g, SCALAR hmin, SCALAR small,
+                               SCALAR zbL,SCALAR zbR,
+                               SCALAR PhiL,SCALAR PhiR,
+                               SCALAR hL,SCALAR qL,SCALAR rL,SCALAR hR,SCALAR qR,SCALAR rR);
+    Str_Riemann_Flux Solv_PorAS(SCALAR g, SCALAR hmin, SCALAR small,
+                               SCALAR zbL,SCALAR zbR,
+                               SCALAR PhiL,SCALAR PhiR,
+                               SCALAR hL,SCALAR qL,SCALAR rL,SCALAR hR,SCALAR qR,SCALAR rR);
 
 	enum FaceType: uint8
 	{
@@ -77,29 +97,80 @@ private:
 
 	void try_subdivision();
 	void try_simplification();
-	void subdivide_face(CMap2::Face f);
-	void simplify_face(CMap2::Face f);
+	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
+	void simplify_face(CMap2::Face f);        
 
 	cgogn::Dart oldest_dart(CMap2::Face f);
 	uint8 face_level(CMap2::Face f);
 	FaceType face_type(CMap2::Face f);
 
+    Str_Riemann_Flux border_condition(int border_condition_choice, SCALAR val_bc, bool sideR,
+                          SCALAR normX, SCALAR normY,
+                          SCALAR q, SCALAR r, SCALAR z, SCALAR zB);
+    void get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr);
+
+    SCALAR min_0(SCALAR a, SCALAR b);
+    SCALAR max_0(SCALAR a, SCALAR b);
+    SCALAR min_1(SCALAR a, SCALAR b, SCALAR c);
+    SCALAR max_1(SCALAR a, SCALAR b, SCALAR c);
 
 	ShallowWater_DockTab* dock_tab_;
 
 	SCALAR t_;
 	SCALAR dt_;
-	QTimer* timer_;
-	bool connectivity_changed_;
+    SCALAR hmin_;
+    SCALAR small_;
+    int solver_;
+    SCALAR v_max_;
+    SCALAR Fr_max_;
+    int geometry_;
+    SCALAR t_max_;
+    SCALAR dt_max_;
+    int friction_;
+    SCALAR alphaK_;
+    SCALAR kx_;
+    int nbr_iter_;
+
+	QTimer* draw_timer_;
+	std::chrono::high_resolution_clock::time_point start_time_;
+	std::future<void> simu_future_;
+	std::atomic_bool simu_running_;
+	std::mutex simu_data_access_;
 
 	CMap2Handler* map_;
 	CMap2* map2_;
+	std::unique_ptr<CMap2::QuickTraversor> qtrav_;                
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
+    CMap2::VertexAttribute<SCALAR> scalar_value_h_;
+    CMap2::VertexAttribute<SCALAR> scalar_value_u_;
+    CMap2::VertexAttribute<SCALAR> scalar_value_v_;
+    CMap2::VertexAttribute<VEC3> water_position_;
+    CMap2::VertexAttribute<VEC3> flow_velocity_;
 
-	CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
+    CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
+
 	CMap2::FaceAttribute<uint32> face_subd_id_; // face subdivision id
 	CMap2::FaceAttribute<bool> tri_face_; // face is triangle or not
+    CMap2::FaceAttribute<SCALAR> phi_; // porosité
+    CMap2::FaceAttribute<SCALAR> zb_; // cote du fond
+    CMap2::FaceAttribute<SCALAR> h_; // hauteur d'eau
+    CMap2::FaceAttribute<SCALAR> q_; // flux de quantité de mouvement dans la direction X
+    CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
+    CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
+    CMap2::FaceAttribute<SCALAR> area_; //cell area
+    CMap2::FaceAttribute<SCALAR> swept_;
+    CMap2::FaceAttribute<SCALAR> discharge_;
+
+    CMap2::EdgeAttribute<SCALAR> f1_;
+    CMap2::EdgeAttribute<SCALAR> f2_;
+    CMap2::EdgeAttribute<SCALAR> f3_;
+    CMap2::EdgeAttribute<SCALAR> s2L_;
+    CMap2::EdgeAttribute<SCALAR> s2R_;
+    CMap2::EdgeAttribute<SCALAR> normX_;
+    CMap2::EdgeAttribute<SCALAR> normY_;
+    CMap2::EdgeAttribute<SCALAR> length_;
+
 };
 
 } // namespace plugin_shallow_water_2

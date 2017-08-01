@@ -37,8 +37,6 @@
 namespace schnapps
 {
 
-using Vec3 = Eigen::Vector3d;
-
 uint32 View::view_count_ = 0;
 
 View::View(const QString& name, SCHNApps* s) :
@@ -331,8 +329,6 @@ void View::init()
 	qoglviewer::Camera* c = this->camera();
 	this->setCamera(current_camera_);
 //	delete c;
-
-
 
 	frame_drawer_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 	frame_drawer_renderer_ = frame_drawer_->generate_renderer();

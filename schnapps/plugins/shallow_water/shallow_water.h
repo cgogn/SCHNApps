@@ -30,6 +30,8 @@
 
 #include <shallow_water_dock_tab.h>
 
+#include <chrono>
+
 namespace schnapps
 {
 
@@ -47,7 +49,9 @@ class SCHNAPPS_PLUGIN_SHALLOW_WATER_API Plugin_ShallowWater : public PluginProce
 
 public:
 
-	Plugin_ShallowWater() {}
+	Plugin_ShallowWater() :
+		simu_running_(false)
+	{}
 	~Plugin_ShallowWater() override {}
 
 private:
@@ -60,15 +64,16 @@ public slots:
 	void init();
 	void start();
 	void stop();
-	bool is_running();
+	bool is_simu_running();
 
 private slots:
 
+	void update_draw_data();
 	void update_time_step();
 	void execute_time_step();
 	void try_subdivision();
 	void try_simplification();
-	void subdivide_face(CMap2::Face f);
+	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
 	void remove_edge(CMap2::Edge e);
 
     void exact_solution_constant_calcul();
@@ -99,6 +104,12 @@ private:
 	SCALAR t_;
 	SCALAR dt_;
 
+	QTimer* draw_timer_;
+	std::chrono::high_resolution_clock::time_point start_time_;
+	std::future<void> simu_future_;
+	std::atomic_bool simu_running_;
+	std::mutex simu_data_access_;
+
     SCALAR initial_right_water_position_;
     SCALAR initial_left_water_position_;
     SCALAR initial_right_flow_velocity_;
@@ -116,9 +127,6 @@ private:
 
     SCALAR dt_max_;
     clock_t t_begin_, t_end_;
-
-	QTimer* timer_;
-	bool connectivity_changed_;
 
 	CMap2Handler* map_;
 	CMap2* map2_;
@@ -149,7 +157,6 @@ private:
 	CMap2::EdgeAttribute<SCALAR> f2_;
 	CMap2::EdgeAttribute<SCALAR> s0L_;
 	CMap2::EdgeAttribute<SCALAR> s0R_;
-
 };
 
 } // namespace plugin_shallow_water
