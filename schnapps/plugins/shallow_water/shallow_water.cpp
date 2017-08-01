@@ -148,51 +148,49 @@ void Plugin_ShallowWater::disable()
 
 void Plugin_ShallowWater::init()
 {
-	map2_->parallel_foreach_cell(
-		[&] (CMap2::Face f)
-		{
-//           if (centroid_[f][0] < -75.)
-//                h_[f] = 10.;
-//            else if (centroid_[f][0] < -50.)
-//                h_[f] = 3.;
-//            else if (centroid_[f][0] < -25.)
-//                h_[f] = 8.;
-//            else if (centroid_[f][0] < 0.)
-//                h_[f] = 1.;
-//            else if (centroid_[f][0] < 25.)
-//                h_[f] = 10.;
-//            else if (centroid_[f][0] < 50.)
-//                h_[f] = 1.;
-//            else if (centroid_[f][0] < 75.)
-//                h_[f] = 6.;
-//            else
-//                h_[f] = 1.;
+    map2_->parallel_foreach_cell(
+        [&] (CMap2::Face f)
+        {
+           /*if (centroid_[f][0] < -75.)
+                h_[f] = 10.;
+            else if (centroid_[f][0] < -50.)
+                h_[f] = 3.;
+            else if (centroid_[f][0] < -25.)
+                h_[f] = 8.;
+            else if (centroid_[f][0] < 0.)
+                h_[f] = 1.;
+            else if (centroid_[f][0] < 25.)
+                h_[f] = 10.;
+            else if (centroid_[f][0] < 50.)
+                h_[f] = 1.;
+            else if (centroid_[f][0] < 75.)
+                h_[f] = 6.;
+            else
+                h_[f] = 1.;
+        //h_[f] = initial_right_flow_velocity_ + initial_left_water_position_*exp(-pow(centroid_[f][0],2.));
+           q_[f] = 0.;*/
 
-//		   //h_[f] = initial_right_flow_velocity_ + initial_left_water_position_*exp(-pow(centroid_[f][0],2.));
-//           q_[f] = 0.;
+            // rupture de barrage sur fond mouillé
+            if(centroid_[f][0] < 0.)
+            {
+                h_[f] = initial_left_water_position_;
+                q_[f] = initial_left_flow_velocity_*initial_left_water_position_;
+            }
+            else
+            {
+                h_[f] = initial_right_water_position_;
+                q_[f] = initial_right_flow_velocity_*initial_right_water_position_;
+            }
+        },
+        *qtrav_
+    );
 
-			// rupture de barrage sur fond mouillé
-			if(centroid_[f][0] < 0.)
-			{
-				h_[f] = initial_left_water_position_;
-				q_[f] = initial_left_flow_velocity_*initial_left_water_position_;
-			}
-			else
-			{
-				h_[f] = initial_right_water_position_;
-				q_[f] = initial_right_flow_velocity_*initial_right_water_position_;
-			}
-		},
-		*qtrav_
-	);
+    // constantes pour la solution exacte
+    exact_solution_constant_calcul();
 
-	// constantes pour la solution exacte
-	exact_solution_constant_calcul();
-	qDebug() << h_exact_solution_ << u_exact_solution_;
-
-	t_ = 0.;
-	dt_ = 0.01;
-	nbr_time_step_ = 0;
+    t_ = 0.;
+    dt_max_ = (initial_left_water_position_-initial_right_water_position_)/100.;
+    nbr_time_step_ = 0;
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Vertex v)
@@ -222,7 +220,7 @@ void Plugin_ShallowWater::start()
 	start_time_ = std::chrono::high_resolution_clock::now();
 
 	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
-	draw_timer_->start(20);
+    draw_timer_->start(50);
 	simu_running_ = true;
 	simu_future_ = cgogn::launch_thread([&] () -> void
 	{
@@ -469,7 +467,7 @@ void Plugin_ShallowWater::try_subdivision()
 {
 	CMap2::CellMarker<CMap2::Face::ORBIT> subdivided(*map2_);
 
-	map2_->foreach_cell(
+    map2_->foreach_cell(
 		[&] (CMap2::Face f)
 		{
 			if (subdivided.is_marked(f))
@@ -485,6 +483,7 @@ void Plugin_ShallowWater::try_subdivision()
 				 * en fonction du sens de la vague
 				 * et des hauteurs relatives d'eau
 				 * avec les différences de valeurs positives ou négatives
+                 * car l'onde se deplace de au plus une cellule à chaque pas de temps
 				 */
 				CMap2::Face fR(map2_->phi2(eR.dart));
 				SCALAR diff_h_right = h_[f] - h_[fR];
@@ -554,7 +553,7 @@ void Plugin_ShallowWater::try_subdivision()
 					if (subd_code_[f] < (1 << 4))
 						subdivide_face(f, subdivided);
 				}
-			}
+            }
 		},
 		*qtrav_
 	);
@@ -825,21 +824,20 @@ void Plugin_ShallowWater::difference_measure()
 
 float Plugin_ShallowWater::parameters()
 {
-	float size;
-	SCALAR c;
-	std::ifstream file_valeurs("parametres.txt", std::ios::in);
-	file_valeurs >> initial_left_water_position_;
-	file_valeurs >> initial_right_water_position_;
-	file_valeurs >> initial_left_flow_velocity_;
-	file_valeurs >> initial_right_flow_velocity_;
-	file_valeurs >> h_difference_;
-	file_valeurs >> q_difference_;
-	file_valeurs >> size;
-	file_valeurs >> c; // erreur <= erreur avec c*100000 mailles fixes
-	file_valeurs.close();
-	nbr_cell_ = c*(initial_left_water_position_-initial_right_water_position_)*size/2;
-	dt_max_ = (initial_left_water_position_-initial_right_water_position_)/1000.;
-	return size;
+    float size;
+    SCALAR c;
+    std::ifstream file("parametres.txt",std::ios::in);
+    file >> initial_left_water_position_;
+    file >> initial_right_water_position_;
+    file >> initial_left_flow_velocity_;
+    file >> initial_right_flow_velocity_;
+    file >> h_difference_;
+    file >> q_difference_;
+    file >> size;
+    file >> c;
+    file.close();
+    nbr_cell_ = c*(initial_left_water_position_-initial_right_water_position_)*size/2;
+    return size;
 }
 
 } // namespace plugin_shallow_water
