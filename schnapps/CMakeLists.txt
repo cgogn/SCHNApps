@@ -5,6 +5,8 @@ project(${SCHNAPPS_EXEC_NAME}
 	LANGUAGES CXX
 )
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
 find_package(cgogn_core REQUIRED)
 

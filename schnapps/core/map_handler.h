@@ -440,7 +440,7 @@ public:
 			case CellType::Face_Cell: return &(get_map()->attribute_container(Face::ORBIT));
 			case CellType::Volume_Cell: return &(get_map()->attribute_container(Volume::ORBIT));
 			default:
-				cgogn_log_warning("MapHandler::const_attribute_container") << "Invalid CellType \"" << cell_type_name(ct) << "\".";
+				cgogn_log_warning("MapHandler::attribute_container") << "Invalid CellType \"" << cell_type_name(ct) << "\".";
 				return nullptr;
 		}
 	}

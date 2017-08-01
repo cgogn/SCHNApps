@@ -39,3 +39,5 @@ target_link_libraries(${PROJECT_NAME}
 	${Qt5Core_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 )
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

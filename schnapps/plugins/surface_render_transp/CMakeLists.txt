@@ -44,3 +44,5 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 endif()
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

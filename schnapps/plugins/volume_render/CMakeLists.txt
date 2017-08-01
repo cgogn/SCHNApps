@@ -50,3 +50,5 @@ else()
 		${Qt5Widgets_LIBRARIES}
 		${QOGLViewer_LIBRARIES})
 endif()
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)
