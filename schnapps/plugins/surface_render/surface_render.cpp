@@ -418,13 +418,13 @@ void Plugin_SurfaceRender::update_dock_tab()
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_SurfaceRender::set_render_vertices(View* view, MapHandlerGen* map, bool b)
+void Plugin_SurfaceRender::set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.render_vertices_ = b;
-		if (view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}

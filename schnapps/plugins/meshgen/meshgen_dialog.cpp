@@ -180,7 +180,7 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 
 
 		export_dialog_->comboBoxPositionSelection->clear();
-		const auto* vert_att_cont = mhg->const_attribute_container(CellType::Vertex_Cell);
+		const auto* vert_att_cont = mhg->attribute_container(CellType::Vertex_Cell);
 		for (const auto& att_name : vert_att_cont->names())
 			export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
 	}
@@ -441,6 +441,6 @@ void VolumeMeshFromSurfaceDialog::update_mesh_generatuion_ui()
 	updating_ui_ = false;
 }
 
-
 } // namespace plugin_meshgen
+
 } // namespace schnapps

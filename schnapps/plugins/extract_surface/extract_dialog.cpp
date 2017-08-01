@@ -91,4 +91,5 @@ void ExtractDialog::extract_validated()
 }
 
 } // namespace plugin_extract_surface
+
 } // namespace schnapps

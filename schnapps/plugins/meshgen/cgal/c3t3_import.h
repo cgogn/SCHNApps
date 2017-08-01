@@ -48,22 +48,24 @@ class Image3D;
 namespace plugin_meshgen
 {
 
-template<typename C3T3>
-class C3T3VolumeImport : public cgogn::io::VolumeImport<VEC3>
+template <typename C3T3>
+class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
 {
 public:
 
-	using Inherit = VolumeImport<VEC3>;
 	using Self = C3T3VolumeImport<C3T3>;
+	using Inherit = VolumeImport<CMap3, VEC3>;
 
-	inline C3T3VolumeImport(const C3T3& cpx) : Inherit(), cpx_(cpx)
+	inline C3T3VolumeImport(const C3T3& cpx, CMap3& map) :
+		Inherit(map),
+		cpx_(cpx)
 	{
 		import_c3t3();
 	}
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(C3T3VolumeImport);
 
-	template<typename T>
+	template <typename T>
 	using ChunkArray = Inherit::ChunkArray<T>;
 
 	using Triangulation = typename C3T3::Triangulation;
@@ -97,7 +99,9 @@ public:
 			subdomain_indices->operator [](id) = float32(cpx_.subdomain_index(cit));
 		}
 	}
+
 private:
+
 	const C3T3& cpx_;
 };
 
@@ -107,19 +111,18 @@ void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
 	if (!map_out)
 		return;
 
-	C3T3VolumeImport<C3T3> volume_import(c3t3_in);
-	volume_import.create_map(*map_out->get_map());
+	C3T3VolumeImport<C3T3> volume_import(c3t3_in, *map_out->get_map());
+	volume_import.create_map();
 	map_out->attribute_added(CMap3::Vertex::ORBIT, "position");
 	map_out->attribute_added(CMap3::Volume::ORBIT, "subdomain index");
 	map_out->set_bb_vertex_attribute("position");
 	static_cast<MapHandlerGen*>(map_out)->create_vbo("position");
 }
 
-
 SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, CMap3Handler* output_volume_map);
 SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, CMap3Handler* output_volume_map);
 
-template<typename Domain_>
+template <typename Domain_>
 void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, CMap3Handler* output_volume_map)
 {
 	using namespace CGAL::parameters;

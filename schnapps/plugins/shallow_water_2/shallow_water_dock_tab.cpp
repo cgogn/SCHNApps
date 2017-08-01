@@ -31,7 +31,7 @@
 namespace schnapps
 {
 
-namespace plugin_shallow_water
+namespace plugin_shallow_water_2
 {
 
 ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) :
@@ -63,6 +63,6 @@ void ShallowWater_DockTab::start_stop()
 	}
 }
 
-} // namespace plugin_shallow_water
+} // namespace plugin_shallow_water_2
 
 } // namespace schnapps

@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
-#define SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_
 
 #include "dll.h"
 #include <schnapps/core/plugin_processing.h>
@@ -30,18 +30,16 @@
 
 #include <shallow_water_dock_tab.h>
 
-#include <chrono>
-
 namespace schnapps
 {
 
-namespace plugin_shallow_water
+namespace plugin_shallow_water_2
 {
 
 /**
 * @brief Shallow water simulation
 */
-class SCHNAPPS_PLUGIN_SHALLOW_WATER_API Plugin_ShallowWater : public PluginProcessing
+class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API Plugin_ShallowWater : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -49,9 +47,7 @@ class SCHNAPPS_PLUGIN_SHALLOW_WATER_API Plugin_ShallowWater : public PluginProce
 
 public:
 
-	Plugin_ShallowWater() :
-		simu_running_(false)
-	{}
+	Plugin_ShallowWater() {}
 	~Plugin_ShallowWater() override {}
 
 private:
@@ -71,33 +67,24 @@ private slots:
 	void update_draw_data();
 	void update_time_step();
 	void execute_time_step();
-	void try_subdivision();
-	void try_simplification();
-	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
-	void remove_edge(CMap2::Edge e);
-
-    void exact_solution_constant_calcul();
-    void exact_solution(SCALAR x, SCALAR& h, SCALAR& u);
-    void difference_measure();
-    float parameters();
 
 private:
 
-	struct Flux
+	enum FaceType: uint8
 	{
-		SCALAR F1;
-		SCALAR F2;
-		SCALAR S0L;
-		SCALAR S0R;
+		TRI_CORNER = 0,
+		TRI_CENTRAL,
+		QUAD
 	};
 
-	struct Flux Solv_HLL(
-		SCALAR zbL, SCALAR zbR,
-		SCALAR PhiL, SCALAR PhiR,
-		SCALAR hL, SCALAR hR,
-		SCALAR qL, SCALAR qR,
-		SCALAR hmin, SCALAR g
-	);    
+	void try_subdivision();
+	void try_simplification();
+	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
+	void simplify_face(CMap2::Face f);
+
+	cgogn::Dart oldest_dart(CMap2::Face f);
+	uint8 face_level(CMap2::Face f);
+	FaceType face_type(CMap2::Face f);
 
 	ShallowWater_DockTab* dock_tab_;
 
@@ -110,57 +97,19 @@ private:
 	std::atomic_bool simu_running_;
 	std::mutex simu_data_access_;
 
-    SCALAR initial_right_water_position_;
-    SCALAR initial_left_water_position_;
-    SCALAR initial_right_flow_velocity_;
-    SCALAR initial_left_flow_velocity_;
-    SCALAR error_h_2_;
-    SCALAR error_u_2_;
-    SCALAR error_h_max_;
-    SCALAR error_u_max_;
-    SCALAR h_exact_solution_;
-    SCALAR u_exact_solution_;
-    SCALAR h_difference_;
-    SCALAR q_difference_;
-    unsigned int nbr_cell_;
-    unsigned int nbr_time_step_;
-
-    SCALAR dt_max_;
-    clock_t t_begin_, t_end_;
-
 	CMap2Handler* map_;
 	CMap2* map2_;
-	CMap2::Edge boundaryL_, boundaryR_;
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
 
-    CMap2::VertexAttribute<VEC3> position_; // vertices position
-    CMap2::VertexAttribute<VEC3> water_position_;
-    CMap2::VertexAttribute<SCALAR> scalar_value_water_position_;
-    CMap2::VertexAttribute<SCALAR> scalar_value_flow_velocity_;
-    CMap2::VertexAttribute<VEC3> flow_velocity_;
+	CMap2::VertexAttribute<VEC3> position_; // vertices position
 
-	CMap2::FaceAttribute<SCALAR> h_;        // water height
-	CMap2::FaceAttribute<SCALAR> h_tmp_;
-	CMap2::FaceAttribute<SCALAR> q_;        // water flow
-	CMap2::FaceAttribute<SCALAR> q_tmp_;
-
-	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
-    CMap2::FaceAttribute<SCALAR> length_;   // cell length
-    CMap2::FaceAttribute<SCALAR> phi_;      // cell width
-
-	CMap2::FaceAttribute<uint32> subd_code_;// subdivision code
-
-    CMap2::FaceAttribute<SCALAR> error_h_;
-    CMap2::FaceAttribute<SCALAR> error_u_;
-
-	CMap2::EdgeAttribute<SCALAR> f1_;
-	CMap2::EdgeAttribute<SCALAR> f2_;
-	CMap2::EdgeAttribute<SCALAR> s0L_;
-	CMap2::EdgeAttribute<SCALAR> s0R_;
+	CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
+	CMap2::FaceAttribute<uint32> face_subd_id_; // face subdivision id
+	CMap2::FaceAttribute<bool> tri_face_; // face is triangle or not
 };
 
-} // namespace plugin_shallow_water
+} // namespace plugin_shallow_water_2
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_

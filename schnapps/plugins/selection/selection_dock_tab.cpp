@@ -360,4 +360,5 @@ void Selection_DockTab::update_map_parameters(MapHandlerGen* map, const MapParam
 }
 
 } // namespace plugin_selection
+
 } // namespace schnapps

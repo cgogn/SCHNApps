@@ -126,16 +126,7 @@ void SurfaceRender_DockTab::color_vbo_changed(int index)
 void SurfaceRender_DockTab::render_vertices_changed(bool b)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.render_vertices_ = b;
-			view->update();
-		}
-	}
+		plugin_->set_render_vertices(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
 }
 
 void SurfaceRender_DockTab::vertices_scale_factor_changed(int i)

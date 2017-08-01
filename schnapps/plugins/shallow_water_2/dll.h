@@ -1,7 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -21,48 +20,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <shallow_water_dock_tab.h>
-#include <shallow_water.h>
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_H_
 
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-#include <schnapps/core/view.h>
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API
+#if defined SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API
+#endif
 
-namespace schnapps
-{
-
-namespace plugin_shallow_water
-{
-
-ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) :
-	schnapps_(s),
-	plugin_(p)
-{
-	setupUi(this);
-
-	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
-	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
-}
-
-void ShallowWater_DockTab::init()
-{
-	plugin_->init();
-}
-
-void ShallowWater_DockTab::start_stop()
-{
-	if (!plugin_->is_simu_running())
-	{
-		plugin_->start();
-		button_start_stop->setText("Stop");
-	}
-	else
-	{
-		plugin_->stop();
-		button_start_stop->setText("Start");
-	}
-}
-
-} // namespace plugin_shallow_water
-
-} // namespace schnapps
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DLL_H_

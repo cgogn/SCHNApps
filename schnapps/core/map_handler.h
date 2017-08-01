@@ -117,7 +117,7 @@ public:
 
 	virtual void foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
 
-	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const = 0;
+	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const = 0;
 
 	/**********************************************************
 	 * MANAGE FRAME                                           *
@@ -210,6 +210,8 @@ public:
 
 	virtual void draw(cgogn::rendering::DrawingType primitive) = 0;
 
+	virtual void init_primitives(cgogn::rendering::DrawingType primitive) = 0;
+
 	/**********************************************************
 	 * MANAGE VBOs                                            *
 	 *********************************************************/
@@ -290,6 +292,9 @@ public:
 
 	virtual bool remove_attribute(CellType ct, const QString& att_name) = 0;
 
+	void lock_topo_access() { topo_access_.lock(); }
+	void unlock_topo_access() { topo_access_.unlock(); }
+
 private:
 
 	void link_view(View* view);
@@ -324,6 +329,9 @@ protected:
 
 	// MapBaseData generic pointer
 	std::unique_ptr<MapBaseData> map_;
+
+	// Topo access mutex
+	std::mutex topo_access_;
 
 	// frame that allow user object manipulation (ctrl + mouse)
 	qoglviewer::ManipulatedFrame frame_;
@@ -382,12 +390,13 @@ public:
 	using FaceSet	= CellSet<Face>;
 	using VolumeSet	= CellSet<Volume>;
 
+	using QuickTraversor = typename MAP_TYPE::QuickTraversor;
+
 	MapHandler(const QString& name, SCHNApps* s) :
 		MapHandlerGen(name, s, cgogn::make_unique<MAP_TYPE>())
 	{}
 
-	~MapHandler() override
-	{}
+	~MapHandler() override {}
 
 	inline MAP_TYPE* get_map() const { return static_cast<MAP_TYPE*>(this->map_.get()); }
 
@@ -473,25 +482,25 @@ public:
 		const cgogn::Orbit orb = orbit(ct);
 		switch (orb)
 		{
-			case CDart::ORBIT: get_map()->foreach_cell([&](CDart d) { func(d.dart); }); break;
-			case Vertex::ORBIT: get_map()->foreach_cell([&](Vertex v) { func(v.dart); }); break;
-			case Edge::ORBIT: get_map()->foreach_cell([&](Edge e) { func(e.dart); }); break;
-			case Face::ORBIT: get_map()->foreach_cell([&](Face f) { func(f.dart); }); break;
-			case Volume::ORBIT: get_map()->foreach_cell([&](Volume w) { func(w.dart); }); break;
+			case CDart::ORBIT: get_map()->foreach_cell([&] (CDart d) { func(d.dart); }); break;
+			case Vertex::ORBIT: get_map()->foreach_cell([&] (Vertex v) { func(v.dart); }); break;
+			case Edge::ORBIT: get_map()->foreach_cell([&] (Edge e) { func(e.dart); }); break;
+			case Face::ORBIT: get_map()->foreach_cell([&] (Face f) { func(f.dart); }); break;
+			case Volume::ORBIT: get_map()->foreach_cell([&] (Volume w) { func(w.dart); }); break;
 			default: break;
 		}
 	}
 
-	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart,uint32)>& func) const override
+	virtual void parallel_foreach_cell(CellType ct, const std::function<void(cgogn::Dart)>& func) const override
 	{
 		const cgogn::Orbit orb = orbit(ct);
 		switch (orb)
 		{
-			case CDart::ORBIT: get_map()->parallel_foreach_cell([&](CDart d, uint32 th) { func(d.dart, th); }); break;
-			case Vertex::ORBIT: get_map()->parallel_foreach_cell([&](Vertex v, uint32 th) { func(v.dart, th); }); break;
-			case Edge::ORBIT: get_map()->parallel_foreach_cell([&](Edge e, uint32 th) { func(e.dart, th); }); break;
-			case Face::ORBIT: get_map()->parallel_foreach_cell([&](Face f, uint32 th) { func(f.dart, th); }); break;
-			case Volume::ORBIT: get_map()->parallel_foreach_cell([&](Volume w, uint32 th) { func(w.dart, th); }); break;
+			case CDart::ORBIT: get_map()->parallel_foreach_cell([&] (CDart d) { func(d.dart); }); break;
+			case Vertex::ORBIT: get_map()->parallel_foreach_cell([&] (Vertex v) { func(v.dart); }); break;
+			case Edge::ORBIT: get_map()->parallel_foreach_cell([&] (Edge e) { func(e.dart); }); break;
+			case Face::ORBIT: get_map()->parallel_foreach_cell([&] (Face f) { func(f.dart); }); break;
+			case Volume::ORBIT: get_map()->parallel_foreach_cell([&] (Volume w) { func(w.dart); }); break;
 			default: break;
 		}
 	}
@@ -536,15 +545,19 @@ public:
 			const MapHandler* mh = dynamic_cast<const MapHandler*>(other_map);
 			typename MAP_TYPE::DartMarker dm(*this->get_map());
 			this->get_map()->merge(*mh->get_map(), dm);
-		} else {
+		}
+		else
+		{
 			if (other_map->dimension() == 2)
 			{
 				const CMap2Handler* mh = dynamic_cast<const CMap2Handler*>(other_map);
 				typename MAP_TYPE::DartMarker dm(*this->get_map());
 				this->get_map()->merge(*mh->get_map(), dm);
-			} else {
+			}
+			else
+			{
 				// other non-handled cases like merging a 1-map in a 3-map or merging a 1-map in a 2-map.
-				cgogn_log_warning("MapHandler::Merge") << "Merge nod handled: dimension" << other_map->dimension() << " inside a map of dimension " << this->dimension() << '.';
+				cgogn_log_warning("MapHandler::Merge") << "Merge not handled: dimension" << other_map->dimension() << " inside a map of dimension " << this->dimension() << '.';
 				return false;
 			}
 		}
@@ -611,15 +624,24 @@ private:
 	inline void draw(cgogn::rendering::DrawingType primitive) override
 	{
 		if (!this->render_.is_primitive_uptodate(primitive))
+		{
+			lock_topo_access();
 			this->render_.init_primitives(*get_map(), primitive);
+			unlock_topo_access();
+		}
 		this->render_.draw(primitive);
+	}
+
+public:
+
+	inline void init_primitives(cgogn::rendering::DrawingType primitive) override
+	{
+		this->render_.init_primitives(*get_map(), primitive);
 	}
 
 	/*********************************************************
 	 * MANAGE ATTRIBUTES
 	 *********************************************************/
-
-public:
 
 	inline bool has_attribute(cgogn::Orbit orbit, const QString& att_name)
 	{
@@ -692,26 +714,6 @@ public:
 
 			const MAP_TYPE* cmap = get_map();
 
-			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
-			if (va4f.is_valid())
-			{
-				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
-				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(va4f, vbo);
-				emit(vbo_added(vbo));
-				return vbo;
-			}
-
-			const VertexAttribute<VEC4D> va4d = cmap->template get_attribute<VEC4D, Vertex::ORBIT>(name.toStdString());
-			if (va4d.is_valid())
-			{
-				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
-				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(va4d, vbo);
-				emit(vbo_added(vbo));
-				return vbo;
-			}
-
 			const VertexAttribute<VEC3F> va3f = cmap->template get_attribute<VEC3F, Vertex::ORBIT>(name.toStdString());
 			if (va3f.is_valid())
 			{
@@ -732,26 +734,45 @@ public:
 				return vbo;
 			}
 
-			const VertexAttribute<AVEC3D> ava3d = cmap->template get_attribute<AVEC3D, Vertex::ORBIT>(name.toStdString());
-			if (ava3d.is_valid())
+			const VertexAttribute<float32> vaf32 = cmap->template get_attribute<float32, Vertex::ORBIT>(name.toStdString());
+			if (vaf32.is_valid())
 			{
-				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(ava3d, vbo);
+				cgogn::rendering::update_vbo(vaf32, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			const VertexAttribute<AVEC3F> ava3f = cmap->template get_attribute<AVEC3F, Vertex::ORBIT>(name.toStdString());
-			if (ava3f.is_valid())
+			const VertexAttribute<float64> vaf64 = cmap->template get_attribute<float64, Vertex::ORBIT>(name.toStdString());
+			if (vaf64.is_valid())
 			{
-				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(ava3f, vbo);
+				cgogn::rendering::update_vbo(vaf64, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
+			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
+			if (va4f.is_valid())
+			{
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(va4f, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
+
+			const VertexAttribute<VEC4D> va4d = cmap->template get_attribute<VEC4D, Vertex::ORBIT>(name.toStdString());
+			if (va4d.is_valid())
+			{
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(va4d, vbo);
+				emit(vbo_added(vbo));
+				return vbo;
+			}
 
 			const VertexAttribute<VEC2F> va2f = cmap->template get_attribute<VEC2F, Vertex::ORBIT>(name.toStdString());
 			if (va2f.is_valid())
@@ -773,22 +794,22 @@ public:
 				return vbo;
 			}
 
-			const VertexAttribute<float32> vaf32 = cmap->template get_attribute<float32, Vertex::ORBIT>(name.toStdString());
-			if (vaf32.is_valid())
+			const VertexAttribute<AVEC3D> ava3d = cmap->template get_attribute<AVEC3D, Vertex::ORBIT>(name.toStdString());
+			if (ava3d.is_valid())
 			{
-				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(vaf32, vbo);
+				cgogn::rendering::update_vbo(ava3d, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
 
-			const VertexAttribute<float64> vaf64 = cmap->template get_attribute<float64, Vertex::ORBIT>(name.toStdString());
-			if (vaf64.is_valid())
+			const VertexAttribute<AVEC3F> ava3f = cmap->template get_attribute<AVEC3F, Vertex::ORBIT>(name.toStdString());
+			if (ava3f.is_valid())
 			{
-				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
+				this->vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(vaf64, vbo);
+				cgogn::rendering::update_vbo(ava3f, vbo);
 				emit(vbo_added(vbo));
 				return vbo;
 			}
@@ -804,22 +825,6 @@ public:
 		{
 			const MAP_TYPE* cmap = get_map();
 
-			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
-			if (va4f.is_valid())
-			{
-				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(va4f, vbo);
-				return;
-			}
-
-			const VertexAttribute<VEC4D> va4d = cmap->template get_attribute<VEC4D, Vertex::ORBIT>(name.toStdString());
-			if (va4d.is_valid())
-			{
-				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(va4d, vbo);
-				return;
-			}
-
 			const VertexAttribute<VEC3F> va3f = cmap->template get_attribute<VEC3F, Vertex::ORBIT>(name.toStdString());
 			if (va3f.is_valid())
 			{
@@ -836,22 +841,37 @@ public:
 				return;
 			}
 
-			const VertexAttribute<AVEC3F> ava3f = cmap->template get_attribute<AVEC3F, Vertex::ORBIT>(name.toStdString());
-			if (ava3f.is_valid())
+			const VertexAttribute<float32> vaf32 = cmap->template get_attribute<float32, Vertex::ORBIT>(name.toStdString());
+			if (vaf32.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(ava3f, vbo);
+				cgogn::rendering::update_vbo(vaf32, vbo);
 				return;
 			}
 
-			const VertexAttribute<AVEC3D> ava3d = cmap->template get_attribute<AVEC3D, Vertex::ORBIT>(name.toStdString());
-			if (ava3d.is_valid())
+			const VertexAttribute<float64> vaf64 = cmap->template get_attribute<float64, Vertex::ORBIT>(name.toStdString());
+			if (vaf64.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(ava3d, vbo);
+				cgogn::rendering::update_vbo(vaf64, vbo);
 				return;
 			}
 
+			const VertexAttribute<VEC4F> va4f = cmap->template get_attribute<VEC4F, Vertex::ORBIT>(name.toStdString());
+			if (va4f.is_valid())
+			{
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(va4f, vbo);
+				return;
+			}
+
+			const VertexAttribute<VEC4D> va4d = cmap->template get_attribute<VEC4D, Vertex::ORBIT>(name.toStdString());
+			if (va4d.is_valid())
+			{
+				vbo = this->vbos_.at(name).get();
+				cgogn::rendering::update_vbo(va4d, vbo);
+				return;
+			}
 
 			const VertexAttribute<VEC2F> va2f = cmap->template get_attribute<VEC2F, Vertex::ORBIT>(name.toStdString());
 			if (va2f.is_valid())
@@ -869,19 +889,19 @@ public:
 				return;
 			}
 
-			const VertexAttribute<float32> vaf32 = cmap->template get_attribute<float32, Vertex::ORBIT>(name.toStdString());
-			if (vaf32.is_valid())
+			const VertexAttribute<AVEC3F> ava3f = cmap->template get_attribute<AVEC3F, Vertex::ORBIT>(name.toStdString());
+			if (ava3f.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(vaf32, vbo);
+				cgogn::rendering::update_vbo(ava3f, vbo);
 				return;
 			}
 
-			const VertexAttribute<float64> vaf64 = cmap->template get_attribute<float64, Vertex::ORBIT>(name.toStdString());
-			if (vaf64.is_valid())
+			const VertexAttribute<AVEC3D> ava3d = cmap->template get_attribute<AVEC3D, Vertex::ORBIT>(name.toStdString());
+			if (ava3d.is_valid())
 			{
 				vbo = this->vbos_.at(name).get();
-				cgogn::rendering::update_vbo(vaf64, vbo);
+				cgogn::rendering::update_vbo(ava3d, vbo);
 				return;
 			}
 		}

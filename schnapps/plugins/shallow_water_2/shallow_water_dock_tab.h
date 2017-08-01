@@ -21,48 +21,46 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <shallow_water_dock_tab.h>
-#include <shallow_water.h>
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
 
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-#include <schnapps/core/view.h>
+#include "dll.h"
+#include <ui_shallow_water.h>
 
 namespace schnapps
 {
 
-namespace plugin_shallow_water
+class SCHNApps;
+class MapHandlerGen;
+
+namespace plugin_shallow_water_2
 {
 
-ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) :
-	schnapps_(s),
-	plugin_(p)
+class Plugin_ShallowWater;
+
+class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API ShallowWater_DockTab : public QWidget, public Ui::ShallowWater_TabWidget
 {
-	setupUi(this);
+	Q_OBJECT
 
-	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
-	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
-}
+	friend class Plugin_ShallowWater;
 
-void ShallowWater_DockTab::init()
-{
-	plugin_->init();
-}
+public:
 
-void ShallowWater_DockTab::start_stop()
-{
-	if (!plugin_->is_simu_running())
-	{
-		plugin_->start();
-		button_start_stop->setText("Stop");
-	}
-	else
-	{
-		plugin_->stop();
-		button_start_stop->setText("Start");
-	}
-}
+	ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p);
 
-} // namespace plugin_shallow_water
+private:
+
+	SCHNApps* schnapps_;
+	Plugin_ShallowWater* plugin_;
+
+private slots:
+
+	void init();
+	void start_stop();
+};
+
+} // namespace plugin_shallow_water_2
 
 } // namespace schnapps
+
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_

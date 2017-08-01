@@ -1,8 +1,9 @@
-project(plugin_shallow_water
+project(plugin_shallow_water_2
 	LANGUAGES CXX
 )
 
 find_package(cgogn_core REQUIRED)
+find_package(cgogn_io REQUIRED)
 find_package(cgogn_modeling REQUIRED)
 find_package(cgogn_geometry REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
@@ -28,7 +29,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SHALLOW_WA
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
+	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -36,6 +37,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	${cgogn_core_LIBRARIES}
+	${cgogn_io_LIBRARIES}
 	${cgogn_modeling_LIBRARIES}
 	${cgogn_geometry_LIBRARIES}
 	${Qt5Core_LIBRARIES}
