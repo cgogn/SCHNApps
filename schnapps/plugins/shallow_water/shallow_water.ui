@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
-<exportmacro>SCHNAPPS_PLUGIN_SHALLOW_WATER_API</exportmacro>
+ <exportmacro>SCHNAPPS_PLUGIN_SHALLOW_WATER_API</exportmacro>
  <class>ShallowWater_TabWidget</class>
  <widget class="QWidget" name="ShallowWater_TabWidget">
   <property name="geometry">
@@ -15,7 +15,7 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="2" column="0" colspan="2">
+   <item row="3" column="0" colspan="2">
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -39,6 +39,13 @@
     <widget class="QPushButton" name="button_start_stop">
      <property name="text">
       <string>Start</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="2">
+    <widget class="QPushButton" name="button_1_step">
+     <property name="text">
+      <string>1 step</string>
      </property>
     </widget>
    </item>

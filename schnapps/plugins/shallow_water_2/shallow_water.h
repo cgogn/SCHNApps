@@ -60,6 +60,7 @@ public slots:
 	void init();
 	void start();
 	void stop();
+	void step();
 	bool is_simu_running();
 
 private slots:

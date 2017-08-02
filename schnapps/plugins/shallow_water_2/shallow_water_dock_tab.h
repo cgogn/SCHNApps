@@ -47,6 +47,7 @@ class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API ShallowWater_DockTab : public QWidget,
 public:
 
 	ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p);
+	void simu_running_state_changed();
 
 private:
 
@@ -57,6 +58,7 @@ private slots:
 
 	void init();
 	void start_stop();
+	void step();
 };
 
 } // namespace plugin_shallow_water_2

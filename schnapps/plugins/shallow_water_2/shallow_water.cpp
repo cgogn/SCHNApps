@@ -305,13 +305,15 @@ void Plugin_ShallowWater::start()
     start_time_ = std::chrono::high_resolution_clock::now();
 
     schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
-    draw_timer_->start(20);
+	draw_timer_->start(50);
     simu_running_ = true;
     simu_future_ = cgogn::launch_thread([&] () -> void
     {
         while (simu_running_)
             execute_time_step();
     });
+
+	dock_tab_->simu_running_state_changed();
 }
 
 void Plugin_ShallowWater::stop()
@@ -324,11 +326,23 @@ void Plugin_ShallowWater::stop()
 
     simu_running_ = false;
     schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+
+	dock_tab_->simu_running_state_changed();
+}
+
+void Plugin_ShallowWater::step()
+{
+	if (simu_running_)
+		stop();
+	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	execute_time_step();
+	update_draw_data();
+	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
 }
 
 bool Plugin_ShallowWater::is_simu_running()
 {
-    return draw_timer_->isActive();
+	return simu_running_;
 }
 
 void Plugin_ShallowWater::update_draw_data()
@@ -384,6 +398,7 @@ void Plugin_ShallowWater::update_draw_data()
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_h");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_u");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_v");
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "flow_velocity");
 }
@@ -860,17 +875,15 @@ void Plugin_ShallowWater::execute_time_step()
                 } // phi_[f] > small_
             } // maps2_->is_incident_to_boundary(e)
 
-
-
             else //Inner cell:use the lateralised Riemann solver
             {
                 CMap2::Face fL,fR;
                 get_LR_faces(e,fL,fR);
 
-                if((area_[fL] == 0 || area_[fR] == 0) && simu_running_)
+				if((area_[fL] == 0 || area_[fR] == 0) && simu_running_)
                 {
                     std::cout << "stop car aire nulle" << std::endl;
-                    simu_running_ = false;
+					stop();
                 }
 
                 SCALAR phiL = phi_[fL];
@@ -1165,10 +1178,8 @@ void Plugin_ShallowWater::execute_time_step()
 //    std::cout << "optional corrections" << std::endl;
 
     map_->lock_topo_access();
-    //try_simplification();
-    std::cout << "simplification" << std::endl;
-    try_subdivision();
-    std::cout << "subdivision" << std::endl;
+	//try_simplification();
+	try_subdivision();
     map_->unlock_topo_access();
 
     t_ += dt_;
@@ -1198,8 +1209,6 @@ void Plugin_ShallowWater::execute_time_step()
 
         if (sleep_duration > std::chrono::nanoseconds::zero())
             std::this_thread::sleep_for(sleep_duration);*/
-
-    std::cout << std::endl;
 }
 
 void Plugin_ShallowWater::try_subdivision()
@@ -1212,7 +1221,7 @@ void Plugin_ShallowWater::try_subdivision()
             if (subdivided.is_marked(f))
                 return;
 
-            if (face_level(f) > 1)
+			if (face_level(f) > 1)
                 return;
 
             std::vector<SCALAR> diff_h;
@@ -1346,8 +1355,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
     {
         if (face_level(af) < fl)
             subdivide_face(af, subdivided);
-    });
-    std::cout << "check neighbours level" << std::endl;
+	});
 
     // cut edges (if not already done)
     // the new vertex is the center of the edge
@@ -1365,22 +1373,22 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
             CMap2::Vertex v2(map2_->phi1(it));
             CMap2::Vertex v = map2_->cut_edge(CMap2::Edge(it));
             position_[v] = (position_[v1] + position_[v2])/2.;
-            if(map2_->is_incident_to_boundary(CMap2::Edge(it)))
-            {
-                dart_level_[map2_->phi1(it)] = fl+1;
-            }
-            else
-            {
+			water_position_[v] = position_[v];
+			if(map2_->is_incident_to_boundary(CMap2::Edge(it)))
+			{
+				dart_level_[map2_->phi1(it)] = fl+1;
+			}
+			else
+			{
                 dart_level_[map2_->phi1(it)] = fl+1;
                 dart_level_[map2_->phi2(it)] = fl+1;
-            }
+			}
             qtrav_->update(v);
             qtrav_->update(CMap2::Edge(it));
             qtrav_->update(CMap2::Edge(map2_->phi1(it)));
         }
         it = next;
-    } while (it != f.dart);
-    std::cout << "cut edge" << std::endl;
+	} while (it != f.dart);
 
     if (tri_face_[f])
     {
@@ -1494,17 +1502,16 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         dart_level_[map2_->phi2(e.dart)] = fl+1;
         tri_face_[CMap2::Face(it2)] = false;
         subdivided.mark(CMap2::Face(it2));
-        qtrav_->update(CMap2::Face(it2));
-        std::cout << "add edge" << std::endl;
+//		qtrav_->update(CMap2::Face(it2));
 
         CMap2::Vertex v = map2_->cut_edge(e);
         position_[v] = old_centroid;
+		water_position_[v] = position_[v];
         dart_level_[map2_->phi1(e.dart)] = fl+1;
         dart_level_[map2_->phi2(e.dart)] = fl+1;
         qtrav_->update(v);
         qtrav_->update(e);
-        qtrav_->update(CMap2::Edge(map2_->phi1(e.dart)));
-        std::cout << "add vertex" << std::endl;
+		qtrav_->update(CMap2::Edge(map2_->phi1(e.dart)));
 
         it = map2_->phi2(e.dart);
         it2 = map2_->phi<11>(it2);
@@ -1513,36 +1520,25 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
             CMap2::Edge ee = map2_->cut_face(it, it2);
 
             CMap2::Vertex v1(ee.dart);
-            CMap2::Vertex v2(map2_->phi2(ee.dart));
-            std::cout << position_[v1][0] << "\t" << position_[v1][1] << std::endl;
-            std::cout << position_[v2][0] << "\t" << position_[v2][1] << std::endl;
+			CMap2::Vertex v2(map2_->phi2(ee.dart));
 
-            std::cout << "ee" << std::endl;
-            dart_level_[ee.dart] = fl+1;
-            std::cout << "dart level ee" << std::endl;
-            dart_level_[map2_->phi2(ee.dart)] = fl+1;
-            std::cout << "dart level phi2 ee" << std::endl;
-            tri_face_[CMap2::Face(it2)] = false;
-            std::cout << "tri face" << std::endl;
-            subdivided.mark(CMap2::Face(it2));
-            std::cout << "mark" << std::endl;
-            qtrav_->update(ee);
-            std::cout << "qtrav" << std::endl;
-            qtrav_->update(CMap2::Face(it2));
+			dart_level_[ee.dart] = fl+1;
+			dart_level_[map2_->phi2(ee.dart)] = fl+1;
+			tri_face_[CMap2::Face(it2)] = false;
+			subdivided.mark(CMap2::Face(it2));
+			qtrav_->update(ee);
+//            qtrav_->update(CMap2::Face(it2));
 
-            it = map2_->phi2(map2_->phi_1(it));
-            std::cout << "it" << std::endl;
-            it2 = map2_->phi<11>(it2);
-            std::cout << "it2" << std::endl;
+			it = map2_->phi2(map2_->phi_1(it));
+			it2 = map2_->phi<11>(it2);
+		} while (map2_->phi1(it2) != it);
 
-        } while (map2_->phi1(it2) != it);
-        std::cout << "boucle edges" << std::endl;
-
-        int cmpt = 0;
+		int cmpt = 0;
         map2_->foreach_incident_face(v, [&] (CMap2::Face af)
         {
             cmpt++;
             face_subd_id_[af] = 4*fid+cmpt;
+			qtrav_->update(af);
             h_[af] = old_h;
             q_[af] = old_q;
             r_[af] = old_r;
@@ -1557,8 +1553,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
                 nbv++;
             });
             zb_[af] /= nbv;
-        });
-        std::cout << "maj valeurs subdivision" << std::endl;
+		});
     }
 }
 
