@@ -46,36 +46,74 @@ bool Plugin_ShallowWater::enable()
     dock_tab_ = new ShallowWater_DockTab(this->schnapps_, this);
     schnapps_->add_plugin_dock_tab(this, dock_tab_, "Shallow Water 2");
 
-    const unsigned int nbc = 100u;
+    const unsigned int nbc = 4u;
 
     map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water_2", 2));
     map2_ = static_cast<CMap2*>(map_->get_map());
     qtrav_ = cgogn::make_unique<CMap2::QuickTraversor>(*map2_);
 
-    /*cgogn::io::import_surface<VEC3>(*map2_, "/home/bloch/Dev/maillages/dambreak.2dm");
-    position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");*/
+    std::string file = "/home/bloch/Desktop/SW2D_Shangzhi-master-472f6daecf3b023dbd229af1bb09a5bfb83eba6c/Test/902_Dambreak_Complexe/Input/";
+    std::string str;
+    std::string File_Mesh_2D; // Name of the 2D mesh file
 
-    position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+    std::ifstream file_2d (file + "2d.in", std::ios::in); // open file "2d.in"
+    std::getline(file_2d,str); // read line "Input parameters for 2D simulation-version_2"
+    std::getline(file_2d,str); // read line "==== Files & Folders"
+    std::getline(file_2d,str); // read line "1D Mesh (2dm): None"
+    std::getline(file_2d,str,':'); // read "2D Mesh (2dm):"
+    std::getline(file_2d,str,' '); // read space after :
+    std::getline(file_2d,File_Mesh_2D);// read name of the 2D mesh file
+    std::getline(file_2d,str); // read line "==== Physical Phenomenon"
+    std::getline(file_2d,str, '\t'); // read "Friction"
+    std::getline(file_2d,str); // read value of friction
+    friction_ = atoi(str.c_str()); // convert string to int
+    std::getline(file_2d,str); // read line "==== Numerical Parameters"
+    std::getline(file_2d,str, '\t'); // read "Solver"
+    std::getline(file_2d,str); // read value of solver
+    solver_ = atoi(str.c_str()); // convert string to int
+    std::getline(file_2d,str); // read line "Parallel   0"
+    std::getline(file_2d,str); // read line "T0	Tmax	Dtmax	DtStore	NbStepMax"
+    std::getline(file_2d,str,'\t'); // read value of T0
+    t_ = atof(str.c_str()); // convert string to SCALAR
+    std::getline(file_2d,str,'\t'); // read value of Tmax
+    t_max_ = atof(str.c_str()); // convert string to SCALAR
+    std::getline(file_2d,str,'\t'); // read value of Dtmax
+    dt_max_ = atof(str.c_str()); // convert string to SCALAR
+    std::getline(file_2d,str); // read the end of the line
+    std::getline(file_2d,str); // read line "Eps"
+    std::getline(file_2d,str); // read the value of Eps
+    std::getline(file_2d,str); // read line "==== Hydraulic Parameters"
+    std::getline(file_2d,str); // read line "Vmax	Frmax"
+    std::getline(file_2d,str, '\t'); // read value of Vmax
+    v_max_ = atof(str.c_str()); // convert string to SCALAR
+    std::getline(file_2d,str); // read the value of Frmax
+    Fr_max_ = atof(str.c_str()); // convert string to SCALAR
+    file_2d.close(); // close file 2d.in
+
+    std::ifstream file_hydrau (file + "Hydrau_Param_2D.txt", std::ios::in); // open file "Hydrau_Param_2D.txt"
+    std::getline(file_hydrau,str); // read line "Unif	1"
+    std::getline(file_hydrau,str); // read line "==== Default Param"
+    std::getline(file_hydrau,str); // read line "Phi	Kx	Ky	Alpha"
+    std::getline(file_hydrau,str, '\t'); // read the value of phi
+    SCALAR phi = atof(str.c_str()); // convert string to SCALAR
+    std::getline(file_hydrau,str, '\t'); // read the value of Kx
+    kx_ = atof(str.c_str()); // convert string to SCALAR
+    std::getline(file_hydrau,str, '\t'); // read the value of Ky
+    std::getline(file_hydrau,str, '\t'); // read the value of Alpha
+    alphaK_ = atof(str.c_str()); // convert string to SCALAR
+    file_hydrau.close(); // close file "Hydrau_Param_2D.txt"
+
+    // import mesh
+    cgogn::io::import_surface<VEC3>(*map2_, file + File_Mesh_2D);
+    position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+
+    // import face_id_ and vertex_id from file "mesh.2dm"
+    /*face_id_ = map_->get_attribute<uint32, CMap2::Face::ORBIT>("face_id");
+    vertex_id_ = map_->get_attribute<uint32, CMap2::Vertex::ORBIT>("vertex_id");*/
+
+    /*position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
     cgogn::modeling::SquareGrid<CMap2> grid(*map2_, nbc, nbc);
-    grid.embed_into_grid(position_, 200.0f, 200.0f, 0.0f);
-
-    /*SCALAR max_x = 0.;
-    SCALAR max_y = 0.;
-    SCALAR max_z = 0.;
-    SCALAR min_x = 1000.;
-    SCALAR min_y = 1000.;
-    SCALAR min_z = 1000.;
-    for(VEC3& p : position_)
-    {
-        max_x = std::max(max_x,p[0]);
-        min_x = std::min(min_x,p[0]);
-        max_y = std::max(max_y,p[1]);
-        min_y = std::min(min_y,p[1]);
-        max_z = std::max(max_z,p[2]);
-        min_z = std::min(min_z,p[2]);
-    }
-    std:: cout << "max" << "_t" << max_x << "\t" << max_y << "\t" << max_z << std::endl;
-    std:: cout << "min" << "_t" << min_x << "\t" << min_y << "\t" << min_z << std::endl;*/
+    grid.embed_into_grid(position_, 200.0f, 200.0f, 0.0f);*/
 
     // depression
     /*for (VEC3& p : position_)
@@ -97,6 +135,7 @@ bool Plugin_ShallowWater::enable()
     area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
     swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
     discharge_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("discharge");
+    face_id_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("face_id");
 
     f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
     f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
@@ -106,18 +145,149 @@ bool Plugin_ShallowWater::enable()
     normX_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normX");
     normY_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normY");
     length_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("length");
+    val_bc_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("val_bc");
+    typ_bc_ = map_->add_attribute<char, CMap2::Edge::ORBIT>("typ_bc_");
 
     scalar_value_h_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_h");
     scalar_value_u_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_u");
     scalar_value_v_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_v");
     water_position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("water_position");
     flow_velocity_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("flow_velocity");
+    NS_ = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("NS");
+    vertex_id_ = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("vertex_id");
 
-    map2_->copy_attribute(water_position_, position_);
+    cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
+    cgogn::geometry::compute_area<VEC3, CMap2::Face>(*map2_, position_, area_);
 
     qtrav_->build<CMap2::Vertex>();
     qtrav_->build<CMap2::Edge>();
     qtrav_->build<CMap2::Face>();
+
+    ///////////////////
+    /*map2_->foreach_cell(
+        [&] (CMap2::Face f)
+        {
+            if(centroid_[f][0] == 0 && centroid_[f][1] == -20./3.)
+                face_id_[f] = 1;
+            else if(centroid_[f][0] == 20./3. && centroid_[f][1] == 0.)
+                face_id_[f] = 2;
+            else if(centroid_[f][0] == 0. && centroid_[f][1] == 20./3.)
+                face_id_[f] = 3;
+            else if(centroid_[f][0] == -20./3. && centroid_[f][1] == 0.)
+                face_id_[f] = 4;
+            else
+                std::cout << "centroid " << centroid_[f][0] << "\t" << centroid_[f][1] << std::endl;
+        },
+        *qtrav_
+    );
+
+    map2_->foreach_cell(
+        [&] (CMap2::Vertex v)
+        {
+            if(position_[v][0] == -10. && position_[v][1] == -10.)
+                vertex_id_[v] = 1;
+            else if(position_[v][0] == 10. && position_[v][1] == -10.)
+                vertex_id_[v] = 2;
+            else if(position_[v][0] == 10. && position_[v][1] == 10.)
+                vertex_id_[v] = 3;
+            else if(position_[v][0] == -10. && position_[v][1] == 10.)
+                vertex_id_[v] = 4;
+            else if(position_[v][0] == 0. && position_[v][1] == 0.)
+                vertex_id_[v] = 5;
+            else
+                std::cout << "position " << position_[v][0] << "\t" << position_[v][1] << std::endl;
+        },
+        *qtrav_
+    );*/
+    ////////////////////////////
+
+    map2_->copy_attribute(water_position_, position_);
+
+    std::ifstream file_mesh (file + File_Mesh_2D, std::ios::in); // open file "mesh.2dm" to read the NS part
+    std::string str2;
+    std::getline(file_mesh,str); // read line "MESH2D"
+    std::getline(file_mesh,str); // read line "MESHNAME "default coverage""
+    while(str.compare("NS") != 0) // read E3T or E4Q and ND lines until NS lines, but do not read the full first NS line
+    {
+        std::getline(file_mesh,str,' ');
+        if(str.compare("NS") != 0)
+            std::getline(file_mesh,str2);
+    }
+    // NS lines read character by character
+    // if the character is not a space nor a tab nor N nor S, keep it in a string
+    // else (the vertex id is read) convert the string to int and keep int in a vector
+    // if the int is less than 0, all the vertices id are read and the next character is the nodestring
+    // then look for the vertices with the same id as store in vector and assign NS_ value
+    int vertex_id_int = 0;
+    char c;
+    std::string vertex_id_str;
+    std::vector<int> vertex_id_vect;
+    while(!file_mesh.eof())
+    {
+        file_mesh.get(c);
+        std::string s(1,c);
+        if(s.compare(" ") != 0 && s.compare("\t") != 0 && s.compare("N") != 0 && s.compare("S") != 0)
+        {
+            vertex_id_str.push_back(c);
+        }
+        else
+        {
+            vertex_id_int = atoi(vertex_id_str.c_str());
+            if(vertex_id_int >= 0)
+                vertex_id_vect.push_back(vertex_id_int);
+            else
+            {
+                vertex_id_vect.push_back(-vertex_id_int);
+                file_mesh.get(c); // read space
+                file_mesh.get(c); // read ns value
+                std::string s(1,c);
+                uint32 ns_read = atoi(s.c_str());
+                map2_->foreach_cell(
+                    [&] (CMap2::Vertex v)
+                    {
+                        for(int& i : vertex_id_vect)
+                        {
+                            if(vertex_id_[v] == i)
+                            {
+                                NS_[v] = ns_read;
+                            }
+                        }
+                    },
+                    *qtrav_
+                );
+                vertex_id_vect.clear();
+            }
+        }
+    }
+    file_mesh.close(); // close file "mesh.2dm"
+
+    std::ifstream file_ic (file + "Initial_Cond_2D.txt", std::ios::in); // open file "Initial_Cond_2D.txt"
+    std::getline(file_ic,str); // read line "Unif   0"
+    std::getline(file_ic,str); // read line "==== Default Param"
+    std::getline(file_ic,str); // read line "z  u	v"
+    std::getline(file_ic,str); // read line "0  0   0"
+    std::getline(file_ic,str); // read line "==== Distrib"
+    uint32 line = 1; // line number
+    // each face has a face_id witch match the line number of the file
+    while(std::getline(file_ic,str, '\t')) // read value of h
+    {
+        map2_->foreach_cell(
+            [&] (CMap2::Face f)
+            {
+                if(face_id_[f] == line)
+                {
+                    h_[f] = atof(str.c_str()); // convert string to SCALAR
+                    std::getline(file_ic,str,'\t'); // read value of q
+                    q_[f] = atof(str.c_str()); // convert string to SCALAR
+                    std::getline(file_ic,str); // read value of r
+                    r_[f] = atof(str.c_str()); // convert string to SCALAR
+                    line++;
+                }
+            },
+            *qtrav_
+        );
+    }
+    file_ic.close(); // close file "Initial_Cond_2D.txt"
 
     map2_->parallel_foreach_cell(
         [&] (CMap2::Face f)
@@ -132,8 +302,89 @@ bool Plugin_ShallowWater::enable()
         *qtrav_
     );
 
-    cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
-    cgogn::geometry::compute_area<VEC3, CMap2::Face>(*map2_, position_, area_);
+    std::ifstream file_bc (file + "BC_2D.lim", std::ios::in); // open file "BC_2D.lim"
+    std::getline(file_bc,str); // read line "2D BC time series"
+    std::getline(file_bc,str, '\t'); // read "Number_of_BC"
+    std::getline(file_bc,str); // read the number of boundary conditions
+    uint32 Number_of_BC = atoi(str.c_str()); // convert string to int
+    std::getline(file_bc,str); // read line "Number_of_values_in_the_time_series" (only the first time serie is used)
+    std::getline(file_bc,str); // read line "========================="
+    // for NS, Type and Value (only one value instead of Number_of_values_in_the_time_series values), there is Number_of_BC int, char or SCALAR to store
+    // the last column is not read like the others because it ends with a new line instead of a tab
+    uint32 tab_ns[Number_of_BC];
+    std::getline(file_bc,str, '\t'); // read "NS"
+
+    for(int i = 0; i < Number_of_BC-1; i++)
+    {
+        std::getline(file_bc,str, '\t'); // read the signed nodestring
+        std::string ns_tmp(1,str[1]); // keep only the figure, all nodestring are less than 0
+        tab_ns[i] = atoi(ns_tmp.c_str()); // convert string to int
+    }
+    // last column
+    std::getline(file_bc,str);
+    std::string ns_tmp (1,str[1]);
+    tab_ns[Number_of_BC-1] = atoi(ns_tmp.c_str());
+
+    char tab_type[Number_of_BC];
+    std::getline(file_bc,str, '\t'); // read "Type"
+    for(int i = 0; i < Number_of_BC-1; i++)
+    {
+        std::getline(file_bc,str, '\t'); // read char
+        tab_type[i] = str[0];
+    }
+    // last column
+    std::getline(file_bc,str);
+    tab_type[Number_of_BC-1] = str[0];
+
+    std::getline(file_bc,str); // read line "========================="
+    std::getline(file_bc,str); // read line "Time	Value"
+    SCALAR tab_value[Number_of_BC];
+    std::getline(file_bc,str, '\t'); // read time
+    for(int i = 0; i < Number_of_BC-1; i++)
+    {
+        std::getline(file_bc,str, '\t'); // read value
+        tab_value[i] = atof(str.c_str()); // convert string to SCALAR
+    }
+    // last column
+    std::getline(file_bc,str); // read value
+    tab_value[Number_of_BC-1] = atof(str.c_str()); // convert string to SCALAR
+    file_bc.close(); // close file "BC_2D.lim"
+
+    // assign typ_bc and val_bc to incident to boundary edges e
+    // if the vertex (e.dart) has a non zero NS, its value will be in the table tab_ns
+    //and the position of this value will give the position in tab_type and tab_value for typ_be_[e] and val_bc_[e]
+    // else typ_bc_[e] = 'q' and val_bc_[e] = 0
+    map2_->parallel_foreach_cell(
+        [&] (CMap2::Edge e)
+        {
+            if(!map2_->is_incident_to_boundary(e))
+                return;
+
+            CMap2::Vertex v(e.dart);
+            for(int i = 0; i < Number_of_BC; i++)
+            {
+                if(NS_[v] == tab_ns[i])
+                {
+                    typ_bc_[e] = tab_type[i];
+                    val_bc_[e] = tab_value[i];
+                }
+            }
+            if(NS_[v] == 0)
+            {
+                typ_bc_[e] = 'q';
+                val_bc_[e] = 0.;
+            }
+        },
+        *qtrav_
+    );
+
+    map2_->parallel_foreach_cell(
+        [&] (CMap2::Face f)
+        {
+            phi_[f] = phi;
+        },
+        *qtrav_
+    );
 
     init();
 
@@ -154,115 +405,10 @@ void Plugin_ShallowWater::init()
 {
     system("rm -rf graphiques/plot*");
 
-    t_ = 0.;
-    dt_ = 0.001;
-    dt_max_ = 1.;
-    t_max_ = 110.;
     nbr_iter_ = 0;
-
-    solver_ = 2;
-    assert(solver_ == 2 || solver_ == 4);
-    /*
-     * solver_ = 2 : solveur HLLC
-     * solver_ = 4 : solveur PorAS
-     */
-
-    geometry_ = 1;
-    assert(geometry_ == 0 || geometry_ == 1 || geometry_ == 2 || geometry_ == 3 || geometry_ == 4);
-    /*
-     * geometry_ = 0 : dambreak
-     * geometry_ = 1 : square grid
-     * geometry_ = 2 : dambreak coude
-     * geometry_ = 3 : depression
-     * geometry_ = 4 : triangular grid
-     */
 
     hmin_ = 1e-3; // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
     small_ = 1e-35; // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
-    v_max_ = 10.;
-    Fr_max_ = 5.;
-    alphaK_ = 0.;
-    kx_ = 33.33;
-
-    friction_ = 0;
-    /*
-     * friction_ = 0 : no friction
-     * friction_ = 1 : friction
-     */
-
-    map2_->parallel_foreach_cell(
-        [&] (CMap2::Face f)
-        {
-            phi_[f] = 1.;
-            q_[f] = 0.;
-            r_[f] = 0.;
-
-            // ------------- dambreak
-            if(geometry_ == 0)
-            {
-                zb_[f] = 0.;
-                if(centroid_[f][1] > 65)
-                    h_[f] = 10;
-                else
-                    h_[f] = 5.;
-            }
-            // ============= dambreak
-
-            // ------------- square grid
-            else if(geometry_ == 1)
-            {
-                zb_[f] == 0.;
-                if(centroid_[f][1] > 0.)
-                    h_[f] = 10;
-                else
-                    h_[f] = 5.;
-            }
-            // ============= square grid
-
-            // -------------  dambreak coude
-            else if(geometry_ == 2)
-            {
-                if(centroid_[f][0] < 2.39)
-                {
-                    zb_[f] = 0.;
-                    h_[f] = 0.58;
-                }
-                else
-                {
-                    zb_[f] = 0.33;
-                    h_[f] = 0.;
-                }
-            }
-            // =============  dambreak coude
-
-            // ------------- depression
-            else if(geometry_ == 3)
-            {
-                zb_[f] = 0.;
-                int nbv = 0.;
-                map2_->foreach_incident_vertex(f, [&] (CMap2::Vertex v)
-                {
-                    zb_[f] += position_[v][2];
-                    nbv++;
-                });
-                zb_[f] /= nbv;
-                h_[f] = 1.;
-            }
-            // ============= depression
-
-            // -------------  triangular grid
-            else if(geometry_ == 4)
-            {
-                zb_[f] == 0.;
-                if(centroid_[f][1] > 86.)
-                    h_[f] = 10;
-                else
-                    h_[f] = 6.;
-            }
-            // =============  triangular grid
-        },
-        *qtrav_
-    );
 
     map2_->parallel_foreach_cell(
         [&] (CMap2::Vertex v)
@@ -406,185 +552,24 @@ void Plugin_ShallowWater::update_time_step()
             if(map2_->is_incident_to_boundary(e))
             {
                 CMap2::Face f(e.dart);
-                CMap2::Vertex v(e.dart);
-                if(geometry_ == 0)
+                char side[1];
+                side[0] = boundary_side(e);
+                if (std::strcmp(side,"R") == 0)
                 {
-                    if((position_[v][0] == 0 && position_[v][1] == 0) ||
-                            (position_[v][0] == 100 && position_[v][1] == 0) ||
-                            (position_[v][0] == 100 && position_[v][1] == 60) ||
-                            (position_[v][0] == 90 && position_[v][1] == 60) ||
-                            (position_[v][0] == 90 && position_[v][1] == 65) ||
-                            (position_[v][0] == 100 && position_[v][1] == 65) ||
-                            (position_[v][0] == 100 && position_[v][1] == 100) ||
-                            (position_[v][0] == 0 && position_[v][1] == 100) ||
-                            (position_[v][0] == 0 && position_[v][1] == 65) ||
-                            (position_[v][0] == 60 && position_[v][1] == 65) ||
-                            (position_[v][0] == 60 && position_[v][1] == 60) ||
-                            (position_[v][0] == 0 && position_[v][1] == 60))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if((position_[v][0] > 90 && position_[v][1] == 60) ||
-                            (position_[v][1] == 100) ||
-                            (position_[v][0] == 0 && position_[v][1] > 65) ||
-                            (position_[v][0] == 60 && position_[v][1] > 60 && position_[v][1] < 65) ||
-                            (position_[v][0] < 60 && position_[v][1] == 60) ||
-                            (position_[v][0] == 0 && position_[v][1] < 60)
-                            ) //  left border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] -= length_[e]*f1_[e];
-                    }
-                    else // right border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] += length_[e]*f1_[e];
-                    }
+                    SCALAR lambda = 0.;
+                    if(h_[f] > hmin_)
+                        lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
+                    swept_[f] += lambda*length_[e];
+                    discharge_[f] += length_[e]*f1_[e];
                 }
-                // =============== dambreak
-
-                // ------------------- square grid
-                else if(geometry_ == 1)
+                else
                 {
-                    if((position_[v][0] == -100 && position_[v][1] == -100) ||
-                            (position_[v][0] == -100 && position_[v][1] == 100) ||
-                            (position_[v][0] == 100 && position_[v][1] == -100) ||
-                            (position_[v][0] == 100 && position_[v][1] == 100))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if(position_[v][1] == 100. || position_[v][0] == -100.) // left border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] -= length_[e]*f1_[e];
-                    }
-                    else // right border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] += length_[e]*f1_[e];
-                    }
+                    SCALAR lambda = 0.;
+                    if(h_[f] > hmin_)
+                        lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
+                    swept_[f] += lambda*length_[e];
+                    discharge_[f] -= length_[e]*f1_[e];
                 }
-                // ================ square grid
-
-                // -------------------- dambreak coude
-                else if(geometry_ == 2)
-                {
-                    if((position_[v][0] == 0 && position_[v][1] == 0) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 0) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 0.445) ||
-                            (position_[v][0] == 6.805 && position_[v][1] == 0.445) ||
-                            (position_[v][0] == 6.805 && position_[v][1] == 3.86) ||
-                            (position_[v][0] == 6.31 && position_[v][1] == 3.86) ||
-                            (position_[v][0] == 6.31 && position_[v][1] == 0.94) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 0.94) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 2.44) ||
-                            (position_[v][0] == 0 && position_[v][1] == 2.44))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if((position_[v][0] > 6.31 && position_[v][1] == 3.86) ||
-                            (position_[v][0] == 6.31 && position_[v][1] > 0.94) ||
-                            (position_[v][0] > 2.39 && position_[v][0] < 6.31 && position_[v][1] == 0.94) ||
-                            (position_[v][0] < 2.39 && position_[v][1] == 2.44) ||
-                            (position_[v][0] == 0 && position_[v][1] < 2.44)
-                            )// left border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] -= length_[e]*f1_[e];
-                    }
-                    else // right border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] += length_[e]*f1_[e];
-                    }
-                }
-                // ===================== dambreak coude
-
-                // -------------------- depression
-                else if(geometry_ == 3)
-                {
-                    if((position_[v][0] == 0 && position_[v][1] == 0 ) ||
-                            (position_[v][0] == 0 && position_[v][1] == 2000 ) ||
-                            (position_[v][0] == 2000 && position_[v][1] == 0) ||
-                            (position_[v][0] == 2000 && position_[v][1] == 2000))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if(position_[v][1] == 2000 || position_[v][0] == 0) // left border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] -= length_[e]*f1_[e];
-                    }
-                    else // right border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] += length_[e]*f1_[e];
-                    }
-                }
-                // ======================== depression
-
-                // ------------------- triangular grid
-                else if(geometry_ == 4)
-                {
-                    if((position_[v][0] ==  0 && position_[v][1] == 0) ||
-                            (position_[v][0] == 0 && position_[v][1] > 173) ||
-                            (position_[v][0] == 200 && position_[v][1] == 0) ||
-                            (position_[v][0] == 300 && position_[v][1] > 173))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if(position_[v][0] <= 100. || position_[v][1] == 100.) // left border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] -= length_[e]*f1_[e];
-                    }
-                    else // right border
-                    {
-                        SCALAR lambda = 0.;
-                        if(h_[f] > hmin_)
-                            lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
-                        swept_[f] += lambda*length_[e];
-                        discharge_[f] += length_[e]*f1_[e];
-                    }
-                }
-                // ================ triangular grid
             }
 
             else
@@ -669,6 +654,7 @@ void Plugin_ShallowWater::execute_time_step()
         },
         *qtrav_
     );
+
 //    std::cout << "normale" << std::endl;
 
     map2_->parallel_foreach_cell(
@@ -684,184 +670,16 @@ void Plugin_ShallowWater::execute_time_step()
             s2R_[e] = 0.;
             if (map2_->is_incident_to_boundary(e))
             {
-                CMap2::Vertex v(e.dart);
                 CMap2::Face f(e.dart);
-
-                /*
-                     * border_condition_choice = 0 : Free Outflow
-                     * border_condition_choice = 1 : Critical Section
-                     * border_condition_choice = 2 : Prescribed h
-                     * border_condition_choice = 3 : Prescribed z
-                     * border_condition_choice = 4 : Prescribed q
-                     * border_condition_choice = 5 : Weir
-                     */
-
                 if(phi_[f] > small_)
                 {
-                    // ------------------- dambreak
-                    if(geometry_ == 0)
-                    {
-                        if((position_[v][0] == 0 && position_[v][1] == 0) ||
-                                (position_[v][0] == 100 && position_[v][1] == 0) ||
-                                (position_[v][0] == 100 && position_[v][1] == 60) ||
-                                (position_[v][0] == 90 && position_[v][1] == 60) ||
-                                (position_[v][0] == 90 && position_[v][1] == 65) ||
-                                (position_[v][0] == 100 && position_[v][1] == 65) ||
-                                (position_[v][0] == 100 && position_[v][1] == 100) ||
-                                (position_[v][0] == 0 && position_[v][1] == 100) ||
-                                (position_[v][0] == 0 && position_[v][1] == 65) ||
-                                (position_[v][0] == 60 && position_[v][1] == 65) ||
-                                (position_[v][0] == 60 && position_[v][1] == 60) ||
-                                (position_[v][0] == 0 && position_[v][1] == 60))
-                        {
-                            // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                            CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                            v = v_aux;
-                        }
-
-                        if(position_[v][1] == 0)
-                            riemann_flux = border_condition(2,5.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 100 && position_[v][1] < 60)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] > 90 && position_[v][1] == 60)
-                            riemann_flux = border_condition(2,5.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 90 && position_[v][1] > 60 && position_[v][1] < 65)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] > 90 && position_[v][1] == 65)
-                            riemann_flux = border_condition(2,10.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 100 && position_[v][1] > 65)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][1] == 100)
-                            riemann_flux = border_condition(2,10.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 0 && position_[v][1] > 65)
-                            riemann_flux = border_condition(4,0.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] < 60 && position_[v][1] == 65)
-                            riemann_flux = border_condition(2,10.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 60 && position_[v][1] > 60 && position_[v][1] < 65)
-                            riemann_flux = border_condition(4,0.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] < 60 && position_[v][1] == 60)
-                            riemann_flux = border_condition(2,5.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 0 && position_[v][1] < 60)
-                            riemann_flux = border_condition(4,0.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-
-                    }
-                    // =================== parital dambreak
-
-                    // ------------------- square grid
-                    else if(geometry_ == 1)
-                    {
-                        if((position_[v][0] == -100 && position_[v][1] == -100) ||
-                                (position_[v][0] == -100 && position_[v][1] == 100) ||
-                                (position_[v][0] == 100 && position_[v][1] == -100) ||
-                                (position_[v][0] == 100 && position_[v][1] == 100))
-                        {
-                            // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                            CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                            v = v_aux;
-                        }
-                        if(position_[v][0] == -100)
-                            riemann_flux = border_condition(4,0.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][1] == -100)
-                            riemann_flux = border_condition(2,5.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 100)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][1] == 100)
-                            riemann_flux = border_condition(2,10.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                    }
-                    // =================== square grid
-
-                    // ------------------- dambreak coude
-                    else if(geometry_ == 2)
-                    {
-                        if((position_[v][0] == 0 && position_[v][1] == 0) ||
-                                (position_[v][0] == 2.39 && position_[v][1] == 0) ||
-                                (position_[v][0] == 2.39 && position_[v][1] == 0.445) ||
-                                (position_[v][0] == 6.805 && position_[v][1] == 0.445) ||
-                                (position_[v][0] == 6.805 && position_[v][1] == 3.86) ||
-                                (position_[v][0] == 6.31 && position_[v][1] == 3.86) ||
-                                (position_[v][0] == 6.31 && position_[v][1] == 0.94) ||
-                                (position_[v][0] == 2.39 && position_[v][1] == 0.94) ||
-                                (position_[v][0] == 2.39 && position_[v][1] == 2.44) ||
-                                (position_[v][0] == 0 && position_[v][1] == 2.44))
-                        {
-                            // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                            CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                            v = v_aux;
-                        }
-                        if(position_[v][0] < 2.39 && position_[v][1] == 0)
-                            riemann_flux = border_condition(2,0.58,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 2.39 && position_[v][1] < 0.445)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] > 2.39 && position_[v][1] == 0.445)
-                            riemann_flux = border_condition(5,2.18,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]); // ????????
-                        else if(position_[v][0] == 6.805 && position_[v][1] > 0.0445)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] > 6.31 && position_[v][1] == 3.86)
-                            riemann_flux = border_condition(0,2.18,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 6.31 && position_[v][1] > 0.94)
-                            riemann_flux = border_condition(4,0.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] > 2.39 && position_[v][0] < 6.31 && position_[v][1] == 0.94)
-                            riemann_flux = border_condition(5,2.18,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]); // ????????
-                        else if(position_[v][0] == 2.39 && position_[v][1] > 0.94)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] < 2.39 && position_[v][1] == 2.44)
-                            riemann_flux = border_condition(2,0.58,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 0 && position_[v][1] < 2.44)
-                            riemann_flux = border_condition(2,0.58,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                    }
-                    // =================== dambreak coude
-
-                    // ------------------- depression
-                    else if(geometry_ == 3)
-                    {
-                        if((position_[v][0] == 0 && position_[v][1] == 0 ) ||
-                                (position_[v][0] == 0 && position_[v][1] == 2000 ) ||
-                                (position_[v][0] == 2000 && position_[v][1] == 0) ||
-                                (position_[v][0] == 2000 && position_[v][1] == 2000))
-                        {
-                            // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                            CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                            v = v_aux;
-                        }
-                        SCALAR q;
-                        if(t_ >= 600. && t_ <= 5160)
-                            q = 0.2;
-                        else
-                            q = 0.;
-                        if(position_[v][1] == 0 || position_[v][0] == 2000)
-                            riemann_flux = border_condition(4,q,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] == 0 || position_[v][1] == 2000)
-                            riemann_flux = border_condition(4,q,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                    }
-                    // =================== depression
-
-                    // ------------------- triangular grid
-                    else if(geometry_ == 4)
-                    {
-                        if((position_[v][0] ==  0 && position_[v][1] == 0) ||
-                                (position_[v][0] == 0 && position_[v][1] > 173) ||
-                                (position_[v][0] == 200 && position_[v][1] == 0) ||
-                                (position_[v][0] == 300 && position_[v][1] > 173))
-                        {
-                            // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                            CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                            v = v_aux;
-                        }
-                        if(position_[v][1] == 0)
-                            riemann_flux = border_condition(2,6.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][1] > 173)
-                            riemann_flux = border_condition(2,10.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else if(position_[v][0] <= 100 )
-                            riemann_flux = border_condition(4,0.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                        else
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
-                    }
-                    // =================== triangular grid
-                } // phi_[f] > small_
-            } // maps2_->is_incident_to_boundary(e)
-
-
-
+                    char side[1];
+                    side[0] = boundary_side(e);
+                    char typ_bc[1];
+                    typ_bc[0] = typ_bc_[e];
+                    riemann_flux = border_condition(typ_bc, val_bc_[e], side,normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f], 9.81, hmin_, small_);
+                }
+            }
             else //Inner cell:use the lateralised Riemann solver
             {
                 CMap2::Face fL,fR;
@@ -914,178 +732,23 @@ void Plugin_ShallowWater::execute_time_step()
                 // border conditions
             {
                 CMap2::Face f(e.dart);
-                CMap2::Vertex v(e.dart);
-
-                // ------------ dambreak
-                if(geometry_ == 0)
+                char side[1];
+                side[0] = boundary_side(e);
+                if (strcmp(side,"R") == 0)
                 {
-                    if((position_[v][0] == 0 && position_[v][1] == 0) ||
-                            (position_[v][0] == 100 && position_[v][1] == 0) ||
-                            (position_[v][0] == 100 && position_[v][1] == 60) ||
-                            (position_[v][0] == 90 && position_[v][1] == 60) ||
-                            (position_[v][0] == 90 && position_[v][1] == 65) ||
-                            (position_[v][0] == 100 && position_[v][1] == 65) ||
-                            (position_[v][0] == 100 && position_[v][1] == 100) ||
-                            (position_[v][0] == 0 && position_[v][1] == 100) ||
-                            (position_[v][0] == 0 && position_[v][1] == 65) ||
-                            (position_[v][0] == 60 && position_[v][1] == 65) ||
-                            (position_[v][0] == 60 && position_[v][1] == 60) ||
-                            (position_[v][0] == 0 && position_[v][1] == 60))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if((position_[v][0] > 90 && position_[v][1] == 60) ||
-                            (position_[v][1] == 100) ||
-                            (position_[v][0] == 0 && position_[v][1] > 65) ||
-                            (position_[v][0] == 60 && position_[v][1] > 60 && position_[v][1] < 65) ||
-                            (position_[v][0] < 60 && position_[v][1] == 60) ||
-                            (position_[v][0] == 0 && position_[v][1] < 60)
-                            ) //  left border
-                    {
-                        SCALAR factR = fact/area_[f];
-                        h_[f] = h_[f] + factR*f1_[e];
-                        q_[f] = q_[f] + factR*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] + factR*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                    else // right border
-                    {
-                        SCALAR factL = fact/area_[f];
-                        h_[f] = h_[f] - factL*f1_[e];
-                        q_[f] = q_[f] - factL*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] - factL*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
+                    SCALAR factL = fact/area_[f];
+                    h_[f] = h_[f] - factL*f1_[e];
+                    q_[f] = q_[f] - factL*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
+                    r_[f] = r_[f] - factL*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
                 }
-                // =============== dambreak
-
-                // ------------------- square grid
-                else if(geometry_ == 1)
+                else
                 {
-                    if((position_[v][0] == -100 && position_[v][1] == -100) ||
-                            (position_[v][0] == -100 && position_[v][1] == 100) ||
-                            (position_[v][0] == 100 && position_[v][1] == -100) ||
-                            (position_[v][0] == 100 && position_[v][1] == 100))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if(position_[v][1] == 100. || position_[v][0] == -100.) // left border
-                    {
-                        SCALAR factR = fact/area_[f];
-                        h_[f] = h_[f] + factR*f1_[e];
-                        q_[f] = q_[f] + factR*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] + factR*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                    else // right border
-                    {
-                        SCALAR factL = fact/area_[f];
-                        h_[f] = h_[f] - factL*f1_[e];
-                        q_[f] = q_[f] - factL*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] - factL*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
+                    SCALAR factR = fact/area_[f];
+                    h_[f] = h_[f] + factR*f1_[e];
+                    q_[f] = q_[f] + factR*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
+                    r_[f] = r_[f] + factR*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
                 }
-                // ================ square grid
-
-                // -------------------- dambreak coude
-                else if(geometry_ == 2)
-                {
-                    if((position_[v][0] == 0 && position_[v][1] == 0) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 0) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 0.445) ||
-                            (position_[v][0] == 6.805 && position_[v][1] == 0.445) ||
-                            (position_[v][0] == 6.805 && position_[v][1] == 3.86) ||
-                            (position_[v][0] == 6.31 && position_[v][1] == 3.86) ||
-                            (position_[v][0] == 6.31 && position_[v][1] == 0.94) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 0.94) ||
-                            (position_[v][0] == 2.39 && position_[v][1] == 2.44) ||
-                            (position_[v][0] == 0 && position_[v][1] == 2.44))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if((position_[v][0] > 6.31 && position_[v][1] == 3.86) ||
-                            (position_[v][0] == 6.31 && position_[v][1] > 0.94) ||
-                            (position_[v][0] > 2.39 && position_[v][0] < 6.31 && position_[v][1] == 0.94) ||
-                            (position_[v][0] < 2.39 && position_[v][1] == 2.44) ||
-                            (position_[v][0] == 0 && position_[v][1] < 2.44)
-                            )// left border
-                    {
-                        SCALAR factR = fact/area_[f];
-                        h_[f] = h_[f] + factR*f1_[e];
-                        q_[f] = q_[f] + factR*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] + factR*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                    else // right border
-                    {
-                        SCALAR factL = fact/area_[f];
-                        h_[f] = h_[f] - factL*f1_[e];
-                        q_[f] = q_[f] - factL*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] - factL*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                }
-                // ===================== dambreak coude
-
-                // -------------------- depression
-                else if(geometry_ == 3)
-                {
-                    if((position_[v][0] == 0 && position_[v][1] == 0 ) ||
-                            (position_[v][0] == 0 && position_[v][1] == 2000 ) ||
-                            (position_[v][0] == 2000 && position_[v][1] == 0) ||
-                            (position_[v][0] == 2000 && position_[v][1] == 2000))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if(position_[v][1] == 2000 || position_[v][0] == 0) // left border
-                    {
-                        SCALAR factR = fact/area_[f];
-                        h_[f] = h_[f] + factR*f1_[e];
-                        q_[f] = q_[f] + factR*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] + factR*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                    else // right border
-                    {
-                        SCALAR factL = fact/area_[f];
-                        h_[f] = h_[f] - factL*f1_[e];
-                        q_[f] = q_[f] - factL*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] - factL*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                }
-                // ======================== depression
-
-                // ------------------- triangular grid
-                else if(geometry_ == 4)
-                {
-                    if((position_[v][0] ==  0 && position_[v][1] == 0) ||
-                            (position_[v][0] == 0 && position_[v][1] > 173) ||
-                            (position_[v][0] == 200 && position_[v][1] == 0) ||
-                            (position_[v][0] == 300 && position_[v][1] > 173))
-                    {
-                        // si le noeud associé à l'arrête est dans le coin, alors on prend l'autre noeud
-                        CMap2::Vertex v_aux(map2_->phi1(e.dart));
-                        v = v_aux;
-                    }
-                    if(position_[v][0] <= 100. || position_[v][1] == 100.) // left border
-                    {
-                        SCALAR factR = fact/area_[f];
-                        h_[f] = h_[f] + factR*f1_[e];
-                        q_[f] = q_[f] + factR*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] + factR*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                    else // right border
-                    {
-                        SCALAR factL = fact/area_[f];
-                        h_[f] = h_[f] - factL*f1_[e];
-                        q_[f] = q_[f] - factL*(f2_[e]*normX_[e] - f3_[e]*normY_[e]);
-                        r_[f] = r_[f] - factL*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
-                    }
-                }
-                // ================ triangular grid
-            } // map2_->is_incident_to_boundary(e)
+            }
 
             else // inner cell
             {
@@ -1164,16 +827,25 @@ void Plugin_ShallowWater::execute_time_step()
     );
 //    std::cout << "optional corrections" << std::endl;
 
-    map_->lock_topo_access();
+    /*map_->lock_topo_access();
     //try_simplification();
-    std::cout << "simplification" << std::endl;
+    //std::cout << "simplification" << std::endl;
     try_subdivision();
     std::cout << "subdivision" << std::endl;
-    map_->unlock_topo_access();
+    map_->unlock_topo_access();*/
 
     t_ += dt_;
-
     nbr_iter_++;
+
+    /*map2_->foreach_cell(
+        [&] (CMap2::Vertex v)
+        {
+            std::cout << position_[v][0] << "\t" << position_[v][1] << std::endl;
+        },
+        *qtrav_
+     );*/
+
+    //stop();
 //    std::cout << nbr_iter_ << std::endl;
 
      /*std::ofstream file ("graphiques/plot" + std::to_string(nbr_iter_) + ".txt");
@@ -1199,7 +871,7 @@ void Plugin_ShallowWater::execute_time_step()
         if (sleep_duration > std::chrono::nanoseconds::zero())
             std::this_thread::sleep_for(sleep_duration);*/
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
 }
 
 void Plugin_ShallowWater::try_subdivision()
@@ -1215,6 +887,8 @@ void Plugin_ShallowWater::try_subdivision()
             if (face_level(f) > 1)
                 return;
 
+            std::cout << nbr_iter_ << "\t" << face_level(f) << std::endl;
+
             std::vector<SCALAR> diff_h;
             std::vector<SCALAR> diff_q;
             std::vector<SCALAR> diff_r;
@@ -1226,20 +900,13 @@ void Plugin_ShallowWater::try_subdivision()
                 diff_r.push_back(fabs(r_[f]-r_[af]));
                 diff_zb.push_back(fabs(zb_[f]-zb_[af]));
             });
-            SCALAR max_diff_h = 0.;
-            SCALAR max_diff_q = 0.;
-            SCALAR max_diff_r = 0.;
-            SCALAR max_diff_zb = 0.;
-            for(int i = 0; i < diff_h.size(); i++)
-            {
-                max_diff_h = std::max(max_diff_h,diff_h[i]);
-                max_diff_q = std::max(max_diff_q,diff_q[i]);
-                max_diff_r = std::max(max_diff_r,diff_r[i]);
-                max_diff_zb = std::max(max_diff_zb,diff_zb[i]);
-            }
+            SCALAR max_diff_h = *(std::max_element(diff_h.begin(),diff_h.end()));
+            SCALAR max_diff_q = *(std::max_element(diff_q.begin(),diff_q.end()));
+            SCALAR max_diff_r = *(std::max_element(diff_r.begin(),diff_r.end()));
+            SCALAR max_diff_zb = *(std::max_element(diff_zb.begin(),diff_zb.end()));
 
-            //if ( /* a certain condition is met */ true)
-            if(max_diff_h > 2.01914/50. || max_diff_q > 8.44341/50. || max_diff_r > 8.44341/50. || max_diff_zb > 0)
+            if ( /* a certain condition is met */ true)
+            //if(max_diff_h > 2.01914/50. || max_diff_q > 8.44341/50. || max_diff_r > 8.44341/50. || max_diff_zb > 0)
                 subdivide_face(f, subdivided);
         },
         *qtrav_
@@ -1311,15 +978,9 @@ void Plugin_ShallowWater::try_simplification()
                 diff_q.push_back(fabs(q_[f]-q_[af]));
                 diff_r.push_back(fabs(r_[f]-r_[af]));
             });
-            SCALAR max_diff_h = 0.;
-            SCALAR max_diff_q = 0.;
-            SCALAR max_diff_r = 0.;
-            for(int i = 0; i < diff_h.size(); i++)
-            {
-                max_diff_h = std::max(max_diff_h,diff_h[i]);
-                max_diff_q = std::max(max_diff_q,diff_q[i]);
-                max_diff_r = std::max(max_diff_r,diff_r[i]);
-            }
+            SCALAR max_diff_h = *(std::max_element(diff_h.begin(),diff_h.end()));
+            SCALAR max_diff_q = *(std::max_element(diff_q.begin(),diff_q.end()));
+            SCALAR max_diff_r = *(std::max_element(diff_r.begin(),diff_r.end()));
 
             //if ( /* a certain condition is met */ true)
             if(max_diff_h < 0.7 && max_diff_q < 0.1 && max_diff_r < 0.1)
@@ -1355,7 +1016,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
     do
     {
         cgogn::Dart next = map2_->phi1(it);
-        if (dart_level_[next] > fl) ////////////////
+        if (dart_level_[next] > fl)
         {
             next = map2_->phi1(next);
         }
@@ -2089,125 +1750,173 @@ struct Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS
 }
 
 struct Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
-        int border_condition_choice, SCALAR val_bc, bool sideR,
-        SCALAR normX, SCALAR normY,
-        SCALAR q, SCALAR r, SCALAR z, SCALAR zb)
+        char* typBC,SCALAR ValBC,char* side,
+                        SCALAR NormX,SCALAR NormY,
+                        SCALAR q,SCALAR r,SCALAR z,SCALAR zb,
+                        SCALAR g, SCALAR hmin, SCALAR small)
 {
-    // initialization
-    SCALAR q1 = q*normX + r*normY;
-    SCALAR r1 = -q*normY + r*normX;
-    SCALAR h1 = z-zb;
-    SCALAR f1,f2,f3;
-    Str_Riemann_Flux riemann_flux;
-    if(sideR)
-    {
-        q1 = -q1;
-        r1 = -r1;
-    }
-    if(h1 < hmin_)
-    {
-        h1 = 0.;
-        q1 = 0.;
-        r1 = 0.;
-    }
 
-    // characteristic variables
-    SCALAR c1 = sqrt(9.81*h1);
-    SCALAR u1 = q1 / max_0(h1, small_);
-    SCALAR v1 = r1 / max_0(h1, small_);
-    SCALAR L1 = max_0(u1 + c1, 0e0);
+        Str_Riemann_Flux Flux;
+        //-----------initialization------------
+        //   h1,q1,r1;h,q,r within the domain
+        SCALAR q1 = q * NormX + r * NormY;
+        SCALAR r1 =-q * NormY + r * NormX;
+        SCALAR h1 = z - zb;
 
-    // boundary conditions
-    if(border_condition_choice == 0) //-----Free Outflow-------
-    {
-        f1 = q1;
-        f2 = q1 * u1 + 0.5 * 9.81 * h1 * h1;
-    }
-    else if(border_condition_choice == 1) //-------Critical Section----
-    {
-        SCALAR c = (u1-2.*c1)/(val_bc-2.);
-        c = max_0(c,0);
-        SCALAR u = -val_bc*c;
-        SCALAR h = c*c/9.81;
-        f1 = h*u;
-        f2 = h*u*u+9.81*h*h/2.;
-    }
-    else if(border_condition_choice == 2) //-------Prescribed h---------
-    {
-        SCALAR h = max_0(val_bc,0.);
-        SCALAR u = 0.;
-        if(L1 < 0) // torrentiel sortant
+        if (strcmp(side,"R") == 0)
         {
-            h = h1;
-            u = u1;
+            q1 = -q1;
+            r1 = -r1;
         }
-        else
-        {
-            SCALAR cmin = max_1(sqrt(9.81 * h), (2 * c1 - u1) / 3.0, 0.0);
-            h = max_0(h, (cmin * cmin) / 9.81);
-            SCALAR c = sqrt(9.81*h);
-            u = u1 + 2 * (c - c1);
-        }
-        f1 = h*u;
-        f2 = h*u*u+9.81*h*h/2.;
-    }
-    else if(border_condition_choice == 3) //-------Prescribed z-----------
-    {
-        SCALAR h=max_0(val_bc - zb,0);
-        SCALAR c = sqrt(9.81*h);
-        SCALAR u=u1+2*(c-c1);
-        f1 = h*u;
-        f2 = h*u*u+9.81*h*h/2.;
 
-        h = max_0(val_bc-zb,0.); //why is part need
-        if(L1 < 0)
+        if(h1 < hmin)
         {
-            /* torrentiel sortant*/
-            h = h1;
-            u = u1;
+            h1 = 0e0;
+            q1 = 0e0;
+            r1 = 0e0;
         }
-        else
-        {
-            SCALAR cmin = max_1(sqrt(9.81*h),(2.*c1-u1)/2.,0.);
-            h = max_0(h, cmin*cmin/9.81);
-            c = sqrt(9.81*h);
-            u = u1+2.*(c-c1);
-        }
-        f1 = h*u;
-        f2 = h*u*u+9.81*h*h/2.;
-    }
-    else if(border_condition_choice == 4) //--------Prescribed q-----------
-    {
-        f1 = val_bc;
-        SCALAR hc = pow(f1*f1/9.81,1./3.);
-        if(hc >= h1)
-            f2 = q1*q1/max_0(hc,small_) + 9.81*h1*h1/2. + (f1-q1)*L1;
-        else
-            f2 = q1*q1/max_0(h1,small_) + 9.81*h1*h1/2. + (f1-q1)*L1;
-    }
-    else if(border_condition_choice == 5) //---------Weir--------------------
-    {
-        if(h1 < val_bc) // No z:weir elevation not reached
-        {
-            f1 = 0.;
-            f2 = (q1*q1)/max_0(h1,small_) + 9.81*h1*h1/2.;
-        }
-        else // Weir overtoped
-        {
-            f1 = -0.42*sqrt(2.*9.81)*pow((h1-val_bc),3./2.);
-            f2 = (q1*q1)/max_0(h1,small_) + 9.81*h1*h1/2.;
-        }
-    }
-    f3 = (f1-fabs(f1))*v1/2.;
-    if(sideR)
-        f1 = -f1;
 
-    riemann_flux.F1 = f1;
-    riemann_flux.F2 = f2;
-    riemann_flux.F3 = f3;
-    riemann_flux.s2L = 0.;
-    riemann_flux.s2R = 0.;
-    return riemann_flux;
+        // Characteristic variables
+        SCALAR c1 = sqrt(g * h1);
+        SCALAR u1 = q1 / max_0(h1, small);
+        SCALAR v1 = r1 / max_0(h1, small);
+        SCALAR L1 = max_0(u1 + c1, 0e0);
+        //===================================================================
+
+        SCALAR F1 = 0;
+        SCALAR F2 = 0;
+        SCALAR F3 = 0;
+        //-----Boundary conditions-------------------
+        //-----Free Outflow-------
+        if ((strcmp(typBC, "f") == 0) || (strcmp(typBC, "F") == 0))
+        {
+            //----message------
+            F1 = q1;
+            F2 = q1 * u1 + 0.5 * g * h1 * h1;
+        }
+        //=========================
+        //-------Critical Section----
+        else if((strcmp(typBC,"c") == 0) || (strcmp(typBC,"C") == 0))
+        {
+            //-----message------
+            SCALAR c=(u1-2*c1)/(ValBC-2);
+            c=max_0(c,0);
+            SCALAR u=-ValBC*c;
+            SCALAR h=c*c/g;
+            F1=h*u;
+            F2=h*u*u+0.5*g*h*h;
+        }
+        //============================
+        //-------Prescribed h---------
+        else if((strcmp(typBC,"h") == 0) || (strcmp(typBC,"H") == 0))
+        {
+            //------message----------
+            SCALAR h = max_0(ValBC, 0);
+            SCALAR u = 0;
+
+            if(L1 < 0)
+            {
+                /* torrentiel sortant*/
+                h = h1;
+                u = u1;
+            }
+            else
+            {
+                SCALAR cmin = max_1(sqrt(g * h), (2 * c1 - u1) / 3.0, 0.0);
+                h = max_0(h, (cmin * cmin) / g);
+                SCALAR c = sqrt(g * h);
+                u = u1 + 2 * (c - c1);
+            }
+            F1 = h * u;
+            F2 = h * u * u+ 0.5 * g * h * h;
+
+        }
+        //==============================
+        //-------Prescribed z-----------
+        else if((strcmp(typBC,"z") == 0) || (strcmp(typBC,"Z") == 0))
+        {
+            //------message-----
+            SCALAR h=max_0(ValBC - zb,0);
+            SCALAR c=sqrt(g*h);
+            SCALAR u=u1+2*(c-c1);
+            F1=h*u;
+            F2=h*u*u+0.5*g*h*h;
+
+            /** @todo Utilité ??? **/
+            h=max_0(ValBC-zb,0);//why is part need
+            if(L1 < 0)
+            {
+                /* torrentiel sortant*/
+                h = h1;
+                u = u1;
+            }
+            else
+            {
+                SCALAR cmin=max_1(sqrt(g*h),(2*c1-u1)/3,0);
+                h=max_0(h,(cmin*cmin)/g);
+                c=sqrt(g*h);
+                u=u1+2*(c-c1);
+            }
+            F1=h*u;
+            F2=h*u*u+0.5*g*h*h;
+        }
+        //===============================
+        //--------Prescribed q-----------
+        else if((strcmp(typBC,"q")==0)||(strcmp(typBC,"Q")==0))
+        {
+            //-----message-------
+            F1=ValBC;
+            SCALAR hc=pow(((F1*F1)/g),1/3);
+            if(hc>=h1)
+            {
+                F2=(q1*q1)/max_0(hc,small)+
+                        0.5*g*h1*h1+
+                        (F1-q1)*L1;
+            }
+            else
+            {
+                F2=(q1*q1)/max_0(h1,small)+
+                        0.5*g*h1*h1+
+                        (F1-q1)*L1;
+            }
+        }
+        //=================================
+        //---------Weir--------------------
+        else if((strcmp(typBC,"s")==0)||(strcmp(typBC,"S")==0))
+        {
+            /**
+             ** @todo Implémenter les BC de type 's' en renseignant la cote de la pelle et non la hauteur (permet de gérer les cas avec plusieurs mailles de cote du fond diférentes attenantes au même seuil)
+             **/
+            //-----message-------
+            if(h1<ValBC)
+            {
+                //No z:weir elevation not reached
+                F1=0;
+                F2=(q1*q1)/max_0(h1,small)
+                        +0.5*g*h1*h1;
+            }
+            else
+            {
+                // Weir overtoped
+                F1=-0.42*sqrt(2*g)*pow((h1-ValBC),3/2);
+                F2=(q1*q1)/max_0(h1,small)
+                        +0.5*g*h1*h1;
+            }
+        }
+        F3=(F1-fabs(F1))*v1/2;
+        //----output-----
+        if (strcmp(side,"R") == 0)
+        {
+            F1 = -F1;
+        }
+        //--return F1,F2,F3
+        Flux.F1=F1;
+        Flux.F2=F2;
+        Flux.F3=F3;
+        Flux.s2L = 0.;
+        Flux.s2R = 0.;
+
+        return Flux;
 }
 
 void Plugin_ShallowWater::get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr)
@@ -2279,6 +1988,22 @@ void Plugin_ShallowWater::get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Fa
     fr = fR;
 }
 
+char Plugin_ShallowWater::boundary_side(CMap2::Edge e)
+{
+    assert(map2_->is_incident_to_boundary(e));
+    CMap2::Face f(e.dart);
+    CMap2::Vertex v1(e.dart);
+    SCALAR eX = -normY_[e];
+    SCALAR eY = normX_[e];
+    SCALAR fX = centroid_[f][0] - position_[v1][0];
+    SCALAR fY = centroid_[f][1] - position_[v1][1];
+    char r;
+    if(eX*fY-fX*eY > 0)
+        r = 'R';
+    else
+        r = 'L';
+    return r;
+}
 
 } // namespace plugin_shallow_water_2
 

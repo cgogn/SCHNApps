@@ -104,10 +104,17 @@ private:
 	uint8 face_level(CMap2::Face f);
 	FaceType face_type(CMap2::Face f);
 
-    Str_Riemann_Flux border_condition(int border_condition_choice, SCALAR val_bc, bool sideR,
+    /*Str_Riemann_Flux border_condition(int border_condition_choice, SCALAR val_bc, bool sideR,
                           SCALAR normX, SCALAR normY,
-                          SCALAR q, SCALAR r, SCALAR z, SCALAR zB);
+                          SCALAR q, SCALAR r, SCALAR z, SCALAR zB);*/
+    struct Str_Riemann_Flux border_condition(
+            char* typBC,SCALAR ValBC,char* side,
+                            SCALAR NormX,SCALAR NormY,
+                            SCALAR q,SCALAR r,SCALAR z,SCALAR zb,
+                            SCALAR g, SCALAR hmin, SCALAR small);
+
     void get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr);
+    char boundary_side(CMap2::Edge e);
 
     SCALAR min_0(SCALAR a, SCALAR b);
     SCALAR max_0(SCALAR a, SCALAR b);
@@ -120,16 +127,15 @@ private:
 	SCALAR dt_;
     SCALAR hmin_;
     SCALAR small_;
-    int solver_;
+    uint8 solver_;
     SCALAR v_max_;
     SCALAR Fr_max_;
-    int geometry_;
     SCALAR t_max_;
     SCALAR dt_max_;
-    int friction_;
+    uint8 friction_;
     SCALAR alphaK_;
     SCALAR kx_;
-    int nbr_iter_;
+    uint32 nbr_iter_;
 
 	QTimer* draw_timer_;
 	std::chrono::high_resolution_clock::time_point start_time_;
@@ -147,6 +153,8 @@ private:
     CMap2::VertexAttribute<SCALAR> scalar_value_v_;
     CMap2::VertexAttribute<VEC3> water_position_;
     CMap2::VertexAttribute<VEC3> flow_velocity_;
+    CMap2::VertexAttribute<uint32> NS_;
+    CMap2::VertexAttribute<uint32> vertex_id_;
 
     CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
 
@@ -161,6 +169,7 @@ private:
     CMap2::FaceAttribute<SCALAR> area_; //cell area
     CMap2::FaceAttribute<SCALAR> swept_;
     CMap2::FaceAttribute<SCALAR> discharge_;
+    CMap2::FaceAttribute<uint32> face_id_;
 
     CMap2::EdgeAttribute<SCALAR> f1_;
     CMap2::EdgeAttribute<SCALAR> f2_;
@@ -170,6 +179,8 @@ private:
     CMap2::EdgeAttribute<SCALAR> normX_;
     CMap2::EdgeAttribute<SCALAR> normY_;
     CMap2::EdgeAttribute<SCALAR> length_;
+    CMap2::EdgeAttribute<SCALAR> val_bc_;
+    CMap2::EdgeAttribute<char> typ_bc_;
 
 };
 
