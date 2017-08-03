@@ -64,6 +64,7 @@ public slots:
 	void init();
 	void start();
 	void stop();
+	void step();
 	bool is_simu_running();
 
 private slots:
@@ -71,6 +72,7 @@ private slots:
 	void update_draw_data();
 	void update_time_step();
 	void execute_time_step();
+
 	void try_subdivision();
 	void try_simplification();
 	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
