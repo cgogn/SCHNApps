@@ -60,6 +60,7 @@ public slots:
 	void init();
 	void start();
 	void stop();
+	void step();
 	bool is_simu_running();
 
 private slots:
@@ -154,7 +155,6 @@ private:
     CMap2::VertexAttribute<VEC3> water_position_;
     CMap2::VertexAttribute<VEC3> flow_velocity_;
     CMap2::VertexAttribute<uint32> NS_;
-    CMap2::VertexAttribute<uint32> vertex_id_;
 
     CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
 
@@ -163,13 +163,15 @@ private:
     CMap2::FaceAttribute<SCALAR> phi_; // porosité
     CMap2::FaceAttribute<SCALAR> zb_; // cote du fond
     CMap2::FaceAttribute<SCALAR> h_; // hauteur d'eau
+	CMap2::FaceAttribute<SCALAR> h_tmp_;
     CMap2::FaceAttribute<SCALAR> q_; // flux de quantité de mouvement dans la direction X
-    CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
+	CMap2::FaceAttribute<SCALAR> q_tmp_;
+	CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
+	CMap2::FaceAttribute<SCALAR> r_tmp_;
     CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
     CMap2::FaceAttribute<SCALAR> area_; //cell area
     CMap2::FaceAttribute<SCALAR> swept_;
     CMap2::FaceAttribute<SCALAR> discharge_;
-    CMap2::FaceAttribute<uint32> face_id_;
 
     CMap2::EdgeAttribute<SCALAR> f1_;
     CMap2::EdgeAttribute<SCALAR> f2_;

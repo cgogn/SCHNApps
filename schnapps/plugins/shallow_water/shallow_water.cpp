@@ -227,6 +227,8 @@ void Plugin_ShallowWater::start()
 		while (simu_running_)
 			execute_time_step();
 	});
+
+	dock_tab_->simu_running_state_changed();
 }
 
 void Plugin_ShallowWater::stop()
@@ -239,11 +241,23 @@ void Plugin_ShallowWater::stop()
 
 	simu_running_ = false;
 	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+
+	dock_tab_->simu_running_state_changed();
+}
+
+void Plugin_ShallowWater::step()
+{
+	if (simu_running_)
+		stop();
+	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	execute_time_step();
+	update_draw_data();
+	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
 }
 
 bool Plugin_ShallowWater::is_simu_running()
 {
-	return draw_timer_->isActive();
+	return simu_running_;
 }
 
 void Plugin_ShallowWater::update_draw_data()
@@ -283,6 +297,7 @@ void Plugin_ShallowWater::update_draw_data()
 
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_water_position");
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_flow_velocity");
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
 	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "flow_velocity");
 }
@@ -451,7 +466,6 @@ void Plugin_ShallowWater::execute_time_step()
 //			flux << centroid_[f][0] << "\t" << h_[f] << "\t" << h << "\t" << u_f << "\t" << u << endl;
 //		}, *qtrav_);
 	}
-
 
 //	auto end = std::chrono::high_resolution_clock::now();
 

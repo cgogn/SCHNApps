@@ -46,17 +46,26 @@ bool Plugin_ShallowWater::enable()
     dock_tab_ = new ShallowWater_DockTab(this->schnapps_, this);
     schnapps_->add_plugin_dock_tab(this, dock_tab_, "Shallow Water 2");
 
-    const unsigned int nbc = 4u;
+    const unsigned int nbc = 20u;
 
     map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water_2", 2));
     map2_ = static_cast<CMap2*>(map_->get_map());
     qtrav_ = cgogn::make_unique<CMap2::QuickTraversor>(*map2_);
 
-    std::string file = "/home/bloch/Desktop/SW2D_Shangzhi-master-472f6daecf3b023dbd229af1bb09a5bfb83eba6c/Test/902_Dambreak_Complexe/Input/";
+    std::cout << "plugin enable" << std::endl;
+
+    std::string file = "/home/bloch/Desktop/grid_10_10/";
     std::string str;
     std::string File_Mesh_2D; // Name of the 2D mesh file
 
     std::ifstream file_2d (file + "2d.in", std::ios::in); // open file "2d.in"
+
+    if (!file_2d.good())
+    {
+        std::cout << "ifstream not good" << std::endl;
+        return true;
+    }
+
     std::getline(file_2d,str); // read line "Input parameters for 2D simulation-version_2"
     std::getline(file_2d,str); // read line "==== Files & Folders"
     std::getline(file_2d,str); // read line "1D Mesh (2dm): None"
@@ -90,6 +99,9 @@ bool Plugin_ShallowWater::enable()
     Fr_max_ = atof(str.c_str()); // convert string to SCALAR
     file_2d.close(); // close file 2d.in
 
+    std::cout << "2d file end" << std::endl;
+    std::cout << t_ << " " << dt_max_ << std::endl;
+
     std::ifstream file_hydrau (file + "Hydrau_Param_2D.txt", std::ios::in); // open file "Hydrau_Param_2D.txt"
     std::getline(file_hydrau,str); // read line "Unif	1"
     std::getline(file_hydrau,str); // read line "==== Default Param"
@@ -103,9 +115,13 @@ bool Plugin_ShallowWater::enable()
     alphaK_ = atof(str.c_str()); // convert string to SCALAR
     file_hydrau.close(); // close file "Hydrau_Param_2D.txt"
 
+    std::cout << "hydrau param file end" << std::endl;
+
     // import mesh
     cgogn::io::import_surface<VEC3>(*map2_, file + File_Mesh_2D);
     position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+
+    std::cout << "mesh file imported" << std::endl;
 
     // import face_id_ and vertex_id from file "mesh.2dm"
     /*face_id_ = map_->get_attribute<uint32, CMap2::Face::ORBIT>("face_id");
@@ -129,13 +145,15 @@ bool Plugin_ShallowWater::enable()
     phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
     zb_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("zb");
     h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h");
+	h_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h_tmp");
     q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q");
-    r_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r");
+	q_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q_tmp");
+	r_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r");
+	r_tmp_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r_tmp");
     centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
     area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
     swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
     discharge_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("discharge");
-    face_id_ = map_->add_attribute<uint32, CMap2::Face::ORBIT>("face_id");
 
     f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
     f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
@@ -154,7 +172,6 @@ bool Plugin_ShallowWater::enable()
     water_position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("water_position");
     flow_velocity_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("flow_velocity");
     NS_ = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("NS");
-    vertex_id_ = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("vertex_id");
 
     cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
     cgogn::geometry::compute_area<VEC3, CMap2::Face>(*map2_, position_, area_);
@@ -163,103 +180,70 @@ bool Plugin_ShallowWater::enable()
     qtrav_->build<CMap2::Edge>();
     qtrav_->build<CMap2::Face>();
 
-    ///////////////////
-    /*map2_->foreach_cell(
+    map2_->parallel_foreach_cell(
         [&] (CMap2::Face f)
         {
-            if(centroid_[f][0] == 0 && centroid_[f][1] == -20./3.)
-                face_id_[f] = 1;
-            else if(centroid_[f][0] == 20./3. && centroid_[f][1] == 0.)
-                face_id_[f] = 2;
-            else if(centroid_[f][0] == 0. && centroid_[f][1] == 20./3.)
-                face_id_[f] = 3;
-            else if(centroid_[f][0] == -20./3. && centroid_[f][1] == 0.)
-                face_id_[f] = 4;
+            if (map2_->codegree(f) == 3)
+                tri_face_[f] = true;
             else
-                std::cout << "centroid " << centroid_[f][0] << "\t" << centroid_[f][1] << std::endl;
+                tri_face_[f] = false;
+            face_subd_id_[f] = 0;
+            map2_->foreach_dart_of_orbit(f, [&] (cgogn::Dart d) { dart_level_[d] = 0; });
+
+            phi_[f] = phi;
         },
         *qtrav_
     );
 
-    map2_->foreach_cell(
-        [&] (CMap2::Vertex v)
-        {
-            if(position_[v][0] == -10. && position_[v][1] == -10.)
-                vertex_id_[v] = 1;
-            else if(position_[v][0] == 10. && position_[v][1] == -10.)
-                vertex_id_[v] = 2;
-            else if(position_[v][0] == 10. && position_[v][1] == 10.)
-                vertex_id_[v] = 3;
-            else if(position_[v][0] == -10. && position_[v][1] == 10.)
-                vertex_id_[v] = 4;
-            else if(position_[v][0] == 0. && position_[v][1] == 0.)
-                vertex_id_[v] = 5;
-            else
-                std::cout << "position " << position_[v][0] << "\t" << position_[v][1] << std::endl;
-        },
-        *qtrav_
-    );*/
-    ////////////////////////////
-
     map2_->copy_attribute(water_position_, position_);
 
+    map2_->parallel_foreach_cell(
+        [&] (CMap2::Vertex v)
+        {
+            NS_[v] = 0;
+        },
+        *qtrav_
+    );
+
     std::ifstream file_mesh (file + File_Mesh_2D, std::ios::in); // open file "mesh.2dm" to read the NS part
-    std::string str2;
-    std::getline(file_mesh,str); // read line "MESH2D"
-    std::getline(file_mesh,str); // read line "MESHNAME "default coverage""
-    while(str.compare("NS") != 0) // read E3T or E4Q and ND lines until NS lines, but do not read the full first NS line
+    std::string tag;
+    do
     {
-        std::getline(file_mesh,str,' ');
-        if(str.compare("NS") != 0)
-            std::getline(file_mesh,str2);
-    }
-    // NS lines read character by character
-    // if the character is not a space nor a tab nor N nor S, keep it in a string
-    // else (the vertex id is read) convert the string to int and keep int in a vector
-    // if the int is less than 0, all the vertices id are read and the next character is the nodestring
-    // then look for the vertices with the same id as store in vector and assign NS_ value
-    int vertex_id_int = 0;
-    char c;
-    std::string vertex_id_str;
-    std::vector<int> vertex_id_vect;
-    while(!file_mesh.eof())
+        file_mesh >> tag;
+        cgogn::io::getline_safe(file_mesh, str);
+    } while (tag != std::string("NS") && (!file_mesh.eof()));
+
+    if (tag == std::string("NS"))
     {
-        file_mesh.get(c);
-        std::string s(1,c);
-        if(s.compare(" ") != 0 && s.compare("\t") != 0 && s.compare("N") != 0 && s.compare("S") != 0)
+        do
         {
-            vertex_id_str.push_back(c);
-        }
-        else
-        {
-            vertex_id_int = atoi(vertex_id_str.c_str());
-            if(vertex_id_int >= 0)
-                vertex_id_vect.push_back(vertex_id_int);
-            else
+            if (tag == std::string("NS")) // lecture d'une face
             {
-                vertex_id_vect.push_back(-vertex_id_int);
-                file_mesh.get(c); // read space
-                file_mesh.get(c); // read ns value
-                std::string s(1,c);
-                uint32 ns_read = atoi(s.c_str());
-                map2_->foreach_cell(
-                    [&] (CMap2::Vertex v)
-                    {
-                        for(int& i : vertex_id_vect)
-                        {
-                            if(vertex_id_[v] == i)
-                            {
-                                NS_[v] = ns_read;
-                            }
-                        }
-                    },
-                    *qtrav_
-                );
-                vertex_id_vect.clear();
+                std::stringstream oss(str);
+                uint32 vertex_id_int = 0;
+                std::vector<uint32> vertex_id_vect;
+                while (oss >> vertex_id_int)
+                    vertex_id_vect.push_back(vertex_id_int);
+
+                uint32 ns_num = vertex_id_vect.back();
+                vertex_id_vect.pop_back();
+                vertex_id_vect.back() *= -1;
+
+                for (uint32 vertex_index : vertex_id_vect)
+                {
+                    CMap2::Vertex v = qtrav_->get<CMap2::Vertex>(vertex_index-1);
+                    NS_[v] = ns_num;
+                }
             }
-        }
+
+            file_mesh >> tag;
+            cgogn::io::getline_safe(file_mesh, str);
+        } while (!file_mesh.eof());
     }
+
     file_mesh.close(); // close file "mesh.2dm"
+
+    std::cout << "mesh file end (NS)" << std::endl;
 
     std::ifstream file_ic (file + "Initial_Cond_2D.txt", std::ios::in); // open file "Initial_Cond_2D.txt"
     std::getline(file_ic,str); // read line "Unif   0"
@@ -271,36 +255,17 @@ bool Plugin_ShallowWater::enable()
     // each face has a face_id witch match the line number of the file
     while(std::getline(file_ic,str, '\t')) // read value of h
     {
-        map2_->foreach_cell(
-            [&] (CMap2::Face f)
-            {
-                if(face_id_[f] == line)
-                {
-                    h_[f] = atof(str.c_str()); // convert string to SCALAR
-                    std::getline(file_ic,str,'\t'); // read value of q
-                    q_[f] = atof(str.c_str()); // convert string to SCALAR
-                    std::getline(file_ic,str); // read value of r
-                    r_[f] = atof(str.c_str()); // convert string to SCALAR
-                    line++;
-                }
-            },
-            *qtrav_
-        );
+        CMap2::Face f = qtrav_->get<CMap2::Face>(line-1);
+        h_[f] = atof(str.c_str()); // convert string to SCALAR
+        std::getline(file_ic,str,'\t'); // read value of q
+        q_[f] = atof(str.c_str()); // convert string to SCALAR
+        std::getline(file_ic,str); // read value of r
+        r_[f] = atof(str.c_str()); // convert string to SCALAR
+        line++;
     }
     file_ic.close(); // close file "Initial_Cond_2D.txt"
 
-    map2_->parallel_foreach_cell(
-        [&] (CMap2::Face f)
-        {
-            if (map2_->codegree(f) == 3)
-                tri_face_[f] = true;
-            else
-                tri_face_[f] = false;
-            face_subd_id_[f] = 0;
-            map2_->foreach_dart_of_orbit(f, [&] (cgogn::Dart d) { dart_level_[d] = 0; });
-        },
-        *qtrav_
-    );
+    std::cout << "IC file end" << std::endl;
 
     std::ifstream file_bc (file + "BC_2D.lim", std::ios::in); // open file "BC_2D.lim"
     std::getline(file_bc,str); // read line "2D BC time series"
@@ -311,80 +276,92 @@ bool Plugin_ShallowWater::enable()
     std::getline(file_bc,str); // read line "========================="
     // for NS, Type and Value (only one value instead of Number_of_values_in_the_time_series values), there is Number_of_BC int, char or SCALAR to store
     // the last column is not read like the others because it ends with a new line instead of a tab
-    uint32 tab_ns[Number_of_BC];
-    std::getline(file_bc,str, '\t'); // read "NS"
 
-    for(int i = 0; i < Number_of_BC-1; i++)
+    if (Number_of_BC > 0)
     {
-        std::getline(file_bc,str, '\t'); // read the signed nodestring
-        std::string ns_tmp(1,str[1]); // keep only the figure, all nodestring are less than 0
-        tab_ns[i] = atoi(ns_tmp.c_str()); // convert string to int
-    }
-    // last column
-    std::getline(file_bc,str);
-    std::string ns_tmp (1,str[1]);
-    tab_ns[Number_of_BC-1] = atoi(ns_tmp.c_str());
+        uint32 tab_ns[Number_of_BC];
+        std::getline(file_bc,str, '\t'); // read "NS"
 
-    char tab_type[Number_of_BC];
-    std::getline(file_bc,str, '\t'); // read "Type"
-    for(int i = 0; i < Number_of_BC-1; i++)
-    {
-        std::getline(file_bc,str, '\t'); // read char
-        tab_type[i] = str[0];
-    }
-    // last column
-    std::getline(file_bc,str);
-    tab_type[Number_of_BC-1] = str[0];
-
-    std::getline(file_bc,str); // read line "========================="
-    std::getline(file_bc,str); // read line "Time	Value"
-    SCALAR tab_value[Number_of_BC];
-    std::getline(file_bc,str, '\t'); // read time
-    for(int i = 0; i < Number_of_BC-1; i++)
-    {
-        std::getline(file_bc,str, '\t'); // read value
-        tab_value[i] = atof(str.c_str()); // convert string to SCALAR
-    }
-    // last column
-    std::getline(file_bc,str); // read value
-    tab_value[Number_of_BC-1] = atof(str.c_str()); // convert string to SCALAR
-    file_bc.close(); // close file "BC_2D.lim"
-
-    // assign typ_bc and val_bc to incident to boundary edges e
-    // if the vertex (e.dart) has a non zero NS, its value will be in the table tab_ns
-    //and the position of this value will give the position in tab_type and tab_value for typ_be_[e] and val_bc_[e]
-    // else typ_bc_[e] = 'q' and val_bc_[e] = 0
-    map2_->parallel_foreach_cell(
-        [&] (CMap2::Edge e)
+        for(int i = 0; i < Number_of_BC-1; i++)
         {
-            if(!map2_->is_incident_to_boundary(e))
-                return;
+            std::getline(file_bc,str, '\t'); // read the signed nodestring
+            std::string ns_tmp(1,str[1]); // keep only the figure, all nodestring are less than 0
+            tab_ns[i] = atoi(ns_tmp.c_str()); // convert string to int
+        }
+        // last column
+        std::getline(file_bc,str);
+        std::string ns_tmp (1,str[1]);
+        tab_ns[Number_of_BC-1] = atoi(ns_tmp.c_str());
 
-            CMap2::Vertex v(e.dart);
-            for(int i = 0; i < Number_of_BC; i++)
+        char tab_type[Number_of_BC];
+        std::getline(file_bc,str, '\t'); // read "Type"
+        for(int i = 0; i < Number_of_BC-1; i++)
+        {
+            std::getline(file_bc,str, '\t'); // read char
+            tab_type[i] = str[0];
+        }
+        // last column
+        std::getline(file_bc,str);
+        tab_type[Number_of_BC-1] = str[0];
+
+        std::getline(file_bc,str); // read line "========================="
+        std::getline(file_bc,str); // read line "Time	Value"
+        SCALAR tab_value[Number_of_BC];
+        std::getline(file_bc,str, '\t'); // read time
+        for(int i = 0; i < Number_of_BC-1; i++)
+        {
+            std::getline(file_bc,str, '\t'); // read value
+            tab_value[i] = atof(str.c_str()); // convert string to SCALAR
+        }
+        // last column
+        std::getline(file_bc,str); // read value
+        tab_value[Number_of_BC-1] = atof(str.c_str()); // convert string to SCALAR
+
+        // assign typ_bc and val_bc to incident to boundary edges e
+        // if the vertex (e.dart) has a non zero NS, its value will be in the table tab_ns
+        //and the position of this value will give the position in tab_type and tab_value for typ_be_[e] and val_bc_[e]
+        // else typ_bc_[e] = 'q' and val_bc_[e] = 0
+        map2_->parallel_foreach_cell(
+            [&] (CMap2::Edge e)
             {
-                if(NS_[v] == tab_ns[i])
-                {
-                    typ_bc_[e] = tab_type[i];
-                    val_bc_[e] = tab_value[i];
-                }
-            }
-            if(NS_[v] == 0)
-            {
+                if(!map2_->is_incident_to_boundary(e))
+                    return;
+
                 typ_bc_[e] = 'q';
                 val_bc_[e] = 0.;
-            }
-        },
-        *qtrav_
-    );
 
-    map2_->parallel_foreach_cell(
-        [&] (CMap2::Face f)
-        {
-            phi_[f] = phi;
-        },
-        *qtrav_
-    );
+                CMap2::Vertex v1(e.dart);
+                CMap2::Vertex v2(map2_->phi2(e.dart));
+                for(int i = 0; i < Number_of_BC; i++)
+                {
+                    if(NS_[v1] == tab_ns[i] && NS_[v2] == tab_ns[i])
+                    {
+                        typ_bc_[e] = tab_type[i];
+                        val_bc_[e] = tab_value[i];
+                    }
+                }
+            },
+            *qtrav_
+        );
+    }
+    else
+    {
+        map2_->parallel_foreach_cell(
+            [&] (CMap2::Edge e)
+            {
+                if(!map2_->is_incident_to_boundary(e))
+                    return;
+
+                typ_bc_[e] = 'q';
+                val_bc_[e] = 0.;
+            },
+            *qtrav_
+        );
+    }
+
+    file_bc.close(); // close file "BC_2D.lim"
+
+    std::cout << "BC file end" << std::endl;
 
     init();
 
@@ -409,6 +386,22 @@ void Plugin_ShallowWater::init()
 
     hmin_ = 1e-3; // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
     small_ = 1e-35; // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
+
+
+    map2_->foreach_cell(
+        [&] (CMap2::Edge e)
+        {
+            if(!map2_->is_incident_to_boundary(e))
+                return;
+
+            CMap2::Vertex v1(e.dart);
+            CMap2::Vertex v2(map2_->phi2(e.dart));
+            std::cout << position_[v1][0] << "\t" << position_[v1][1] << std::endl;
+            std::cout << position_[v2][0] << "\t" << position_[v2][1] << std::endl;
+            std::cout << val_bc_[e] << std::endl << std::endl;
+        },
+        *qtrav_
+    );
 
     map2_->parallel_foreach_cell(
         [&] (CMap2::Vertex v)
@@ -451,13 +444,15 @@ void Plugin_ShallowWater::start()
     start_time_ = std::chrono::high_resolution_clock::now();
 
     schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
-    draw_timer_->start(20);
+	draw_timer_->start(100);
     simu_running_ = true;
     simu_future_ = cgogn::launch_thread([&] () -> void
     {
         while (simu_running_)
             execute_time_step();
     });
+
+	dock_tab_->simu_running_state_changed();
 }
 
 void Plugin_ShallowWater::stop()
@@ -470,11 +465,23 @@ void Plugin_ShallowWater::stop()
 
     simu_running_ = false;
     schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+
+	dock_tab_->simu_running_state_changed();
+}
+
+void Plugin_ShallowWater::step()
+{
+	if (simu_running_)
+		stop();
+	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	execute_time_step();
+	update_draw_data();
+	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
 }
 
 bool Plugin_ShallowWater::is_simu_running()
 {
-    return draw_timer_->isActive();
+	return simu_running_;
 }
 
 void Plugin_ShallowWater::update_draw_data()
@@ -514,24 +521,24 @@ void Plugin_ShallowWater::update_draw_data()
             flow_velocity_[v][1] = r/h;
         },
         *qtrav_
-    );
-
-    simu_data_access_.unlock();
+	);
 
     map_->notify_connectivity_change();
     map_->init_primitives(cgogn::rendering::POINTS);
     map_->init_primitives(cgogn::rendering::LINES);
     map_->init_primitives(cgogn::rendering::TRIANGLES);
-    map_->init_primitives(cgogn::rendering::BOUNDARY);
-
-    map_->unlock_topo_access();
+	map_->init_primitives(cgogn::rendering::BOUNDARY);
 
     // notify attribute changes
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_h");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_u");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_v");
+	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
     map_->notify_attribute_change(CMap2::Vertex::ORBIT, "flow_velocity");
+
+	simu_data_access_.unlock();
+	map_->unlock_topo_access();
 }
 
 
@@ -685,10 +692,10 @@ void Plugin_ShallowWater::execute_time_step()
                 CMap2::Face fL,fR;
                 get_LR_faces(e,fL,fR);
 
-                if((area_[fL] == 0 || area_[fR] == 0) && simu_running_)
+				if((area_[fL] == 0 || area_[fR] == 0) && simu_running_)
                 {
                     std::cout << "stop car aire nulle" << std::endl;
-                    simu_running_ = false;
+					stop();
                 }
 
                 SCALAR phiL = phi_[fL];
@@ -717,11 +724,15 @@ void Plugin_ShallowWater::execute_time_step()
             s2R_[e] = riemann_flux.s2R;
         },
         *qtrav_
-    );
-//    std::cout << "flux" << std::endl;
+	);
 
-    update_time_step();
-//    std::cout << "update time step" << std::endl;
+	update_time_step();
+
+//	h_tmp_.set_all_values(0.);
+//	q_tmp_.set_all_values(0.);
+//	r_tmp_.set_all_values(0.);
+
+	simu_data_access_.lock();
 
     map2_->foreach_cell(
         [&] (CMap2::Edge e)
@@ -749,7 +760,6 @@ void Plugin_ShallowWater::execute_time_step()
                     r_[f] = r_[f] + factR*(f3_[e]*normX_[e] + f2_[e]*normY_[e]);
                 }
             }
-
             else // inner cell
             {
                 CMap2::Face fL, fR;
@@ -760,17 +770,17 @@ void Plugin_ShallowWater::execute_time_step()
                     factL = fact/area_[fL]*phi_[fL];
                 if(phi_[fR] > small_)
                     factR = fact/area_[fR]*phi_[fR];
-                h_[fL] = h_[fL] - factL*f1_[e];
-                h_[fR] = h_[fR] + factR*f1_[e];
-                q_[fL] = q_[fL] + factL * ((-f2_[e] + s2L_[e])*normX_[e] + f3_[e]*normY_[e]);
-                q_[fR] = q_[fR] + factR * (( f2_[e] + s2R_[e])*normX_[e] - f3_[e]*normY_[e]);
-                r_[fL] = r_[fL] + factL*(-f3_[e]*normX_[e] + (-f2_[e]+s2L_[e])*normY_[e]);
-                r_[fR] = r_[fR] + factR*( f3_[e]*normX_[e] + ( f2_[e]+s2R_[e])*normY_[e]);
+				h_[fL] = h_[fL] - factL*f1_[e];
+				h_[fR] = h_[fR] + factR*f1_[e];
+				q_[fL] = q_[fL] + factL * ((-f2_[e] + s2L_[e])*normX_[e] + f3_[e]*normY_[e]);
+				q_[fR] = q_[fR] + factR * (( f2_[e] + s2R_[e])*normX_[e] - f3_[e]*normY_[e]);
+				r_[fL] = r_[fL] + factL*(-f3_[e]*normX_[e] + (-f2_[e]+s2L_[e])*normY_[e]);
+				r_[fR] = r_[fR] + factR*( f3_[e]*normX_[e] + ( f2_[e]+s2R_[e])*normY_[e]);
             }
-
         },
         *qtrav_
-    );
+	);
+
 //    std::cout << "balance" << std::endl;
 
     map2_->parallel_foreach_cell(
@@ -782,57 +792,60 @@ void Plugin_ShallowWater::execute_time_step()
             // friction
             if(friction_ != 0)
             {
-                SCALAR qx = q_[f]*cos(alphaK_) + r_[f]*sin(alphaK_);
-                SCALAR qy = - q_[f]*sin(alphaK_) + r_[f]*cos(alphaK_);
+				SCALAR qx = q_[f]*cos(alphaK_) + r_[f]*sin(alphaK_);
+				SCALAR qy = - q_[f]*sin(alphaK_) + r_[f]*cos(alphaK_);
                 if(h_[f] > hmin_)
                 {
-                    qx = qx * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (max_0(kx_*kx_,small_*small_) * pow(h_[f],7./3.))) * dt_);
-                    qy = qy * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (max_0(kx_*kx_,small_*small_) * pow(h_[f],7./3.))) * dt_);
+					qx = qx * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (max_0(kx_*kx_,small_*small_) * pow(h_[f],7./3.))) * dt_);
+					qy = qy * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (max_0(kx_*kx_,small_*small_) * pow(h_[f],7./3.))) * dt_);
                 }
                 else
                 {
                     qx = 0.;
                     qy = 0.;
                 }
-                q_[f] = qx*cos(alphaK_) - qy*sin(alphaK_);
-                r_[f] = qx*sin(alphaK_) + qy*cos(alphaK_);
+				q_[f] = qx*cos(alphaK_) - qy*sin(alphaK_);
+				r_[f] = qx*sin(alphaK_) + qy*cos(alphaK_);
             }
 
             // optional correction
             // Negative water depth
-            if(h_[f] < 0.)
+			if(h_[f] < 0.)
             {
-                h_[f] = 0.;
-                q_[f] = 0.;
-                r_[f] = 0.;
+				h_[f] = 0.;
+				q_[f] = 0.;
+				r_[f] = 0.;
             }
             // Abnormal large velocity => Correction of q and r to respect Vmax and Frmax
-            if(h_[f] > hmin_)
+			if(h_[f] > hmin_)
             {
-                SCALAR v = sqrt(q_[f]*q_[f]+r_[f]*r_[f])/max_0(h_[f],small_);
-                SCALAR c = sqrt(9.81*max_0(h_[f],small_));
+				SCALAR v = sqrt(q_[f]*q_[f]+r_[f]*r_[f])/max_0(h_[f],small_);
+				SCALAR c = sqrt(9.81*max_0(h_[f],small_));
                 SCALAR Fr = v/c;
                 SCALAR Fact = max_1(1e0, v/v_max_, Fr/Fr_max_);
-                q_[f] /= Fact;
-                r_[f] /= Fact;
+				q_[f] /= Fact;
+				r_[f] /= Fact;
             }
             // Quasi-zero
             else
             {
-                q_[f] = 0.;
-                r_[f] = 0.;
+				q_[f] = 0.;
+				r_[f] = 0.;
             }
         },
         *qtrav_
     );
-//    std::cout << "optional corrections" << std::endl;
 
-    /*map_->lock_topo_access();
-    //try_simplification();
-    //std::cout << "simplification" << std::endl;
-    try_subdivision();
-    std::cout << "subdivision" << std::endl;
-    map_->unlock_topo_access();*/
+//	map2_->swap_attributes(h_, h_tmp_);
+//	map2_->swap_attributes(q_, q_tmp_);
+//	map2_->swap_attributes(r_, r_tmp_);
+
+	simu_data_access_.unlock();
+
+    map_->lock_topo_access();
+	try_simplification();
+	try_subdivision();
+    map_->unlock_topo_access();
 
     t_ += dt_;
     nbr_iter_++;
@@ -870,8 +883,6 @@ void Plugin_ShallowWater::execute_time_step()
 
         if (sleep_duration > std::chrono::nanoseconds::zero())
             std::this_thread::sleep_for(sleep_duration);*/
-
-    //std::cout << std::endl;
 }
 
 void Plugin_ShallowWater::try_subdivision()
@@ -884,7 +895,7 @@ void Plugin_ShallowWater::try_subdivision()
             if (subdivided.is_marked(f))
                 return;
 
-            if (face_level(f) > 1)
+			if (face_level(f) > 1)
                 return;
 
             std::cout << nbr_iter_ << "\t" << face_level(f) << std::endl;
@@ -1007,8 +1018,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
     {
         if (face_level(af) < fl)
             subdivide_face(af, subdivided);
-    });
-    std::cout << "check neighbours level" << std::endl;
+	});
 
     // cut edges (if not already done)
     // the new vertex is the center of the edge
@@ -1025,23 +1035,23 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
             CMap2::Vertex v1(it);
             CMap2::Vertex v2(map2_->phi1(it));
             CMap2::Vertex v = map2_->cut_edge(CMap2::Edge(it));
-            position_[v] = (position_[v1] + position_[v2])/2.;
-            if(map2_->is_incident_to_boundary(CMap2::Edge(it)))
-            {
-                dart_level_[map2_->phi1(it)] = fl+1;
-            }
-            else
-            {
+			position_[v] = (position_[v1] + position_[v2]) / 2.;
+			water_position_[v] = position_[v];
+			if(map2_->is_incident_to_boundary(CMap2::Edge(it)))
+			{
+				dart_level_[map2_->phi1(it)] = fl+1;
+			}
+			else
+			{
                 dart_level_[map2_->phi1(it)] = fl+1;
                 dart_level_[map2_->phi2(it)] = fl+1;
-            }
+			}
             qtrav_->update(v);
             qtrav_->update(CMap2::Edge(it));
             qtrav_->update(CMap2::Edge(map2_->phi1(it)));
         }
         it = next;
-    } while (it != f.dart);
-    std::cout << "cut edge" << std::endl;
+	} while (it != f.dart);
 
     if (tri_face_[f])
     {
@@ -1069,8 +1079,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         });
         zb_[CMap2::Face(it)] /= nbv;
         centroid_[CMap2::Face(it)] = cgogn::geometry::centroid<VEC3>(*map2_, CMap2::Face(it), position_);
-        area_[CMap2::Face(it)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it), position_);
-//        std::cout << "face tri 1" << std::endl;
+		area_[CMap2::Face(it)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it), position_);
 
         it = map2_->phi<11>(it2);
         e = map2_->cut_face(it, it2);
@@ -1093,13 +1102,10 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         });
         zb_[CMap2::Face(it2)] /= nbv;
         centroid_[CMap2::Face(it2)] = cgogn::geometry::centroid<VEC3>(*map2_, CMap2::Face(it2), position_);
-        area_[CMap2::Face(it2)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it2), position_);
-//        std::cout << "face tri 2" << std::endl;
+		area_[CMap2::Face(it2)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it2), position_);
 
-        it2 = map2_->phi<11>(it);
-//        std::cout << "it2" << std::endl;
-        e = map2_->cut_face(it, it2);
-//        std::cout << "cut face" << std::endl;
+		it2 = map2_->phi<11>(it);
+		e = map2_->cut_face(it, it2);
         dart_level_[e.dart] = fl+1;
         dart_level_[map2_->phi2(e.dart)] = fl+1;
         face_subd_id_[CMap2::Face(it)] = 4*fid+3;
@@ -1120,8 +1126,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         });
         zb_[CMap2::Face(it)] /= nbv;
         centroid_[CMap2::Face(it)] = cgogn::geometry::centroid<VEC3>(*map2_, CMap2::Face(it), position_);
-        area_[CMap2::Face(it)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it), position_);
-//        std::cout << "face tri 3" << std::endl;
+		area_[CMap2::Face(it)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it), position_);
 
         face_subd_id_[CMap2::Face(it2)] = 4*fid+4;
         tri_face_[CMap2::Face(it2)] = true;
@@ -1141,8 +1146,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         });
         zb_[CMap2::Face(it2)] /= nbv;
         centroid_[CMap2::Face(it2)] = cgogn::geometry::centroid<VEC3>(*map2_, CMap2::Face(it2), position_);
-        area_[CMap2::Face(it2)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it2), position_);
-//        std::cout << "face tri 4" << std::endl;
+		area_[CMap2::Face(it2)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it2), position_);
     }
 
     else
@@ -1154,18 +1158,16 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         dart_level_[e.dart] = fl+1;
         dart_level_[map2_->phi2(e.dart)] = fl+1;
         tri_face_[CMap2::Face(it2)] = false;
-        subdivided.mark(CMap2::Face(it2));
-        qtrav_->update(CMap2::Face(it2));
-        std::cout << "add edge" << std::endl;
+		subdivided.mark(CMap2::Face(it2));
 
         CMap2::Vertex v = map2_->cut_edge(e);
         position_[v] = old_centroid;
+		water_position_[v] = position_[v];
         dart_level_[map2_->phi1(e.dart)] = fl+1;
         dart_level_[map2_->phi2(e.dart)] = fl+1;
         qtrav_->update(v);
         qtrav_->update(e);
-        qtrav_->update(CMap2::Edge(map2_->phi1(e.dart)));
-        std::cout << "add vertex" << std::endl;
+		qtrav_->update(CMap2::Edge(map2_->phi1(e.dart)));
 
         it = map2_->phi2(e.dart);
         it2 = map2_->phi<11>(it2);
@@ -1173,37 +1175,22 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         {
             CMap2::Edge ee = map2_->cut_face(it, it2);
 
-            CMap2::Vertex v1(ee.dart);
-            CMap2::Vertex v2(map2_->phi2(ee.dart));
-            std::cout << position_[v1][0] << "\t" << position_[v1][1] << std::endl;
-            std::cout << position_[v2][0] << "\t" << position_[v2][1] << std::endl;
+			dart_level_[ee.dart] = fl+1;
+			dart_level_[map2_->phi2(ee.dart)] = fl+1;
+			tri_face_[CMap2::Face(it2)] = false;
+			subdivided.mark(CMap2::Face(it2));
+			qtrav_->update(ee);
 
-            std::cout << "ee" << std::endl;
-            dart_level_[ee.dart] = fl+1;
-            std::cout << "dart level ee" << std::endl;
-            dart_level_[map2_->phi2(ee.dart)] = fl+1;
-            std::cout << "dart level phi2 ee" << std::endl;
-            tri_face_[CMap2::Face(it2)] = false;
-            std::cout << "tri face" << std::endl;
-            subdivided.mark(CMap2::Face(it2));
-            std::cout << "mark" << std::endl;
-            qtrav_->update(ee);
-            std::cout << "qtrav" << std::endl;
-            qtrav_->update(CMap2::Face(it2));
+			it = map2_->phi2(map2_->phi_1(it));
+			it2 = map2_->phi<11>(it2);
+		} while (map2_->phi1(it2) != it);
 
-            it = map2_->phi2(map2_->phi_1(it));
-            std::cout << "it" << std::endl;
-            it2 = map2_->phi<11>(it2);
-            std::cout << "it2" << std::endl;
-
-        } while (map2_->phi1(it2) != it);
-        std::cout << "boucle edges" << std::endl;
-
-        int cmpt = 0;
+		int cmpt = 0;
         map2_->foreach_incident_face(v, [&] (CMap2::Face af)
         {
             cmpt++;
             face_subd_id_[af] = 4*fid+cmpt;
+			qtrav_->update(af);
             h_[af] = old_h;
             q_[af] = old_q;
             r_[af] = old_r;
@@ -1218,8 +1205,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
                 nbv++;
             });
             zb_[af] /= nbv;
-        });
-        std::cout << "maj valeurs subdivision" << std::endl;
+		});
     }
 }
 
@@ -1248,8 +1234,7 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
             resF = od;
             break;
         }
-        case TRI_CENTRAL:
-        {
+		case TRI_CENTRAL: {
             resF = map2_->phi_1(map2_->phi2(f.dart));
             break;
         }
@@ -1277,8 +1262,7 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
         it = next;
         map2_->merge_incident_faces(CMap2::Edge(it));
 
-        tri_face_[CMap2::Face(resF)] = true;
-//        std::cout << "merge incident faces tri" << std::endl;
+		tri_face_[CMap2::Face(resF)] = true;
     }
 
     else
@@ -1298,10 +1282,28 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 
         map2_->merge_incident_faces(CMap2::Vertex(it));
 
-        tri_face_[CMap2::Face(resF)] = false;
-//        std::cout << "merge incident faces quad" << std::endl;
-
+		tri_face_[CMap2::Face(resF)] = false;
     }
+
+	// simplify edges (if possible)
+	cgogn::Dart it = resF;
+	do
+	{
+		cgogn::Dart next = map2_->phi<11>(it);
+		if (map2_->is_incident_to_boundary(CMap2::Edge(map2_->phi2(it))) || face_level(CMap2::Face(map2_->phi2(it))) == fl-1)
+		{
+			map2_->merge_incident_edges(CMap2::Vertex(map2_->phi1(it)));
+			qtrav_->update(CMap2::Edge(it));
+		}
+		else
+		{
+			qtrav_->update(CMap2::Vertex(map2_->phi1(it)));
+		}
+		it = next;
+	} while (it != resF);
+
+	face_subd_id_[resF] = uint32((fid-1)/4);
+	qtrav_->update(CMap2::Face(resF));
 
     SCALAR area = 0.;
     h_[CMap2::Face(resF)] = 0.;
@@ -1329,33 +1331,12 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
     });
     zb_[CMap2::Face(resF)] /= nbv;
     centroid_[CMap2::Face(resF)] = cgogn::geometry::centroid<VEC3>(*map2_, CMap2::Face(resF), position_);
-    area_[CMap2::Face(resF)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(resF), position_);
-    face_subd_id_[resF] = uint32((fid-1)/4);
-    qtrav_->update(CMap2::Face(resF));
+	area_[CMap2::Face(resF)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(resF), position_);
 
     if(area_[CMap2::Face(resF)] == 0)
     {
         // supprimer resF ou Face(resF)
-    }
-//    std::cout << "maj valeurs simplification" << std::endl;
-
-    // simplify edges (if possible)    
-    cgogn::Dart it = resF;
-    do
-    {
-        cgogn::Dart next = map2_->phi<11>(it);
-        if (map2_->is_boundary_cell(CMap2::Face(map2_->phi2(it))) || face_level(CMap2::Face(map2_->phi2(it))) == fl-1)
-        {
-            map2_->merge_incident_edges(CMap2::Vertex(map2_->phi1(it)));
-            qtrav_->update(CMap2::Edge(it));
-        }
-        else
-        {
-            qtrav_->update(CMap2::Vertex(map2_->phi1(it)));
-        }
-        it = next;
-    } while (it != resF);
-//    std::cout << "simplify edges" << std::endl;
+	}
 }
 
 cgogn::Dart Plugin_ShallowWater::oldest_dart(CMap2::Face f)
