@@ -35,6 +35,8 @@
 
 #include <cgogn/io/map_import.h>
 
+#include <cgogn/core/utils/thread.h>
+
 namespace schnapps
 {
 
@@ -46,7 +48,7 @@ bool Plugin_ShallowWater::enable()
     dock_tab_ = new ShallowWater_DockTab(this->schnapps_, this);
     schnapps_->add_plugin_dock_tab(this, dock_tab_, "Shallow Water 2");
 
-	const unsigned int nbc = 50u;
+	const unsigned int nbc = 10u;
 
     map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water_2", 2));
     map2_ = static_cast<CMap2*>(map_->get_map());
@@ -58,6 +60,17 @@ bool Plugin_ShallowWater::enable()
     position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
     cgogn::modeling::SquareGrid<CMap2> grid(*map2_, nbc, nbc);
     grid.embed_into_grid(position_, 200.0f, 200.0f, 0.0f);
+
+	map2_->foreach_cell(
+		[&] (CMap2::Face f)
+		{
+			map2_->cut_face(f.dart, map2_->phi<11>(f.dart));
+		},
+		[&] (CMap2::Face f) -> bool
+		{
+			return position_[CMap2::Vertex(f.dart)][0] < 0.;
+		}
+	);
 
     /*SCALAR max_x = 0.;
     SCALAR max_y = 0.;
@@ -207,7 +220,7 @@ void Plugin_ShallowWater::init()
                 if(centroid_[f][1] > 65)
                     h_[f] = 10;
                 else
-                    h_[f] = 5.;
+					h_[f] = 5.;
             }
             // ============= dambreak
 
@@ -218,7 +231,7 @@ void Plugin_ShallowWater::init()
                 if(centroid_[f][1] > 0.)
                     h_[f] = 10;
                 else
-                    h_[f] = 5.;
+					h_[f] = 1.;
             }
             // ============= square grid
 
@@ -777,13 +790,13 @@ void Plugin_ShallowWater::execute_time_step()
                             v = v_aux;
                         }
                         if(position_[v][0] == -100)
-                            riemann_flux = border_condition(4,0.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
+							riemann_flux = border_condition(4, 0., false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
                         else if(position_[v][1] == -100)
-                            riemann_flux = border_condition(2,5.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
+							riemann_flux = border_condition(2, 3., true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
                         else if(position_[v][0] == 100)
-                            riemann_flux = border_condition(4,0.,true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
+							riemann_flux = border_condition(4, 0., true, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
                         else if(position_[v][1] == 100)
-                            riemann_flux = border_condition(2,10.,false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
+							riemann_flux = border_condition(2, 10., false, normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f]);
                     }
                     // =================== square grid
 
@@ -1189,7 +1202,7 @@ void Plugin_ShallowWater::execute_time_step()
 
 	simu_data_access_.unlock();
 
-    map_->lock_topo_access();
+	map_->lock_topo_access();
 	try_simplification();
 	try_subdivision();
     map_->unlock_topo_access();
@@ -1225,15 +1238,13 @@ void Plugin_ShallowWater::execute_time_step()
 
 void Plugin_ShallowWater::try_subdivision()
 {
-    CMap2::CellMarker<CMap2::Face::ORBIT> subdivided(*map2_);
+	std::vector<CMap2::Face>* to_subdivide = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
+	CMap2::CellMarker<CMap2::Face::ORBIT> subdivided(*map2_);
 
-    map2_->foreach_cell(
+	map2_->foreach_cell(
         [&] (CMap2::Face f)
-        {
-            if (subdivided.is_marked(f))
-                return;
-
-			if (face_level(f) > 1)
+		{
+			if (face_level(f) >= 3)
                 return;
 
             std::vector<SCALAR> diff_h;
@@ -1259,21 +1270,35 @@ void Plugin_ShallowWater::try_subdivision()
                 max_diff_zb = std::max(max_diff_zb,diff_zb[i]);
             }
 
-            //if ( /* a certain condition is met */ true)
-            if(max_diff_h > 2.01914/50. || max_diff_q > 8.44341/50. || max_diff_r > 8.44341/50. || max_diff_zb > 0)
-                subdivide_face(f, subdivided);
+			//if(max_diff_h > 2.01914/50. || max_diff_q > 8.44341/50. || max_diff_r > 8.44341/50. || max_diff_zb > 0)
+			if (max_diff_h > 0.2)
+				to_subdivide->push_back(f);
         },
         *qtrav_
-    );
+	);
+
+	for (CMap2::Face f : *to_subdivide)
+	{
+		if (!subdivided.is_marked(f))
+			subdivide_face(f, subdivided);
+	}
+
+	cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(to_subdivide);
 }
 
 void Plugin_ShallowWater::try_simplification()
 {
-    map2_->foreach_cell(
+	std::vector<CMap2::Face>* to_simplify = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
+	CMap2::CellMarker<CMap2::Face::ORBIT> simplified(*map2_);
+
+	map2_->foreach_cell(
         [&] (CMap2::Face f)
         {
             if (face_level(f) == 0)
                 return;
+
+			if (simplified.is_marked(f))
+				return;
 
             switch (face_type(f))
             {
@@ -1343,11 +1368,48 @@ void Plugin_ShallowWater::try_simplification()
             }
 
             //if ( /* a certain condition is met */ true)
-            if(max_diff_h < 0.7 && max_diff_q < 0.1 && max_diff_r < 0.1)
-                simplify_face(f);
+			if(max_diff_h < 0.1) // && max_diff_q < 0.1 && max_diff_r < 0.1)
+			{
+				to_simplify->push_back(f);
+				switch (face_type(f))
+				{
+					case TRI_CORNER: {
+						CMap2::Face cf(map2_->phi<12>(oldest_dart(f))); // central face
+						simplified.mark(cf);
+						map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face iface)
+						{
+							simplified.mark(iface);
+						});
+						break;
+					}
+					case TRI_CENTRAL: {
+						simplified.mark(f);
+						map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face iface)
+						{
+							simplified.mark(iface);
+						});
+						break;
+					}
+					case QUAD: {
+						cgogn::Dart cv = map2_->phi2(map2_->phi1(oldest_dart(f)));
+						map2_->foreach_incident_face(CMap2::Vertex(cv), [&] (CMap2::Face iface)
+						{
+							simplified.mark(iface);
+						});
+						break;
+					}
+				}
+			}
         },
         *qtrav_
     );
+
+	for (CMap2::Face f : *to_simplify)
+	{
+		simplify_face(f);
+	}
+
+	cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(to_simplify);
 }
 
 void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided)
@@ -1420,7 +1482,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         r_[CMap2::Face(it)] = old_r;
         phi_[CMap2::Face(it)] = old_phi;
         zb_[CMap2::Face(it)] = 0.;
-        int nbv = 0.;
+		uint32 nbv = 0;
         map2_->foreach_incident_vertex(CMap2::Face(it), [&] (CMap2::Vertex v)
         {
             zb_[CMap2::Face(it)] += position_[v][2];
@@ -1433,6 +1495,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         it = map2_->phi<11>(it2);
         e = map2_->cut_face(it, it2);
         dart_level_[e.dart] = fl+1;
+		dart_level_[map2_->phi2(e.dart)] = fl+1;
         face_subd_id_[CMap2::Face(it2)] = 4*fid+2;
         tri_face_[CMap2::Face(it2)] = true;
         subdivided.mark(CMap2::Face(it2));
@@ -1443,7 +1506,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         r_[CMap2::Face(it2)] = old_r;
         phi_[CMap2::Face(it2)] = old_phi;
         zb_[CMap2::Face(it2)] = 0.;
-        nbv = 0.;
+		nbv = 0;
         map2_->foreach_incident_vertex(CMap2::Face(it2), [&] (CMap2::Vertex v)
         {
             zb_[CMap2::Face(it2)] += position_[v][2];
@@ -1467,7 +1530,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         r_[CMap2::Face(it)] = old_r;
         phi_[CMap2::Face(it)] = old_phi;
         zb_[CMap2::Face(it)] = 0.;
-        nbv = 0.;
+		nbv = 0;
         map2_->foreach_incident_vertex(CMap2::Face(it), [&] (CMap2::Vertex v)
         {
             zb_[CMap2::Face(it)] += position_[v][2];
@@ -1481,13 +1544,12 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         tri_face_[CMap2::Face(it2)] = true;
         subdivided.mark(CMap2::Face(it2));
         qtrav_->update(CMap2::Face(it2));
-
         h_[CMap2::Face(it2)] = old_h;
         q_[CMap2::Face(it2)] = old_q;
         r_[CMap2::Face(it2)] = old_r;
         phi_[CMap2::Face(it2)] = old_phi;
         zb_[CMap2::Face(it2)] = 0.;
-        nbv = 0.;
+		nbv = 0;
         map2_->foreach_incident_vertex(CMap2::Face(it2), [&] (CMap2::Vertex v)
         {
             zb_[CMap2::Face(it2)] += position_[v][2];
@@ -1497,7 +1559,6 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         centroid_[CMap2::Face(it2)] = cgogn::geometry::centroid<VEC3>(*map2_, CMap2::Face(it2), position_);
 		area_[CMap2::Face(it2)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(it2), position_);
     }
-
     else
     {
         // cut face into 4 quads
@@ -1523,10 +1584,6 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
         do
         {
             CMap2::Edge ee = map2_->cut_face(it, it2);
-
-            CMap2::Vertex v1(ee.dart);
-			CMap2::Vertex v2(map2_->phi2(ee.dart));
-
 			dart_level_[ee.dart] = fl+1;
 			dart_level_[map2_->phi2(ee.dart)] = fl+1;
 			tri_face_[CMap2::Face(it2)] = false;
@@ -1563,7 +1620,7 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
 
 void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 {
-    // if we are here, f is simplifiable (part of a group of 4 triangle or quad faces)
+	// if we are here, f is simplifiable (part of a group of 4 triangle or quad faces)
 
     uint32 fid = face_subd_id_[f];
     uint8 fl = face_level(f);
@@ -1580,16 +1637,16 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
         cgogn::Dart it = f.dart;
         switch (face_type(f))
         {
-        case TRI_CORNER: {
-            cgogn::Dart od = oldest_dart(f);
-            it = map2_->phi<12>(od); // put 'it' in the central face
-            resF = od;
-            break;
-        }
-		case TRI_CENTRAL: {
-            resF = map2_->phi_1(map2_->phi2(f.dart));
-            break;
-        }
+			case TRI_CORNER: {
+				cgogn::Dart od = oldest_dart(f);
+				it = map2_->phi<12>(od); // put 'it' in the central face
+				resF = od;
+				break;
+			}
+			case TRI_CENTRAL: {
+				resF = map2_->phi_1(map2_->phi2(f.dart));
+				break;
+			}
         }
 
         old_h.push_back(h_[CMap2::Face(it)]);
@@ -1597,17 +1654,17 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
         old_r.push_back(r_[CMap2::Face(it)]);
         old_phi.push_back(phi_[CMap2::Face(it)]);
         old_area.push_back(area_[CMap2::Face(it)]);
-        map2_->foreach_adjacent_face_through_edge(CMap2::Face(it), [&] (CMap2::Face f)
+		map2_->foreach_adjacent_face_through_edge(CMap2::Face(it), [&] (CMap2::Face af)
         {
-            old_h.push_back(h_[f]);
-            old_q.push_back(q_[f]);
-            old_r.push_back(r_[f]);
-            old_phi.push_back(phi_[f]);
-            old_area.push_back(area_[f]);
+			old_h.push_back(h_[af]);
+			old_q.push_back(q_[af]);
+			old_r.push_back(r_[af]);
+			old_phi.push_back(phi_[af]);
+			old_area.push_back(area_[af]);
         });
 
         cgogn::Dart next = map2_->phi1(it);
-        map2_->merge_incident_faces(CMap2::Edge(it));
+		map2_->merge_incident_faces(CMap2::Edge(map2_->phi2(it)));
         it = next;
         next = map2_->phi1(it);
         map2_->merge_incident_faces(CMap2::Edge(it));
@@ -1616,8 +1673,7 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 
 		tri_face_[CMap2::Face(resF)] = true;
     }
-
-    else
+	else
     {
         cgogn::Dart od = oldest_dart(f);
         resF = od;
@@ -1638,9 +1694,14 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
     }
 
 	// simplify edges (if possible)
+	// and compute centroid
 	cgogn::Dart it = resF;
+	uint32 nb = 0;
+	VEC3 centroid(0,0,0);
 	do
 	{
+		centroid += position_[CMap2::Vertex(it)];
+		++nb;
 		cgogn::Dart next = map2_->phi<11>(it);
 		if (map2_->is_incident_to_boundary(CMap2::Edge(map2_->phi2(it))) || face_level(CMap2::Face(map2_->phi2(it))) == fl-1)
 		{
@@ -1653,6 +1714,7 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
 		}
 		it = next;
 	} while (it != resF);
+	centroid_[CMap2::Face(resF)] = centroid / SCALAR(nb);
 
 	face_subd_id_[resF] = uint32((fid-1)/4);
 	qtrav_->update(CMap2::Face(resF));
@@ -1681,12 +1743,12 @@ void Plugin_ShallowWater::simplify_face(CMap2::Face f)
         zb_[CMap2::Face(resF)] += position_[v][2];
         nbv++;
     });
-    zb_[CMap2::Face(resF)] /= nbv;
-    centroid_[CMap2::Face(resF)] = cgogn::geometry::centroid<VEC3>(*map2_, CMap2::Face(resF), position_);
-	area_[CMap2::Face(resF)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(resF), position_);
+	zb_[CMap2::Face(resF)] /= nbv;
 
+	area_[CMap2::Face(resF)] = cgogn::geometry::area<VEC3>(*map2_, CMap2::Face(resF), position_);
     if(area_[CMap2::Face(resF)] == 0)
     {
+		std::cout << "area = 0 / " << map2_->embedding(CMap2::Face(resF)) << std::endl;
         // supprimer resF ou Face(resF)
 	}
 }
