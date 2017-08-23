@@ -93,22 +93,31 @@ private:
 	{
 		TRI_CORNER = 0,
 		TRI_CENTRAL,
-		QUAD
+		QUAD,
+		DIM1
 	};
 
 	void try_subdivision();
 	void try_simplification();
 	void subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2::Face::ORBIT>& subdivided);
-	void simplify_face(CMap2::Face f);        
+	void simplify_face(CMap2::Face f);	
 
 	cgogn::Dart oldest_dart(CMap2::Face f);
 	uint8 face_level(CMap2::Face f);
 	FaceType face_type(CMap2::Face f);
 
-    Str_Riemann_Flux border_condition(int border_condition_choice, SCALAR val_bc, bool sideR,
-                          SCALAR normX, SCALAR normY,
-                          SCALAR q, SCALAR r, SCALAR z, SCALAR zB);
+    struct Str_Riemann_Flux border_condition(
+			std::string typBC,SCALAR ValBC,std::string side,
+                            SCALAR NormX,SCALAR NormY,
+                            SCALAR q,SCALAR r,SCALAR z,SCALAR zb,
+                            SCALAR g, SCALAR hmin, SCALAR small);
+
     void get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr);
+	std::string boundary_side(CMap2::Edge e);
+	bool almost_equal(VEC3 v1, VEC3 v2);
+	bool are_points_aligned(VEC3 p1, VEC3 p2, VEC3 p3); // check if the point p is in the line through points l1 and l2
+	bool is_point_in_segment(VEC3 A, VEC3 B, VEC3 C); // check if the point C is in the segment [A,B]
+	bool sew_faces_recursive(CMap2::Edge e1, CMap2::Edge e2);
 
     SCALAR min_0(SCALAR a, SCALAR b);
     SCALAR max_0(SCALAR a, SCALAR b);
@@ -121,16 +130,22 @@ private:
 	SCALAR dt_;
     SCALAR hmin_;
     SCALAR small_;
-    int solver_;
+    uint8 solver_;
     SCALAR v_max_;
     SCALAR Fr_max_;
-    int geometry_;
     SCALAR t_max_;
     SCALAR dt_max_;
-    int friction_;
+    uint8 friction_;
     SCALAR alphaK_;
-    SCALAR kx_;
-    int nbr_iter_;
+	SCALAR kx_;
+	uint32 nbr_iter_;
+
+	SCALAR h_min_;
+	SCALAR q_min_;
+	SCALAR r_min_;
+	SCALAR h_max_;
+	SCALAR q_max_;
+	SCALAR r_max_;
 
 	QTimer* draw_timer_;
 	std::chrono::high_resolution_clock::time_point start_time_;
@@ -139,7 +154,7 @@ private:
 	std::mutex simu_data_access_;
 
 	CMap2Handler* map_;
-	CMap2* map2_;
+	CMap2* map2_;	
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;                
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
@@ -147,7 +162,7 @@ private:
     CMap2::VertexAttribute<SCALAR> scalar_value_u_;
     CMap2::VertexAttribute<SCALAR> scalar_value_v_;
     CMap2::VertexAttribute<VEC3> water_position_;
-    CMap2::VertexAttribute<VEC3> flow_velocity_;
+	CMap2::VertexAttribute<VEC3> flow_velocity_;
 
     CMap2::CDartAttribute<uint8> dart_level_; // dart insertion level
 
@@ -155,16 +170,14 @@ private:
 	CMap2::FaceAttribute<bool> tri_face_; // face is triangle or not
     CMap2::FaceAttribute<SCALAR> phi_; // porosité
     CMap2::FaceAttribute<SCALAR> zb_; // cote du fond
-    CMap2::FaceAttribute<SCALAR> h_; // hauteur d'eau
-	CMap2::FaceAttribute<SCALAR> h_tmp_;
-    CMap2::FaceAttribute<SCALAR> q_; // flux de quantité de mouvement dans la direction X
-	CMap2::FaceAttribute<SCALAR> q_tmp_;
+	CMap2::FaceAttribute<SCALAR> h_; // hauteur d'eau
+	CMap2::FaceAttribute<SCALAR> q_; // flux de quantité de mouvement dans la direction X
 	CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
-	CMap2::FaceAttribute<SCALAR> r_tmp_;
     CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
     CMap2::FaceAttribute<SCALAR> area_; //cell area
     CMap2::FaceAttribute<SCALAR> swept_;
     CMap2::FaceAttribute<SCALAR> discharge_;
+	CMap2::FaceAttribute<uint8> dimension_;
 
     CMap2::EdgeAttribute<SCALAR> f1_;
     CMap2::EdgeAttribute<SCALAR> f2_;
@@ -174,7 +187,9 @@ private:
     CMap2::EdgeAttribute<SCALAR> normX_;
     CMap2::EdgeAttribute<SCALAR> normY_;
     CMap2::EdgeAttribute<SCALAR> length_;
-
+    CMap2::EdgeAttribute<SCALAR> val_bc_;
+	CMap2::EdgeAttribute<std::string> typ_bc_;
+	CMap2::EdgeAttribute<uint32> NS_;
 };
 
 } // namespace plugin_shallow_water_2
