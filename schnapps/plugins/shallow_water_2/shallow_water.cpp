@@ -1023,7 +1023,7 @@ void Plugin_ShallowWater::try_subdivision()
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
-			if (dpmap_->face_level(f) >= 2)
+			if (dpmap_->face_level(f) >= 3)
 				return;
 
 			uint32 idx = cgogn::current_thread_index();
@@ -1041,7 +1041,7 @@ void Plugin_ShallowWater::try_subdivision()
 				max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
 			});
 
-			if (max_diff_h > 0.025*(h_max_-h_min_) || max_diff_q > 0.025*(q_max_-q_min_) || max_diff_r > 0.025*(r_max_-r_min_))
+			if (max_diff_h > 0.05*(h_max_-h_min_) || max_diff_q > 0.05*(q_max_-q_min_) || max_diff_r > 0.05*(r_max_-r_min_))
 				faces_to_subdivide_per_thread[idx]->push_back(f);
 		},
 		*qtrav_
@@ -1194,52 +1194,67 @@ void Plugin_ShallowWater::try_simplification()
 
 			if (dpmap_->is_simplifiable(f))
 			{
+				std::vector<CMap2::Face>* subfaces = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
+
 				SCALAR max_diff_h = 0.;
 				SCALAR max_diff_q = 0.;
 				SCALAR max_diff_r = 0.;
-				map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
-				{
-					SCALAR diff_h = fabs(h_[f] - h_[af]);
-					SCALAR diff_q = fabs(q_[f] - q_[af]);
-					SCALAR diff_r = fabs(r_[f] - r_[af]);
-					max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
-					max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
-					max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
-				});
 
-				if (max_diff_h < 0.01*(h_max_-h_min_) && max_diff_q < 0.01*(q_max_-q_min_) && max_diff_r < 0.01*(r_max_-r_min_))
+				switch (dpmap_->face_type(f))
 				{
-					to_simplify->push_back(f);
-
-					switch (dpmap_->face_type(f))
-					{
-						case cgogn::DynamicPrimalCMap2::TRI_CORNER: {
-							CMap2::Face cf(map2_->phi<12>(dpmap_->oldest_dart(f))); // central face
-							simplified.mark(cf);
-							map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face iface)
-							{
-								simplified.mark(iface);
-							});
-							break;
-						}
-						case cgogn::DynamicPrimalCMap2::TRI_CENTRAL: {
-							simplified.mark(f);
-							map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face iface)
-							{
-								simplified.mark(iface);
-							});
-							break;
-						}
-						case cgogn::DynamicPrimalCMap2::QUAD: {
-							cgogn::Dart cv = map2_->phi2(map2_->phi1(dpmap_->oldest_dart(f)));
-							map2_->foreach_incident_face(CMap2::Vertex(cv), [&] (CMap2::Face iface)
-							{
-								simplified.mark(iface);
-							});
-							break;
-						}
+					case cgogn::DynamicPrimalCMap2::TRI_CORNER: {
+						CMap2::Face cf(map2_->phi<12>(dpmap_->oldest_dart(f))); // central face
+						subfaces->push_back(cf);
+						map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+						{
+							subfaces->push_back(af);
+							SCALAR diff_h = fabs(h_[f] - h_[af]);
+							SCALAR diff_q = fabs(q_[f] - q_[af]);
+							SCALAR diff_r = fabs(r_[f] - r_[af]);
+							max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
+							max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
+							max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+						});
+						break;
+					}
+					case cgogn::DynamicPrimalCMap2::TRI_CENTRAL: {
+						subfaces->push_back(f);
+						map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
+						{
+							subfaces->push_back(af);
+							SCALAR diff_h = fabs(h_[f] - h_[af]);
+							SCALAR diff_q = fabs(q_[f] - q_[af]);
+							SCALAR diff_r = fabs(r_[f] - r_[af]);
+							max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
+							max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
+							max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+						});
+						break;
+					}
+					case cgogn::DynamicPrimalCMap2::QUAD: {
+						cgogn::Dart cv = map2_->phi<12>(dpmap_->oldest_dart(f));
+						map2_->foreach_incident_face(CMap2::Vertex(cv), [&] (CMap2::Face iface)
+						{
+							subfaces->push_back(iface);
+							SCALAR diff_h = fabs(h_[f] - h_[iface]);
+							SCALAR diff_q = fabs(q_[f] - q_[iface]);
+							SCALAR diff_r = fabs(r_[f] - r_[iface]);
+							max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
+							max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
+							max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+						});
+						break;
 					}
 				}
+
+				if (max_diff_h < 0.02*(h_max_-h_min_) && max_diff_q < 0.02*(q_max_-q_min_) && max_diff_r < 0.02*(r_max_-r_min_))
+				{
+					to_simplify->push_back(f);
+					for (CMap2::Face sf : *subfaces)
+						simplified.mark(sf);
+				}
+
+				cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(subfaces);
 			}
 		},
 		*qtrav_
