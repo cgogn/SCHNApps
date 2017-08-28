@@ -86,6 +86,7 @@ private:
 							   SCALAR zbL,SCALAR zbR,
 							   SCALAR PhiL,SCALAR PhiR,
 							   SCALAR hL,SCALAR qL,SCALAR rL,SCALAR hR,SCALAR qR,SCALAR rR);
+
 	Str_Riemann_Flux Solv_PorAS(SCALAR g, SCALAR hmin, SCALAR small,
 								SCALAR zbL,SCALAR zbR,
 								SCALAR PhiL,SCALAR PhiR,
@@ -99,9 +100,7 @@ private:
 
 	void try_subdivision();
 	void try_simplification();
-
-	void get_signed_faces(CMap2::Edge e, CMap2::Face& fP, CMap2::Face& fN);
-//	bool boundary_side_right(CMap2::Edge e);
+	void get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr);
 
 	bool almost_equal(VEC3 v1, VEC3 v2);
 	bool are_points_aligned(VEC3 p1, VEC3 p2, VEC3 p3); // check if the point p is in the line through points l1 and l2
