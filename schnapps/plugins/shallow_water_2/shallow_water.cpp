@@ -768,12 +768,12 @@ void Plugin_ShallowWater::update_time_step()
 				if (h_[f] > hmin_)
 					lambda = fabs(q_[f]*normX_[e] + r_[f]*normY_[e]) / max_0(h_[f], hmin_) + sqrt(9.81*h_[f]);
 				swept_[f] += lambda*length_[e];
-				discharge_[f] += length_[e]*f1_[e];
+				discharge_[f] -= length_[e]*f1_[e];
 			}
 			else
 			{
-				CMap2::Face fP, fN;
-				get_signed_faces(e, fP, fN);
+				CMap2::Face fN, fP;
+				get_signed_faces(e, fN, fP);
 
 				SCALAR lambda = 0.;
 				if (h_[fP] > hmin_)
@@ -819,6 +819,7 @@ void Plugin_ShallowWater::execute_time_step()
 //	auto start = std::chrono::high_resolution_clock::now();
 
 	map2_->parallel_foreach_cell(
+//	map2_->foreach_cell(
 		[&] (CMap2::Edge e)
 		{
 			// solve flux on edge
@@ -828,7 +829,10 @@ void Plugin_ShallowWater::execute_time_step()
 			{
 				CMap2::Face f(e.dart);
 				if (phi_[f] > small_)
+				{
 					riemann_flux = border_condition(typ_bc_[e], val_bc_[e], normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f], 9.81, hmin_, small_);
+//					std::cout << typ_bc_[e] << "/" << val_bc_[e] << " : " << riemann_flux.F1 << "/" << riemann_flux.F2 << "/" << riemann_flux.F3 << "/" << riemann_flux.s2L << "/" << riemann_flux.s2R << std::endl;
+				}
 			}
 			else // Inner cell: use the lateralised Riemann solver
 			{
@@ -1479,6 +1483,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_HLLC(
 		s2L = 0e0;
 		s2R = 0e0;
 	}
+
 	Riemann_flux.F1 = F1;
 	Riemann_flux.F2 = F2;
 	Riemann_flux.F3 = F3;
@@ -1736,7 +1741,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 		SCALAR h = max_0(ValBC, 0);
 		SCALAR u = 0;
 
-		if(L1 < 0)
+		if (L1 < 0)
 		{
 			/* torrentiel sortant*/
 			h = h1;
