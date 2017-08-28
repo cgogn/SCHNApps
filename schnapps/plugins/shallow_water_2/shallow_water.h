@@ -91,17 +91,17 @@ private:
 								SCALAR PhiL,SCALAR PhiR,
 								SCALAR hL,SCALAR qL,SCALAR rL,SCALAR hR,SCALAR qR,SCALAR rR);
 
-	void try_subdivision();
-	void try_simplification();
-
-	struct Str_Riemann_Flux border_condition(
-			std::string typBC, SCALAR ValBC, bool right_side,
+	Str_Riemann_Flux border_condition(
+			std::string typBC, SCALAR ValBC,
 			SCALAR NormX, SCALAR NormY,
 			SCALAR q, SCALAR r, SCALAR z, SCALAR zb,
 			SCALAR g, SCALAR hmin, SCALAR small);
 
-	void get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr);
-	bool boundary_side_right(CMap2::Edge e);
+	void try_subdivision();
+	void try_simplification();
+
+	void get_signed_faces(CMap2::Edge e, CMap2::Face& fP, CMap2::Face& fN);
+//	bool boundary_side_right(CMap2::Edge e);
 
 	bool almost_equal(VEC3 v1, VEC3 v2);
 	bool are_points_aligned(VEC3 p1, VEC3 p2, VEC3 p3); // check if the point p is in the line through points l1 and l2
@@ -148,6 +148,7 @@ private:
 	CMap2* map2_;
 	std::unique_ptr<cgogn::DynamicPrimalCMap2> dpmap_;
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
+	std::unique_ptr<CMap2::DartMarker> edge_dir_;
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 	CMap2::VertexAttribute<SCALAR> scalar_value_h_;
