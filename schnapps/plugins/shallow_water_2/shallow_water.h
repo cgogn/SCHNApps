@@ -147,7 +147,7 @@ private:
 	CMap2* map2_;
 	std::unique_ptr<cgogn::DynamicPrimalCMap2> dpmap_;
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
-	std::unique_ptr<CMap2::DartMarker> edge_dir_;
+	std::unique_ptr<CMap2::DartMarker> edge_left_side_;
 
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 	CMap2::VertexAttribute<SCALAR> scalar_value_h_;
