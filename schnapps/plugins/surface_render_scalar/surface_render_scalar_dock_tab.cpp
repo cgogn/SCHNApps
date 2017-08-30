@@ -48,6 +48,7 @@ SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_Sur
 	connect(combo_positionVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(position_vbo_changed(int)));
 	connect(list_scalarVBO, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(selected_scalar_vbo_changed(QListWidgetItem*, QListWidgetItem*)));
 	connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
+	connect(check_autoUpdateMinMax, SIGNAL(toggled(bool)), this, SLOT(auto_update_min_max_changed(bool)));
 	connect(slider_expansion, SIGNAL(valueChanged(int)), this, SLOT(expansion_changed(int)));
 	connect(check_showIsoLines, SIGNAL(toggled(bool)), this, SLOT(show_iso_lines_changed(bool)));
 	connect(slider_nbIsoLevels, SIGNAL(valueChanged(int)), this, SLOT(nb_iso_levels_changed(int)));
@@ -81,6 +82,18 @@ void SurfaceRenderScalar_DockTab::selected_scalar_vbo_changed(QListWidgetItem* i
 			p.set_scalar_vbo(map->get_vbo(item->text()));
 			combo_colorMap->setEnabled(true);
 			combo_colorMap->setCurrentIndex(p.get_color_map());
+			check_autoUpdateMinMax->setEnabled(true);
+			check_autoUpdateMinMax->setChecked(p.get_auto_update_min_max());
+			if (!p.get_auto_update_min_max())
+				spin_min->setEnabled(true);
+			else
+				spin_min->setDisabled(true);
+			spin_min->setValue(p.get_scalar_min());
+			if (!p.get_auto_update_min_max())
+				spin_max->setEnabled(true);
+			else
+				spin_max->setDisabled(true);
+			spin_max->setValue(p.get_scalar_max());
 			slider_expansion->setEnabled(true);
 			slider_expansion->setSliderPosition(p.get_expansion());
 			check_showIsoLines->setEnabled(true);
@@ -103,6 +116,31 @@ void SurfaceRenderScalar_DockTab::color_map_changed(int index)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_color_map(index);
+			view->update();
+		}
+	}
+}
+
+void SurfaceRenderScalar_DockTab::auto_update_min_max_changed(bool b)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_auto_update_min_max(b);
+			if (!b)
+				spin_min->setEnabled(true);
+			else
+				spin_min->setDisabled(true);
+			spin_min->setValue(p.get_scalar_min());
+			if (!b)
+				spin_max->setEnabled(true);
+			else
+				spin_max->setDisabled(true);
+			spin_max->setValue(p.get_scalar_max());
 			view->update();
 		}
 	}
@@ -191,6 +229,16 @@ void SurfaceRenderScalar_DockTab::remove_scalar_vbo(const QString& name)
 	updating_ui_ = false;
 }
 
+void SurfaceRenderScalar_DockTab::set_scalar_min(double s)
+{
+	spin_min->setValue(s);
+}
+
+void SurfaceRenderScalar_DockTab::set_scalar_max(double s)
+{
+	spin_max->setValue(s);
+}
+
 void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
 	updating_ui_ = true;
@@ -223,10 +271,39 @@ void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, cons
 		}
 	}
 
-	combo_colorMap->setDisabled(true);
-	slider_expansion->setDisabled(true);
-	check_showIsoLines->setDisabled(true);
-	slider_nbIsoLevels->setDisabled(true);
+	if (p.get_scalar_vbo())
+	{
+		combo_colorMap->setEnabled(true);
+		combo_colorMap->setCurrentIndex(p.get_color_map());
+		check_autoUpdateMinMax->setEnabled(true);
+		check_autoUpdateMinMax->setChecked(p.get_auto_update_min_max());
+		if (!p.get_auto_update_min_max())
+			spin_min->setEnabled(true);
+		else
+			spin_min->setDisabled(true);
+		spin_min->setValue(p.get_scalar_min());
+		if (!p.get_auto_update_min_max())
+			spin_max->setEnabled(true);
+		else
+			spin_max->setDisabled(true);
+		spin_max->setValue(p.get_scalar_max());
+		slider_expansion->setEnabled(true);
+		slider_expansion->setSliderPosition(p.get_expansion());
+		check_showIsoLines->setEnabled(true);
+		check_showIsoLines->setChecked(p.get_show_iso_lines());
+		slider_nbIsoLevels->setEnabled(true);
+		slider_nbIsoLevels->setSliderPosition(p.get_nb_iso_levels());
+	}
+	else
+	{
+		combo_colorMap->setDisabled(true);
+		check_autoUpdateMinMax->setDisabled(true);
+		spin_min->setDisabled(true);
+		spin_max->setDisabled(true);
+		slider_expansion->setDisabled(true);
+		check_showIsoLines->setDisabled(true);
+		slider_nbIsoLevels->setDisabled(true);
+	}
 
 	updating_ui_ = false;
 }

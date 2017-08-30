@@ -62,6 +62,7 @@ private slots:
 	void position_vbo_changed(int index);
 	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
 	void color_map_changed(int index);
+	void auto_update_min_max_changed(bool b);
 	void expansion_changed(int i);
 	void show_iso_lines_changed(bool b);
 	void nb_iso_levels_changed(int i);
@@ -72,6 +73,9 @@ private:
 	void remove_position_vbo(const QString& name);
 	void add_scalar_vbo(const QString& name);
 	void remove_scalar_vbo(const QString& name);
+
+	void set_scalar_min(double s);
+	void set_scalar_max(double s);
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
