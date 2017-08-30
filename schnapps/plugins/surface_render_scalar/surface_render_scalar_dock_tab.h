@@ -63,6 +63,8 @@ private slots:
 	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
 	void color_map_changed(int index);
 	void auto_update_min_max_changed(bool b);
+	void scalar_min_changed(double d);
+	void scalar_max_changed(double d);
 	void expansion_changed(int i);
 	void show_iso_lines_changed(bool b);
 	void nb_iso_levels_changed(int i);

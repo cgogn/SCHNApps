@@ -49,6 +49,8 @@ SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_Sur
 	connect(list_scalarVBO, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)), this, SLOT(selected_scalar_vbo_changed(QListWidgetItem*, QListWidgetItem*)));
 	connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
 	connect(check_autoUpdateMinMax, SIGNAL(toggled(bool)), this, SLOT(auto_update_min_max_changed(bool)));
+	connect(spin_min, SIGNAL(valueChanged(double)), this, SLOT(scalar_min_changed(double)));
+	connect(spin_max, SIGNAL(valueChanged(double)), this, SLOT(scalar_max_changed(double)));
 	connect(slider_expansion, SIGNAL(valueChanged(int)), this, SLOT(expansion_changed(int)));
 	connect(check_showIsoLines, SIGNAL(toggled(bool)), this, SLOT(show_iso_lines_changed(bool)));
 	connect(slider_nbIsoLevels, SIGNAL(valueChanged(int)), this, SLOT(nb_iso_levels_changed(int)));
@@ -131,6 +133,7 @@ void SurfaceRenderScalar_DockTab::auto_update_min_max_changed(bool b)
 		{
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_auto_update_min_max(b);
+			updating_ui_ = true;
 			if (!b)
 				spin_min->setEnabled(true);
 			else
@@ -141,6 +144,37 @@ void SurfaceRenderScalar_DockTab::auto_update_min_max_changed(bool b)
 			else
 				spin_max->setDisabled(true);
 			spin_max->setValue(p.get_scalar_max());
+			updating_ui_ = false;
+			view->update();
+		}
+	}
+}
+
+void SurfaceRenderScalar_DockTab::scalar_min_changed(double d)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_scalar_min(d);
+			view->update();
+		}
+	}
+}
+
+void SurfaceRenderScalar_DockTab::scalar_max_changed(double d)
+{
+	if (!updating_ui_)
+	{
+		View* view = schnapps_->get_selected_view();
+		MapHandlerGen* map = schnapps_->get_selected_map();
+		if (view && map)
+		{
+			MapParameters& p = plugin_->get_parameters(view, map);
+			p.set_scalar_max(d);
 			view->update();
 		}
 	}
