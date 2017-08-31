@@ -109,11 +109,6 @@ private:
 
 	void compute_edge_length_and_normal(CMap2::Edge e);
 
-	SCALAR min_0(SCALAR a, SCALAR b);
-	SCALAR max_0(SCALAR a, SCALAR b);
-	SCALAR min_1(SCALAR a, SCALAR b, SCALAR c);
-	SCALAR max_1(SCALAR a, SCALAR b, SCALAR c);
-
 	ShallowWater_DockTab* dock_tab_;
 
 	SCALAR t_;
@@ -128,13 +123,20 @@ private:
 	uint8 friction_;
 	SCALAR alphaK_;
 	SCALAR kx_;
-	uint32 nbr_iter_;
+	uint32 nb_iter_;
+	uint32 max_depth_;
 
+	std::vector<SCALAR> min_h_per_thread_;
+	std::vector<SCALAR> max_h_per_thread_;
+	std::vector<SCALAR> min_q_per_thread_;
+	std::vector<SCALAR> max_q_per_thread_;
+	std::vector<SCALAR> min_r_per_thread_;
+	std::vector<SCALAR> max_r_per_thread_;
 	SCALAR h_min_;
-	SCALAR q_min_;
-	SCALAR r_min_;
 	SCALAR h_max_;
+	SCALAR q_min_;
 	SCALAR q_max_;
+	SCALAR r_min_;
 	SCALAR r_max_;
 
 	QTimer* draw_timer_;

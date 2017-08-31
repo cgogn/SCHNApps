@@ -586,10 +586,10 @@ bool Plugin_ShallowWater::enable()
 	dpmap_ = cgogn::make_unique<cgogn::DynamicPrimalCMap2>(*map2_);
 	dpmap_->init();
 
-	init();
-
 	draw_timer_ = new QTimer(this);
 	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
+
+	init();
 
 	return true;
 }
@@ -604,51 +604,47 @@ void Plugin_ShallowWater::disable()
 void Plugin_ShallowWater::init()
 {
 	simu_running_ = false;
-	nbr_iter_ = 0;
+	nb_iter_ = 0;
 
 	hmin_ = 1e-3; // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_ = 1e-35; // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
+
+	max_depth_ = 3;
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Edge e) { compute_edge_length_and_normal(e); },
 		*qtrav_
 	);
 
-	map2_->parallel_foreach_cell(
-		[&] (CMap2::Vertex v)
-		{
-			SCALAR h = 0;
-			SCALAR q = 0;
-			SCALAR r = 0;
-			uint32 nbf = 0;
-			map2_->foreach_incident_face(v, [&] (CMap2::Face f)
-			{
-				h += h_[f];
-				//h += (h_[f] + zb_[f]);
-				q += q_[f];
-				r += r_[f];
-				++nbf;
-			});
-			h /= nbf;
-			q /= nbf;
-			r /= nbf;
-			scalar_value_h_[v] = h;
-			scalar_value_u_[v] = q / h;
-			scalar_value_v_[v] = r / h;
-			water_position_[v][2] = h;
-			flow_velocity_[v][0] = q / h;
-			flow_velocity_[v][1] = r / h;
-			flow_velocity_[v][2] = 0.;
+	min_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
+	max_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
+	min_q_per_thread_.resize(cgogn::thread_pool()->nb_workers());
+	max_q_per_thread_.resize(cgogn::thread_pool()->nb_workers());
+	min_r_per_thread_.resize(cgogn::thread_pool()->nb_workers());
+	max_r_per_thread_.resize(cgogn::thread_pool()->nb_workers());
+
+	h_min_ = std::numeric_limits<SCALAR>::max();
+	h_max_ = 0.;
+	q_min_ = std::numeric_limits<SCALAR>::max();
+	q_max_ = 0.;
+	r_min_ = std::numeric_limits<SCALAR>::max();
+	r_max_ = 0.;
+	map2_->foreach_cell(
+		[&] (CMap2::Face f) {
+			h_min_ = std::min(h_min_, h_[f]);
+			h_max_ = std::max(h_max_, h_[f]);
+			q_min_ = std::min(q_min_, q_[f]);
+			q_max_ = std::max(q_max_, q_[f]);
+			r_min_ = std::min(r_min_, r_[f]);
+			q_max_ = std::max(r_max_, r_[f]);
 		},
 		*qtrav_
 	);
 
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_h");
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_u");
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "scalar_value_v");
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "position");
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "water_position");
-	map_->notify_attribute_change(CMap2::Vertex::ORBIT, "flow_velocity");
+	for (uint32 i = 0; i < max_depth_; ++i)
+		try_subdivision();
+
+	update_draw_data();
 }
 
 void Plugin_ShallowWater::start()
@@ -729,8 +725,7 @@ void Plugin_ShallowWater::update_draw_data()
 			scalar_value_u_[v] = q / h;
 			scalar_value_v_[v] = r / h;
 			water_position_[v][2] = h;
-			flow_velocity_[v][0] = q / h;
-			flow_velocity_[v][1] = r / h;
+			flow_velocity_[v] = VEC3(q / h, r / h, 0.);
 		},
 		*qtrav_
 	);
@@ -761,38 +756,40 @@ void Plugin_ShallowWater::update_time_step()
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
+			uint32 fidx = map2_->embedding(f);
 			map2_->foreach_incident_edge(f, [&] (CMap2::Edge ie)
 			{
-				SCALAR le = length_[ie];
-				SCALAR f1e = f1_[ie];SCALAR lambda = 0.;
-				SCALAR h = h_[f];
+				uint32 ieidx = map2_->embedding(ie);
+				SCALAR le = length_[ieidx];
+				SCALAR f1e = f1_[ieidx];
+				SCALAR lambda = 0.;
+				SCALAR h = h_[fidx];
 				if (h > hmin_)
-					lambda = fabs(q_[f]*normX_[ie] + r_[f]*normY_[ie]) / max_0(h, hmin_) + sqrt(9.81*h);
-				swept_[f] += le * lambda;
+					lambda = fabs(q_[fidx]*normX_[ieidx] + r_[fidx]*normY_[ieidx]) / std::max(h, hmin_) + sqrt(9.81*h);
+				swept_[fidx] += le * lambda;
 				if (edge_left_side_->is_marked(ie.dart))
-					discharge_[f] -= le * f1e;
+					discharge_[fidx] -= le * f1e;
 				else
-					discharge_[f] += le * f1e;
+					discharge_[fidx] += le * f1e;
 			});
 		},
 		*qtrav_
 	);
 
 	std::vector<SCALAR> min_dt_per_thread(cgogn::thread_pool()->nb_workers());
-	for(SCALAR& d : min_dt_per_thread) d = min_0(dt_max_, t_max_ - t_); // Timestep for ending simulation
+	for(SCALAR& d : min_dt_per_thread) d = std::min(dt_max_, t_max_ - t_); // Timestep for ending simulation
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
-			uint32 idx = cgogn::current_thread_index();
+			uint32 fidx = map2_->embedding(f);
+			uint32 threadidx = cgogn::current_thread_index();
 			// Ensure CFL condition
-			SCALAR cfl = area_[f] / max_0(swept_[f], small_);
-			min_dt_per_thread[idx] = cfl < min_dt_per_thread[idx] ? cfl : min_dt_per_thread[idx];
+			SCALAR cfl = area_[fidx] / std::max(swept_[fidx], small_);
+			min_dt_per_thread[threadidx] = std::min(min_dt_per_thread[threadidx], cfl);
 			// Ensure overdry condition
-			if (area_[f]*phi_[f]*(h_[f]+zb_[f]) < (-discharge_[f]*min_dt_per_thread[idx]))
-				min_dt_per_thread[idx] = - area_[f]*phi_[f]*(h_[f]+zb_[f]) / discharge_[f];
-//			SCALAR overdry = - area_[f] * phi_[f] * (h_[f]+zb_[f]) / discharge_[f];
-//			min_dt_per_thread[idx] = overdry < min_dt_per_thread[idx] ? overdry : min_dt_per_thread[idx];
+			if (area_[fidx]*phi_[fidx]*(h_[fidx]+zb_[fidx]) < (-discharge_[fidx]*min_dt_per_thread[threadidx]))
+				min_dt_per_thread[threadidx] = - area_[fidx]*phi_[fidx]*(h_[fidx]+zb_[fidx]) / discharge_[fidx];
 		},
 		*qtrav_
 	);
@@ -807,32 +804,38 @@ void Plugin_ShallowWater::execute_time_step()
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Edge e)
 		{
+			uint32 eidx = map2_->embedding(e);
+
 			// solve flux on edge
 			Str_Riemann_Flux riemann_flux;
 
 			if (map2_->is_incident_to_boundary(e)) // border conditions
 			{
 				CMap2::Face f(e.dart);
+				uint32 fidx = map2_->embedding(f);
 				if (phi_[f] > small_)
-					riemann_flux = border_condition(typ_bc_[e], val_bc_[e], normX_[e], normY_[e], q_[f], r_[f], h_[f]+zb_[f], zb_[f], 9.81, hmin_, small_);
+					riemann_flux = border_condition(typ_bc_[eidx], val_bc_[eidx], normX_[eidx], normY_[eidx], q_[fidx], r_[fidx], h_[fidx]+zb_[fidx], zb_[fidx], 9.81, hmin_, small_);
 			}
 			else // Inner cell: use the lateralised Riemann solver
 			{
 				CMap2::Face f1(e.dart),
 							f2(map2_->phi2(e.dart));
 
-				SCALAR phiL = phi_[f1];
-				SCALAR phiR = phi_[f2];
-				SCALAR zbL = zb_[f1];
-				SCALAR zbR = zb_[f2];
-				if (h_[f1] > hmin_ || h_[f2] > hmin_)
+				uint32 f1idx = map2_->embedding(f1);
+				uint32 f2idx = map2_->embedding(f2);
+
+				SCALAR phiL = phi_[f1idx];
+				SCALAR phiR = phi_[f2idx];
+				SCALAR zbL = zb_[f1idx];
+				SCALAR zbR = zb_[f2idx];
+				if (h_[f1idx] > hmin_ || h_[f2idx] > hmin_)
 				{
-					SCALAR hL = h_[f1];
-					SCALAR hR = h_[f2];
-					SCALAR qL = q_[f1]*normX_[e] + r_[f1]*normY_[e];
-					SCALAR qR = q_[f2]*normX_[e] + r_[f2]*normY_[e];
-					SCALAR rL = -q_[f1]*normY_[e] + r_[f1]*normX_[e];
-					SCALAR rR = -q_[f2]*normY_[e] + r_[f2]*normX_[e];
+					SCALAR hL = h_[f1idx];
+					SCALAR hR = h_[f2idx];
+					SCALAR qL = q_[f1idx]*normX_[eidx] + r_[f1idx]*normY_[eidx];
+					SCALAR qR = q_[f2idx]*normX_[eidx] + r_[f2idx]*normY_[eidx];
+					SCALAR rL = -q_[f1idx]*normY_[eidx] + r_[f1idx]*normX_[eidx];
+					SCALAR rR = -q_[f2idx]*normY_[eidx] + r_[f2idx]*normX_[eidx];
 
 					if (solver_ == 2)
 						riemann_flux = Solv_HLLC(9.81, hmin_, small_, zbL, zbR, phiL, phiR, hL, qL, rL, hR, qR, rR);
@@ -841,11 +844,11 @@ void Plugin_ShallowWater::execute_time_step()
 				}
 			}
 
-			f1_[e] = riemann_flux.F1;
-			f2_[e] = riemann_flux.F2;
-			f3_[e] = riemann_flux.F3;
-			s2L_[e] = riemann_flux.s2L;
-			s2R_[e] = riemann_flux.s2R;
+			f1_[eidx] = riemann_flux.F1;
+			f2_[eidx] = riemann_flux.F2;
+			f3_[eidx] = riemann_flux.F3;
+			s2L_[eidx] = riemann_flux.s2L;
+			s2R_[eidx] = riemann_flux.s2R;
 		},
 		*qtrav_
 	);
@@ -857,123 +860,124 @@ void Plugin_ShallowWater::execute_time_step()
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
+			uint32 fidx = map2_->embedding(f);
 			map2_->foreach_incident_edge(f, [&] (CMap2::Edge ie)
 			{
-				SCALAR fact = dt_ * length_[ie];
+				uint32 ieidx = map2_->embedding(ie);
+				SCALAR fact = dt_ * length_[ieidx];
 				SCALAR factF = 0.;
-				if (phi_[f] > small_)
-					factF = fact / area_[f] * phi_[f];
+				if (phi_[fidx] > small_)
+					factF = fact / area_[fidx] * phi_[fidx];
 				if (edge_left_side_->is_marked(ie.dart))
 				{
-					h_[f] -= factF * f1_[ie];
-					q_[f] -= factF * ((f2_[ie] + s2L_[ie])*normX_[ie] - f3_[ie]*normY_[ie]);
-					r_[f] -= factF * (f3_[ie]*normX_[ie] + (f2_[ie] + s2L_[ie])*normY_[ie]);
+					h_[fidx] -= factF * f1_[ieidx];
+					q_[fidx] -= factF * ((f2_[ieidx] + s2L_[ieidx])*normX_[ieidx] - f3_[ieidx]*normY_[ieidx]);
+					r_[fidx] -= factF * (f3_[ieidx]*normX_[ieidx] + (f2_[ieidx] + s2L_[ieidx])*normY_[ieidx]);
 				}
 				else
 				{
-					h_[f] += factF * f1_[ie];
-					q_[f] += factF * (( f2_[ie] + s2R_[ie])*normX_[ie] - f3_[ie]*normY_[ie]);
-					r_[f] += factF * ( f3_[ie]*normX_[ie] + ( f2_[ie]+s2R_[ie])*normY_[ie]);
+					h_[fidx] += factF * f1_[ieidx];
+					q_[fidx] += factF * (( f2_[ieidx] + s2R_[ieidx])*normX_[ieidx] - f3_[ieidx]*normY_[ieidx]);
+					r_[fidx] += factF * ( f3_[ieidx]*normX_[ieidx] + ( f2_[ieidx]+s2R_[ieidx])*normY_[ieidx]);
 				}
 			});
 		},
 		*qtrav_
 	);
 
-	std::vector<SCALAR> min_h_per_thread(cgogn::thread_pool()->nb_workers());
-	std::vector<SCALAR> max_h_per_thread(cgogn::thread_pool()->nb_workers());
-	std::vector<SCALAR> min_q_per_thread(cgogn::thread_pool()->nb_workers());
-	std::vector<SCALAR> max_q_per_thread(cgogn::thread_pool()->nb_workers());
-	std::vector<SCALAR> min_r_per_thread(cgogn::thread_pool()->nb_workers());
-	std::vector<SCALAR> max_r_per_thread(cgogn::thread_pool()->nb_workers());
 	for(uint32 i = 0; i < cgogn::thread_pool()->nb_workers(); ++i)
 	{
-		min_h_per_thread[i] = 100.;
-		max_h_per_thread[i] = 0.;
-		min_q_per_thread[i] = 100.;
-		max_q_per_thread[i] = 0.;
-		min_r_per_thread[i] = 100.;
-		max_r_per_thread[i] = 0.;
+		min_h_per_thread_[i] = std::numeric_limits<SCALAR>::max();
+		max_h_per_thread_[i] = 0.;
+		min_q_per_thread_[i] = std::numeric_limits<SCALAR>::max();
+		max_q_per_thread_[i] = 0.;
+		min_r_per_thread_[i] = std::numeric_limits<SCALAR>::max();
+		max_r_per_thread_[i] = 0.;
 	}
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
+			uint32 fidx = map2_->embedding(f);
+
 			// friction
 			if (friction_ != 0)
 			{
-				SCALAR qx = q_[f]*cos(alphaK_) + r_[f]*sin(alphaK_);
-				SCALAR qy = - q_[f]*sin(alphaK_) + r_[f]*cos(alphaK_);
-				if (h_[f] > hmin_)
+				SCALAR qx = q_[fidx]*cos(alphaK_) + r_[fidx]*sin(alphaK_);
+				SCALAR qy = - q_[fidx]*sin(alphaK_) + r_[fidx]*cos(alphaK_);
+				if (h_[fidx] > hmin_)
 				{
-					qx = qx * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (max_0(kx_*kx_,small_*small_) * pow(h_[f],7./3.))) * dt_);
-					qy = qy * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (max_0(kx_*kx_,small_*small_) * pow(h_[f],7./3.))) * dt_);
+					qx = qx * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (std::max(kx_*kx_,small_*small_) * pow(h_[fidx],7./3.))) * dt_);
+					qy = qy * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (std::max(kx_*kx_,small_*small_) * pow(h_[fidx],7./3.))) * dt_);
 				}
 				else
 				{
 					qx = 0.;
 					qy = 0.;
 				}
-				q_[f] = qx*cos(alphaK_) - qy*sin(alphaK_);
-				r_[f] = qx*sin(alphaK_) + qy*cos(alphaK_);
+				q_[fidx] = qx*cos(alphaK_) - qy*sin(alphaK_);
+				r_[fidx] = qx*sin(alphaK_) + qy*cos(alphaK_);
 			}
 
 			// optional correction
 			// Negative water depth
-			if (h_[f] < 0.)
+			if (h_[fidx] < 0.)
 			{
-				h_[f] = 0.;
-				q_[f] = 0.;
-				r_[f] = 0.;
+				h_[fidx] = 0.;
+				q_[fidx] = 0.;
+				r_[fidx] = 0.;
 			}
 
 			// Abnormal large velocity => Correction of q and r to respect Vmax and Frmax
-			if (h_[f] > hmin_)
+			if (h_[fidx] > hmin_)
 			{
-				SCALAR v = sqrt(q_[f]*q_[f]+r_[f]*r_[f]) / max_0(h_[f], small_);
-				SCALAR c = sqrt(9.81 * max_0(h_[f], small_));
+				SCALAR v = sqrt(q_[fidx]*q_[fidx]+r_[fidx]*r_[fidx]) / std::max(h_[fidx], small_);
+				SCALAR c = sqrt(9.81 * std::max(h_[fidx], small_));
 				SCALAR Fr = v / c;
-				SCALAR Fact = max_1(1e0, v / v_max_, Fr / Fr_max_);
-				q_[f] /= Fact;
-				r_[f] /= Fact;
+				SCALAR Fact = std::max({ 1e0, v / v_max_, Fr / Fr_max_ });
+				q_[fidx] /= Fact;
+				r_[fidx] /= Fact;
 			}
 			else // Quasi-zero
 			{
-				q_[f] = 0.;
-				r_[f] = 0.;
+				q_[fidx] = 0.;
+				r_[fidx] = 0.;
 			}
 
 			// min and max of each variables for subdivision and simplification
 			uint32 idx = cgogn::current_thread_index();
-			min_h_per_thread[idx] = std::min(min_h_per_thread[idx], h_[f]);
-			max_h_per_thread[idx] = std::max(max_h_per_thread[idx], h_[f]);
-			min_q_per_thread[idx] = std::min(min_q_per_thread[idx], q_[f]);
-			max_q_per_thread[idx] = std::max(max_q_per_thread[idx], q_[f]);
-			min_r_per_thread[idx] = std::min(min_r_per_thread[idx], r_[f]);
-			max_r_per_thread[idx] = std::max(max_r_per_thread[idx], r_[f]);
+			min_h_per_thread_[idx] = std::min(min_h_per_thread_[idx], h_[fidx]);
+			max_h_per_thread_[idx] = std::max(max_h_per_thread_[idx], h_[fidx]);
+			min_q_per_thread_[idx] = std::min(min_q_per_thread_[idx], q_[fidx]);
+			max_q_per_thread_[idx] = std::max(max_q_per_thread_[idx], q_[fidx]);
+			min_r_per_thread_[idx] = std::min(min_r_per_thread_[idx], r_[fidx]);
+			max_r_per_thread_[idx] = std::max(max_r_per_thread_[idx], r_[fidx]);
 
 		},
 		*qtrav_
 	);
 
-	h_min_ = *(std::min_element(min_h_per_thread.begin(), min_h_per_thread.end()));
-	h_max_ = *(std::max_element(max_h_per_thread.begin(), max_h_per_thread.end()));
-	q_min_ = *(std::min_element(min_q_per_thread.begin(), min_q_per_thread.end()));
-	q_max_ = *(std::max_element(max_q_per_thread.begin(), max_q_per_thread.end()));
-	r_min_ = *(std::min_element(min_r_per_thread.begin(), min_r_per_thread.end()));
-	r_max_ = *(std::max_element(max_r_per_thread.begin(), max_r_per_thread.end()));
+	h_min_ = *(std::min_element(min_h_per_thread_.begin(), min_h_per_thread_.end()));
+	h_max_ = *(std::max_element(max_h_per_thread_.begin(), max_h_per_thread_.end()));
+	q_min_ = *(std::min_element(min_q_per_thread_.begin(), min_q_per_thread_.end()));
+	q_max_ = *(std::max_element(max_q_per_thread_.begin(), max_q_per_thread_.end()));
+	r_min_ = *(std::min_element(min_r_per_thread_.begin(), min_r_per_thread_.end()));
+	r_max_ = *(std::max_element(max_r_per_thread_.begin(), max_r_per_thread_.end()));
 
 	simu_data_access_.unlock();
 
-	map_->lock_topo_access();
-	try_simplification();
-	try_subdivision();
-	map_->unlock_topo_access();
+	if (nb_iter_ % 5 == 0)
+	{
+		map_->lock_topo_access();
+		try_simplification();
+		try_subdivision();
+		map_->unlock_topo_access();
+	}
 
 	t_ += dt_;
-	nbr_iter_++;
+	nb_iter_++;
 
-	if(t_ == t_max_)
+	if (t_ == t_max_)
 		stop();
 
 //	auto end = std::chrono::high_resolution_clock::now();
@@ -997,29 +1001,27 @@ void Plugin_ShallowWater::try_subdivision()
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
-			if (dpmap_->face_level(f) >= 2)
+			if (dpmap_->face_level(f) >= max_depth_)
 				return;
 
-			uint32 idx = cgogn::current_thread_index();
+			uint32 fidx = map2_->embedding(f);
 
 			SCALAR max_diff_h = 0.;
 			SCALAR max_diff_q = 0.;
 			SCALAR max_diff_r = 0.;
 			map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
 			{
-				SCALAR diff_h = fabs(h_[f] - h_[af]);
-				SCALAR diff_q = fabs(q_[f] - q_[af]);
-				SCALAR diff_r = fabs(r_[f] - r_[af]);
-				max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
-				max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
-				max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+				uint32 afidx = map2_->embedding(af);
+				max_diff_h = std::max(max_diff_h, fabs(h_[fidx] - h_[afidx]));
+				max_diff_q = std::max(max_diff_q, fabs(q_[fidx] - q_[afidx]));
+				max_diff_r = std::max(max_diff_r, fabs(r_[fidx] - r_[afidx]));
 			});
 
 			if (max_diff_h > 0.05 * (h_max_ - h_min_) ||
 				max_diff_q > 0.05 * (q_max_ - q_min_) ||
 				max_diff_r > 0.05 * (r_max_ - r_min_))
 			{
-				faces_to_subdivide_per_thread[idx]->push_back(f);
+				faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
 			}
 		},
 		*qtrav_
@@ -1055,11 +1057,12 @@ void Plugin_ShallowWater::try_subdivision()
 					},
 					[&] (CMap2::Face f)
 					{
-						old_h = h_[f];
-						old_q = q_[f];
-						old_r = r_[f];
-						old_phi = phi_[f];
-						old_centroid = centroid_[f];
+						uint32 fidx = map2_->embedding(f);
+						old_h = h_[fidx];
+						old_q = q_[fidx];
+						old_r = r_[fidx];
+						old_phi = phi_[fidx];
+						old_centroid = centroid_[fidx];
 					},
 					[&] (CMap2::Face f)
 					{
@@ -1067,24 +1070,25 @@ void Plugin_ShallowWater::try_subdivision()
 						{
 							cgogn::Dart cfd = map2_->phi<12>(f.dart);
 							CMap2::Face cf(cfd);
+							uint32 cfidx = map2_->embedding(cf);
 
 							qtrav_->update(cf);
 							subdivided.mark(cf);
-							h_[cf] = old_h;
-							q_[cf] = old_q;
-							r_[cf] = old_r;
-							phi_[cf] = old_phi;
-							zb_[cf] = 0.;
+							h_[cfidx] = old_h;
+							q_[cfidx] = old_q;
+							r_[cfidx] = old_r;
+							phi_[cfidx] = old_phi;
+							SCALAR zb = 0.;
 							uint32 nbv = 0;
 							map2_->foreach_incident_vertex(cf, [&] (CMap2::Vertex iv)
 							{
-								zb_[cf] += position_[iv][2];
+								zb += position_[iv][2];
 								nbv++;
 							});
-							zb_[cf] /= nbv;
-							centroid_[cf] = cgogn::geometry::centroid<VEC3>(*map2_, cf, position_);
-							area_[cf] = cgogn::geometry::area<VEC3>(*map2_, cf, position_);
-							dimension_[cf] = 2;
+							zb_[cfidx] = zb / nbv;
+							centroid_[cfidx] = cgogn::geometry::centroid<VEC3>(*map2_, cf, position_);
+							area_[cfidx] = cgogn::geometry::area<VEC3>(*map2_, cf, position_);
+							dimension_[cfidx] = 2;
 
 							map2_->foreach_incident_edge(cf, [&] (CMap2::Edge ie)
 							{
@@ -1094,23 +1098,24 @@ void Plugin_ShallowWater::try_subdivision()
 
 							map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
 							{
+								uint32 afidx = map2_->embedding(af);
 								qtrav_->update(af);
 								subdivided.mark(af);
-								h_[af] = old_h;
-								q_[af] = old_q;
-								r_[af] = old_r;
-								phi_[af] = old_phi;
-								zb_[af] = 0.;
+								h_[afidx] = old_h;
+								q_[afidx] = old_q;
+								r_[afidx] = old_r;
+								phi_[afidx] = old_phi;
+								SCALAR zb = 0.;
 								uint32 nbv = 0;
 								map2_->foreach_incident_vertex(af, [&] (CMap2::Vertex iv)
 								{
-									zb_[af] += position_[iv][2];
+									zb += position_[iv][2];
 									nbv++;
 								});
-								zb_[af] /= nbv;
-								centroid_[af] = cgogn::geometry::centroid<VEC3>(*map2_, af, position_);
-								area_[af] = cgogn::geometry::area<VEC3>(*map2_, af, position_);
-								dimension_[af] = 2;
+								zb_[afidx] = zb / nbv;
+								centroid_[afidx] = cgogn::geometry::centroid<VEC3>(*map2_, af, position_);
+								area_[afidx] = cgogn::geometry::area<VEC3>(*map2_, af, position_);
+								dimension_[afidx] = 2;
 							});
 						}
 						else
@@ -1130,23 +1135,25 @@ void Plugin_ShallowWater::try_subdivision()
 
 							map2_->foreach_incident_face(cv, [&] (CMap2::Face af)
 							{
+								uint32 afidx = map2_->embedding(af);
 								qtrav_->update(af);
 								subdivided.mark(af);
-								h_[af] = old_h;
-								q_[af] = old_q;
-								r_[af] = old_r;
-								phi_[af] = old_phi;
-								zb_[af] = 0.;
+								h_[afidx] = old_h;
+								q_[afidx] = old_q;
+								r_[afidx] = old_r;
+								phi_[afidx] = old_phi;
+								zb_[afidx] = 0.;
+								SCALAR zb = 0.;
 								uint32 nbv = 0;
 								map2_->foreach_incident_vertex(af, [&] (CMap2::Vertex iv)
 								{
-									zb_[af] += position_[iv][2];
+									zb += position_[iv][2];
 									nbv++;
 								});
-								zb_[af] /= nbv;
-								centroid_[af] = cgogn::geometry::centroid<VEC3>(*map2_, af, position_);
-								area_[af] = cgogn::geometry::area<VEC3>(*map2_, af, position_);
-								dimension_[af] = 2;
+								zb_[afidx] = zb / nbv;
+								centroid_[afidx] = cgogn::geometry::centroid<VEC3>(*map2_, af, position_);
+								area_[afidx] = cgogn::geometry::area<VEC3>(*map2_, af, position_);
+								dimension_[afidx] = 2;
 							});
 						}
 					}
@@ -1186,12 +1193,9 @@ void Plugin_ShallowWater::try_simplification()
 						map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
 						{
 							subfaces->push_back(af);
-							SCALAR diff_h = fabs(h_[f] - h_[af]);
-							SCALAR diff_q = fabs(q_[f] - q_[af]);
-							SCALAR diff_r = fabs(r_[f] - r_[af]);
-							max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
-							max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
-							max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+							max_diff_h = std::max(max_diff_h, fabs(h_[f] - h_[af]));
+							max_diff_q = std::max(max_diff_q, fabs(q_[f] - q_[af]));
+							max_diff_r = std::max(max_diff_r, fabs(r_[f] - r_[af]));
 						});
 						break;
 					}
@@ -1200,12 +1204,9 @@ void Plugin_ShallowWater::try_simplification()
 						map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
 						{
 							subfaces->push_back(af);
-							SCALAR diff_h = fabs(h_[f] - h_[af]);
-							SCALAR diff_q = fabs(q_[f] - q_[af]);
-							SCALAR diff_r = fabs(r_[f] - r_[af]);
-							max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
-							max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
-							max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+							max_diff_h = std::max(max_diff_h, fabs(h_[f] - h_[af]));
+							max_diff_q = std::max(max_diff_q, fabs(q_[f] - q_[af]));
+							max_diff_r = std::max(max_diff_r, fabs(r_[f] - r_[af]));
 						});
 						break;
 					}
@@ -1214,12 +1215,9 @@ void Plugin_ShallowWater::try_simplification()
 						map2_->foreach_incident_face(CMap2::Vertex(cv), [&] (CMap2::Face iface)
 						{
 							subfaces->push_back(iface);
-							SCALAR diff_h = fabs(h_[f] - h_[iface]);
-							SCALAR diff_q = fabs(q_[f] - q_[iface]);
-							SCALAR diff_r = fabs(r_[f] - r_[iface]);
-							max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
-							max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
-							max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+							max_diff_h = std::max(max_diff_h, fabs(h_[f] - h_[iface]));
+							max_diff_q = std::max(max_diff_q, fabs(q_[f] - q_[iface]));
+							max_diff_r = std::max(max_diff_r, fabs(r_[f] - r_[iface]));
 						});
 						break;
 					}
@@ -1240,14 +1238,14 @@ void Plugin_ShallowWater::try_simplification()
 		*qtrav_
 	);
 
+	std::vector<SCALAR> old_h; old_h.reserve(4);
+	std::vector<SCALAR> old_q; old_q.reserve(4);
+	std::vector<SCALAR> old_r; old_r.reserve(4);
+	std::vector<SCALAR> old_phi; old_phi.reserve(4);
+	std::vector<SCALAR> old_area; old_area.reserve(4);
+
 	for (CMap2::Face f : *to_simplify)
 	{
-		std::vector<SCALAR> old_h; old_h.reserve(4);
-		std::vector<SCALAR> old_q; old_q.reserve(4);
-		std::vector<SCALAR> old_r; old_r.reserve(4);
-		std::vector<SCALAR> old_phi; old_phi.reserve(4);
-		std::vector<SCALAR> old_area; old_area.reserve(4);
-
 		dpmap_->simplify_face(f,
 			[&] (CMap2::Face f)
 			{
@@ -1262,18 +1260,20 @@ void Plugin_ShallowWater::try_simplification()
 					CMap2::Face cf(f.dart);
 					if (dpmap_->face_type(f) == cgogn::DynamicPrimalCMap2::TRI_CORNER)
 						cf.dart = map2_->phi<12>(dpmap_->oldest_dart(f));
-					old_h.push_back(h_[cf]);
-					old_q.push_back(q_[cf]);
-					old_r.push_back(r_[cf]);
-					old_phi.push_back(phi_[cf]);
-					old_area.push_back(area_[cf]);
+					uint32 cfidx = map2_->embedding(cf);
+					old_h.push_back(h_[cfidx]);
+					old_q.push_back(q_[cfidx]);
+					old_r.push_back(r_[cfidx]);
+					old_phi.push_back(phi_[cfidx]);
+					old_area.push_back(area_[cfidx]);
 					map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
 					{
-						old_h.push_back(h_[af]);
-						old_q.push_back(q_[af]);
-						old_r.push_back(r_[af]);
-						old_phi.push_back(phi_[af]);
-						old_area.push_back(area_[af]);
+						uint32 afidx = map2_->embedding(af);
+						old_h.push_back(h_[afidx]);
+						old_q.push_back(q_[afidx]);
+						old_r.push_back(r_[afidx]);
+						old_phi.push_back(phi_[afidx]);
+						old_area.push_back(area_[afidx]);
 					});
 				}
 				else
@@ -1281,21 +1281,24 @@ void Plugin_ShallowWater::try_simplification()
 					CMap2::Vertex cv(map2_->phi<12>(dpmap_->oldest_dart(f)));
 					map2_->foreach_incident_face(cv, [&] (CMap2::Face iface)
 					{
-						old_h.push_back(h_[iface]);
-						old_q.push_back(q_[iface]);
-						old_r.push_back(r_[iface]);
-						old_phi.push_back(phi_[iface]);
-						old_area.push_back(area_[iface]);
+						uint32 ifaceidx = map2_->embedding(iface);
+						old_h.push_back(h_[ifaceidx]);
+						old_q.push_back(q_[ifaceidx]);
+						old_r.push_back(r_[ifaceidx]);
+						old_phi.push_back(phi_[ifaceidx]);
+						old_area.push_back(area_[ifaceidx]);
 					});
 				}
 			},
 			[&] (CMap2::Face f)
 			{
+				uint32 fidx = map2_->embedding(f);
+
 				qtrav_->update(f);
 
-				cgogn::Dart it = f.dart;
 				uint32 nb = 0;
 				VEC3 centroid(0,0,0);
+				cgogn::Dart it = f.dart;
 				do
 				{
 					cgogn::Dart next = map2_->phi<11>(it);
@@ -1303,7 +1306,7 @@ void Plugin_ShallowWater::try_simplification()
 					++nb;
 					it = next;
 				} while (it != f.dart);
-				centroid_[f] = centroid / SCALAR(nb);
+				centroid_[fidx] = centroid / SCALAR(nb);
 
 				SCALAR h = 0.;
 				SCALAR q = 0.;
@@ -1318,11 +1321,11 @@ void Plugin_ShallowWater::try_simplification()
 					phi += old_phi[i] * old_area[i];
 					area += old_area[i];
 				}
-				h_[f] = h / area;
-				q_[f] = q / area;
-				r_[f] = r / area;
-				phi_[f] = phi / area;
-				area_[f] = cgogn::geometry::area<VEC3>(*map2_, f, position_);
+				h_[fidx] = h / area;
+				q_[fidx] = q / area;
+				r_[fidx] = r / area;
+				phi_[fidx] = phi / area;
+				area_[fidx] = cgogn::geometry::area<VEC3>(*map2_, f, position_);
 
 				SCALAR zb = 0.;
 				nb = 0;
@@ -1344,47 +1347,11 @@ void Plugin_ShallowWater::try_simplification()
 	cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(to_simplify);
 }
 
-SCALAR Plugin_ShallowWater::min_0(SCALAR a, SCALAR b)
-{
-	if (a > b)
-		return b;
-	else
-		return a;
-}
-
-SCALAR Plugin_ShallowWater::max_0(SCALAR a, SCALAR b)
-{
-	if (a > b)
-		return a;
-	else
-		return b;
-}
-
-SCALAR Plugin_ShallowWater::min_1(SCALAR a, SCALAR b, SCALAR c)
-{
-	if ((a <= b) && (a <= c))
-		return a;
-	else if ((b <= a) && (b <= c))
-		return b;
-	else
-		return c;
-}
-
-SCALAR Plugin_ShallowWater::max_1(SCALAR a, SCALAR b, SCALAR c)
-{
-	if ((a >= b) && (a >= c))
-		return a;
-	else if ((b >= a) && (b >= c))
-		return b;
-	else
-		return c;
-}
-
 Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_HLLC(
 	SCALAR g, SCALAR hmin, SCALAR small,
 	SCALAR zbL,SCALAR zbR,
 	SCALAR PhiL,SCALAR PhiR,
-	SCALAR hL,SCALAR qL,SCALAR rL,SCALAR hR,SCALAR qR,SCALAR rR
+	SCALAR hL, SCALAR qL, SCALAR rL, SCALAR hR, SCALAR qR, SCALAR rR
 )
 {
 	Str_Riemann_Flux Riemann_flux;
@@ -1406,38 +1373,38 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_HLLC(
 		//There is water in both cells or one of the cells
 		//can fill the other one
 		//-----wave speed--------
-		SCALAR L1L = qL / max_0(hL, small) - sqrt(g * max_0(hL, small));
-		SCALAR L3L = qL / max_0(hL, small) + sqrt(g * max_0(hL, small));
-		SCALAR L1R = qR / max_0(hR, small) - sqrt(g * max_0(hR, small));
-		SCALAR L3R = qR / max_0(hR, small) + sqrt(g * max_0(hR, small));
-		SCALAR L1LR = min_1(L1L, L1R, 0e0);
-		SCALAR L3LR = max_1(L3L, L3R, 0e0);
+		SCALAR L1L = qL / std::max(hL, small) - sqrt(g * std::max(hL, small));
+		SCALAR L3L = qL / std::max(hL, small) + sqrt(g * std::max(hL, small));
+		SCALAR L1R = qR / std::max(hR, small) - sqrt(g * std::max(hR, small));
+		SCALAR L3R = qR / std::max(hR, small) + sqrt(g * std::max(hR, small));
+		SCALAR L1LR = std::min({ L1L, L1R, 0e0 });
+		SCALAR L3LR = std::max({ L3L, L3R, 0e0 });
 		//========================
-		SCALAR PhiLR = min_0(PhiL, PhiR);
+		SCALAR PhiLR = std::min(PhiL, PhiR);
 		//------compute F1--------
 		F1 = L3LR * qL - L1LR * qR + L1LR * L3LR * (zR - zL);
-		F1 = F1 * PhiLR / max_0(L3LR - L1LR, small);
+		F1 = F1 * PhiLR / std::max(L3LR - L1LR, small);
 		//========================
 		//-----compute F2---------
-		SCALAR F2L = (qL * qL) / max_0(hL, small) + 5e-1 * g * hL * hL;
-		SCALAR F2R = (qR * qR) / max_0(hR, small) + 5e-1 * g * hR * hR;
+		SCALAR F2L = (qL * qL) / std::max(hL, small) + 5e-1 * g * hL * hL;
+		SCALAR F2R = (qR * qR) / std::max(hR, small) + 5e-1 * g * hR * hR;
 		F2 = (L3LR * PhiL * F2L - L1LR * PhiR * F2R + L1LR * L3LR * (PhiR * qR - PhiL * qL))
-				/ max_0(L3LR-L1LR, small);
+				/ std::max(L3LR-L1LR, small);
 		//==========================
 		//-----Compute S2L and S2R---
 		SCALAR Fact = 0.5 * PhiLR * (hL + hR);
 		s2L = 0.5 * (PhiL * hL * hL - PhiR * hR * hR)
 				- Fact * (zL - zR);
-		s2L = g * L1LR * s2L / max_0(L3LR - L1LR, small);
+		s2L = g * L1LR * s2L / std::max(L3LR - L1LR, small);
 		s2R = 0.5 * (PhiR * hR * hR - PhiL * hL * hL)
 				- Fact * (zR - zL);
-		s2R = g * L3LR * s2R / max_0(L3LR - L1LR, small);
+		s2R = g * L3LR * s2R / std::max(L3LR - L1LR, small);
 		//============================
 		//------Compute F3------------
 		if (F1 > 0)
-			F3 = F1 * rL / max_0(hL, small);
+			F3 = F1 * rL / std::max(hL, small);
 		else
-			F3 = F1 * rR / max_0(hR, small);
+			F3 = F1 * rR / std::max(hR, small);
 	}
 	//===================================
 	else if ((hL < hmin) && (zR < zbL) && (hR > hmin))
@@ -1504,12 +1471,12 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 		SCALAR cR = sqrt(g * hR);           // pressure wave speed on the right side
 		SCALAR uL;                          // velocity on the left side
 		if (hL > hmin)
-			uL = qL / max_0(hL, small);
+			uL = qL / std::max(hL, small);
 		else
 			uL = 0;
 		SCALAR uR;                          // velocity on the right side
 		if (hR > hmin)
-			uR = qR / max_0(hR, small);
+			uR = qR / std::max(hR, small);
 		else
 			uR = 0;
 
@@ -1524,8 +1491,8 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 		SCALAR L1R = uR - cR;          // 1st wave speed on the right side (u-c)
 		SCALAR L2L = uL + cL;          // 2nd wave speed on the left side (u+c)
 		SCALAR L2R = uR + cR;          // 2nd wave speed on the right side (u+c)
-		SCALAR L1LR = min_0(L1L,L1R);    // 1st wave speed at the interface
-		SCALAR L2LR = max_0(L2L,L2R);    // 2nd wave speed at the interface
+		SCALAR L1LR = std::min(L1L,L1R);    // 1st wave speed at the interface
+		SCALAR L2LR = std::max(L2L,L2R);    // 2nd wave speed at the interface
 
 		// Zone intermédiaire
 		// Intermediate state
@@ -1567,7 +1534,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 		if (L1L > L1I)
 		{
 			// ???? PFG : pourquoi dans cet ordre ????
-			if (fabs(hI - hL > hmin))
+			if (fabs(hI - hL) > hmin)
 				L1L = (uI * hI - uL * hL) / (hI - hL);
 			/** @todo remplacer @a hmin par @a small ??? **/
 			if (fabs(uI * hI - uL * hL) > hmin)
@@ -1580,7 +1547,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 		if (L2R < L2I)
 		{
 			// ???? PFG : pourquoi dans cet ordre ????
-			if (fabs(hI - hR > hmin))
+			if (fabs(hI - hR) > hmin)
 				L2R = (uI * hI - uR * hR) / (hI - hR);
 			/** @todo remplacer @a hmin par @a small ??? **/
 			if (fabs(uI * hI - uR * hR) > hmin)
@@ -1602,8 +1569,8 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 			// Ecoulement critique de la maille L vers la maille R
 			// Critical flow from L-cell to R-cell
 			SCALAR PhiLR = PhiL;
-			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / max_0(L2LR - L1LR, small);
-			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / max_0(L2LR - L1LR, small);
+			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / std::max(L2LR - L1LR, small);
+			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, small);
 		}
 		else if ((L1I <0) && (L2I >= 0))
 		{
@@ -1611,16 +1578,16 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 			// Calcul des flux dans la zone intermédiaire d'état constant
 			// Subcritical flow between the L-cell and R-cell
 			// Flux computation in the constant intermediate zone
-			Riemann_Flux.F1 = ((F2L - F2R - L1LR * F1L + L2LR * F1R) + (Phi_Term - Bot_Term)) / max_0(L2LR - L1LR, small);
-			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / max_0(L2LR - L1LR, small);
+			Riemann_Flux.F1 = ((F2L - F2R - L1LR * F1L + L2LR * F1R) + (Phi_Term - Bot_Term)) / std::max(L2LR - L1LR, small);
+			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, small);
 		}
 		else if ((L2I < 0) && (L2R >= 0))
 		{
 			// Ecoulement critique de la maille R vers la maille L
 			// Critical flow from R-cell to L-cell
 			SCALAR PhiLR = PhiR;
-			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / max_0(L2LR - L1LR, small);
-			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / max_0(L2LR - L1LR, small);
+			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / std::max(L2LR - L1LR, small);
+			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, small);
 		}
 		else if (L2R < 0)
 		{
@@ -1632,12 +1599,12 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 
 		// Computation of F3
 		if (Riemann_Flux.F1 > 0e0)
-			Riemann_Flux.F3 = Riemann_Flux.F1 * rL / max_0(hL, small);
+			Riemann_Flux.F3 = Riemann_Flux.F1 * rL / std::max(hL, small);
 		else
-			Riemann_Flux.F3 = Riemann_Flux.F1 * rR / max_0(hR, small);
+			Riemann_Flux.F3 = Riemann_Flux.F1 * rR / std::max(hR, small);
 		// Upwind computation of the source term s2L and s2R
-		Riemann_Flux.s2L = - L1LR * (-Bot_Term + Phi_Term) / max_0(L2LR - L1LR, small);
-		Riemann_Flux.s2R = L2LR * (-Bot_Term + Phi_Term) / max_0(L2LR - L1LR, small);
+		Riemann_Flux.s2L = - L1LR * (-Bot_Term + Phi_Term) / std::max(L2LR - L1LR, small);
+		Riemann_Flux.s2R = L2LR * (-Bot_Term + Phi_Term) / std::max(L2LR - L1LR, small);
 	}
 	else if ((hL <= hmin) && (zR < zbL) && (hR > hmin))
 	{
@@ -1691,21 +1658,21 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 
 	if (h1 < hmin)
 	{
-		h1 = 0e0;
-		q1 = 0e0;
-		r1 = 0e0;
+		h1 = 0.;
+		q1 = 0.;
+		r1 = 0.;
 	}
 
 	// Characteristic variables
 	SCALAR c1 = sqrt(g * h1);
-	SCALAR u1 = q1 / max_0(h1, small);
-	SCALAR v1 = r1 / max_0(h1, small);
-	SCALAR L1 = max_0(u1 + c1, 0e0);
+	SCALAR u1 = q1 / std::max(h1, small);
+	SCALAR v1 = r1 / std::max(h1, small);
+	SCALAR L1 = std::max(u1 + c1, 0.);
 	//===================================================================
 
-	SCALAR F1 = 0;
-	SCALAR F2 = 0;
-	SCALAR F3 = 0;
+	SCALAR F1 = 0.;
+	SCALAR F2 = 0.;
+	SCALAR F3 = 0.;
 	//-----Boundary conditions-------------------
 	//-----Free Outflow-------
 	if (typBC.compare("f") == 0 || typBC.compare("F") == 0)
@@ -1720,7 +1687,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 	{
 		//-----message------
 		SCALAR c=(u1-2*c1)/(ValBC-2);
-		c=max_0(c,0);
+		c=std::max(c,0.);
 		SCALAR u=-ValBC*c;
 		SCALAR h=c*c/g;
 		F1=h*u;
@@ -1731,7 +1698,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 	else if (typBC.compare("h") == 0 || typBC.compare("H") == 0)
 	{
 		//------message----------
-		SCALAR h = max_0(ValBC, 0);
+		SCALAR h = std::max(ValBC, 0.);
 		SCALAR u = 0;
 
 		if(L1 < 0)
@@ -1742,8 +1709,8 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 		}
 		else
 		{
-			SCALAR cmin = max_1(sqrt(g * h), (2 * c1 - u1) / 3.0, 0.0);
-			h = max_0(h, (cmin * cmin) / g);
+			SCALAR cmin = std::max({ sqrt(g * h), (2 * c1 - u1) / 3.0, 0.0 });
+			h = std::max(h, (cmin * cmin) / g);
 			SCALAR c = sqrt(g * h);
 			u = u1 + 2 * (c - c1);
 		}
@@ -1756,14 +1723,14 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 	else if (typBC.compare("z") == 0 || typBC.compare("Z") == 0)
 	{
 		//------message-----
-		SCALAR h=max_0(ValBC - zb,0);
+		SCALAR h=std::max(ValBC - zb,0.);
 		SCALAR c=sqrt(g*h);
 		SCALAR u=u1+2*(c-c1);
 		F1=h*u;
 		F2=h*u*u+0.5*g*h*h;
 
 		/** @todo Utilité ??? **/
-		h=max_0(ValBC-zb,0);//why is part need
+		h=std::max(ValBC-zb,0.);//why is part need
 		if (L1 < 0)
 		{
 			/* torrentiel sortant*/
@@ -1772,8 +1739,8 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 		}
 		else
 		{
-			SCALAR cmin=max_1(sqrt(g*h),(2*c1-u1)/3,0);
-			h=max_0(h,(cmin*cmin)/g);
+			SCALAR cmin=std::max({ sqrt(g*h), (2*c1-u1)/3, 0. });
+			h=std::max(h,(cmin*cmin)/g);
 			c=sqrt(g*h);
 			u=u1+2*(c-c1);
 		}
@@ -1789,13 +1756,13 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 		SCALAR hc=pow(((F1*F1)/g),1/3);
 		if (hc>=h1)
 		{
-			F2=(q1*q1)/max_0(hc,small)+
+			F2=(q1*q1)/std::max(hc,small)+
 					0.5*g*h1*h1+
 					(F1-q1)*L1;
 		}
 		else
 		{
-			F2=(q1*q1)/max_0(h1,small)+
+			F2=(q1*q1)/std::max(h1,small)+
 					0.5*g*h1*h1+
 					(F1-q1)*L1;
 		}
@@ -1812,14 +1779,14 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 		{
 			//No z:weir elevation not reached
 			F1=0;
-			F2=(q1*q1)/max_0(h1,small)
+			F2=(q1*q1)/std::max(h1,small)
 					+0.5*g*h1*h1;
 		}
 		else
 		{
 			// Weir overtoped
 			F1=-0.42*sqrt(2*g)*pow((h1-ValBC),3/2);
-			F2=(q1*q1)/max_0(h1,small)
+			F2=(q1*q1)/std::max(h1,small)
 					+0.5*g*h1*h1;
 		}
 	}
