@@ -609,7 +609,7 @@ void Plugin_ShallowWater::init()
 	hmin_ = 1e-3; // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_ = 1e-35; // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
 
-	max_depth_ = 3;
+	max_depth_ = 4;
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Edge e) { compute_edge_length_and_normal(e); },

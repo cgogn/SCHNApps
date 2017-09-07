@@ -42,10 +42,10 @@ uint32 View::view_count_ = 0;
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
 	schnapps_(s),
-	background_color_(0.1f, 0.1f, 0.2f, 0.0f),
+	background_color_(0, 0, 0, 255),
 	current_camera_(nullptr),
-	bb_min_(0.0, 0.0, 0.0),
-	bb_max_(0.0, 0.0, 0.0),
+	bb_min_(0., 0., 0.),
+	bb_max_(0., 0., 0.),
 	button_area_(nullptr),
 	close_button_(nullptr),
 	Vsplit_button_(nullptr),
@@ -735,6 +735,7 @@ void View::color_selected()
 	background_color_ = color_dial_->currentColor();
 	this->makeCurrent();
 	glClearColor(background_color_.redF(), background_color_.greenF(), background_color_.blueF(), background_color_.alphaF());
+	this->update();
 }
 
 void View::ui_vertical_split_view(int, int, int, int)
