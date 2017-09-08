@@ -292,4 +292,5 @@ void Plugin_SurfaceRenderVector::set_vector_color(View* view, MapHandlerGen* map
 }
 
 } // namespace plugin_surface_render_vector
+
 } // namespace schnapps

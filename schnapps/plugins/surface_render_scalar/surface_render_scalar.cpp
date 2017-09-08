@@ -197,7 +197,17 @@ void Plugin_SurfaceRenderScalar::linked_map_attribute_changed(cgogn::Orbit orbit
 				MapParameters& p = view_param_set[map];
 				cgogn::rendering::VBO* vbo = p.get_scalar_vbo();
 				if (vbo && QString::fromStdString(vbo->name()) == attribute_name)
-					p.set_scalar_vbo(vbo);
+				{
+					if (p.auto_update_min_max_)
+					{
+						p.update_min_max();
+						if (it.first->is_selected_view() && map->is_selected_map())
+						{
+							dock_tab_->set_scalar_min(p.get_scalar_min());
+							dock_tab_->set_scalar_max(p.get_scalar_max());
+						}
+					}
+				}
 			}
 		}
 	}
