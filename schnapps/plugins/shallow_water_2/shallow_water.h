@@ -28,7 +28,7 @@
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
 
-#include <cgogn/topology/types/dynamic_primal_cmap2.h>
+#include <cgogn/topology/types/adaptive_tri_quad_cmap2.h>
 
 #include <shallow_water_dock_tab.h>
 
@@ -147,7 +147,7 @@ private:
 
 	CMap2Handler* map_;
 	CMap2* map2_;
-	std::unique_ptr<cgogn::DynamicPrimalCMap2> dpmap_;
+	std::unique_ptr<cgogn::AdaptiveTriQuadCMap2> atq_map_;
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
 	std::unique_ptr<CMap2::DartMarker> edge_left_side_;
 

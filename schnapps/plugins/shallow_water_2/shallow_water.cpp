@@ -583,8 +583,8 @@ bool Plugin_ShallowWater::enable()
 		*qtrav_
 	);
 
-	dpmap_ = cgogn::make_unique<cgogn::DynamicPrimalCMap2>(*map2_);
-	dpmap_->init();
+	atq_map_ = cgogn::make_unique<cgogn::AdaptiveTriQuadCMap2>(*map2_);
+	atq_map_->init();
 
 	draw_timer_ = new QTimer(this);
 	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
@@ -1001,7 +1001,7 @@ void Plugin_ShallowWater::try_subdivision()
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
-			if (dpmap_->face_level(f) >= max_depth_)
+			if (atq_map_->face_level(f) >= max_depth_)
 				return;
 
 			uint32 fidx = map2_->embedding(f);
@@ -1039,7 +1039,7 @@ void Plugin_ShallowWater::try_subdivision()
 				SCALAR old_phi;
 				VEC3& old_centroid = centroid_[f];
 
-				dpmap_->subdivide_face(f,
+				atq_map_->subdivide_face(f,
 					[&] (CMap2::Vertex v)
 					{
 						if (map2_->is_incident_to_boundary(CMap2::Edge(v.dart)))
@@ -1066,7 +1066,7 @@ void Plugin_ShallowWater::try_subdivision()
 					},
 					[&] (CMap2::Face f)
 					{
-						if (dpmap_->is_triangle_face(f))
+						if (atq_map_->is_triangle_face(f))
 						{
 							cgogn::Dart cfd = map2_->phi<12>(f.dart);
 							CMap2::Face cf(cfd);
@@ -1177,7 +1177,7 @@ void Plugin_ShallowWater::try_simplification()
 			if (simplified.is_marked(f))
 				return;
 
-			if (dpmap_->is_simplifiable(f))
+			if (atq_map_->is_simplifiable(f))
 			{
 				std::vector<CMap2::Face>* subfaces = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
 
@@ -1185,10 +1185,10 @@ void Plugin_ShallowWater::try_simplification()
 				SCALAR max_diff_q = 0.;
 				SCALAR max_diff_r = 0.;
 
-				switch (dpmap_->face_type(f))
+				switch (atq_map_->face_type(f))
 				{
-					case cgogn::DynamicPrimalCMap2::TRI_CORNER: {
-						CMap2::Face cf(map2_->phi<12>(dpmap_->oldest_dart(f))); // central face
+					case cgogn::AdaptiveTriQuadCMap2::TRI_CORNER: {
+						CMap2::Face cf(map2_->phi<12>(atq_map_->oldest_dart(f))); // central face
 						subfaces->push_back(cf);
 						map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
 						{
@@ -1199,7 +1199,7 @@ void Plugin_ShallowWater::try_simplification()
 						});
 						break;
 					}
-					case cgogn::DynamicPrimalCMap2::TRI_CENTRAL: {
+					case cgogn::AdaptiveTriQuadCMap2::TRI_CENTRAL: {
 						subfaces->push_back(f);
 						map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
 						{
@@ -1210,8 +1210,8 @@ void Plugin_ShallowWater::try_simplification()
 						});
 						break;
 					}
-					case cgogn::DynamicPrimalCMap2::QUAD: {
-						cgogn::Dart cv = map2_->phi<12>(dpmap_->oldest_dart(f));
+					case cgogn::AdaptiveTriQuadCMap2::QUAD: {
+						cgogn::Dart cv = map2_->phi<12>(atq_map_->oldest_dart(f));
 						map2_->foreach_incident_face(CMap2::Vertex(cv), [&] (CMap2::Face iface)
 						{
 							subfaces->push_back(iface);
@@ -1246,7 +1246,7 @@ void Plugin_ShallowWater::try_simplification()
 
 	for (CMap2::Face f : *to_simplify)
 	{
-		dpmap_->simplify_face(f,
+		atq_map_->simplify_face(f,
 			[&] (CMap2::Face f)
 			{
 				old_h.clear();
@@ -1255,11 +1255,11 @@ void Plugin_ShallowWater::try_simplification()
 				old_phi.clear();
 				old_area.clear();
 
-				if (dpmap_->is_triangle_face(f))
+				if (atq_map_->is_triangle_face(f))
 				{
 					CMap2::Face cf(f.dart);
-					if (dpmap_->face_type(f) == cgogn::DynamicPrimalCMap2::TRI_CORNER)
-						cf.dart = map2_->phi<12>(dpmap_->oldest_dart(f));
+					if (atq_map_->face_type(f) == cgogn::AdaptiveTriQuadCMap2::TRI_CORNER)
+						cf.dart = map2_->phi<12>(atq_map_->oldest_dart(f));
 					uint32 cfidx = map2_->embedding(cf);
 					old_h.push_back(h_[cfidx]);
 					old_q.push_back(q_[cfidx]);
@@ -1278,7 +1278,7 @@ void Plugin_ShallowWater::try_simplification()
 				}
 				else
 				{
-					CMap2::Vertex cv(map2_->phi<12>(dpmap_->oldest_dart(f)));
+					CMap2::Vertex cv(map2_->phi<12>(atq_map_->oldest_dart(f)));
 					map2_->foreach_incident_face(cv, [&] (CMap2::Face iface)
 					{
 						uint32 ifaceidx = map2_->embedding(iface);
