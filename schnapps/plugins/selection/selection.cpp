@@ -274,9 +274,9 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 							case MapParameters::SingleCell:
 								if (!p.selecting_vertex_.is_nil())
 								{
-									if(event->button() == Qt::LeftButton)
+									if (event->button() == Qt::LeftButton)
 										csg->select(p.selecting_vertex_);
-									else if(event->button() == Qt::RightButton)
+									else if (event->button() == Qt::RightButton)
 										csg->unselect(p.selecting_vertex_);
 									p.update_selected_cells_rendering();
 								}
@@ -286,9 +286,9 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 								{
 									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
 									neighborhood->collect(p.selecting_vertex_);
-									if(event->button() == Qt::LeftButton)
+									if (event->button() == Qt::LeftButton)
 										csg->select(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
-									if(event->button() == Qt::RightButton)
+									else if (event->button() == Qt::RightButton)
 										csg->unselect(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
 								}
 							}
@@ -304,9 +304,9 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 							case MapParameters::SingleCell:
 								if (!p.selecting_edge_.is_nil())
 								{
-									if(event->button() == Qt::LeftButton)
+									if (event->button() == Qt::LeftButton)
 										csg->select(p.selecting_edge_);
-									else if(event->button() == Qt::RightButton)
+									else if (event->button() == Qt::RightButton)
 										csg->unselect(p.selecting_edge_);
 									p.update_selected_cells_rendering();
 								}
@@ -319,11 +319,11 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 									{
 										neighborhood->collect(p.selecting_vertex_);
 										const auto& cells = neighborhood->cells(map->orbit(CellType::Edge_Cell));
-										for(auto e : cells)
+										for (auto e : cells)
 										{
-											if(event->button() == Qt::LeftButton)
+											if (event->button() == Qt::LeftButton)
 												csg->select(e);
-											else if(event->button() == Qt::RightButton)
+											else if (event->button() == Qt::RightButton)
 												csg->unselect(e);
 										}
 									}
@@ -342,9 +342,9 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 							case MapParameters::SingleCell:
 								if (!p.selecting_face_.is_nil())
 								{
-									if(event->button() == Qt::LeftButton)
+									if (event->button() == Qt::LeftButton)
 										csg->select(p.selecting_face_);
-									else if(event->button() == Qt::RightButton)
+									else if (event->button() == Qt::RightButton)
 										csg->unselect(p.selecting_face_);
 									p.update_selected_cells_rendering();
 								}
@@ -358,11 +358,11 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 									{
 										neighborhood->collect(p.selecting_vertex_);
 										const auto& cells = neighborhood->cells(map->orbit(CellType::Face_Cell));
-										for(auto f : cells)
+										for (auto f : cells)
 										{
-											if(event->button() == Qt::LeftButton)
+											if (event->button() == Qt::LeftButton)
 												csg->select(f);
-											else if(event->button() == Qt::RightButton)
+											else if  (event->button() == Qt::RightButton)
 												csg->unselect(f);
 										}
 									}
@@ -381,9 +381,9 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 							case MapParameters::SingleCell:
 								if (!p.selecting_volume_.is_nil())
 								{
-									if(event->button() == Qt::LeftButton)
+									if (event->button() == Qt::LeftButton)
 										csg->select(p.selecting_volume_);
-									else if(event->button() == Qt::RightButton)
+									else if (event->button() == Qt::RightButton)
 										csg->unselect(p.selecting_volume_);
 									p.update_selected_cells_rendering();
 								}
@@ -621,7 +621,9 @@ std::unique_ptr<Plugin_Selection::CollectorGen> Plugin_Selection::collector_with
 			CMap2Handler* mh2 = static_cast<CMap2Handler*>(map);
 			const CMap2::VertexAttribute<VEC3>* pos = static_cast<const CMap2::VertexAttribute<VEC3>*>(&position_att);
 			return cgogn::make_unique<cgogn::geometry::Collector_WithinSphere<VEC3, CMap2>>(*mh2->get_map(), radius, *pos);
-		} else {
+		}
+		else
+		{
 			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
 			const CMap3::VertexAttribute<VEC3>* pos = static_cast<const CMap3::VertexAttribute<VEC3>*>(&position_att);
 			return cgogn::make_unique<cgogn::geometry::Collector_WithinSphere<VEC3, CMap3>>(*mh3->get_map(), radius, *pos);
@@ -652,7 +654,9 @@ std::vector<cgogn::Dart> Plugin_Selection::get_picked_cells(MapHandlerGen* map, 
 				default:
 					pick_res = false; break;
 			}
-		} else {
+		}
+		else
+		{
 			CMap3Handler* mh3 = static_cast<CMap3Handler*>(map);
 			const CMap3::VertexAttribute<VEC3>* pos = static_cast<const CMap3::VertexAttribute<VEC3>*>(&position_att);
 			switch (ct) {
