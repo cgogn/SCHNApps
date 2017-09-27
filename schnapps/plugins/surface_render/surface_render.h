@@ -81,7 +81,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		edge_color_(0, 0, 0),
 		front_color_(85, 168, 190, 127),
 		back_color_(85, 168, 190, 127),
-		render_back_faces_(true),
+		render_backfaces_(true),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
 		transparency_factor_(127),
@@ -188,10 +188,10 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 #endif
 	}
 
-	bool get_render_back_face() const { return render_back_faces_; }
-	void set_render_back_face(bool b)
+	bool get_render_backfaces() const { return render_backfaces_; }
+	void set_render_backfaces(bool b)
 	{
-		render_back_faces_ = b;
+		render_backfaces_ = b;
 		shader_phong_param_->double_side_ = b;
 		shader_phong_color_param_->double_side_ = b;
 		shader_flat_param_->bf_culling_ = !b;
@@ -234,7 +234,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 	{
 #ifdef USE_TRANSP
 		use_transparency_ = b;
-		if (b)
+		if (use_transparency_)
 		{
 			transparency_factor_ = transparency_factor_ % 255;
 			shader_transp_flat_param_->set_alpha(transparency_factor_);
@@ -254,6 +254,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		return shader_transp_phong_param_.get();
 	}
 #endif
+
 private:
 
 	inline void initialize_gl()
@@ -273,10 +274,10 @@ private:
 		shader_phong_param_ = cgogn::rendering::ShaderPhong::generate_param();
 		shader_phong_param_->front_color_ = front_color_;
 		shader_phong_param_->back_color_ = back_color_;
-		shader_phong_param_->double_side_ = render_back_faces_;
+		shader_phong_param_->double_side_ = render_backfaces_;
 
 		shader_phong_color_param_ = cgogn::rendering::ShaderPhongColor::generate_param();
-		shader_phong_color_param_->double_side_ = render_back_faces_;
+		shader_phong_color_param_->double_side_ = render_backfaces_;
 
 		shader_point_sprite_param_ = cgogn::rendering::ShaderPointSprite::generate_param();
 		shader_point_sprite_param_->color_ = vertex_color_;
@@ -293,6 +294,7 @@ private:
 		shader_transp_phong_param_->back_color_ = back_color_;
 		shader_transp_flat_param_->set_alpha(transparency_factor_);
 #endif
+
 		set_position_vbo(position_vbo_);
 		set_normal_vbo(normal_vbo_);
 		set_color_vbo(color_vbo_);
@@ -309,6 +311,7 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderFlatTransp::Param>	shader_transp_flat_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPhongTransp::Param>	shader_transp_phong_param_;
 #endif
+
 	cgogn::rendering::VBO* position_vbo_;
 	cgogn::rendering::VBO* normal_vbo_;
 	cgogn::rendering::VBO* color_vbo_;
@@ -318,7 +321,7 @@ private:
 	QColor front_color_;
 	QColor back_color_;
 
-	bool render_back_faces_;
+	bool render_backfaces_;
 
 	float32 vertex_scale_factor_;
 	float32 vertex_base_size_;
@@ -343,8 +346,6 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_API Plugin_SurfaceRender : public PluginInt
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
-
-	friend class SurfaceRender_DockTab;
 
 public:
 
@@ -393,88 +394,32 @@ private slots:
 public slots:
 
 	void set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
-	inline void set_render_vertices(const QString& view_name, const QString& map_name, bool b)
-	{
-		set_render_vertices(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
-	}
 
-	void set_render_edges(View* view, MapHandlerGen* map, bool b);
-	inline void set_render_edges(const QString& view_name, const QString& map_name, bool b)
-	{
-		set_render_edges(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
-	}
+	void set_render_edges(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
 
-	void set_render_faces(View* view, MapHandlerGen* map, bool b);
-	inline void set_render_faces(const QString& view_name, const QString& map_name, bool b)
-	{
-		set_render_faces(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
-	}
+	void set_render_faces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
 
-	void set_render_boundary(View* view, MapHandlerGen* map, bool b);
-	inline void set_render_boundary(const QString& view_name, const QString& map_name, bool b)
-	{
-		set_render_boundary(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
-	}
+	void set_render_backfaces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
 
-	void set_face_style(View* view, MapHandlerGen* map, MapParameters::FaceShadingStyle s);
-	inline void set_face_style(const QString& view_name, const QString& map_name, MapParameters::FaceShadingStyle s)
-	{
-		set_face_style(schnapps_->get_view(view_name), schnapps_->get_map(map_name), s);
-	}
+	void set_render_boundary(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
 
-	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
-	inline void set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
-	{
-		MapHandlerGen* map = schnapps_->get_map(map_name);
-		if (map)
-			set_position_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
-	}
+	void set_face_style(View* view, MapHandlerGen* map, MapParameters::FaceShadingStyle s, bool update_dock_tab = true);
 
-	void set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
-	inline void set_normal_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
-	{
-		MapHandlerGen* map = schnapps_->get_map(map_name);
-		if (map)
-			set_normal_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
-	}
+	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab = true);
 
-	void set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
-	inline void set_color_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
-	{
-		MapHandlerGen* map = schnapps_->get_map(map_name);
-		if (map)
-			set_color_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
-	}
+	void set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab = true);
 
-	void set_vertex_color(View* view, MapHandlerGen* map, const QColor& color);
-	inline void set_vertex_color(const QString& view_name, const QString& map_name, const QColor& color)
-	{
-		set_vertex_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
-	}
+	void set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab = true);
 
-	void set_edge_color(View* view, MapHandlerGen* map, const QColor& color);
-	inline void set_edge_color(const QString& view_name, const QString& map_name, const QColor& color)
-	{
-		set_edge_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
-	}
+	void set_vertex_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
 
-	void set_front_color(View* view, MapHandlerGen* map, const QColor& color);
-	inline void set_front_color(const QString& view_name, const QString& map_name, const QColor& color)
-	{
-		set_front_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
-	}
+	void set_edge_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
 
-	void set_back_color(View* view, MapHandlerGen* map, const QColor& color);
-	inline void set_back_color(const QString& view_name, const QString& map_name, const QColor& color)
-	{
-		set_back_color(schnapps_->get_view(view_name), schnapps_->get_map(map_name), color);
-	}
+	void set_front_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
 
-	void set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf);
-	void set_vertex_scale_factor(const QString& view_name, const QString& map_name, float32 sf)
-	{
-		set_vertex_scale_factor(schnapps_->get_view(view_name), schnapps_->get_map(map_name), sf);
-	}
+	void set_back_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
+
+	void set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf, bool update_dock_tab = true);
 
 private:
 
@@ -489,9 +434,8 @@ private:
 #ifdef USE_TRANSP
 	PluginInteraction* plug_transp_;
 #endif
-	std::map<View*,QMetaObject::Connection> connection_map_linked_;
-	std::map<View*,QMetaObject::Connection> connection_map_unlinked_;
-
+	std::map<View*, QMetaObject::Connection> connection_map_linked_;
+	std::map<View*, QMetaObject::Connection> connection_map_unlinked_;
 };
 
 } // namespace plugin_surface_render

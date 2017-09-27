@@ -46,8 +46,6 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_API SurfaceRender_DockTab : public QWidget,
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRender;
-
 public:
 
 	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
@@ -76,9 +74,9 @@ private slots:
 	void vertices_scale_factor_changed(int i);
 	void render_edges_changed(bool b);
 	void render_faces_changed(bool b);
+	void render_backfaces_changed(bool b);
 	void face_style_changed(QAbstractButton* b);
 	void render_boundary_changed(bool b);
-	void render_backface_changed(bool b);
 
 	void vertex_color_clicked();
 	void edge_color_clicked();
@@ -90,19 +88,13 @@ private slots:
 	void transparency_factor_changed(int n);
 	void transparency_rendering_changed(bool b);
 
-private:
-
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_normal_vbo(QString name);
-	void remove_normal_vbo(QString name);
-	void add_color_vbo(QString name);
-	void remove_color_vbo(QString name);
+public:
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace plugin_surface_render
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_

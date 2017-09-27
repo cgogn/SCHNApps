@@ -360,7 +360,7 @@ bool Plugin_ShallowWater::enable()
 		std::getline(file_bc, str);
 		tab_ns[Number_of_BC - 1] = - std::stoi(str);
 
-		std::string tab_type[Number_of_BC];
+		std::vector<std::string> tab_type(Number_of_BC);
 		std::getline(file_bc, str, '\t'); // read "Type"
 		for (uint32 i = 0; i < Number_of_BC - 1; ++i)
 		{
@@ -463,7 +463,7 @@ bool Plugin_ShallowWater::enable()
 			std::getline(file_bc_1d, str);
 			tab_ns[Number_of_BC - 1] = - std::stoi(str);
 
-			std::string tab_type[Number_of_BC];
+			std::vector<std::string> tab_type(Number_of_BC);
 			std::getline(file_bc_1d, str, '\t'); // read "Type"
 			for (uint32 i = 0; i < Number_of_BC - 1; ++i)
 			{

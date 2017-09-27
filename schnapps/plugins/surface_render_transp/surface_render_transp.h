@@ -88,6 +88,7 @@ private:
 	void view_unlinked(View*) override;
 
 private slots:
+
 	void viewer_initialized();
 
 private:

@@ -94,10 +94,7 @@ void ControlDock_MapTab::set_selected_map(const QString& map_name)
 {
 	QList<QListWidgetItem*> items = list_maps->findItems(map_name, Qt::MatchExactly);
 	if (!items.empty())
-	{
 		items[0]->setSelected(true);
-		update_selected_map_info();
-	}
 }
 
 
@@ -295,35 +292,15 @@ void ControlDock_MapTab::map_added(MapHandlerGen* m)
 	updating_ui_ = true;
 	list_maps->addItem(m->get_name());
 	updating_ui_ = false;
+
 	if (schnapps_->get_core_setting("Added map is selected").toBool())
-	{
-		if (list_maps->selectedItems().empty())
-			list_maps->setItemSelected(list_maps->item(list_maps->count() - 1),true);
-	}
+		set_selected_map(m->get_name());
 }
 
 void ControlDock_MapTab::map_removed(MapHandlerGen* m)
 {
 	if (selected_map_ == m)
-	{
-//		selected_selector_[DART] = nullptr;
-//		foreach(QListWidgetItem* item, list_dartSelectors->selectedItems())
-//			item->setSelected(false);
-//		selected_selector_[VERTEX] = nullptr;
-//		foreach(QListWidgetItem* item, list_vertexSelectors->selectedItems())
-//			item->setSelected(false);
-//		selected_selector_[EDGE] = nullptr;
-//		foreach(QListWidgetItem* item, list_edgeSelectors->selectedItems())
-//			item->setSelected(false);
-//		selected_selector_[FACE] = nullptr;
-//		foreach(QListWidgetItem* item, list_faceSelectors->selectedItems())
-//			item->setSelected(false);
-//		selected_selector_[VOLUME] = nullptr;
-//		foreach(QListWidgetItem* item, list_volumeSelectors->selectedItems())
-//			item->setSelected(false);
-
 		selected_map_ = nullptr;
-	}
 
 	QList<QListWidgetItem*> items = list_maps->findItems(m->get_name(), Qt::MatchExactly);
 	if (!items.empty())
@@ -365,7 +342,29 @@ void ControlDock_MapTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void ControlDock_MapTab::selected_map_connectivity_changed()
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+
+	label_dartNbCells->setText(QString::number(0));
+	label_vertexNbCells->setText(QString::number(0));
+	label_edgeNbCells->setText(QString::number(0));
+	label_faceNbCells->setText(QString::number(0));
+	label_volumeNbCells->setText(QString::number(0));
+
+	if (selected_map_)
+	{
+		const uint32 nb_d = selected_map_->nb_cells(Dart_Cell);
+		label_dartNbCells->setText(QString::number(nb_d));
+		const uint32 nb_v = selected_map_->nb_cells(Vertex_Cell);
+		label_vertexNbCells->setText(QString::number(nb_v));
+		const uint32 nb_e = selected_map_->nb_cells(Edge_Cell);
+		label_edgeNbCells->setText(QString::number(nb_e));
+		const uint32 nb_f = selected_map_->nb_cells(Face_Cell);
+		label_faceNbCells->setText(QString::number(nb_f));
+		const uint32 nb_vol = selected_map_->nb_cells(Volume_Cell);
+		label_volumeNbCells->setText(QString::number(nb_vol));
+	}
+
+	updating_ui_ = false;
 }
 
 void ControlDock_MapTab::selected_map_cells_set_added(CellType ct, const QString& name)
