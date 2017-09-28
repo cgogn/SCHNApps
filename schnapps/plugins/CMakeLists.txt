@@ -11,8 +11,8 @@ endforeach()
 
 
 if ((Qt5Widgets_VERSION VERSION_GREATER 5.5.99) AND ${USE_PLUGIN_surface_render_transp})
-  add_definitions("-D USE_TRANSP")
-  set (USE_TRANSP ON)
+  add_definitions("-D USE_TRANSPARENCY")
+  set (USE_TRANSPARENCY ON)
 endif()
 
 foreach(plug_dir ${plugin_dirs})

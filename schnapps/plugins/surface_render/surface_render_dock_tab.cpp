@@ -24,7 +24,7 @@
 #include "surface_render_dock_tab.h"
 #include "surface_render.h"
 
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 #include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
 #endif
 
@@ -34,6 +34,7 @@
 
 namespace schnapps
 {
+
 namespace plugin_surface_render
 {
 
@@ -66,9 +67,9 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 
 	checkBox_transparency->setChecked(false);
 	slider_transparency->setDisabled(true);
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_factor_changed(int)));
-	connect(checkBox_transparency, SIGNAL(toggled(bool)), this, SLOT(transparency_rendering_changed(bool)));
+	connect(checkBox_transparency, SIGNAL(toggled(bool)), this, SLOT(transparency_enabled_changed(bool)));
 #else
 	checkBox_transparency->setDisabled(true);
 #endif
@@ -90,7 +91,7 @@ void SurfaceRender_DockTab::normal_vbo_changed(int index)
 	{
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (map)
-			plugin_->set_position_vbo(schnapps_->get_selected_view(), map, map->get_vbo(combo_normalVBO->currentText()), false);
+			plugin_->set_normal_vbo(schnapps_->get_selected_view(), map, map->get_vbo(combo_normalVBO->currentText()), false);
 	}
 }
 
@@ -100,7 +101,7 @@ void SurfaceRender_DockTab::color_vbo_changed(int index)
 	{
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (map)
-			plugin_->set_position_vbo(schnapps_->get_selected_view(), map, map->get_vbo(combo_colorVBO->currentText()), false);
+			plugin_->set_color_vbo(schnapps_->get_selected_view(), map, map->get_vbo(combo_colorVBO->currentText()), false);
 	}
 }
 
@@ -235,45 +236,19 @@ void SurfaceRender_DockTab::color_selected()
 	}
 }
 
-void SurfaceRender_DockTab::transparency_factor_changed(int n)
+void SurfaceRender_DockTab::transparency_enabled_changed(bool b)
 {
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_transparency_factor(n);
-			view->update();
-		}
-	}
+		plugin_->set_transparency_enabled(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, true);
 #endif
 }
 
-void SurfaceRender_DockTab::transparency_rendering_changed(bool b)
+void SurfaceRender_DockTab::transparency_factor_changed(int n)
 {
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	if (!updating_ui_)
-	{
-		slider_transparency->setEnabled(b);
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_transparency_enabled(b);
-			if (p.render_faces_)
-			{
-				if (b)
-					plugin_->add_transparency(view, map, p);
-				else
-					plugin_->remove_transparency(view, map, p);
-			}
-			view->update();
-		}
-	}
+		plugin_->set_transparency_factor(schnapps_->get_selected_view(), schnapps_->get_selected_map(), n, false);
 #endif
 }
 
@@ -337,7 +312,7 @@ void SurfaceRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapP
 	back_color_ = p.get_back_color();
 	backColorButton->setStyleSheet("QPushButton { background-color:" + back_color_.name() + " }");
 
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	checkBox_transparency->setChecked(p.use_transparency_);
 	slider_transparency->setValue(p.get_transparency_factor());
 	slider_transparency->setEnabled(p.use_transparency_);

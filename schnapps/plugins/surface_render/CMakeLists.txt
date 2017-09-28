@@ -35,7 +35,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 
-if (USE_TRANSP)
+if (USE_TRANSPARENCY)
 	target_link_libraries(${PROJECT_NAME}
 		schnapps_core
 		plugin_surface_render_transp

@@ -52,6 +52,11 @@ MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandler
 
 bool Plugin_SurfaceRenderScalar::enable()
 {
+	if (get_setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = get_setting("Auto load position attribute").toString();
+	else
+		setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position").toString();
+
 	dock_tab_ = new SurfaceRenderScalar_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render Scalar");
 
@@ -99,7 +104,7 @@ void Plugin_SurfaceRenderScalar::view_linked(View* view)
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
+	for (MapHandlerGen* map : view->get_linked_maps()) { add_linked_map(view, map); }
 }
 
 void Plugin_SurfaceRenderScalar::view_unlinked(View* view)
@@ -110,32 +115,46 @@ void Plugin_SurfaceRenderScalar::view_unlinked(View* view)
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
+	for (MapHandlerGen* map : view->get_linked_maps()) { remove_linked_map(view, map); }
 }
 
 void Plugin_SurfaceRenderScalar::map_linked(MapHandlerGen *map)
 {
-	update_dock_tab();
+	View* view = static_cast<View*>(sender());
+	add_linked_map(view, map);
+}
 
+void Plugin_SurfaceRenderScalar::add_linked_map(View* view, MapHandlerGen *map)
+{
 	if (map->dimension() == 2)
 	{
+		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), false);
+
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, QString)), Qt::UniqueConnection);
+
+		update_dock_tab();
 	}
 }
 
 void Plugin_SurfaceRenderScalar::map_unlinked(MapHandlerGen *map)
 {
-	update_dock_tab();
+	View* view = static_cast<View*>(sender());
+	remove_linked_map(view, map);
+}
 
+void Plugin_SurfaceRenderScalar::remove_linked_map(View* view, MapHandlerGen *map)
+{
 	if (map->dimension() == 2)
 	{
 		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, QString)));
+
+		update_dock_tab();
 	}
 }
 
@@ -143,12 +162,26 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
+	if (vbo->vector_dimension() == 3)
+	{
+		const QString vbo_name = QString::fromStdString(vbo->name());
+		for (auto& it : parameter_set_)
+		{
+			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(map) > 0ul)
+			{
+				MapParameters& p = view_param_set[map];
+				if (!p.get_position_vbo() && vbo_name == setting_auto_load_position_attribute_)
+					set_position_vbo(it.first, map, vbo, false);
+			}
+		}
+	}
+
 	if (map->is_selected_map())
 	{
-		if (vbo->vector_dimension() == 3)
-			dock_tab_->add_position_vbo(QString::fromStdString(vbo->name()));
-		if (vbo->vector_dimension() == 1)
-			dock_tab_->add_scalar_vbo(QString::fromStdString(vbo->name()));
+		View* view = schnapps_->get_selected_view();
+		if (view)
+			dock_tab_->update_map_parameters(map, get_parameters(view, map));
 	}
 }
 
@@ -156,26 +189,31 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_removed(cgogn::rendering::VBO* v
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
+	if (vbo->vector_dimension() == 3 || vbo->vector_dimension() == 1)
+	{
+		for (auto& it : parameter_set_)
+		{
+			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(map) > 0ul)
+			{
+				MapParameters& p = view_param_set[map];
+				if (p.get_position_vbo() == vbo)
+					p.set_position_vbo(nullptr);
+				if (p.get_scalar_vbo() == vbo)
+					p.set_scalar_vbo(nullptr);
+			}
+		}
+
+		for (View* view : map->get_linked_views())
+			view->update();
+	}
+
 	if (map->is_selected_map())
 	{
-		if (vbo->vector_dimension() == 3)
-			dock_tab_->remove_position_vbo(QString::fromStdString(vbo->name()));
-		if (vbo->vector_dimension() == 1)
-			dock_tab_->remove_scalar_vbo(QString::fromStdString(vbo->name()));
+		View* view = schnapps_->get_selected_view();
+		if (view)
+			dock_tab_->update_map_parameters(map, get_parameters(view, map));
 	}
-
-	for (auto& it : parameter_set_)
-	{
-		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-		MapParameters& map_param = view_param_set[map];
-		if (map_param.get_position_vbo() == vbo)
-			map_param.set_position_vbo(nullptr);
-		if (map_param.get_scalar_vbo() == vbo)
-			map_param.set_scalar_vbo(nullptr);
-	}
-
-	for (View* view : map->get_linked_views())
-		view->update();
 }
 
 void Plugin_SurfaceRenderScalar::linked_map_bb_changed()
@@ -203,8 +241,8 @@ void Plugin_SurfaceRenderScalar::linked_map_attribute_changed(cgogn::Orbit orbit
 						p.update_min_max();
 						if (it.first->is_selected_view() && map->is_selected_map())
 						{
-							dock_tab_->set_scalar_min(p.get_scalar_min());
-							dock_tab_->set_scalar_max(p.get_scalar_max());
+							MapParameters& p = get_parameters(it.first, map);
+							dock_tab_->update_map_parameters(map, p);
 						}
 					}
 				}
@@ -219,7 +257,7 @@ void Plugin_SurfaceRenderScalar::viewer_initialized()
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];
-		for (auto & p : view_param_set)
+		for (auto& p : view_param_set)
 			p.second.initialize_gl();
 	}
 }
@@ -231,8 +269,7 @@ void Plugin_SurfaceRenderScalar::update_dock_tab()
 	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		schnapps_->enable_plugin_tab_widgets(this);
-		const MapParameters& p = get_parameters(view, map);
-		dock_tab_->update_map_parameters(map, p);
+		dock_tab_->update_map_parameters(map, get_parameters(view, map));
 	}
 	else
 		schnapps_->disable_plugin_tab_widgets(this);
@@ -242,73 +279,109 @@ void Plugin_SurfaceRenderScalar::update_dock_tab()
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_SurfaceRenderScalar::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
+void Plugin_SurfaceRenderScalar::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_position_vbo(vbo);
-		if (view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo)
+void Plugin_SurfaceRenderScalar::set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_scalar_vbo(vbo);
-		if (view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm)
+void Plugin_SurfaceRenderScalar::set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_color_map(cm);
-		if (view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_expansion(View* view, MapHandlerGen* map, int32 e)
+void Plugin_SurfaceRenderScalar::set_auto_update_min_max(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_auto_update_min_max(b);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_scalar_min(View* view, MapHandlerGen* map, double d, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_scalar_min(d);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_scalar_max(View* view, MapHandlerGen* map, double d, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_scalar_max(d);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->update_map_parameters(map, p);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::set_expansion(View* view, MapHandlerGen* map, int32 e, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_expansion(e);
-		if (view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_show_iso_lines(View* view, MapHandlerGen* map, bool b)
+void Plugin_SurfaceRenderScalar::set_show_iso_lines(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_show_iso_lines(b);
-		if (view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n)
+void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
 		p.set_nb_iso_levels(n);
-		if (view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->update_map_parameters(map, p);
 		view->update();
 	}

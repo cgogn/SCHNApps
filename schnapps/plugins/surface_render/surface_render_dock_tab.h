@@ -85,8 +85,8 @@ private slots:
 	void both_color_clicked();
 	void color_selected();
 
+	void transparency_enabled_changed(bool b);
 	void transparency_factor_changed(int n);
-	void transparency_rendering_changed(bool b);
 
 public:
 

@@ -60,6 +60,8 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 		initialize_gl();
 	}
 
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
+
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
@@ -85,9 +87,9 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 	}
 
 	cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
-	void set_color_map(int color_map)
+	void set_color_map(cgogn::rendering::ShaderScalarPerVertex::ColorMap color_map)
 	{
-		color_map_ = cgogn::rendering::ShaderScalarPerVertex::ColorMap(color_map);
+		color_map_ = color_map;
 		shader_scalar_per_vertex_param_->color_map_ = color_map_;
 	}
 
@@ -195,13 +197,11 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API Plugin_SurfaceRenderScalar : pub
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
-	friend class SurfaceRenderScalar_DockTab;
-
 public:
 
 	inline Plugin_SurfaceRenderScalar() {}
 
-	~Plugin_SurfaceRenderScalar() {}
+	~Plugin_SurfaceRenderScalar() override {}
 
 private:
 
@@ -230,6 +230,13 @@ private slots:
 	void map_linked(MapHandlerGen* map);
 	void map_unlinked(MapHandlerGen* map);
 
+private:
+
+	void add_linked_map(View* view, MapHandlerGen* map);
+	void remove_linked_map(View* view, MapHandlerGen* map);
+
+private slots:
+
 	// slots called from MapHandler signals
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
@@ -242,50 +249,22 @@ private slots:
 
 public slots:
 
-	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
-	inline void set_position_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
-	{
-		MapHandlerGen* map = schnapps_->get_map(map_name);
-		if (map)
-			set_position_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
-	}
-
-	void set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo);
-	inline void set_scalar_vbo(const QString& view_name, const QString& map_name, const QString& vbo_name)
-	{
-		MapHandlerGen* map = schnapps_->get_map(map_name);
-		if (map)
-			set_scalar_vbo(schnapps_->get_view(view_name), map, map->get_vbo(vbo_name));
-	}
-
-	void set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm);
-	void set_color_map(const QString& view_name, const QString& map_name, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm)
-	{
-		set_color_map(schnapps_->get_view(view_name), schnapps_->get_map(map_name), cm);
-	}
-
-	void set_expansion(View* view, MapHandlerGen* map, int32 e);
-	void set_expansion(const QString& view_name, const QString& map_name, int32 e)
-	{
-		set_expansion(schnapps_->get_view(view_name), schnapps_->get_map(map_name), e);
-	}
-
-	void set_show_iso_lines(View* view, MapHandlerGen* map, bool b);
-	void set_show_iso_lines(const QString& view_name, const QString& map_name, bool b)
-	{
-		set_show_iso_lines(schnapps_->get_view(view_name), schnapps_->get_map(map_name), b);
-	}
-
-	void set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n);
-	void set_nb_iso_levels(const QString& view_name, const QString& map_name, int32 n)
-	{
-		set_nb_iso_levels(schnapps_->get_view(view_name), schnapps_->get_map(map_name), n);
-	}
+	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm, bool update_dock_tab);
+	void set_auto_update_min_max(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_scalar_min(View* view, MapHandlerGen* map, double d, bool update_dock_tab);
+	void set_scalar_max(View* view, MapHandlerGen* map, double d, bool update_dock_tab);
+	void set_expansion(View* view, MapHandlerGen* map, int32 e, bool update_dock_tab);
+	void set_show_iso_lines(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n, bool update_dock_tab);
 
 private:
 
 	SurfaceRenderScalar_DockTab* dock_tab_;
 	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
+
+	QString setting_auto_load_position_attribute_;
 };
 
 } // namespace plugin_surface_render_scalar

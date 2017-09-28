@@ -60,14 +60,9 @@ void SurfaceRenderScalar_DockTab::position_vbo_changed(int index)
 {
 	if (!updating_ui_)
 	{
-		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_position_vbo(map->get_vbo(combo_positionVBO->currentText()));
-			view->update();
-		}
+		if (map)
+			plugin_->set_position_vbo(schnapps_->get_selected_view(), map, map->get_vbo(combo_positionVBO->currentText()), false);
 	}
 }
 
@@ -75,203 +70,56 @@ void SurfaceRenderScalar_DockTab::selected_scalar_vbo_changed(QListWidgetItem* i
 {
 	if (!updating_ui_)
 	{
-		View* view = schnapps_->get_selected_view();
 		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			updating_ui_ = true;
-			p.set_scalar_vbo(map->get_vbo(item->text()));
-			combo_colorMap->setEnabled(true);
-			combo_colorMap->setCurrentIndex(p.get_color_map());
-			check_autoUpdateMinMax->setEnabled(true);
-			check_autoUpdateMinMax->setChecked(p.get_auto_update_min_max());
-			if (!p.get_auto_update_min_max())
-				spin_min->setEnabled(true);
-			else
-				spin_min->setDisabled(true);
-			spin_min->setValue(p.get_scalar_min());
-			if (!p.get_auto_update_min_max())
-				spin_max->setEnabled(true);
-			else
-				spin_max->setDisabled(true);
-			spin_max->setValue(p.get_scalar_max());
-			slider_expansion->setEnabled(true);
-			slider_expansion->setSliderPosition(p.get_expansion());
-			check_showIsoLines->setEnabled(true);
-			check_showIsoLines->setChecked(p.get_show_iso_lines());
-			slider_nbIsoLevels->setEnabled(true);
-			slider_nbIsoLevels->setSliderPosition(p.get_nb_iso_levels());
-			updating_ui_ = false;
-			view->update();
-		}
+		if (map)
+			plugin_->set_scalar_vbo(schnapps_->get_selected_view(), map, map->get_vbo(item->text()), true);
 	}
 }
 
 void SurfaceRenderScalar_DockTab::color_map_changed(int index)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_color_map(index);
-			view->update();
-		}
-	}
+		plugin_->set_color_map(schnapps_->get_selected_view(), schnapps_->get_selected_map(), cgogn::rendering::ShaderScalarPerVertex::ColorMap(index), false);
 }
 
 void SurfaceRenderScalar_DockTab::auto_update_min_max_changed(bool b)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_auto_update_min_max(b);
-			updating_ui_ = true;
-			if (!b)
-				spin_min->setEnabled(true);
-			else
-				spin_min->setDisabled(true);
-			spin_min->setValue(p.get_scalar_min());
-			if (!b)
-				spin_max->setEnabled(true);
-			else
-				spin_max->setDisabled(true);
-			spin_max->setValue(p.get_scalar_max());
-			updating_ui_ = false;
-			view->update();
-		}
-	}
+		plugin_->set_auto_update_min_max(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, true);
 }
 
 void SurfaceRenderScalar_DockTab::scalar_min_changed(double d)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_scalar_min(d);
-			view->update();
-		}
-	}
+		plugin_->set_scalar_min(schnapps_->get_selected_view(), schnapps_->get_selected_map(), d, false);
 }
 
 void SurfaceRenderScalar_DockTab::scalar_max_changed(double d)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_scalar_max(d);
-			view->update();
-		}
-	}
+		plugin_->set_scalar_max(schnapps_->get_selected_view(), schnapps_->get_selected_map(), d, false);
 }
 
 void SurfaceRenderScalar_DockTab::expansion_changed(int i)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_expansion(i);
-			view->update();
-		}
-	}
+		plugin_->set_expansion(schnapps_->get_selected_view(), schnapps_->get_selected_map(), i, false);
 }
 
 void SurfaceRenderScalar_DockTab::show_iso_lines_changed(bool b)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_show_iso_lines(b);
-			view->update();
-		}
-	}
+		plugin_->set_show_iso_lines(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
 }
 
 void SurfaceRenderScalar_DockTab::nb_iso_levels_changed(int i)
 {
 	if (!updating_ui_)
-	{
-		View* view = schnapps_->get_selected_view();
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (view && map)
-		{
-			MapParameters& p = plugin_->get_parameters(view, map);
-			p.set_nb_iso_levels(i);
-			view->update();
-		}
-	}
+		plugin_->set_nb_iso_levels(schnapps_->get_selected_view(), schnapps_->get_selected_map(), i, false);
 }
 
 
 
-
-
-void SurfaceRenderScalar_DockTab::add_position_vbo(const QString& name)
-{
-	updating_ui_ = true;
-	combo_positionVBO->addItem(name);
-	updating_ui_ = false;
-}
-
-void SurfaceRenderScalar_DockTab::remove_position_vbo(const QString& name)
-{
-	updating_ui_ = true;
-	int curIndex = combo_positionVBO->currentIndex();
-	int index = combo_positionVBO->findText(name, Qt::MatchExactly);
-	if (curIndex == index)
-		combo_positionVBO->setCurrentIndex(0);
-	combo_positionVBO->removeItem(index);
-	updating_ui_ = false;
-}
-
-void SurfaceRenderScalar_DockTab::add_scalar_vbo(const QString& name)
-{
-	updating_ui_ = true;
-	list_scalarVBO->addItem(name);
-	updating_ui_ = false;
-}
-
-void SurfaceRenderScalar_DockTab::remove_scalar_vbo(const QString& name)
-{
-	updating_ui_ = true;
-	QList<QListWidgetItem*> vbo = list_scalarVBO->findItems(name, Qt::MatchExactly);
-	if (!vbo.empty())
-		delete vbo[0];
-	updating_ui_ = false;
-}
-
-void SurfaceRenderScalar_DockTab::set_scalar_min(double s)
-{
-	spin_min->setValue(s);
-}
-
-void SurfaceRenderScalar_DockTab::set_scalar_max(double s)
-{
-	spin_max->setValue(s);
-}
 
 void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, const MapParameters& p)
 {
@@ -281,11 +129,10 @@ void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, cons
 	combo_positionVBO->addItem("- select VBO -");
 
 	list_scalarVBO->clear();
-	list_scalarVBO->clearSelection();
 
 	unsigned int i = 1;
 	unsigned int j = 0;
-	for(auto& vbo_it : map->get_vbo_set())
+	for (auto& vbo_it : map->get_vbo_set())
 	{
 		auto& vbo = vbo_it.second;
 		const uint32 dimension = vbo->vector_dimension();
@@ -299,6 +146,7 @@ void SurfaceRenderScalar_DockTab::update_map_parameters(MapHandlerGen* map, cons
 		if (dimension == 1)
 		{
 			list_scalarVBO->addItem(QString::fromStdString(vbo->name()));
+			list_scalarVBO->item(j)->setSelected(false);
 			if (vbo.get() == p.get_scalar_vbo())
 				list_scalarVBO->item(j)->setSelected(true);
 			++j;

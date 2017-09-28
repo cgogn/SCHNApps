@@ -44,8 +44,6 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API SurfaceRenderVector_DockTab : pu
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRenderVector;
-
 public:
 
 	SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p);
@@ -65,17 +63,13 @@ private slots:
 	void vector_scale_factor_changed(int i);
 	void vector_color_changed(int i);
 
-private:
-
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_vector_vbo(QString name);
-	void remove_vector_vbo(QString name);
+public:
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
 
 } // namespace plugin_surface_render_vector
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_

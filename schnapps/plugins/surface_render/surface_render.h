@@ -36,7 +36,7 @@
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_phong.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 #include <cgogn/rendering/transparency_shaders/shader_transparent_flat.h>
 #include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>
 #endif
@@ -70,10 +70,10 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		shader_phong_param_(nullptr),
 		shader_phong_color_param_(nullptr),
 		shader_point_sprite_param_(nullptr),
-	#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		shader_transp_flat_param_(nullptr),
 		shader_transp_phong_param_(nullptr),
-	#endif
+#endif
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
 		color_vbo_(nullptr),
@@ -95,6 +95,8 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		initialize_gl();
 	}
 
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
+
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
@@ -108,7 +110,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 			shader_phong_param_->set_position_vbo(position_vbo_);
 			shader_phong_color_param_->set_position_vbo(position_vbo_);
 			shader_point_sprite_param_->set_position_vbo(position_vbo_);
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 			shader_transp_flat_param_->set_position_vbo(position_vbo_);
 			shader_transp_phong_param_->set_position_vbo(position_vbo_);
 #endif
@@ -125,7 +127,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		{
 			shader_phong_param_->set_normal_vbo(normal_vbo_);
 			shader_phong_color_param_->set_normal_vbo(normal_vbo_);
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 			shader_transp_phong_param_->set_normal_vbo(normal_vbo_);
 #endif
 		}
@@ -166,7 +168,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		front_color_ = c;
 		shader_flat_param_->front_color_ = front_color_;
 		shader_phong_param_->front_color_ = front_color_;
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		shader_transp_flat_param_->front_color_ = front_color_;
 		shader_transp_phong_param_->front_color_ = front_color_;
 		shader_transp_flat_param_->set_alpha(transparency_factor_);
@@ -180,7 +182,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		back_color_ = c;
 		shader_flat_param_->back_color_ = back_color_;
 		shader_phong_param_->back_color_ = back_color_;
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		shader_transp_flat_param_->back_color_ = back_color_;
 		shader_transp_phong_param_->back_color_ = back_color_;
 		shader_transp_flat_param_->set_alpha(transparency_factor_);
@@ -195,7 +197,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		shader_phong_param_->double_side_ = b;
 		shader_phong_color_param_->double_side_ = b;
 		shader_flat_param_->bf_culling_ = !b;
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		shader_transp_phong_param_->bf_culling_ = !b;
 		shader_transp_flat_param_->bf_culling_ = !b;
 #endif
@@ -219,7 +221,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 
 	void set_transparency_factor(int32 n)
 	{
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		n = n % 255;
 		transparency_factor_ = n;
 		if (use_transparency_)
@@ -232,7 +234,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 
 	inline void set_transparency_enabled(bool b)
 	{
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		use_transparency_ = b;
 		if (use_transparency_)
 		{
@@ -243,13 +245,13 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 #endif
 	}
 
-#ifdef USE_TRANSP
-	inline cgogn::rendering::ShaderFlatTransp::Param* get_transp_flat_param()
+#ifdef USE_TRANSPARENCY
+	inline cgogn::rendering::ShaderFlatTransp::Param* get_transp_flat_param() const
 	{
 		return shader_transp_flat_param_.get();
 	}
 
-	inline cgogn::rendering::ShaderPhongTransp::Param* get_transp_phong_param()
+	inline cgogn::rendering::ShaderPhongTransp::Param* get_transp_phong_param() const
 	{
 		return shader_transp_phong_param_.get();
 	}
@@ -283,7 +285,7 @@ private:
 		shader_point_sprite_param_->color_ = vertex_color_;
 		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		shader_transp_flat_param_ = cgogn::rendering::ShaderFlatTransp::generate_param();
 		shader_transp_flat_param_->front_color_ = front_color_;
 		shader_transp_flat_param_->back_color_ = back_color_;
@@ -307,7 +309,7 @@ private:
 	std::unique_ptr<cgogn::rendering::ShaderPhong::Param>		shader_phong_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPhongColor::Param>	shader_phong_color_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	std::unique_ptr<cgogn::rendering::ShaderFlatTransp::Param>	shader_transp_flat_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPhongTransp::Param>	shader_transp_phong_param_;
 #endif
@@ -351,7 +353,7 @@ public:
 
 	inline Plugin_SurfaceRender() {}
 
-	~Plugin_SurfaceRender() override;
+	~Plugin_SurfaceRender() override {}
 
 private:
 
@@ -373,13 +375,23 @@ private:
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
-#ifdef USE_TRANSP
-	void add_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
-	void remove_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
-	void change_transparency(View* view, MapHandlerGen* map, MapParameters& mp);
+
+#ifdef USE_TRANSPARENCY
+	void add_transparency(View* view, MapHandlerGen* map);
+	void remove_transparency(View* view, MapHandlerGen* map);
+	void change_transparency(View* view, MapHandlerGen* map);
 #endif
-	void map_linked(View* view, MapHandlerGen* map);
-	void map_unlinked(View* view, MapHandlerGen* map);
+
+private slots:
+
+	// slots called from View signals
+	void map_linked(MapHandlerGen* map);
+	void map_unlinked(MapHandlerGen* map);
+
+private:
+
+	void add_linked_map(View* view, MapHandlerGen* map);
+	void remove_linked_map(View* view, MapHandlerGen* map);
 
 private slots:
 
@@ -387,39 +399,31 @@ private slots:
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
+
 	void viewer_initialized();
+
 	void enable_on_selected_view(Plugin* p);
+
 	void update_dock_tab();
 
 public slots:
 
-	void set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
-
-	void set_render_edges(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
-
-	void set_render_faces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
-
-	void set_render_backfaces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
-
-	void set_render_boundary(View* view, MapHandlerGen* map, bool b, bool update_dock_tab = true);
-
-	void set_face_style(View* view, MapHandlerGen* map, MapParameters::FaceShadingStyle s, bool update_dock_tab = true);
-
-	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab = true);
-
-	void set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab = true);
-
-	void set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab = true);
-
-	void set_vertex_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
-
-	void set_edge_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
-
-	void set_front_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
-
-	void set_back_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab = true);
-
-	void set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf, bool update_dock_tab = true);
+	void set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_render_edges(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_render_faces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_render_backfaces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_render_boundary(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_face_style(View* view, MapHandlerGen* map, MapParameters::FaceShadingStyle s, bool update_dock_tab);
+	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_vertex_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab);
+	void set_edge_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab);
+	void set_front_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab);
+	void set_back_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab);
+	void set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf, bool update_dock_tab);
+	void set_transparency_enabled(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
+	void set_transparency_factor(View* view, MapHandlerGen* map, int32 tf, bool update_dock_tab);
 
 private:
 
@@ -431,11 +435,9 @@ private:
 	QString setting_auto_load_normal_attribute_;
 	QString setting_auto_load_color_attribute_;
 
-#ifdef USE_TRANSP
-	PluginInteraction* plug_transp_;
+#ifdef USE_TRANSPARENCY
+	PluginInteraction* plugin_transparency_;
 #endif
-	std::map<View*, QMetaObject::Connection> connection_map_linked_;
-	std::map<View*, QMetaObject::Connection> connection_map_unlinked_;
 };
 
 } // namespace plugin_surface_render

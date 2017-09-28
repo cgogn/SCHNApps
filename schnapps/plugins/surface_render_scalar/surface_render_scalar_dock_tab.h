@@ -44,8 +44,6 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API SurfaceRenderScalar_DockTab : pu
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRenderScalar;
-
 public:
 
 	SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_SurfaceRenderScalar* p);
@@ -69,15 +67,7 @@ private slots:
 	void show_iso_lines_changed(bool b);
 	void nb_iso_levels_changed(int i);
 
-private:
-
-	void add_position_vbo(const QString& name);
-	void remove_position_vbo(const QString& name);
-	void add_scalar_vbo(const QString& name);
-	void remove_scalar_vbo(const QString& name);
-
-	void set_scalar_min(double s);
-	void set_scalar_max(double s);
+public:
 
 	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 };
