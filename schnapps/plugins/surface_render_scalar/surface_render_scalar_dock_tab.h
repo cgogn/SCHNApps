@@ -79,6 +79,7 @@ private slots:
 
 	// slots called from MapHandlerGen signals
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
+	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
 
 public:
 

@@ -152,9 +152,13 @@ void SurfaceRenderScalar_DockTab::selected_view_changed(View* old, View* cur)
 void SurfaceRenderScalar_DockTab::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
 	if (selected_map_)
+	{
 		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
+	}
 	selected_map_ = cur;
 	connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 
 	if (check_docktab_activation())
 		refresh_ui();
@@ -171,6 +175,23 @@ void SurfaceRenderScalar_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* 
 		combo_positionVBO->addItem(vbo_name);
 	else if (vbo->vector_dimension() == 1)
 		list_scalarVBO->addItem(vbo_name);
+}
+
+void SurfaceRenderScalar_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
+{
+	const QString vbo_name = QString::fromStdString(vbo->name());
+	if (vbo->vector_dimension() == 3)
+	{
+		int index = combo_positionVBO->findText(vbo_name);
+		if (index > 0)
+			combo_positionVBO->removeItem(index);
+	}
+	else if (vbo->vector_dimension() == 1)
+	{
+		QList<QListWidgetItem*> items = list_scalarVBO->findItems(vbo_name, Qt::MatchExactly);
+		if (!items.empty())
+			list_scalarVBO->removeItemWidget(items[0]);
+	}
 }
 
 /*****************************************************************************/
