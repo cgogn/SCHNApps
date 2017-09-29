@@ -63,6 +63,17 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
+	cgogn::rendering::VBO* get_scalar_vbo() const { return scalar_vbo_; }
+	cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
+	SCALAR get_scalar_min() const { return scalar_min_; }
+	SCALAR get_scalar_max() const { return scalar_max_; }
+	bool get_auto_update_min_max() const { return auto_update_min_max_; }
+	int32 get_expansion() const { return expansion_; }
+	bool get_show_iso_lines() const { return show_iso_lines_; }
+	int32 get_nb_iso_levels() const { return nb_iso_levels_; }
+
+private:
+
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
@@ -72,7 +83,6 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 			position_vbo_ = nullptr;
 	}
 
-	cgogn::rendering::VBO* get_scalar_vbo() const { return scalar_vbo_; }
 	void set_scalar_vbo(cgogn::rendering::VBO* v)
 	{
 		scalar_vbo_ = v;
@@ -86,28 +96,24 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 			scalar_vbo_ = nullptr;
 	}
 
-	cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
 	void set_color_map(cgogn::rendering::ShaderScalarPerVertex::ColorMap color_map)
 	{
 		color_map_ = color_map;
 		shader_scalar_per_vertex_param_->color_map_ = color_map_;
 	}
 
-	SCALAR get_scalar_min() const { return scalar_min_; }
 	void set_scalar_min(SCALAR s)
 	{
 		scalar_min_ = s;
 		shader_scalar_per_vertex_param_->min_value_ = scalar_min_;
 	}
 
-	SCALAR get_scalar_max() const { return scalar_max_; }
 	void set_scalar_max(SCALAR s)
 	{
 		scalar_max_ = s;
 		shader_scalar_per_vertex_param_->max_value_ = scalar_max_;
 	}
 
-	bool get_auto_update_min_max() const { return auto_update_min_max_; }
 	void set_auto_update_min_max(bool update)
 	{
 		auto_update_min_max_ = update;
@@ -115,28 +121,23 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 			update_min_max();
 	}
 
-	int32 get_expansion() const { return expansion_; }
 	void set_expansion(int32 expansion)
 	{
 		expansion_ = expansion;
 		shader_scalar_per_vertex_param_->expansion_ = expansion_;
 	}
 
-	bool get_show_iso_lines() const { return show_iso_lines_; }
 	void set_show_iso_lines(bool show_iso_lines)
 	{
 		show_iso_lines_ = show_iso_lines;
 		shader_scalar_per_vertex_param_->show_iso_lines_ = show_iso_lines_;
 	}
 
-	int32 get_nb_iso_levels() const { return nb_iso_levels_; }
 	void set_nb_iso_levels(int32 n)
 	{
 		nb_iso_levels_ = n;
 		shader_scalar_per_vertex_param_->nb_iso_levels_ = nb_iso_levels_;
 	}
-
-private:
 
 	void initialize_gl()
 	{
@@ -203,9 +204,9 @@ public:
 
 	~Plugin_SurfaceRenderScalar() override {}
 
-private:
-
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
+
+private:
 
 	bool enable() override;
 	void disable() override;
@@ -245,8 +246,6 @@ private slots:
 
 	void viewer_initialized();
 
-	void update_dock_tab();
-
 public slots:
 
 	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
@@ -255,9 +254,9 @@ public slots:
 	void set_auto_update_min_max(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
 	void set_scalar_min(View* view, MapHandlerGen* map, double d, bool update_dock_tab);
 	void set_scalar_max(View* view, MapHandlerGen* map, double d, bool update_dock_tab);
-	void set_expansion(View* view, MapHandlerGen* map, int32 e, bool update_dock_tab);
+	void set_expansion(View* view, MapHandlerGen* map, int32 i, bool update_dock_tab);
 	void set_show_iso_lines(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_nb_iso_levels(View* view, MapHandlerGen* map, int32 n, bool update_dock_tab);
+	void set_nb_iso_levels(View* view, MapHandlerGen* map, int32 i, bool update_dock_tab);
 
 private:
 

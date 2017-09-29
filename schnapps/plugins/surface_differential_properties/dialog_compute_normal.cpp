@@ -53,13 +53,13 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferenti
 
 	normal_attribute_name->setText(setting_default_normal_attribute_name_);
 
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
-
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
 	connect(this, SIGNAL(accepted()), this, SLOT(compute_normal()));
 	connect(button_apply, SIGNAL(clicked()), this, SLOT(compute_normal()));
+
+	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 }
