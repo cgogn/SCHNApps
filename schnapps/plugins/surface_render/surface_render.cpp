@@ -52,6 +52,23 @@ MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* m
 		return view_param_set[map];
 }
 
+bool Plugin_SurfaceRender::check_docktab_activation()
+{
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	View* view = schnapps_->get_selected_view();
+
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		return true;
+	}
+	else
+	{
+		schnapps_->disable_plugin_tab_widgets(this);
+		return false;
+	}
+}
+
 bool Plugin_SurfaceRender::enable()
 {
 	if (get_setting("Auto enable on selected view").isValid())
@@ -77,15 +94,12 @@ bool Plugin_SurfaceRender::enable()
 	dock_tab_ = new SurfaceRender_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Render");
 
-	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
-	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
-
-	update_dock_tab();
 
 #ifdef USE_TRANSPARENCY
 	plugin_transparency_ = reinterpret_cast<PluginInteraction*>(schnapps_->enable_plugin("surface_render_transp"));
 #endif
+
 	return true;
 }
 
@@ -94,8 +108,6 @@ void Plugin_SurfaceRender::disable()
 	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
 	delete dock_tab_;
 
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
 	disconnect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 }
 
@@ -114,9 +126,9 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 				glEnable(GL_POLYGON_OFFSET_FILL);
 				glPolygonOffset(0.5f, 1.0f);
 			}
-			if (p.get_position_vbo())
+			if (p.position_vbo_)
 			{
-				if (p.get_color_vbo())
+				if (p.color_vbo_)
 				{
 					switch (p.face_style_)
 					{
@@ -126,7 +138,7 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 							p.shader_flat_color_param_->release();
 							break;
 						case MapParameters::FaceShadingStyle::PHONG:
-							if (p.get_normal_vbo())
+							if (p.normal_vbo_)
 							{
 								p.shader_phong_color_param_->bind(proj, mv);
 								map->draw(cgogn::rendering::TRIANGLES);
@@ -145,7 +157,7 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 							p.shader_flat_param_->release();
 							break;
 						case MapParameters::FaceShadingStyle::PHONG:
-							if (p.get_normal_vbo())
+							if (p.normal_vbo_)
 							{
 								p.shader_phong_param_->bind(proj, mv);
 								map->draw(cgogn::rendering::TRIANGLES);
@@ -160,7 +172,7 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 
 		if (p.render_edges_)
 		{
-			if (p.get_position_vbo())
+			if (p.position_vbo_)
 			{
 				p.shader_simple_color_param_->bind(proj, mv);
 				map->draw(cgogn::rendering::LINES);
@@ -170,7 +182,7 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 
 		if (p.render_vertices_)
 		{
-			if (p.get_position_vbo())
+			if (p.position_vbo_)
 			{
 				p.shader_point_sprite_param_->bind(proj, mv);
 				map->draw(cgogn::rendering::POINTS);
@@ -180,7 +192,7 @@ void Plugin_SurfaceRender::draw_map(View* view, MapHandlerGen* map, const QMatri
 
 		if (p.render_boundary_)
 		{
-			if (p.get_position_vbo())
+			if (p.position_vbo_)
 			{
 				p.shader_simple_color_param_boundary_->bind(proj, mv);
 				map->draw(cgogn::rendering::BOUNDARY);
@@ -195,7 +207,9 @@ void Plugin_SurfaceRender::view_linked(View* view)
 #ifdef USE_TRANSPARENCY
 	view->link_plugin(plugin_transparency_);
 #endif
-	update_dock_tab();
+
+	if (check_docktab_activation())
+		dock_tab_->refresh_ui();
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
@@ -206,7 +220,8 @@ void Plugin_SurfaceRender::view_linked(View* view)
 
 void Plugin_SurfaceRender::view_unlinked(View* view)
 {
-	update_dock_tab();
+	if (check_docktab_activation())
+		dock_tab_->refresh_ui();
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
@@ -239,7 +254,8 @@ void Plugin_SurfaceRender::add_linked_map(View* view, MapHandlerGen *map)
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
 
-		update_dock_tab();
+		if (check_docktab_activation())
+			dock_tab_->refresh_ui();
 	}
 }
 
@@ -258,23 +274,22 @@ void Plugin_SurfaceRender::remove_linked_map(View* view, MapHandlerGen *map)
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 
 #ifdef USE_TRANSPARENCY
-		View* view = static_cast<View*>(sender());
-
 		MapParameters& p = get_parameters(view, map);
 		if (p.use_transparency_)
 			remove_transparency(view, map);
 #endif
 
-		update_dock_tab();
+		if (check_docktab_activation())
+			dock_tab_->refresh_ui();
 	}
 }
 
 void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
-
 	if (vbo->vector_dimension() == 3)
 	{
+		MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
 		{
@@ -282,21 +297,17 @@ void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (!p.get_position_vbo() && vbo_name == setting_auto_load_position_attribute_)
-					set_position_vbo(it.first, map, vbo, false);
-				if (!p.get_normal_vbo() && vbo_name == setting_auto_load_normal_attribute_)
-					set_normal_vbo(it.first, map, vbo, false);
-				if (!p.get_color_vbo() && vbo_name == setting_auto_load_color_attribute_)
-					set_color_vbo(it.first, map, vbo, false);
+				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
+					this->set_position_vbo(it.first, map, vbo, true);
+				if (!p.normal_vbo_ && vbo_name == setting_auto_load_normal_attribute_)
+					this->set_normal_vbo(it.first, map, vbo, true);
+				if (!p.color_vbo_ && vbo_name == setting_auto_load_color_attribute_)
+					this->set_color_vbo(it.first, map, vbo, true);
 			}
 		}
-	}
 
-	if (map->is_selected_map())
-	{
-		View* view = schnapps_->get_selected_view();
-		if (view)
-			dock_tab_->update_map_parameters(map, get_parameters(view, map));
+		for (View* view : map->get_linked_views())
+			view->update();
 	}
 }
 
@@ -312,24 +323,17 @@ void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.get_position_vbo() == vbo)
-					p.set_position_vbo(nullptr);
-				if (p.get_normal_vbo() == vbo)
-					p.set_normal_vbo(nullptr);
-				if (p.get_color_vbo() == vbo)
-					p.set_color_vbo(nullptr);
+				if (p.position_vbo_ == vbo)
+					this->set_position_vbo(it.first, map, nullptr, true);
+				if (p.normal_vbo_ == vbo)
+					this->set_normal_vbo(it.first, map, nullptr, true);
+				if (p.color_vbo_ == vbo)
+					this->set_color_vbo(it.first, map, nullptr, true);
 			}
 		}
 
 		for (View* view : map->get_linked_views())
 			view->update();
-	}
-
-	if (map->is_selected_map())
-	{
-		View* view = schnapps_->get_selected_view();
-		if (view)
-			dock_tab_->update_map_parameters(map, get_parameters(view, map));
 	}
 }
 
@@ -347,6 +351,9 @@ void Plugin_SurfaceRender::linked_map_bb_changed()
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
 		}
 	}
+
+	for (View* view : map->get_linked_views())
+		view->update();
 }
 
 void Plugin_SurfaceRender::viewer_initialized()
@@ -370,7 +377,6 @@ void Plugin_SurfaceRender::viewer_initialized()
 #endif
 		}
 	}
-	update_dock_tab();
 }
 
 #ifdef USE_TRANSPARENCY
@@ -414,22 +420,45 @@ void Plugin_SurfaceRender::enable_on_selected_view(Plugin* p)
 		schnapps_->get_selected_view()->link_plugin(this);
 }
 
-void Plugin_SurfaceRender::update_dock_tab()
-{
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
-	if (view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		schnapps_->enable_plugin_tab_widgets(this);
-		dock_tab_->update_map_parameters(map, get_parameters(view, map));
-	}
-	else
-		schnapps_->disable_plugin_tab_widgets(this);
-}
-
 /******************************************************************************/
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
+
+void Plugin_SurfaceRender::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_position_vbo(vbo);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_position_vbo(vbo);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_normal_vbo(vbo);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_normal_vbo(vbo);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRender::set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_color_vbo(vbo);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_color_vbo(vbo);
+		view->update();
+	}
+}
 
 void Plugin_SurfaceRender::set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
 {
@@ -438,7 +467,7 @@ void Plugin_SurfaceRender::set_render_vertices(View* view, MapHandlerGen* map, b
 		MapParameters& p = get_parameters(view, map);
 		p.render_vertices_ = b;
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_render_vertices(b);
 		view->update();
 	}
 }
@@ -450,7 +479,7 @@ void Plugin_SurfaceRender::set_render_edges(View* view, MapHandlerGen* map, bool
 		MapParameters& p = get_parameters(view, map);
 		p.render_edges_ = b;
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_render_edges(b);
 		view->update();
 	}
 }
@@ -471,7 +500,7 @@ void Plugin_SurfaceRender::set_render_faces(View* view, MapHandlerGen* map, bool
 		}
 #endif
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_render_faces(b);
 		view->update();
 	}
 }
@@ -483,19 +512,7 @@ void Plugin_SurfaceRender::set_render_backfaces(View* view, MapHandlerGen* map, 
 		MapParameters& p = get_parameters(view, map);
 		p.set_render_backfaces(b);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
-		view->update();
-	}
-}
-
-void Plugin_SurfaceRender::set_render_boundary(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
-{
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		MapParameters& p = get_parameters(view, map);
-		p.render_boundary_ = b;
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_render_backfaces(b);
 		view->update();
 	}
 }
@@ -511,43 +528,19 @@ void Plugin_SurfaceRender::set_face_style(View* view, MapHandlerGen* map, MapPar
 			change_transparency(view, map);
 #endif
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_face_style(s);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRender::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+void Plugin_SurfaceRender::set_render_boundary(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(view, map);
-		p.set_position_vbo(vbo);
+		p.render_boundary_ = b;
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
-		view->update();
-	}
-}
-
-void Plugin_SurfaceRender::set_normal_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
-{
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		MapParameters& p = get_parameters(view, map);
-		p.set_normal_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
-		view->update();
-	}
-}
-
-void Plugin_SurfaceRender::set_color_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
-{
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		MapParameters& p = get_parameters(view, map);
-		p.set_color_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_render_boundary(b);
 		view->update();
 	}
 }
@@ -559,7 +552,7 @@ void Plugin_SurfaceRender::set_vertex_color(View* view, MapHandlerGen* map, cons
 		MapParameters& p = get_parameters(view, map);
 		p.set_vertex_color(color);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_vertex_color(color);
 		view->update();
 	}
 }
@@ -571,7 +564,7 @@ void Plugin_SurfaceRender::set_edge_color(View* view, MapHandlerGen* map, const 
 		MapParameters& p = get_parameters(view, map);
 		p.set_edge_color(color);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_edge_color(color);
 		view->update();
 	}
 }
@@ -583,7 +576,7 @@ void Plugin_SurfaceRender::set_front_color(View* view, MapHandlerGen* map, const
 		MapParameters& p = get_parameters(view, map);
 		p.set_front_color(color);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_front_color(color);
 		view->update();
 	}
 }
@@ -595,7 +588,7 @@ void Plugin_SurfaceRender::set_back_color(View* view, MapHandlerGen* map, const 
 		MapParameters& p = get_parameters(view, map);
 		p.set_back_color(color);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_back_color(color);
 		view->update();
 	}
 }
@@ -607,7 +600,7 @@ void Plugin_SurfaceRender::set_vertex_scale_factor(View* view, MapHandlerGen* ma
 		MapParameters& p = get_parameters(view, map);
 		p.set_vertex_scale_factor(sf);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_vertex_scale_factor(sf);
 		view->update();
 	}
 }
@@ -628,7 +621,7 @@ void Plugin_SurfaceRender::set_transparency_enabled(View* view, MapHandlerGen* m
 		}
 #endif
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_transparency_enabled(b);
 		view->update();
 	}
 }
@@ -640,7 +633,7 @@ void Plugin_SurfaceRender::set_transparency_factor(View* view, MapHandlerGen* ma
 		MapParameters& p = get_parameters(view, map);
 		p.set_transparency_factor(tf);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
-			dock_tab_->update_map_parameters(map, p);
+			dock_tab_->set_transparency_factor(tf);
 		view->update();
 	}
 }

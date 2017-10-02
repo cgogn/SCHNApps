@@ -203,7 +203,7 @@ void SurfaceRenderVector_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO
 void SurfaceRenderVector_DockTab::set_position_vbo(cgogn::rendering::VBO* vbo)
 {
 	updating_ui_ = true;
-	if (vbo)
+	if (vbo && vbo->vector_dimension() == 3)
 	{
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		int index = combo_positionVBO->findText(vbo_name);
@@ -218,7 +218,7 @@ void SurfaceRenderVector_DockTab::set_position_vbo(cgogn::rendering::VBO* vbo)
 void SurfaceRenderVector_DockTab::add_vector_vbo(cgogn::rendering::VBO* vbo)
 {
 	updating_ui_ = true;
-	if (vbo)
+	if (vbo && vbo->vector_dimension() == 3)
 	{
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		QList<QListWidgetItem*> items = list_vectorVBO->findItems(vbo_name, Qt::MatchExactly);

@@ -94,7 +94,7 @@ void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const 
 		view->makeCurrent();
 		const MapParameters& p = get_parameters(view, map);
 
-		if (p.get_position_vbo())
+		if (p.position_vbo_)
 		{
 			for (auto& param : p.get_shader_params())
 			{
@@ -183,7 +183,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (!p.get_position_vbo() && vbo_name == setting_auto_load_position_attribute_)
+				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
 					this->set_position_vbo(it.first, map, vbo, true);
 			}
 		}
@@ -205,7 +205,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.get_position_vbo() == vbo)
+				if (p.position_vbo_ == vbo)
 					this->set_position_vbo(it.first, map, nullptr, true);
 				if (p.get_vector_vbo_index(vbo) != UINT32_MAX)
 					this->remove_vector_vbo(it.first, map, vbo, true);

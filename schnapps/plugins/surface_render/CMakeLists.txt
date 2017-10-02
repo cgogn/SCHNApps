@@ -9,6 +9,7 @@ find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
 	dll.h
+	map_parameters.h
 	surface_render.h
 	surface_render_dock_tab.h
 )

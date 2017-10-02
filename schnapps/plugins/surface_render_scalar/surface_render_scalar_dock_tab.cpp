@@ -209,7 +209,7 @@ void SurfaceRenderScalar_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO
 void SurfaceRenderScalar_DockTab::set_position_vbo(cgogn::rendering::VBO* vbo)
 {
 	updating_ui_ = true;
-	if (vbo)
+	if (vbo && vbo->vector_dimension() == 3)
 	{
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		int index = combo_positionVBO->findText(vbo_name);
@@ -225,7 +225,7 @@ void SurfaceRenderScalar_DockTab::set_scalar_vbo(cgogn::rendering::VBO* vbo)
 {
 	updating_ui_ = true;
 	list_scalarVBO->clearSelection();
-	if (vbo)
+	if (vbo && vbo->vector_dimension() == 1)
 	{
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		QList<QListWidgetItem*> items = list_scalarVBO->findItems(vbo_name, Qt::MatchExactly);
@@ -303,8 +303,8 @@ void SurfaceRenderScalar_DockTab::refresh_ui()
 
 	list_scalarVBO->clear();
 
-	unsigned int i = 1;
-	unsigned int j = 0;
+	uint32 i = 1;
+	uint32 j = 0;
 	for (auto& vbo_it : map->get_vbo_set())
 	{
 		auto& vbo = vbo_it.second;
@@ -384,16 +384,19 @@ void SurfaceRenderScalar_DockTab::update_after_scalar_vbo_changed()
 		check_autoUpdateMinMax->setChecked(p.get_auto_update_min_max());
 		spin_min->setValue(p.get_scalar_min());
 		spin_max->setValue(p.get_scalar_max());
-		if (!p.get_auto_update_min_max())
-		{
-			spin_min->setEnabled(true);
-			spin_max->setEnabled(true);
-		}
-		else
-		{
-			spin_min->setDisabled(true);
-			spin_max->setDisabled(true);
-		}
+		bool auto_update = p.get_auto_update_min_max();
+		spin_min->setEnabled(!auto_update);
+		spin_max->setEnabled(!auto_update);
+//		if (!p.get_auto_update_min_max())
+//		{
+//			spin_min->setEnabled(true);
+//			spin_max->setEnabled(true);
+//		}
+//		else
+//		{
+//			spin_min->setDisabled(true);
+//			spin_max->setDisabled(true);
+//		}
 		slider_expansion->setEnabled(true);
 		check_showIsoLines->setEnabled(true);
 		slider_nbIsoLevels->setEnabled(true);
@@ -421,16 +424,19 @@ void SurfaceRenderScalar_DockTab::update_after_auto_update_min_max_changed()
 
 	spin_min->setValue(p.get_scalar_min());
 	spin_max->setValue(p.get_scalar_max());
-	if (!p.get_auto_update_min_max())
-	{
-		spin_min->setEnabled(true);
-		spin_max->setEnabled(true);
-	}
-	else
-	{
-		spin_min->setDisabled(true);
-		spin_max->setDisabled(true);
-	}
+	bool auto_update = p.get_auto_update_min_max();
+	spin_min->setEnabled(!auto_update);
+	spin_max->setEnabled(!auto_update);
+//	if (!p.get_auto_update_min_max())
+//	{
+//		spin_min->setEnabled(true);
+//		spin_max->setEnabled(true);
+//	}
+//	else
+//	{
+//		spin_min->setDisabled(true);
+//		spin_max->setDisabled(true);
+//	}
 	updating_ui_ = false;
 }
 

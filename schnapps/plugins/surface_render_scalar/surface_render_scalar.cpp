@@ -188,7 +188,7 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 			if (view_param_set.count(map) > 0ul)
 			{
 				const MapParameters& p = view_param_set[map];
-				if (!p.get_position_vbo() && vbo_name == setting_auto_load_position_attribute_)
+				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
 					this->set_position_vbo(it.first, map, vbo, true);
 			}
 		}
@@ -210,9 +210,9 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_removed(cgogn::rendering::VBO* v
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.get_position_vbo() == vbo)
+				if (p.position_vbo_ == vbo)
 					this->set_position_vbo(it.first, map, nullptr, true);
-				if (p.get_scalar_vbo() == vbo)
+				if (p.scalar_vbo_ == vbo)
 					this->set_scalar_vbo(it.first, map, nullptr, true);
 			}
 		}

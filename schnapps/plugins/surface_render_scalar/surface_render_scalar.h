@@ -62,15 +62,15 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	cgogn::rendering::VBO* get_scalar_vbo() const { return scalar_vbo_; }
-	cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
-	SCALAR get_scalar_min() const { return scalar_min_; }
-	SCALAR get_scalar_max() const { return scalar_max_; }
-	bool get_auto_update_min_max() const { return auto_update_min_max_; }
-	int32 get_expansion() const { return expansion_; }
-	bool get_show_iso_lines() const { return show_iso_lines_; }
-	int32 get_nb_iso_levels() const { return nb_iso_levels_; }
+	inline cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
+	inline cgogn::rendering::VBO* get_scalar_vbo() const { return scalar_vbo_; }
+	inline cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
+	inline SCALAR get_scalar_min() const { return scalar_min_; }
+	inline SCALAR get_scalar_max() const { return scalar_max_; }
+	inline bool get_auto_update_min_max() const { return auto_update_min_max_; }
+	inline int32 get_expansion() const { return expansion_; }
+	inline bool get_show_iso_lines() const { return show_iso_lines_; }
+	inline int32 get_nb_iso_levels() const { return nb_iso_levels_; }
 
 private:
 

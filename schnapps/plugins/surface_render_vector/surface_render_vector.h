@@ -48,34 +48,33 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 {
 	friend class Plugin_SurfaceRenderVector;
 
-	MapParameters() :
-		position_vbo_(nullptr)
+	MapParameters() : position_vbo_(nullptr)
 	{
 		initialize_gl();
 	}
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const
+	inline const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const
 	{
 		return shader_vector_per_vertex_param_list_;
 	}
 
-	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	cgogn::rendering::VBO* get_vector_vbo(uint32 index) const
+	inline cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
+	inline cgogn::rendering::VBO* get_vector_vbo(uint32 index) const
 	{
 		if (index < vector_vbo_list_.size())
 			return vector_vbo_list_[index];
 		else
 			return nullptr;
 	}
-	uint32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
+	inline uint32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
 	{
 		const uint32 index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
 		return index >= vector_vbo_list_.size() ? UINT32_MAX : index;
 	}
-	float32 get_vector_scale_factor(uint32 i) const { return vector_scale_factor_list_[i]; }
-	const QColor& get_vector_color(uint32 i) const { return vector_color_list_[i]; }
+	inline float32 get_vector_scale_factor(uint32 i) const { return vector_scale_factor_list_[i]; }
+	inline const QColor& get_vector_color(uint32 i) const { return vector_color_list_[i]; }
 
 private:
 
