@@ -54,6 +54,23 @@ MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandler
 		return view_param_set[map];
 }
 
+bool Plugin_SurfaceRenderScalar::check_docktab_activation()
+{
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	View* view = schnapps_->get_selected_view();
+
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		return true;
+	}
+	else
+	{
+		schnapps_->disable_plugin_tab_widgets(this);
+		return false;
+	}
+}
+
 bool Plugin_SurfaceRenderScalar::enable()
 {
 	if (get_setting("Auto load position attribute").isValid())
@@ -94,7 +111,7 @@ void Plugin_SurfaceRenderScalar::draw_map(View* view, MapHandlerGen* map, const 
 
 void Plugin_SurfaceRenderScalar::view_linked(View* view)
 {
-	if (dock_tab_->check_docktab_activation())
+	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
@@ -106,7 +123,7 @@ void Plugin_SurfaceRenderScalar::view_linked(View* view)
 
 void Plugin_SurfaceRenderScalar::view_unlinked(View* view)
 {
-	if (dock_tab_->check_docktab_activation())
+	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
@@ -133,7 +150,7 @@ void Plugin_SurfaceRenderScalar::add_linked_map(View* view, MapHandlerGen *map)
 		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
 		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, QString)), Qt::UniqueConnection);
 
-		if (dock_tab_->check_docktab_activation())
+		if (check_docktab_activation())
 			dock_tab_->refresh_ui();
 	}
 }
@@ -153,7 +170,7 @@ void Plugin_SurfaceRenderScalar::remove_linked_map(View* view, MapHandlerGen *ma
 		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, QString)));
 
-		if (dock_tab_->check_docktab_activation())
+		if (check_docktab_activation())
 			dock_tab_->refresh_ui();
 	}
 }

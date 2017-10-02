@@ -62,6 +62,23 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 	}
 
 	cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
+	cgogn::rendering::VBO* get_vector_vbo(uint32 index) const
+	{
+		if (index < vector_vbo_list_.size())
+			return vector_vbo_list_[index];
+		else
+			return nullptr;
+	}
+	uint32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
+	{
+		const uint32 index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
+		return index >= vector_vbo_list_.size() ? UINT32_MAX : index;
+	}
+	float32 get_vector_scale_factor(uint32 i) const { return vector_scale_factor_list_[i]; }
+	const QColor& get_vector_color(uint32 i) const { return vector_color_list_[i]; }
+
+private:
+
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
@@ -74,11 +91,6 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 			position_vbo_ = nullptr;
 	}
 
-	uint32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
-	{
-		const uint32 index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
-		return index >= vector_vbo_list_.size() ? UINT32_MAX : index;
-	}
 	void add_vector_vbo(cgogn::rendering::VBO* v)
 	{
 		if (std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) == vector_vbo_list_.end())
@@ -95,6 +107,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 			shader_vector_per_vertex_param_list_.push_back(std::move(p));
 		}
 	}
+
 	void remove_vector_vbo(cgogn::rendering::VBO* v)
 	{
 		const uint32 idx = get_vector_vbo_index(v);
@@ -111,21 +124,17 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 		}
 	}
 
-	float32 get_vector_scale_factor(uint32 i) const { return vector_scale_factor_list_[i]; }
 	void set_vector_scale_factor(uint32 i, float32 sf)
 	{
 		vector_scale_factor_list_[i] = sf;
 		shader_vector_per_vertex_param_list_[i]->length_ = map_->get_bb_diagonal_size() / 100.0f * vector_scale_factor_list_[i];
 	}
 
-	const QColor& get_vector_color(uint32 i) const { return vector_color_list_[i]; }
 	void set_vector_color(uint32 i, const QColor& c)
 	{
 		vector_color_list_[i] = c;
 		shader_vector_per_vertex_param_list_[i]->color_ = vector_color_list_[i];
 	}
-
-private:
 
 	void initialize_gl()
 	{
@@ -171,9 +180,10 @@ public:
 
 	~Plugin_SurfaceRenderVector() override {}
 
-private:
-
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
+	bool check_docktab_activation();
+
+private:
 
 	bool enable() override;
 	void disable() override;
@@ -212,39 +222,13 @@ private slots:
 
 	void viewer_initialized();
 
-	void update_dock_tab();
-
 public slots:
 
 	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
 	void add_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
 	void remove_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_vector_scale_factor(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vector_vbo, float32 sf, bool update_dock_tab);
-	void set_vector_color(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vector_vbo, const QColor& color, bool update_dock_tab);
-
-	float32 get_vector_scale_factor(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vector_vbo)
-	{
-		if (view && map)
-		{
-			const MapParameters& p = get_parameters(view, map);
-			const uint32 index = p.get_vector_vbo_index(vector_vbo);
-			if (index != UINT32_MAX)
-				return p.get_vector_scale_factor(index);
-		}
-		return 0.0;
-	}
-
-	QColor get_vector_color(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vector_vbo)
-	{
-		if (view && map)
-		{
-			const MapParameters& p = get_parameters(view, map);
-			const uint32 index = p.get_vector_vbo_index(vector_vbo);
-			if (index != UINT32_MAX)
-				return p.get_vector_color(index);
-		}
-		return QColor();
-	}
+	void set_vector_scale_factor(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, float32 sf, bool update_dock_tab);
+	void set_vector_color(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, const QColor& color, bool update_dock_tab);
 
 private:
 

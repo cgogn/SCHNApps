@@ -95,7 +95,6 @@ public:
 	void set_nb_iso_levels(int i);
 
 	void refresh_ui();
-	bool check_docktab_activation();
 
 private:
 

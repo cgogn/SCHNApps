@@ -205,6 +205,7 @@ public:
 	~Plugin_SurfaceRenderScalar() override {}
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
+	bool check_docktab_activation();
 
 private:
 

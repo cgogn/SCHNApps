@@ -153,7 +153,7 @@ void SurfaceRenderScalar_DockTab::nb_iso_levels_changed(int i)
 
 void SurfaceRenderScalar_DockTab::selected_view_changed(View* old, View* cur)
 {
-	if (check_docktab_activation())
+	if (plugin_->check_docktab_activation())
 		refresh_ui();
 }
 
@@ -168,7 +168,7 @@ void SurfaceRenderScalar_DockTab::selected_map_changed(MapHandlerGen* old, MapHa
 	connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 	connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 
-	if (check_docktab_activation())
+	if (plugin_->check_docktab_activation())
 		refresh_ui();
 }
 
@@ -363,23 +363,6 @@ void SurfaceRenderScalar_DockTab::refresh_ui()
 	}
 
 	updating_ui_ = false;
-}
-
-bool SurfaceRenderScalar_DockTab::check_docktab_activation()
-{
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
-
-	if (view && view->is_linked_to_plugin(plugin_) && map && map->is_linked_to_view(view) && map->dimension() == 2)
-	{
-		schnapps_->enable_plugin_tab_widgets(plugin_);
-		return true;
-	}
-	else
-	{
-		schnapps_->disable_plugin_tab_widgets(plugin_);
-		return false;
-	}
 }
 
 /*****************************************************************************/
