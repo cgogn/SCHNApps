@@ -56,6 +56,11 @@ SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_Sur
 	connect(slider_nbIsoLevels, SIGNAL(valueChanged(int)), this, SLOT(nb_iso_levels_changed(int)));
 
 	selected_map_ = schnapps_->get_selected_map();
+	if (selected_map_)
+	{
+		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
+	}
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
@@ -88,7 +93,10 @@ void SurfaceRenderScalar_DockTab::selected_scalar_vbo_changed(QListWidgetItem* i
 		MapHandlerGen* map = schnapps_->get_selected_map();
 		if (map)
 		{
-			plugin_->set_scalar_vbo(schnapps_->get_selected_view(), map, map->get_vbo(item->text()), false);
+			cgogn::rendering::VBO* vbo = nullptr;
+			if (item)
+				vbo = map->get_vbo(item->text());
+			plugin_->set_scalar_vbo(schnapps_->get_selected_view(), map, vbo, false);
 			update_after_scalar_vbo_changed();
 		}
 	}
@@ -190,7 +198,7 @@ void SurfaceRenderScalar_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO
 	{
 		QList<QListWidgetItem*> items = list_scalarVBO->findItems(vbo_name, Qt::MatchExactly);
 		if (!items.empty())
-			list_scalarVBO->removeItemWidget(items[0]);
+			delete items[0];
 	}
 }
 
@@ -390,6 +398,7 @@ void SurfaceRenderScalar_DockTab::update_after_scalar_vbo_changed()
 	{
 		combo_colorMap->setEnabled(true);
 		check_autoUpdateMinMax->setEnabled(true);
+		check_autoUpdateMinMax->setChecked(p.get_auto_update_min_max());
 		spin_min->setValue(p.get_scalar_min());
 		spin_max->setValue(p.get_scalar_max());
 		if (!p.get_auto_update_min_max())
