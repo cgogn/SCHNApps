@@ -108,8 +108,6 @@ private slots:
 
 	void enable_on_selected_view(Plugin* p);
 
-	void update_dock_tab();
-
 public slots:
 
 	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
