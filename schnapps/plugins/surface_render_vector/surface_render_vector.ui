@@ -45,12 +45,12 @@
     </widget>
    </item>
    <item row="8" column="0" colspan="2">
-    <widget class="ColorComboBox" name="combo_color"/>
+    <widget class="ColorComboBox" name="combo_vectorColor"/>
    </item>
    <item row="2" column="0" colspan="2">
     <widget class="QListWidget" name="list_vectorVBO">
      <property name="selectionMode">
-      <enum>QAbstractItemView::MultiSelection</enum>
+      <enum>QAbstractItemView::SingleSelection</enum>
      </property>
     </widget>
    </item>
@@ -75,7 +75,7 @@
     </spacer>
    </item>
    <item row="6" column="0" colspan="2">
-    <widget class="QSlider" name="slider_vectorsScaleFactor">
+    <widget class="QSlider" name="slider_vectorScaleFactor">
      <property name="value">
       <number>50</number>
      </property>

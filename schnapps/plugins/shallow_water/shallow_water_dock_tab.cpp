@@ -42,6 +42,15 @@ ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) 
 
 	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
 	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
+	connect(button_1_step, SIGNAL(clicked()), this, SLOT(step()));
+}
+
+void ShallowWater_DockTab::simu_running_state_changed()
+{
+	if (plugin_->is_simu_running())
+		button_start_stop->setText("Stop");
+	else
+		button_start_stop->setText("Start");
 }
 
 void ShallowWater_DockTab::init()
@@ -51,16 +60,15 @@ void ShallowWater_DockTab::init()
 
 void ShallowWater_DockTab::start_stop()
 {
-	if (!plugin_->is_running())
-	{
+	if (!plugin_->is_simu_running())
 		plugin_->start();
-		button_start_stop->setText("Stop");
-	}
 	else
-	{
 		plugin_->stop();
-		button_start_stop->setText("Start");
-	}
+}
+
+void ShallowWater_DockTab::step()
+{
+	plugin_->step();
 }
 
 } // namespace plugin_shallow_water

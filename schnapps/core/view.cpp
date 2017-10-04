@@ -37,16 +37,15 @@
 namespace schnapps
 {
 
-using Vec3 = Eigen::Vector3d;
-
 uint32 View::view_count_ = 0;
 
 View::View(const QString& name, SCHNApps* s) :
 	name_(name),
 	schnapps_(s),
+	background_color_(0, 0, 0, 255),
 	current_camera_(nullptr),
-	bb_min_(0.0, 0.0, 0.0),
-	bb_max_(0.0, 0.0, 0.0),
+	bb_min_(0., 0., 0.),
+	bb_max_(0., 0., 0.),
 	button_area_(nullptr),
 	close_button_(nullptr),
 	Vsplit_button_(nullptr),
@@ -64,6 +63,8 @@ View::View(const QString& name, SCHNApps* s) :
 	updating_ui_(false)
 {
 	++view_count_;
+
+	this->setAutoFillBackground(true);
 
 	this->setSnapshotFormat("BMP");
 	this->setSnapshotFileName(name_);
@@ -98,6 +99,9 @@ View::View(const QString& name, SCHNApps* s) :
 	dialog_cameras_->check(current_camera_->get_name(), Qt::Checked);
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(close_dialogs()));
+
+	color_dial_ = new QColorDialog(background_color_, nullptr);
+	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
 }
 
 View::~View()
@@ -196,7 +200,8 @@ void View::link_plugin(PluginInteraction* plugin)
 		emit(plugin_linked(plugin));
 
 		updating_ui_ = true;
-		dialog_plugins_->check(plugin->get_name(), Qt::Checked);
+		if (!plugin->auto_activate())
+			dialog_plugins_->check(plugin->get_name(), Qt::Checked);
 		updating_ui_ = false;
 
 		this->update();
@@ -220,7 +225,8 @@ void View::unlink_plugin(PluginInteraction* plugin)
 		emit(plugin_unlinked(plugin));
 
 		updating_ui_ = true;
-		dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
+		if (!plugin->auto_activate())
+			dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
 		updating_ui_ = false;
 
 		this->update();
@@ -324,8 +330,6 @@ void View::init()
 	this->setCamera(current_camera_);
 //	delete c;
 
-	glClearColor(0.1f, 0.1f, 0.2f, 0.0f);
-
 	frame_drawer_ = cgogn::make_unique<cgogn::rendering::DisplayListDrawer>();
 	frame_drawer_renderer_ = frame_drawer_->generate_renderer();
 
@@ -342,6 +346,10 @@ void View::init()
 
 	button_area_ = new ViewButtonArea(this);
 	button_area_->set_top_right_position(this->width(), 0);
+
+	color_button_ = new ViewButton(":icons/icons/color.png", this);
+	button_area_->add_button(color_button_);
+	connect(color_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_color_view(int, int, int, int)));
 
 	Vsplit_button_ = new ViewButton(":icons/icons/Vsplit.png", this);
 	button_area_->add_button(Vsplit_button_);
@@ -438,7 +446,7 @@ void View::resizeGL(int width, int height)
 	QOGLViewer::resizeGL(width, height);
 
 	if (button_area_)
-		button_area_->set_top_right_position(width / this->pixel_ratio(), 0);
+		button_area_->set_top_right_position(width, 0);
 
 	if (button_area_left_)
 		button_area_left_->set_top_left_position(0, 0);
@@ -466,6 +474,10 @@ void View::keyPressEvent(QKeyEvent* event)
 
 	switch (event->key())
 	{
+		case Qt::Key_V:
+			schnapps_->cycle_selected_view();
+			break;
+
 		case Qt::Key_S:
 		{
 			save_snapshots_ = !save_snapshots_;
@@ -492,7 +504,6 @@ void View::keyPressEvent(QKeyEvent* event)
 				disconnect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
 				cgogn_log_info("View::keyPressEvent") <<"Stop frame snapshot.";
 			}
-
 		}
 		break;
 
@@ -604,8 +615,14 @@ void View::map_added(MapHandlerGen* mh)
 	if (mh)
 	{
 		dialog_maps_->add_item(mh->get_name());
-		if (schnapps_->get_core_setting("Add map to selected view").toBool())
-			dialog_maps_->list()->item(dialog_maps_->nb_items() -1)->setCheckState(Qt::Checked);
+		if (schnapps_->get_core_setting("Add map to selected view").toBool() && is_selected_view())
+		{
+			link_map(mh);
+
+			updating_ui_ = true;
+			dialog_maps_->check(mh->get_name(), Qt::Checked);
+			updating_ui_ = false;
+		}
 	}
 }
 
@@ -628,13 +645,13 @@ void View::map_check_state_changed(QListWidgetItem* item)
 
 void View::plugin_enabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin))
+	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->add_item(plugin->get_name());
 }
 
 void View::plugin_disabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin))
+	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->remove_item(plugin->get_name());
 }
 
@@ -719,6 +736,14 @@ void View::update_bb()
 	emit(bb_changed());
 }
 
+void View::color_selected()
+{
+	background_color_ = color_dial_->currentColor();
+	this->makeCurrent();
+	glClearColor(background_color_.redF(), background_color_.greenF(), background_color_.blueF(), background_color_.alphaF());
+	this->update();
+}
+
 void View::ui_vertical_split_view(int, int, int, int)
 {
 	schnapps_->split_view(name_, Qt::Horizontal);
@@ -732,6 +757,12 @@ void View::ui_horizontal_split_view(int, int, int, int)
 void View::ui_close_view(int, int, int, int)
 {
 	schnapps_->remove_view(name_);
+}
+
+void View::ui_color_view(int, int, int, int)
+{
+	color_dial_->show();
+	color_dial_->setCurrentColor(background_color_);
 }
 
 void View::ui_maps_list_view(int, int, int globalX, int globalY)

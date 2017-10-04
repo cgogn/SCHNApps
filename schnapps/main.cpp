@@ -21,10 +21,9 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/core/schnapps_window.h>
-
+#include <cgogn/core/utils/logger.h>
+#include <schnapps/core/schnapps_window_factory.h>
 #include <QOGLViewer/qoglviewer.h>
-
 #include <QApplication>
 #include <QSplashScreen>
 
@@ -38,10 +37,25 @@ int main(int argc, char* argv[])
 	splash.show();
 	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
 
-	schnapps::SCHNAppsWindow w(app.applicationDirPath());
-	w.show();
+	QString settings_path;
+	if (argc == 2)
+		settings_path = QString(argv[1]);
+	if (! settings_path.endsWith(".json", Qt::CaseInsensitive))
+	{
+		if (!settings_path.isEmpty())
+			cgogn_log_warning("Main Application") << "Invalid settings file: " << settings_path.toStdString() << " is not a json file";
+#if defined (WIN32)
+		settings_path = app.applicationDirPath() + QString("/settings.json");
+#elif defined (__APPLE__)
+		settings_path = app.applicationDirPath() + QString("/lib/settings.json");
+#else
+		settings_path = app.applicationDirPath() + QString("/../lib/settings.json");
+#endif
+	}
 
-	splash.finish(&w);
+	std::unique_ptr<QMainWindow> w = schnapps::schnapps_window_factory(app.applicationDirPath(), settings_path);
+	w->show();
+	splash.finish(w.get());
 
 	return app.exec();
 }

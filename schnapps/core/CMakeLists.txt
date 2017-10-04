@@ -79,7 +79,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${QOGLViewer_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
 	${CMAKE_CURRENT_BINARY_DIR}
 	$<INSTALL_INTERFACE:include/schnapps/core>
 )
@@ -94,7 +94,7 @@ target_link_libraries(${PROJECT_NAME}
 if(WIN32)
 	# copying cgogn's dlls
 	foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
-		file(GLOB CGOGN_DLLS "${CGOGN_BUILD_PATH}/bin/${CONFIG}/*.dll")
+		file(GLOB CGOGN_DLLS "${CGOGN_BUILD_OR_INSTALL_PATH}/bin/${CONFIG}/*.dll")
 		file(COPY ${CGOGN_DLLS} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
 	endforeach()
 	# copying Qt's dlls
@@ -131,3 +131,5 @@ install(TARGETS ${PROJECT_NAME}
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib
 )
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER core)

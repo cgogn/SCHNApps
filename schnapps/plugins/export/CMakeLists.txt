@@ -27,7 +27,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_EXPORT_DLL
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -38,3 +38,5 @@ target_link_libraries(${PROJECT_NAME}
 	${cgogn_io_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 )
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

@@ -91,7 +91,9 @@ void ExportDialog::selected_map_changed(QString map_name)
 			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), this->listWidgetCellAttributes);
 			item->setCheckState(Qt::Unchecked);
 		}
-	} else {
+	}
+	else
+	{
 		this->comboBoxPositionSelection->clear();
 		this->comboBoxPositionSelection->addItem("-select attribute-");
 		plugin_->map_name_.clear();
@@ -102,16 +104,22 @@ void ExportDialog::position_att_changed(QString pos_name)
 {
 	if (!pos_name.isEmpty())
 	{
-		plugin_->export_params_->position_attribute_.second = pos_name.toStdString();
-		for (int i = 0; i < this->listWidgetVertexAttributes->count(); ++i)
+		MapHandlerGen* mhg = schnapps_->get_map(plugin_->map_name_);
+		if (mhg)
 		{
-			QListWidgetItem* item = this->listWidgetVertexAttributes->item(i);
-			if (item->text() == pos_name)
+			cgogn::Orbit vorbit = mhg->orbit(CellType::Vertex_Cell);
+			plugin_->export_params_->position_attributes_[vorbit] = pos_name.toStdString();
+			for (int i = 0; i < this->listWidgetVertexAttributes->count(); ++i)
 			{
-				item->setCheckState(Qt::Unchecked);
-				item->setHidden(true);
-			} else
-				item->setHidden(false);
+				QListWidgetItem* item = this->listWidgetVertexAttributes->item(i);
+				if (item->text() == pos_name)
+				{
+					item->setCheckState(Qt::Unchecked);
+					item->setHidden(true);
+				}
+				else
+					item->setHidden(false);
+			}
 		}
 	}
 }

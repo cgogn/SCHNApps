@@ -27,12 +27,17 @@
 #include "dll.h"
 #include <ui_surface_render.h>
 
+#include <map_parameters.h>
+
 #include <QColorDialog>
+
+namespace cgogn { namespace rendering { class VBO; } }
 
 namespace schnapps
 {
 
 class SCHNApps;
+class View;
 class MapHandlerGen;
 
 namespace plugin_surface_render
@@ -40,45 +45,45 @@ namespace plugin_surface_render
 
 class Plugin_SurfaceRender;
 
-struct MapParameters;
-
 class SCHNAPPS_PLUGIN_SURFACE_RENDER_API SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
 	Q_OBJECT
 
-	friend class Plugin_SurfaceRender;
-
 public:
 
 	SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p);
+	~SurfaceRender_DockTab() override;
 
 private:
 
 	SCHNApps* schnapps_;
 	Plugin_SurfaceRender* plugin_;
 
+	MapHandlerGen* selected_map_;
+	bool updating_ui_;
+
 	QColorDialog* color_dial_;
 	int current_color_dial_;
-
 	QColor vertex_color_;
 	QColor edge_color_;
 	QColor front_color_;
 	QColor back_color_;
 
-	bool updating_ui_;
-
 private slots:
 
+	// slots called from UI signals
 	void position_vbo_changed(int index);
 	void normal_vbo_changed(int index);
 	void color_vbo_changed(int index);
 	void render_vertices_changed(bool b);
-	void vertices_scale_factor_changed(int i);
+	void vertex_scale_factor_changed(int i);
 	void render_edges_changed(bool b);
 	void render_faces_changed(bool b);
+	void render_backfaces_changed(bool b);
 	void face_style_changed(QAbstractButton* b);
 	void render_boundary_changed(bool b);
-	void render_backface_changed(bool b);
+	void transparency_enabled_changed(bool b);
+	void transparency_factor_changed(int n);
 
 	void vertex_color_clicked();
 	void edge_color_clicked();
@@ -87,19 +92,44 @@ private slots:
 	void both_color_clicked();
 	void color_selected();
 
+	// slots called from SCHNApps signals
+	void selected_view_changed(View* old, View* cur);
+	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
+
+	// slots called from MapHandlerGen signals
+	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
+	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
+
+public:
+
+	// methods used to update the UI from the plugin
+	void set_position_vbo(cgogn::rendering::VBO* vbo);
+	void set_normal_vbo(cgogn::rendering::VBO* vbo);
+	void set_color_vbo(cgogn::rendering::VBO* vbo);
+	void set_render_vertices(bool b);
+	void set_render_edges(bool b);
+	void set_render_faces(bool b);
+	void set_render_backfaces(bool b);
+	void set_face_style(MapParameters::FaceShadingStyle s);
+	void set_render_boundary(bool b);
+	void set_vertex_color(const QColor& color);
+	void set_edge_color(const QColor& color);
+	void set_front_color(const QColor& color);
+	void set_back_color(const QColor& color);
+	void set_vertex_scale_factor(float sf);
+	void set_transparency_enabled(bool b);
+	void set_transparency_factor(int tf);
+
+	void refresh_ui();
+
 private:
 
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_normal_vbo(QString name);
-	void remove_normal_vbo(QString name);
-	void add_color_vbo(QString name);
-	void remove_color_vbo(QString name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
+	// internal UI cascading updates
+	void update_after_use_transparency_changed();
 };
 
 } // namespace plugin_surface_render
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_

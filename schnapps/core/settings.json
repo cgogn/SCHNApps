@@ -1,15 +1,27 @@
 {
-	"core" : {
+    "core": {
 		"Add map to selected view": true,
 		"Added map is selected": true,
 		"Load modules": [
 			"import",
-			"export",
-			"merge",
-			"selection",
-			"attribute_editor"
+			"surface_render"
 		],
 		"Plugins paths": [
 		 ]
-	}
+    },
+    "import": {
+        "Bounding box attribute": "position",
+        "Compute VBO": [
+            "position",
+            "normal",
+            "color"
+        ],
+        "Default path": ""
+    },
+    "surface_render": {
+        "Auto enable on selected view": true,
+        "Auto load position attribute": "position",
+        "Auto load normal attribute": "normal",
+        "Auto load color attribute": "color"
+    }
 }

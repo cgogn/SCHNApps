@@ -75,7 +75,7 @@ NetgenStructureVolumeImport::NetgenStructureVolumeImport(void** netgen_data, CMa
 
 void NetgenStructureVolumeImport::import_netgen_structure()
 {
-	ChunkArray<VEC3>* position = this->position_attribute();
+	ChunkArray<VEC3>* position = this->add_vertex_attribute<VEC3>("position");
 
 	const int nb_points = nglib::Ng_GetNP(volume_mesh_structure_);
 	for (int i = 1 ; i <= nb_points; ++i)
@@ -90,8 +90,12 @@ void NetgenStructureVolumeImport::import_netgen_structure()
 	for (int i = 1 ; i <= nb_vol; ++i)
 	{
 		std::array<int, 4> tetra;
-		nglib::Ng_GetVolumeElement(volume_mesh_structure_,i, &tetra[0]);
-		this->add_tetra(tetra[0]-1, tetra[1]-1, tetra[2]-1, tetra[3]-1, true);
+		nglib::Ng_GetVolumeElement(volume_mesh_structure_, i, &tetra[0]);
+		std::array<uint32, 4> ids;
+		for (uint32 j = 0u; j < 4u; j++)
+			ids[j] = tetra[j] - 1;
+		this->reorient_tetra(*position, ids[0], ids[1], ids[2], ids[3]);
+		this->add_tetra(ids[0], ids[1], ids[2], ids[3]);
 	}
 }
 

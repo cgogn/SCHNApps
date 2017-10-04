@@ -26,8 +26,9 @@
 
 #include <schnapps/core/dll.h>
 #include <schnapps/core/settings.h>
-#include <schnapps/core/schnapps_window.h>
 #include <schnapps/core/status_bar_output.h>
+
+#include <cgogn/core/utils/type_traits.h>
 
 #include <QObject>
 #include <QString>
@@ -59,7 +60,7 @@ class SCHNAPPS_CORE_API SCHNApps : public QObject
 
 public:
 
-	SCHNApps(const QString& app_path, SCHNAppsWindow* window);
+	SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window);
 	~SCHNApps();
 
 public slots:
@@ -280,6 +281,11 @@ public:
 public slots:
 
 	/**
+	* @brief selected view cycle thru the views 
+	*/
+	void cycle_selected_view();
+
+	/**
 	* @brief get the selected view
 	*/
 	inline View* get_selected_view() const { return selected_view_; }
@@ -324,19 +330,13 @@ public slots:
 	 * @param menuPath path of menu (ex: "Surface; Import Mesh")
 	 * @param action action to associate with entry
 	 */
-	inline QAction* add_menu_action(const QString& menu_path, const QString& action_text)
-	{
-		return window_->add_menu_action(menu_path, action_text);
-	}
+	QAction* add_menu_action(const QString& menu_path, const QString& action_text);
 
 	/**
 	 * @brief remove an entry in the menu
 	 * @param action action entry to remove
 	 */
-	inline void remove_menu_action(QAction* action)
-	{
-		window_->remove_menu_action(action);
-	}
+	void remove_menu_action(QAction* action);
 
 	/*********************************************************
 	 * MANAGE WINDOW
@@ -360,6 +360,10 @@ public slots:
 	void schnapps_window_closing();
 	SCHNAppsWindow* get_window() { return window_; }
 
+
+public slots:
+	void export_settings();
+
 signals:
 
 	void camera_added(Camera*);
@@ -376,6 +380,7 @@ signals:
 	void view_added(View*);
 	void view_removed(View*);
 	void selected_view_changed(View*, View*);
+	void view_split(View*);
 
 	void schnapps_closing();
 
@@ -399,6 +404,7 @@ public:
 protected:
 
 	QString app_path_;
+	QString settings_path_;
 
 	std::unique_ptr<Settings> settings_;
 	std::unique_ptr<StatusBarOutput> status_bar_output_;

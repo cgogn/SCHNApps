@@ -29,7 +29,7 @@
 #include <image_dock_tab.h>
 #include <schnapps/core/schnapps.h>
 #include <cgogn/io/c_locale.h>
-#include <cgogn/io/vtk_io.h>
+#include <cgogn/io/formats/vtk.h>
 #include <cgogn/core/utils/string.h>
 
 #ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM

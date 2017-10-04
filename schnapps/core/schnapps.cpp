@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/core/schnapps.h>
-
+#include <schnapps/core/schnapps_window.h>
 #include <schnapps/core/camera.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/plugin.h>
@@ -48,12 +48,15 @@
 #include <QFile>
 #include <QByteArray>
 #include <QAction>
+#include <list>
+
 
 namespace schnapps
 {
 
-SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
+SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window) :
 	app_path_(app_path),
+	settings_path_(settings_path),
 	first_view_(nullptr),
 	selected_view_(nullptr),
 	window_(window)
@@ -69,6 +72,8 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	control_map_tab_ = new ControlDock_MapTab(this);
 	window_->control_dock_tab_widget_->addTab(control_map_tab_, control_map_tab_->title());
 
+	window_->control_dock_tab_widget_->setCurrentIndex(window_->control_dock_tab_widget_->indexOf(control_map_tab_));
+
 	// create & setup central widget (views)
 
 	root_splitter_ = new QSplitter(window_->centralwidget);
@@ -79,13 +84,15 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 	set_selected_view(first_view_);
 	root_splitter_->addWidget(first_view_);
 
-#ifdef WIN32
+#if defined (WIN32)
 	register_plugins_directory(app_path_);
+#elif defined (__APPLE__)
+	register_plugins_directory(app_path_ + QString("/lib"));
 #else
 	register_plugins_directory(app_path_ + QString("/../lib"));
 #endif
 
-	settings_ = Settings::from_file(app_path_ + QString("/../lib/settings.json"));
+	settings_ = Settings::from_file(settings_path_);
 	settings_->set_widget(window->settings_widget_.get());
 	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
 		this->register_plugins_directory(plugin_dir_v.toString());
@@ -95,10 +102,26 @@ SCHNApps::SCHNApps(const QString& app_path, SCHNAppsWindow* window) :
 
 SCHNApps::~SCHNApps()
 {
-	settings_->to_file(app_path_ + QString("/../lib/settings.json"));
+	// make a copy of overwrite settings
+	QFile old(settings_path_);
+	QString copy_name = settings_path_.left(settings_path_.length()-5) + ".back.json";
+	old.copy(copy_name);
+
+	settings_->to_file(settings_path_);
+
 	// first safely unload every plugins (this has to be done before the views get deleted)
-	while (!plugins_.empty())
-		this->disable_plugin(plugins_.begin()->first);
+
+	std::list<QString> plugins_ordered;
+	for (auto& pp : plugins_)
+	{
+		if (pp.second->auto_activate())
+			plugins_ordered.push_back(pp.first);
+		else
+			plugins_ordered.push_front(pp.first);
+	}
+
+	for (const auto& p : plugins_ordered)
+		this->disable_plugin(p);
 }
 
 /*********************************************************
@@ -245,6 +268,9 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 				(*pi->get_linked_views().begin())->unlink_plugin(pi);
 		}
 
+		// because plugin_name no more valid after unloading
+		std::string destroyed_name = plugin_name.toStdString();
+
 		// call disable() method and dereference plugin
 		plugin->disable();
 		plugins_.erase(plugin_name);
@@ -252,7 +278,7 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		QPluginLoader loader(plugin->get_file_path());
 		loader.unload();
 
-		cgogn_log_info("SCHNApps::disable_plugin") << plugin_name.toStdString()  << " successfully unloaded.";
+		cgogn_log_info("SCHNApps::disable_plugin") << destroyed_name << " successfully unloaded.";
 		emit(plugin_disabled(plugin.get()));
 	}
 }
@@ -488,6 +514,17 @@ void SCHNApps::set_selected_view(const QString& name)
 		set_selected_view(v);
 }
 
+
+void SCHNApps::cycle_selected_view()
+{
+	auto it = views_.find(selected_view_->get_name());
+	it++;
+	if (it == views_.end())
+		it = views_.begin();
+
+	set_selected_view(it->second.get());
+}
+
 View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 {
 	View* new_view = add_view();
@@ -528,6 +565,9 @@ View* SCHNApps::split_view(const QString& name, Qt::Orientation orientation)
 		sz[1] = tot - sz[0];
 		spl->setSizes(sz);
 	}
+
+	view->update_bb();
+	new_view->update_bb();
 
 	return new_view;
 }
@@ -595,6 +635,19 @@ void SCHNApps::set_split_view_positions(QString positions)
 }
 
 /*********************************************************
+ * MANAGE MENU ACTIONS
+ *********************************************************/
+QAction* SCHNApps::add_menu_action(const QString& menu_path, const QString& action_text)
+{
+	return window_->add_menu_action(menu_path, action_text);
+}
+
+void SCHNApps::remove_menu_action(QAction* action)
+{
+	window_->remove_menu_action(action);
+}
+
+/*********************************************************
  * MANAGE WINDOW
  *********************************************************/
 
@@ -616,6 +669,19 @@ void SCHNApps::status_bar_message(const QString& msg, int msec)
 void SCHNApps::set_window_size(int w, int h)
 {
 	window_->resize(w, h);
+}
+
+
+/*********************************************************
+ * EXPORT SETTINGS
+ *********************************************************/
+
+void SCHNApps::export_settings()
+{
+	QString filename = QFileDialog::getSaveFileName(nullptr, "Export", settings_path_, "Settings Files (*.json)");
+	if (! filename.isEmpty())
+		settings_->to_file(filename);
+
 }
 
 } // namespace schnapps

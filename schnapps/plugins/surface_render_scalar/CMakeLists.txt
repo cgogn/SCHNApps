@@ -9,6 +9,7 @@ find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
 	dll.h
+	map_parameters.h
 	surface_render_scalar.h
 	surface_render_scalar_dock_tab.h
 )
@@ -29,7 +30,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SURFACE_RE
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${QOGLViewer_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -41,3 +42,5 @@ target_link_libraries(${PROJECT_NAME}
 	${Qt5Widgets_LIBRARIES}
 	${QOGLViewer_LIBRARIES}
 )
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

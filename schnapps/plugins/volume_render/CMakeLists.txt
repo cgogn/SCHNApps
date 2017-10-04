@@ -29,15 +29,26 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_VOLUME_REN
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${QOGLViewer_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME}
-	schnapps_core
-	${cgogn_core_LIBRARIES}
-	${cgogn_rendering_LIBRARIES}
-	${Qt5Widgets_LIBRARIES}
-	${QOGLViewer_LIBRARIES}
-)
+if (USE_TRANSPARENCY)
+	target_link_libraries(${PROJECT_NAME}
+		schnapps_core
+		plugin_surface_render_transp
+		${cgogn_core_LIBRARIES}
+		${cgogn_rendering_LIBRARIES}
+		${Qt5Widgets_LIBRARIES}
+		${QOGLViewer_LIBRARIES})
+else()
+	target_link_libraries(${PROJECT_NAME}
+		schnapps_core
+		${cgogn_core_LIBRARIES}
+		${cgogn_rendering_LIBRARIES}
+		${Qt5Widgets_LIBRARIES}
+		${QOGLViewer_LIBRARIES})
+endif()
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

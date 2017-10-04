@@ -23,8 +23,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_render_dock_tab.h>
-#include <volume_render.h>
+#include "volume_render_dock_tab.h"
+#include "volume_render.h"
+
+#include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
+
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -62,11 +65,11 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 
 	checkBox_transparency->setChecked(false);
 	slider_transparency->setDisabled(true);
-#if (QT_VERSION < QT_VERSION_CHECK(5, 6, 0))
-	checkBox_transparency->setDisabled(true);
-#else
+#ifdef USE_TRANSPARENCY
 	connect(slider_transparency, SIGNAL(valueChanged(int)), this, SLOT(transparency_factor_changed(int)));
 	connect(checkBox_transparency, SIGNAL(toggled(bool)), this, SLOT(transparency_rendering_changed(bool)));
+#else
+	checkBox_transparency->setDisabled(true);
 #endif
 }
 
@@ -147,12 +150,22 @@ void VolumeRender_DockTab::render_faces_changed(bool b)
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.render_faces_ = b;
 			view->update();
+#ifdef USE_TRANSPARENCY
+			if (p.use_transparency_)
+			{
+				if (b)
+					plugin_surface_render_transp::add_tr_vol(plugin_->plugin_transparency_, view, map, p.get_transp_drawer_rend());
+				else
+					plugin_surface_render_transp::remove_tr_vol(plugin_->plugin_transparency_, view, map, p.get_transp_drawer_rend());
+			}
+#endif
 		}
 	}
 }
 
 void VolumeRender_DockTab::transparency_rendering_changed(bool b)
 {
+#ifdef USE_TRANSPARENCY
 	if (!updating_ui_)
 	{
 		slider_transparency->setEnabled(b);
@@ -163,9 +176,17 @@ void VolumeRender_DockTab::transparency_rendering_changed(bool b)
 			MapParameters& p = plugin_->get_parameters(view, map);
 			p.set_transparency_enabled(b);
 			plugin_->connectivity_changed(map);
+			if (p.render_faces_)
+			{
+				if (b)
+					plugin_surface_render_transp::add_tr_vol(plugin_->plugin_transparency_, view, map, p.get_transp_drawer_rend());
+				else
+					plugin_surface_render_transp::remove_tr_vol(plugin_->plugin_transparency_, view, map, p.get_transp_drawer_rend());
+			}
 			view->update();
 		}
 	}
+#endif
 }
 
 void VolumeRender_DockTab::render_boundary_changed(bool b)
@@ -376,4 +397,5 @@ void VolumeRender_DockTab::update_map_parameters(MapHandlerGen* map, const MapPa
 }
 
 } // namespace plugin_volume_render
+
 } // namespace schnapps

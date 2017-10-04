@@ -101,17 +101,28 @@ void Plugin_SurfaceDifferentialProperties::attribute_changed(cgogn::Orbit orbit,
 		if (compute_normal_last_parameters_.count(map->get_name()) > 0ul)
 		{
 			ComputeNormalParameters& params = compute_normal_last_parameters_[map->get_name()];
-			if (params.auto_update && params.position_name == attribute_name)
-				compute_normal(map->get_name(), params.position_name, params.normal_name, true);
+			if (params.auto_update_ && params.position_name_ == attribute_name)
+				compute_normal(
+					map->get_name(),
+					params.position_name_,
+					params.normal_name_, params.create_vbo_normal_,
+					true
+				);
 		}
 		if (compute_curvature_last_parameters_.count(map->get_name()) > 0ul)
 		{
 			ComputeCurvatureParameters& params = compute_curvature_last_parameters_[map->get_name()];
-			if (params.auto_update && (params.position_name == attribute_name || params.normal_name == attribute_name))
+			if (params.auto_update_ && (params.position_name_ == attribute_name || params.normal_name_ == attribute_name))
 				compute_curvature(
 					map->get_name(),
-					params.position_name, params.normal_name,
-					params.Kmax_name, params.kmax_name, params.Kmin_name, params.kmin_name, params.Knormal_name,
+					params.position_name_, params.normal_name_,
+					params.Kmax_name_, params.create_vbo_Kmax_,
+					params.kmax_name_, params.create_vbo_kmax_,
+					params.Kmin_name_, params.create_vbo_Kmin_,
+					params.kmin_name_, params.create_vbo_kmin_,
+					params.Knormal_name_, params.create_vbo_Knormal_,
+					params.compute_kmean_, params.kmean_name_, params.create_vbo_kmean_,
+					params.compute_kgaussian_, params.kgaussian_name_, params.create_vbo_kgaussian_,
 					true
 				);
 		}
@@ -132,7 +143,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	const QString& map_name,
 	const QString& position_attribute_name,
 	const QString& normal_attribute_name,
-	bool create_vbo,
+	bool create_vbo_normal,
 	bool auto_update)
 {
 	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
@@ -154,13 +165,18 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 
 	cgogn::geometry::compute_normal<VEC3>(*mh->get_map(), position, normal);
 
-	if (create_vbo)
+	mh->notify_attribute_change(CMap2::Vertex::ORBIT, normal_attribute_name);
+
+	if (create_vbo_normal)
 		mh->create_vbo(normal_attribute_name);
 
 	compute_normal_last_parameters_[map_name] =
-		ComputeNormalParameters(position_attribute_name, normal_attribute_name, auto_update);
-
-	mh->notify_attribute_change(CMap2::Vertex::ORBIT, normal_attribute_name);
+		ComputeNormalParameters(
+			position_attribute_name,
+			normal_attribute_name,
+			create_vbo_normal,
+			auto_update
+		);
 }
 
 void Plugin_SurfaceDifferentialProperties::compute_curvature(
@@ -168,12 +184,21 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 	const QString& position_attribute_name,
 	const QString& normal_attribute_name,
 	const QString& Kmax_attribute_name,
+	bool create_vbo_Kmax,
 	const QString& kmax_attribute_name,
+	bool create_vbo_kmax,
 	const QString& Kmin_attribute_name,
+	bool create_vbo_Kmin,
 	const QString& kmin_attribute_name,
+	bool create_vbo_kmin,
 	const QString& Knormal_attribute_name,
+	bool create_vbo_Knormal,
 	bool compute_kmean,
+	const QString& kmean_attribute_name,
+	bool create_vbo_kmean,
 	bool compute_kgaussian,
+	const QString& kgaussian_attribute_name,
+	bool create_vbo_kgaussian,
 	bool auto_update)
 {
 	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
@@ -226,44 +251,74 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 
 	cgogn::geometry::compute_curvature<VEC3>(*map2, radius, position, normal, edge_angle, edge_area, kmax, kmin, Kmax, Kmin, Knormal);
 
-	compute_curvature_last_parameters_[map_name] =
-		ComputeCurvatureParameters(
-			position_attribute_name, normal_attribute_name,
-			Kmax_attribute_name, kmax_attribute_name, Kmin_attribute_name, kmin_attribute_name, Knormal_attribute_name,
-			compute_kmean, compute_kgaussian, auto_update
-		);
-
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, Kmax_attribute_name);
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, kmax_attribute_name);
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, Kmin_attribute_name);
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, kmin_attribute_name);
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, Knormal_attribute_name);
 
+	if (create_vbo_Kmax)
+		mh->create_vbo(Kmax_attribute_name);
+	if (create_vbo_kmax)
+		mh->create_vbo(kmax_attribute_name);
+	if (create_vbo_Kmin)
+		mh->create_vbo(Kmin_attribute_name);
+	if (create_vbo_kmin)
+		mh->create_vbo(kmin_attribute_name);
+	if (create_vbo_Knormal)
+		mh->create_vbo(Knormal_attribute_name);
+
 	if (compute_kmean)
 	{
-		CMap2::VertexAttribute<SCALAR> kmean = mh->get_attribute<SCALAR, CMap2::Vertex::ORBIT>("kmean");
+		CMap2::VertexAttribute<SCALAR> kmean = mh->get_attribute<SCALAR, CMap2::Vertex::ORBIT>(kmean_attribute_name);
 		if (!kmean.is_valid())
-			kmean = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("kmean");
+			kmean = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>(kmean_attribute_name);
 
 		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
-		for (uint32 i = container.begin(); i != container.end(); container.next(i))
+		container.parallel_foreach_index([&] (uint32 i)
+		{
 			kmean[i] = (kmin[i] + kmax[i]) / 2.0;
+		});
 
-		mh->notify_attribute_change(CMap2::Vertex::ORBIT, "kmean");
+		mh->notify_attribute_change(CMap2::Vertex::ORBIT, kmean_attribute_name);
+
+		if (create_vbo_kmean)
+			mh->create_vbo(kmean_attribute_name);
 	}
 
 	if (compute_kgaussian)
 	{
-		CMap2::VertexAttribute<SCALAR> kgaussian = mh->get_attribute<SCALAR, CMap2::Vertex::ORBIT>("kgaussian");
+		CMap2::VertexAttribute<SCALAR> kgaussian = mh->get_attribute<SCALAR, CMap2::Vertex::ORBIT>(kgaussian_attribute_name);
 		if (!kgaussian.is_valid())
-			kgaussian = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("kgaussian");
+			kgaussian = mh->add_attribute<SCALAR, CMap2::Vertex::ORBIT>(kgaussian_attribute_name);
 
 		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
-		for (uint32 i = container.begin(); i != container.end(); container.next(i))
+		container.parallel_foreach_index([&] (uint32 i)
+		{
 			kgaussian[i] = kmin[i] * kmax[i];
+		});
 
-		mh->notify_attribute_change(CMap2::Vertex::ORBIT, "kgaussian");
+		if (create_vbo_kmin)
+			mh->create_vbo(kmin_attribute_name);
+
+		mh->notify_attribute_change(CMap2::Vertex::ORBIT, kgaussian_attribute_name);
+
+		if (create_vbo_kgaussian)
+			mh->create_vbo(kgaussian_attribute_name);
 	}
+
+	compute_curvature_last_parameters_[map_name] =
+		ComputeCurvatureParameters(
+			position_attribute_name, normal_attribute_name,
+			Kmax_attribute_name, create_vbo_Kmax,
+			kmax_attribute_name, create_vbo_kmax,
+			Kmin_attribute_name, create_vbo_Kmin,
+			kmin_attribute_name, create_vbo_kmin,
+			Knormal_attribute_name, create_vbo_Knormal,
+			compute_kmean, kmean_attribute_name, create_vbo_kmean,
+			compute_kgaussian, kgaussian_attribute_name, create_vbo_kgaussian,
+			auto_update
+		);
 }
 
 } // namespace plugin_sdp

@@ -55,7 +55,7 @@ private:
 	CMap2Handler* selected_map_;
 
 	QString setting_auto_load_position_attribute_;
-	QString setting_auto_load_normal_attribute_;
+	QString setting_default_normal_attribute_name_;
 
 private slots:
 

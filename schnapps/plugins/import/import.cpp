@@ -58,6 +58,11 @@ bool Plugin_Import::enable()
 	else
 		setting_vbo_names_ = add_setting("Compute VBO", QStringList({"position", "normal", "color"})).toStringList();
 
+	if (get_setting("Default path").isValid())
+		setting_default_path_ = get_setting("Default path").toString();
+	else
+		setting_default_path_ = add_setting("Default path", schnapps_->get_app_path() ).toString();
+
 	return true;
 }
 
@@ -96,8 +101,15 @@ MapHandlerGen* Plugin_Import::import_surface_mesh_from_file(const QString& filen
 
 void Plugin_Import::import_surface_mesh_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", schnapps_->get_app_path(), "Surface mesh Files (*.ply *.off *.stl *.trian *.vtk *.vtp *.vtu *.obj *.msh *.mesh *.meshb)");
+    QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", setting_default_path_, "Surface mesh Files (*.ply *.off *.stl *.trian *.vtk *.vtp *.vtu *.obj *.2dm *.msh *.mesh *.meshb)");
 	QStringList::Iterator it = filenames.begin();
+
+	if  (it != filenames.end())
+	{
+		QFileInfo info(*it);
+		setting_default_path_ = info.path();
+	}
+
 	while (it != filenames.end())
 	{
 		import_surface_mesh_from_file(*it);
@@ -133,8 +145,15 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 
 void Plugin_Import::import_volume_mesh_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", schnapps_->get_app_path(), "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", setting_default_path_, "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
 	QStringList::Iterator it = filenames.begin();
+
+	if  (it != filenames.end())
+	{
+		QFileInfo info(*it);
+		setting_default_path_ = info.path();
+	}
+
 	while (it != filenames.end())
 	{
 		import_volume_mesh_from_file(*it);
