@@ -72,6 +72,8 @@ SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAp
 	control_map_tab_ = new ControlDock_MapTab(this);
 	window_->control_dock_tab_widget_->addTab(control_map_tab_, control_map_tab_->title());
 
+	window_->control_dock_tab_widget_->setCurrentIndex(window_->control_dock_tab_widget_->indexOf(control_map_tab_));
+
 	// create & setup central widget (views)
 
 	root_splitter_ = new QSplitter(window_->centralwidget);

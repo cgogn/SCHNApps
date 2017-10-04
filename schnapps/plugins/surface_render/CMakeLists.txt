@@ -9,6 +9,7 @@ find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
 	dll.h
+	map_parameters.h
 	surface_render.h
 	surface_render_dock_tab.h
 )
@@ -35,7 +36,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 
-if (USE_TRANSP)
+if (USE_TRANSPARENCY)
 	target_link_libraries(${PROJECT_NAME}
 		schnapps_core
 		plugin_surface_render_transp

@@ -55,12 +55,12 @@ public:
 
 	Plugin_SurfaceDifferentialProperties() {}
 
-	~Plugin_SurfaceDifferentialProperties() {}
+	~Plugin_SurfaceDifferentialProperties() override {}
 
 private:
 
-	virtual bool enable();
-	virtual void disable();
+	virtual bool enable() override;
+	virtual void disable() override;
 
 private slots:
 
@@ -80,18 +80,18 @@ public slots:
 
 	/**
 	 * @brief compute the normals of a mesh
-	 * @param map_name name of the 2d map (mesh)
+	 * @param map_name name of the 2d map
 	 * @param position_attribute_name name of position attribute used for computation
 	 * @param normal_attribute_name name of result attribute
-	 * @param create_vbo create a vbo for the computed normal attribute
-	 * @param auto_update automatically update the normal attribute when position attribute change.
+	 * @param create_vbo_normal create a vbo for the computed normal attribute
+	 * @param auto_update automatically update the normal attribute when position attribute change
 	 */
 	void compute_normal(
 		const QString& map_name,
-		const QString& position_attribute_name = "position",
-		const QString& normal_attribute_name = "normal",
-		bool create_vbo = true,
-		bool auto_update = true
+		const QString& position_attribute_name,
+		const QString& normal_attribute_name,
+		bool create_vbo_normal,
+		bool auto_update
 	);
 
 	/**
@@ -100,27 +100,128 @@ public slots:
 	 * @param position_attribute_name name of input position attribute
 	 * @param normal_attribute_name name of input normal attribute
 	 * @param Kmax_attribute_name name of output maximum curvature direction attribute
+	 * @param create_vbo_Kmax create a vbo for the computed Kmax attribute
 	 * @param kmax_attribute_name name of output maximum curvature magnitude attribute
+	 * @param create_vbo_kmax create a vbo for the computed kmax attribute
 	 * @param Kmin_attribute_name name of output minimum curvature direction attribute
+	 * @param create_vbo_Kmin create a vbo for the computed Kmin attribute
 	 * @param kmin_attribute_name name of output minimum curvature magnitude attribute
+	 * @param create_vbo_kmin create a vbo for the computed kmin attribute
 	 * @param Knormal_attribute_name name of output normal direction attribute
+	 * @param create_vbo_Knormal create a vbo for the computed Knormal attribute
 	 * @param compute_kmean compute the mean curvature
+	 * @param kmean_attribute_name name of mean curvature attribute
+	 * @param create_vbo_kmean create a vbo for the computed kmean attribute
 	 * @param compute_kgaussian compute the gaussian curvature
-	 * @param auto_update automatically update the output attributes when input attribute change.
+	 * @param kgaussian_attribute_name name of gaussian curvature attribute
+	 * @param create_vbo_kgaussian create a vbo for the computed kgaussian attribute
+	 * @param auto_update automatically update the output attributes when input attribute change
 	 */
 	void compute_curvature(
 		const QString& map_name,
-		const QString& position_attribute_name = "position",
-		const QString& normal_attribute_name = "normal",
-		const QString& Kmax_attribute_name = "Kmax",
-		const QString& kmax_attribute_name = "kmax",
-		const QString& Kmin_attribute_name = "Kmin",
-		const QString& kmin_attribute_name = "kmin",
-		const QString& Knormal_attribute_name = "Knormal",
-		bool compute_kmean = true,
-		bool compute_kgaussian = true,
-		bool auto_update = true
+		const QString& position_attribute_name,
+		const QString& normal_attribute_name,
+		const QString& Kmax_attribute_name,
+		bool create_vbo_Kmax,
+		const QString& kmax_attribute_name,
+		bool create_vbo_kmax,
+		const QString& Kmin_attribute_name,
+		bool create_vbo_Kmin,
+		const QString& kmin_attribute_name,
+		bool create_vbo_kmin,
+		const QString& Knormal_attribute_name,
+		bool create_vbo_Knormal,
+		bool compute_kmean,
+		const QString& kmean_attribute_name,
+		bool create_vbo_kmean,
+		bool compute_kgaussian,
+		const QString& kgaussian_attribute_name,
+		bool create_vbo_kgaussian,
+		bool auto_update
 	);
+
+public:
+
+	struct ComputeNormalParameters
+	{
+		ComputeNormalParameters() {}
+		ComputeNormalParameters(
+			const QString& position_name, const QString& normal_name,
+			bool create_vbo_normal,
+			bool update
+		) : position_name_(position_name), normal_name_(normal_name),
+			create_vbo_normal_(create_vbo_normal),
+			auto_update_(update)
+		{}
+		QString position_name_;
+		QString normal_name_;
+		bool create_vbo_normal_;
+		bool auto_update_;
+	};
+
+	bool has_compute_normal_last_parameters(const QString& map_name)
+	{
+		return compute_normal_last_parameters_.count(map_name) > 0;
+	}
+	const ComputeNormalParameters& get_compute_normal_last_parameters(const QString& map_name)
+	{
+		cgogn_message_assert(has_compute_normal_last_parameters(map_name), "Getting inexistant parameters");
+		return compute_normal_last_parameters_[map_name];
+	}
+
+	struct ComputeCurvatureParameters
+	{
+		ComputeCurvatureParameters() {}
+		ComputeCurvatureParameters(
+			const QString& position_name, const QString& normal_name,
+			const QString& Kmax_name, bool create_vbo_Kmax,
+			const QString& kmax_name, bool create_vbo_kmax,
+			const QString& Kmin_name, bool create_vbo_Kmin,
+			const QString& kmin_name, bool create_vbo_kmin,
+			const QString& Knormal_name,  bool create_vbo_Knormal,
+			bool compute_kmean, const QString& kmean_name, bool create_vbo_kmean,
+			bool compute_kgaussian, const QString& kgaussian_name, bool create_vbo_kgaussian,
+			bool update
+		) :	position_name_(position_name), normal_name_(normal_name),
+			Kmax_name_(Kmax_name), create_vbo_Kmax_(create_vbo_Kmax),
+			kmax_name_(kmax_name), create_vbo_kmax_(create_vbo_kmax),
+			Kmin_name_(Kmin_name), create_vbo_Kmin_(create_vbo_Kmin),
+			kmin_name_(kmin_name), create_vbo_kmin_(create_vbo_kmin),
+			Knormal_name_(Knormal_name), create_vbo_Knormal_(create_vbo_Knormal),
+			compute_kmean_(compute_kmean), kmean_name_(kmean_name), create_vbo_kmean_(create_vbo_kmean),
+			compute_kgaussian_(compute_kgaussian), kgaussian_name_(kgaussian_name), create_vbo_kgaussian_(create_vbo_kgaussian),
+			auto_update_(update)
+		{}
+		QString position_name_;
+		QString normal_name_;
+		QString Kmax_name_;
+		bool create_vbo_Kmax_;
+		QString kmax_name_;
+		bool create_vbo_kmax_;
+		QString Kmin_name_;
+		bool create_vbo_Kmin_;
+		QString kmin_name_;
+		bool create_vbo_kmin_;
+		QString Knormal_name_;
+		bool create_vbo_Knormal_;
+		bool compute_kmean_;
+		QString kmean_name_;
+		bool create_vbo_kmean_;
+		bool compute_kgaussian_;
+		QString kgaussian_name_;
+		bool create_vbo_kgaussian_;
+		bool auto_update_;
+	};
+
+	bool has_compute_curvature_last_parameters(const QString& map_name)
+	{
+		return compute_curvature_last_parameters_.count(map_name) > 0;
+	}
+	const ComputeCurvatureParameters& get_compute_curvature_last_parameters(const QString& map_name)
+	{
+		cgogn_message_assert(has_compute_curvature_last_parameters(map_name), "Getting inexistant parameters");
+		return compute_curvature_last_parameters_[map_name];
+	}
 
 private:
 
@@ -130,42 +231,7 @@ private:
 	QAction* compute_normal_action_;
 	QAction* compute_curvature_action_;
 
-	struct ComputeNormalParameters
-	{
-		ComputeNormalParameters() {}
-		ComputeNormalParameters(const QString& p, const QString& n, bool update) :
-			position_name(p), normal_name(n), auto_update(update)
-		{}
-		QString position_name;
-		QString normal_name;
-		bool auto_update;
-	};
-
 	std::map<QString, ComputeNormalParameters> compute_normal_last_parameters_;
-
-	struct ComputeCurvatureParameters
-	{
-		ComputeCurvatureParameters() {}
-		ComputeCurvatureParameters(
-			const QString& p, const QString& n,
-			const QString& Kmax, const QString& kmax, const QString& Kmin, const QString& kmin, const QString& Knormal,
-			bool kmean, bool kgaussian, bool update) :
-			position_name(p), normal_name(n),
-			Kmax_name(Kmax), kmax_name(kmax), Kmin_name(Kmin), kmin_name(kmin), Knormal_name(Knormal),
-			compute_kmean(kmean), compute_kgaussian(kgaussian), auto_update(update)
-		{}
-		QString position_name;
-		QString normal_name;
-		QString Kmax_name;
-		QString kmax_name;
-		QString Kmin_name;
-		QString kmin_name;
-		QString Knormal_name;
-		bool compute_kmean;
-		bool compute_kgaussian;
-		bool auto_update;
-	};
-
 	std::map<QString, ComputeCurvatureParameters> compute_curvature_last_parameters_;
 };
 

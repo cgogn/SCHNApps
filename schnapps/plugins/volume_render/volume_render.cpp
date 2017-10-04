@@ -81,8 +81,8 @@ bool Plugin_VolumeRender::enable()
 
 	update_dock_tab();
 
-#ifdef USE_TRANSP
-	plug_transp_ = reinterpret_cast<PluginInteraction*>(schnapps_->enable_plugin("surface_render_transp"));
+#ifdef USE_TRANSPARENCY
+	plugin_transparency_ = reinterpret_cast<PluginInteraction*>(schnapps_->enable_plugin("surface_render_transp"));
 #endif
 
 	return true;
@@ -203,8 +203,8 @@ void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
 
 void Plugin_VolumeRender::view_linked(View* view)
 {
-#ifdef USE_TRANSP
-	view->link_plugin(plug_transp_);
+#ifdef USE_TRANSPARENCY
+	view->link_plugin(plugin_transparency_);
 #endif
 	update_dock_tab();
 
@@ -248,10 +248,9 @@ void Plugin_VolumeRender::connectivity_changed(MapHandlerGen* map)
 					p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
 					p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
 				}
-#ifdef USE_TRANSP
-				else {
+#ifdef USE_TRANSPARENCY
+				else
 					p.volume_transparency_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
-				}
 #endif
 				p.topo_drawer_->update<VEC3>(*mh3->get_map(),pos_attr);
 			}
@@ -267,9 +266,9 @@ void Plugin_VolumeRender::map_linked(View* view, MapHandlerGen* map)
 	{
 		set_position_vbo(view->get_name(), map->get_name(), setting_auto_load_position_attribute_);
 		MapParameters& p = get_parameters(view, map);
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		if (p.use_transparency_)
-				plugin_surface_render_transp::add_tr_vol(plug_transp_,view,map,p.get_transp_drawer_rend());
+				plugin_surface_render_transp::add_tr_vol(plugin_transparency_,view,map,p.get_transp_drawer_rend());
 #endif
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
@@ -292,9 +291,9 @@ void Plugin_VolumeRender::map_unlinked(View* view, MapHandlerGen* map)
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit,QString)), this, SLOT(linked_attribute_changed(cgogn::Orbit,QString)));
 
 		MapParameters& p = get_parameters(view, map);
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		if (p.use_transparency_)
-			plugin_surface_render_transp::remove_tr_vol(plug_transp_,view,map,p.get_transp_drawer_rend());
+			plugin_surface_render_transp::remove_tr_vol(plugin_transparency_,view,map,p.get_transp_drawer_rend());
 #endif
 	}
 }
@@ -385,7 +384,7 @@ void Plugin_VolumeRender::linked_map_connectivity_changed()
 					p.volume_drawer_->update_edge<VEC3>(*mh3->get_map(), pos_attr);
 					p.volume_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
 				}
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 				else {
 					p.volume_transparency_drawer_->update_face<VEC3>(*mh3->get_map(), pos_attr);
 				}
@@ -413,13 +412,13 @@ void Plugin_VolumeRender::viewer_initialized()
 		{
 			MapParameters& mp = p.second;
 			MapHandlerGen* map = p.first;
-	#ifdef USE_TRANSP
-			plugin_surface_render_transp::remove_tr_vol(plug_transp_, view, map, mp.get_transp_drawer_rend());
-	#endif
+#ifdef USE_TRANSPARENCY
+			plugin_surface_render_transp::remove_tr_vol(plugin_transparency_, view, map, mp.get_transp_drawer_rend());
+#endif
 			mp.initialize_gl();
-	#ifdef USE_TRANSP
-			plugin_surface_render_transp::add_tr_vol(plug_transp_, view, map, mp.get_transp_drawer_rend());
-	#endif
+#ifdef USE_TRANSPARENCY
+			plugin_surface_render_transp::add_tr_vol(plugin_transparency_, view, map, mp.get_transp_drawer_rend());
+#endif
 		}
 	}
 	update_dock_tab();
@@ -585,7 +584,7 @@ void Plugin_VolumeRender::set_apply_clipping_plane(View* view, MapHandlerGen* ma
 MapParameters::MapParameters() :
 	position_vbo_(nullptr),
 	plane_clipping_(0., 0., 0., 0.),
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	volume_transparency_drawer_(nullptr),
 	volume_transparency_drawer_rend_(nullptr),
 #endif
@@ -625,7 +624,7 @@ void MapParameters::set_position_vbo(cgogn::rendering::VBO* v)
 				volume_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
 				volume_drawer_->update_edge<VEC3>(*map_->get_map(), pos_attr);
 			}
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 			else {
 				volume_transparency_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
 			}
@@ -652,7 +651,7 @@ void MapParameters::initialize_gl()
 	topo_drawer_rend_ = topo_drawer_->generate_renderer();
 
 
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	{
 //		if (volume_transparency_drawer_ == nullptr)
 			volume_transparency_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeTransparencyDrawer>();

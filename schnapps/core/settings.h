@@ -42,7 +42,9 @@ class SCHNAPPS_CORE_API Settings : public QObject
 	Q_OBJECT
 
 	friend class SettingsWidget;
+
 public:
+
 	Settings() = default;
 	Settings(const Settings&) = delete;
 	Settings(Settings&&) = delete;
@@ -66,6 +68,7 @@ public:
 	void set_widget(QWidget* widget);
 
 private slots:
+
 	void setting_changed(const QString& module_name, const QString& name, const QVariant& value);
 	void setting_changed_bool(bool b);
 	void setting_changed_double(double d);

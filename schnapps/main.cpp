@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
 
 	QString settings_path;
-	if (argc==2)
+	if (argc == 2)
 		settings_path = QString(argv[1]);
 	if (! settings_path.endsWith(".json", Qt::CaseInsensitive))
 	{
@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
 	std::unique_ptr<QMainWindow> w = schnapps::schnapps_window_factory(app.applicationDirPath(), settings_path);
 	w->show();
 	splash.finish(w.get());
-
 
 	return app.exec();
 }

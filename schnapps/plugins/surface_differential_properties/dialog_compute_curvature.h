@@ -33,7 +33,6 @@ namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
 
 namespace plugin_sdp
 {
@@ -45,6 +44,7 @@ class SCHNAPPS_PLUGIN_SDP_API ComputeCurvature_Dialog : public QDialog, public U
 	Q_OBJECT
 
 public:
+
 	ComputeCurvature_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
 
 private:
@@ -56,11 +56,13 @@ private:
 
 	QString setting_auto_load_position_attribute_;
 	QString setting_auto_load_normal_attribute_;
-	QString setting_auto_load_Kmax_attribute_;
-	QString setting_auto_load_kmax_attribute_;
-	QString setting_auto_load_Kmin_attribute_;
-	QString setting_auto_load_kmin_attribute_;
-	QString setting_auto_load_Knormal_attribute_;
+	QString setting_default_Kmax_attribute_name_;
+	QString setting_default_kmax_attribute_name_;
+	QString setting_default_Kmin_attribute_name_;
+	QString setting_default_kmin_attribute_name_;
+	QString setting_default_Knormal_attribute_name_;
+	QString setting_default_kmean_attribute_name_;
+	QString setting_default_kgaussian_attribute_name_;
 
 private slots:
 

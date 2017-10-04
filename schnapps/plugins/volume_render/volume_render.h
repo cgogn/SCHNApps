@@ -44,9 +44,10 @@
 #include <cgogn/rendering/volume_drawer.h>
 #include <cgogn/rendering/frame_manipulator.h>
 #include <cgogn/rendering/topo_drawer.h>
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 #include <cgogn/rendering/transparency_volume_drawer.h>
 #endif
+
 namespace schnapps
 {
 
@@ -86,7 +87,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	{
 		face_color_ = c;
 		volume_drawer_rend_->set_face_color(face_color_);
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		face_color_.setAlpha(transparency_factor_);
 		volume_transparency_drawer_rend_->set_color(face_color_);
 #endif
@@ -111,7 +112,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	{
 		volume_explode_factor_ = vef;
 		volume_drawer_rend_->set_explode_volume(vef);
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		volume_transparency_drawer_rend_->set_explode_volume(vef);
 #endif
 		topo_drawer_->set_explode_volume(vef);
@@ -124,7 +125,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 	int32 get_transparency_factor() const { return transparency_factor_; }
 	void set_transparency_factor(int32 n)
 	{
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 		n = n % 255;
 		transparency_factor_ = n;
 		if (use_transparency_)
@@ -161,21 +162,18 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 			float32 d = -(position.dot(axis_z));
 			volume_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
 			topo_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
-	#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 			volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(axis_z[0], axis_z[1], axis_z[2], d));
-	#endif
-
+#endif
 		}
 		else
 		{
 			volume_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 			topo_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
-	#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 			volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
-	#endif
-
+#endif
 		}
-
 	}
 
 	void plane_clip_from_frame()
@@ -188,7 +186,7 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		plane_clipping_ = QVector4D(axis_z[0],axis_z[1],axis_z[2],d);
 	}
 
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	cgogn::rendering::VolumeTransparencyDrawer::Renderer* get_transp_drawer_rend()
 	{
 		return volume_transparency_drawer_rend_.get();
@@ -217,10 +215,11 @@ private:
 	int32 transparency_factor_;
 	QVector4D plane_clipping_;
 
-#ifdef USE_TRANSP
+#ifdef USE_TRANSPARENCY
 	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer> volume_transparency_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeTransparencyDrawer::Renderer> volume_transparency_drawer_rend_;
 #endif
+
 	std::unique_ptr<cgogn::rendering::VolumeDrawer> volume_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeDrawer::Renderer> volume_drawer_rend_;
 
@@ -256,7 +255,6 @@ public:
 	inline Plugin_VolumeRender() {}
 
 	~Plugin_VolumeRender() {}
-
 
 private:
 
@@ -375,12 +373,12 @@ private:
 	bool setting_auto_enable_on_selected_view_;
 	QString setting_auto_load_position_attribute_;
 
-#ifdef USE_TRANSP
-	PluginInteraction* plug_transp_;
+#ifdef USE_TRANSPARENCY
+	PluginInteraction* plugin_transparency_;
 #endif
+
 	std::map<View*,QMetaObject::Connection> connection_map_linked_;
 	std::map<View*,QMetaObject::Connection> connection_map_unlinked_;
-
 };
 
 } // namespace plugin_volume_render

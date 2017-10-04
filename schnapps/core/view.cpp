@@ -477,6 +477,7 @@ void View::keyPressEvent(QKeyEvent* event)
 		case Qt::Key_V:
 			schnapps_->cycle_selected_view();
 			break;
+
 		case Qt::Key_S:
 		{
 			save_snapshots_ = !save_snapshots_;
@@ -503,7 +504,6 @@ void View::keyPressEvent(QKeyEvent* event)
 				disconnect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
 				cgogn_log_info("View::keyPressEvent") <<"Stop frame snapshot.";
 			}
-
 		}
 		break;
 
@@ -615,8 +615,14 @@ void View::map_added(MapHandlerGen* mh)
 	if (mh)
 	{
 		dialog_maps_->add_item(mh->get_name());
-		if (schnapps_->get_core_setting("Add map to selected view").toBool())
-			dialog_maps_->list()->item(dialog_maps_->nb_items() -1)->setCheckState(Qt::Checked);
+		if (schnapps_->get_core_setting("Add map to selected view").toBool() && is_selected_view())
+		{
+			link_map(mh);
+
+			updating_ui_ = true;
+			dialog_maps_->check(mh->get_name(), Qt::Checked);
+			updating_ui_ = false;
+		}
 	}
 }
 
