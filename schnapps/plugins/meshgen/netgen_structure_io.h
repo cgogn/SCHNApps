@@ -43,11 +43,11 @@ namespace plugin_meshgen
 
 class NetgenParameters;
 
-class SCHNAPPS_PLUGIN_MESHGEN_API NetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
+class SCHNAPPS_PLUGIN_MESHGEN_API NetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3>
 {
 public:
 
-	using Inherit = cgogn::io::VolumeImport<CMap3, VEC3>;
+	using Inherit = cgogn::io::VolumeImport<CMap3>;
 	using Self = NetgenStructureVolumeImport;
 	using Scalar = SCALAR;
 	template <typename T>

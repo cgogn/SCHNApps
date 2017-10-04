@@ -41,11 +41,11 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
+class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3>
 {
 public:
 
-	using Inherit = cgogn::io::VolumeImport<CMap3, VEC3>;
+	using Inherit = cgogn::io::VolumeImport<CMap3>;
 	using Self = TetgenStructureVolumeImport;
 	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
 	template <typename T>
