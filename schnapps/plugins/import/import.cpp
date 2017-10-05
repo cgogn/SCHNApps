@@ -168,12 +168,51 @@ MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filena
 			CMap3* map = mh->get_map();
 
 			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
+
+			mh->notify_connectivity_change();
+
+			if (mh->is_embedded(Dart_Cell))
+			{
+				const auto* container = mh->attribute_container(Dart_Cell);
+				const std::vector<std::string>& names = container->names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(mh->orbit(Dart_Cell), QString::fromStdString(names[i]));
+			}
+			if (mh->is_embedded(Vertex_Cell))
+			{
+				const auto* container = mh->attribute_container(Vertex_Cell);
+				const std::vector<std::string>& names = container->names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(mh->orbit(Vertex_Cell), QString::fromStdString(names[i]));
+			}
+			if (mh->is_embedded(Edge_Cell))
+			{
+				const auto* container = mh->attribute_container(Edge_Cell);
+				const std::vector<std::string>& names = container->names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(mh->orbit(Edge_Cell), QString::fromStdString(names[i]));
+			}
+			if (mh->is_embedded(Face_Cell))
+			{
+				const auto* container = mh->attribute_container(Face_Cell);
+				const std::vector<std::string>& names = container->names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(mh->orbit(Face_Cell), QString::fromStdString(names[i]));
+			}
+			if (mh->is_embedded(Volume_Cell))
+			{
+				const auto* container = mh->attribute_container(Volume_Cell);
+				const std::vector<std::string>& names = container->names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(mh->orbit(Volume_Cell), QString::fromStdString(names[i]));
+			}
+
 			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
 			{
-				mh->set_bb_vertex_attribute(setting_bbox_name_);
-
 				for (const QString& vbo_name : setting_vbo_names_)
 					mhg->create_vbo(vbo_name);
+
+				mh->set_bb_vertex_attribute(setting_bbox_name_);
 			}
 		}
 		return mhg;
