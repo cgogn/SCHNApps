@@ -39,6 +39,10 @@ namespace plugin_surface_render
 
 MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* map)
 {
+	cgogn_message_assert(view, "Try to access parameters for null view");
+	cgogn_message_assert(map, "Try to access parameters for null map");
+	cgogn_message_assert(map->dimension() == 2, "Try to access parameters for map with dimension other than 2");
+
 	view->makeCurrent();
 
 	auto& view_param_set = parameter_set_[view];
@@ -240,9 +244,9 @@ void Plugin_SurfaceRender::add_linked_map(View* view, MapHandlerGen *map)
 {
 	if (map->dimension() == 2)
 	{
-		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), false);
-		set_normal_vbo(view, map, map->get_vbo(setting_auto_load_normal_attribute_), false);
-		set_color_vbo(view, map, map->get_vbo(setting_auto_load_color_attribute_), false);
+		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), true);
+		set_normal_vbo(view, map, map->get_vbo(setting_auto_load_normal_attribute_), true);
+		set_color_vbo(view, map, map->get_vbo(setting_auto_load_color_attribute_), true);
 
 #ifdef USE_TRANSPARENCY
 		MapParameters& p = get_parameters(view, map);
@@ -298,11 +302,11 @@ void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 			{
 				MapParameters& p = view_param_set[map];
 				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
-					this->set_position_vbo(it.first, map, vbo, true);
+					set_position_vbo(it.first, map, vbo, true);
 				if (!p.normal_vbo_ && vbo_name == setting_auto_load_normal_attribute_)
-					this->set_normal_vbo(it.first, map, vbo, true);
+					set_normal_vbo(it.first, map, vbo, true);
 				if (!p.color_vbo_ && vbo_name == setting_auto_load_color_attribute_)
-					this->set_color_vbo(it.first, map, vbo, true);
+					set_color_vbo(it.first, map, vbo, true);
 			}
 		}
 
@@ -324,11 +328,11 @@ void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 			{
 				MapParameters& p = view_param_set[map];
 				if (p.position_vbo_ == vbo)
-					this->set_position_vbo(it.first, map, nullptr, true);
+					set_position_vbo(it.first, map, nullptr, true);
 				if (p.normal_vbo_ == vbo)
-					this->set_normal_vbo(it.first, map, nullptr, true);
+					set_normal_vbo(it.first, map, nullptr, true);
 				if (p.color_vbo_ == vbo)
-					this->set_color_vbo(it.first, map, nullptr, true);
+					set_color_vbo(it.first, map, nullptr, true);
 			}
 		}
 
@@ -359,7 +363,7 @@ void Plugin_SurfaceRender::linked_map_bb_changed()
 void Plugin_SurfaceRender::viewer_initialized()
 {
 	View* view = dynamic_cast<View*>(sender());
-	if (view && (parameter_set_.count(view) > 0))
+	if (view && parameter_set_.count(view) > 0)
 	{
 		auto& view_param_set = parameter_set_[view];
 		for (auto& p : view_param_set)

@@ -43,7 +43,9 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 {
 	friend class Plugin_SurfaceRenderVector;
 
-	MapParameters() : position_vbo_(nullptr)
+	MapParameters() :
+		map_(nullptr),
+		position_vbo_(nullptr)
 	{
 		initialize_gl();
 	}

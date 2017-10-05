@@ -44,6 +44,7 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 	friend class Plugin_SurfaceRenderScalar;
 
 	MapParameters() :
+		map_(nullptr),
 		position_vbo_(nullptr),
 		scalar_vbo_(nullptr),
 		color_map_(cgogn::rendering::ShaderScalarPerVertex::BWR),

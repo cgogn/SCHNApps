@@ -68,8 +68,8 @@ SurfaceRenderScalar_DockTab::SurfaceRenderScalar_DockTab(SCHNApps* s, Plugin_Sur
 
 SurfaceRenderScalar_DockTab::~SurfaceRenderScalar_DockTab()
 {
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_ui()));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_ui()));
+	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
+	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 }
 
 /*****************************************************************************/
