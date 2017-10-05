@@ -50,12 +50,12 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 	connect(combo_normalVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(normal_vbo_changed(int)));
 	connect(combo_colorVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(color_vbo_changed(int)));
 	connect(check_renderVertices, SIGNAL(toggled(bool)), this, SLOT(render_vertices_changed(bool)));
-	connect(slider_vertexScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertex_scale_factor_changed(int)));
 	connect(check_renderEdges, SIGNAL(toggled(bool)), this, SLOT(render_edges_changed(bool)));
 	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(render_faces_changed(bool)));
 	connect(check_renderBackFaces, SIGNAL(toggled(bool)), this, SLOT(render_backfaces_changed(bool)));
 	connect(group_faceStyle, SIGNAL(buttonClicked(QAbstractButton*)), this, SLOT(face_style_changed(QAbstractButton*)));
 	connect(check_renderBoundary, SIGNAL(toggled(bool)), this, SLOT(render_boundary_changed(bool)));
+	connect(slider_vertexScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertex_scale_factor_changed(int)));
 
 	color_dial_ = new QColorDialog(front_color_, nullptr);
 	connect(vertexColorButton, SIGNAL(clicked()), this, SLOT(vertex_color_clicked()));
@@ -87,8 +87,8 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 
 SurfaceRender_DockTab::~SurfaceRender_DockTab()
 {
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_ui()));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_ui()));
+	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
+	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 }
 
 /*****************************************************************************/
@@ -174,6 +174,25 @@ void SurfaceRender_DockTab::render_boundary_changed(bool b)
 		plugin_->set_render_boundary(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
 }
 
+void SurfaceRender_DockTab::transparency_enabled_changed(bool b)
+{
+#ifdef USE_TRANSPARENCY
+	if (!updating_ui_)
+	{
+		plugin_->set_transparency_enabled(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
+		update_after_use_transparency_changed();
+	}
+#endif
+}
+
+void SurfaceRender_DockTab::transparency_factor_changed(int n)
+{
+#ifdef USE_TRANSPARENCY
+	if (!updating_ui_)
+		plugin_->set_transparency_factor(schnapps_->get_selected_view(), schnapps_->get_selected_map(), n, false);
+#endif
+}
+
 void SurfaceRender_DockTab::vertex_color_clicked()
 {
 	current_color_dial_ = 1;
@@ -254,25 +273,6 @@ void SurfaceRender_DockTab::color_selected()
 		plugin_->set_front_color(view, map, front_color_, false);
 		plugin_->set_back_color(view, map, back_color_, false);
 	}
-}
-
-void SurfaceRender_DockTab::transparency_enabled_changed(bool b)
-{
-#ifdef USE_TRANSPARENCY
-	if (!updating_ui_)
-	{
-		plugin_->set_transparency_enabled(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
-		update_after_use_transparency_changed();
-	}
-#endif
-}
-
-void SurfaceRender_DockTab::transparency_factor_changed(int n)
-{
-#ifdef USE_TRANSPARENCY
-	if (!updating_ui_)
-		plugin_->set_transparency_factor(schnapps_->get_selected_view(), schnapps_->get_selected_map(), n, false);
-#endif
 }
 
 /*****************************************************************************/
