@@ -74,7 +74,7 @@ private:
 	void mouseRelease(View*, QMouseEvent*) override {}
 	void mouseMove(View*, QMouseEvent*) override {}
 	void wheelEvent(View*, QWheelEvent*) override {}
-	void resizeGL(View* /*view*/, int /*width*/, int /*height*/) override {}
+	void resizeGL(View*, int, int) override {}
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;

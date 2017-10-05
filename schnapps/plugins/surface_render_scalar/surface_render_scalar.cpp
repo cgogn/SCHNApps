@@ -143,7 +143,7 @@ void Plugin_SurfaceRenderScalar::add_linked_map(View* view, MapHandlerGen *map)
 {
 	if (map->dimension() == 2)
 	{
-		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), false);
+		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), true);
 
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
@@ -189,7 +189,7 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 			{
 				const MapParameters& p = view_param_set[map];
 				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
-					this->set_position_vbo(it.first, map, vbo, true);
+					set_position_vbo(it.first, map, vbo, true);
 			}
 		}
 
@@ -211,9 +211,9 @@ void Plugin_SurfaceRenderScalar::linked_map_vbo_removed(cgogn::rendering::VBO* v
 			{
 				MapParameters& p = view_param_set[map];
 				if (p.position_vbo_ == vbo)
-					this->set_position_vbo(it.first, map, nullptr, true);
+					set_position_vbo(it.first, map, nullptr, true);
 				if (p.scalar_vbo_ == vbo)
-					this->set_scalar_vbo(it.first, map, nullptr, true);
+					set_scalar_vbo(it.first, map, nullptr, true);
 			}
 		}
 
@@ -239,12 +239,11 @@ void Plugin_SurfaceRenderScalar::linked_map_attribute_changed(cgogn::Orbit orbit
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				cgogn::rendering::VBO* vbo = p.get_scalar_vbo();
-				if (vbo && QString::fromStdString(vbo->name()) == attribute_name && p.auto_update_min_max_)
+				if (p.scalar_vbo_ && QString::fromStdString(p.scalar_vbo_->name()) == attribute_name && p.auto_update_min_max_)
 				{
 					p.update_min_max();
-					this->set_scalar_min(it.first, map, p.get_scalar_min(), true);
-					this->set_scalar_max(it.first, map, p.get_scalar_max(), true);
+					set_scalar_min(it.first, map, p.get_scalar_min(), true);
+					set_scalar_max(it.first, map, p.get_scalar_max(), true);
 				}
 			}
 		}

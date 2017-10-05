@@ -140,7 +140,7 @@ void Plugin_SurfaceRenderVector::add_linked_map(View* view, MapHandlerGen *map)
 {
 	if (map->dimension() == 2)
 	{
-		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), false);
+		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), true);
 
 		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
@@ -184,7 +184,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 			{
 				MapParameters& p = view_param_set[map];
 				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
-					this->set_position_vbo(it.first, map, vbo, true);
+					set_position_vbo(it.first, map, vbo, true);
 			}
 		}
 
@@ -206,9 +206,9 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 			{
 				MapParameters& p = view_param_set[map];
 				if (p.position_vbo_ == vbo)
-					this->set_position_vbo(it.first, map, nullptr, true);
+					set_position_vbo(it.first, map, nullptr, true);
 				if (p.get_vector_vbo_index(vbo) != UINT32_MAX)
-					this->remove_vector_vbo(it.first, map, vbo, true);
+					remove_vector_vbo(it.first, map, vbo, true);
 			}
 		}
 
@@ -228,7 +228,7 @@ void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 		{
 			MapParameters& p = view_param_set[map];
 			for (uint32 i = 0, size = p.vector_scale_factor_list_.size(); i < size; ++i)
-				this->set_vector_scale_factor(it.first, map, p.get_vector_vbo(i), p.vector_scale_factor_list_[i], true);
+				set_vector_scale_factor(it.first, map, p.get_vector_vbo(i), p.vector_scale_factor_list_[i], true);
 		}
 	}
 
