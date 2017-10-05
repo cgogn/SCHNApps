@@ -284,10 +284,12 @@ public:
 
 	virtual const ChunkArrayContainer<uint32>* attribute_container(CellType ct) const = 0;
 
+	void notify_attribute_added(cgogn::Orbit, const QString&);
 	void notify_attribute_change(cgogn::Orbit, const QString&);
 
 	void notify_connectivity_change();
 
+	virtual QString get_attribute_type_name(CellType ct, const QString& attribute_name) const = 0;
 	virtual QStringList get_attribute_names(CellType ct) const = 0;
 
 	virtual bool remove_attribute(CellType ct, const QString& att_name) = 0;
@@ -653,7 +655,7 @@ public:
 	{
 		Attribute<T, ORBIT> a = get_map()->template add_attribute<T, ORBIT>(attribute_name.toStdString());
 		if (a.is_valid())
-			emit(attribute_added(ORBIT, attribute_name));
+			notify_attribute_added(ORBIT, attribute_name);
 		return a;
 	}
 
@@ -684,6 +686,13 @@ public:
 	inline Attribute<T, ORBIT> get_attribute(const QString& attribute_name)
 	{
 		return get_map()->template get_attribute<T, ORBIT>(attribute_name.toStdString());
+	}
+
+	virtual QString get_attribute_type_name(CellType ct, const QString& attribute_name) const override
+	{
+		const ChunkArrayGen* ca = attribute_container(ct)->get_chunk_array(attribute_name.toStdString());
+		if (ca)	return QString::fromStdString(ca->type_name());
+		else return QString();
 	}
 
 	virtual QStringList get_attribute_names(CellType ct) const override

@@ -317,27 +317,100 @@ void ControlDock_MapTab::map_removed(MapHandlerGen* m)
 
 void ControlDock_MapTab::selected_map_attribute_added(cgogn::Orbit orbit, const QString& name)
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+	switch (selected_map_->cell_type(orbit))
+	{
+		case Dart_Cell: {
+			list_dartAttributes->addItem(name);
+			break;
+		}
+		case Vertex_Cell: {
+			QListWidgetItem* item = new QListWidgetItem(name, list_vertexAttributes);
+			QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+			QString type = selected_map_->get_attribute_type_name(Vertex_Cell, name);
+			if (type == vec3_type_name)
+				combo_bbVertexAttribute->addItem(name);
+			if (selected_map_->get_vbo(name))
+				item->setCheckState(Qt::Checked);
+			else
+				item->setCheckState(Qt::Unchecked);
+			break;
+		}
+		case Edge_Cell: {
+			list_edgeAttributes->addItem(name);
+			break;
+		}
+		case Face_Cell: {
+			list_faceAttributes->addItem(name);
+			break;
+		}
+		case Volume_Cell: {
+			list_volumeAttributes->addItem(name);
+			break;
+		}
+	}
+	updating_ui_ = false;
 }
 
 void ControlDock_MapTab::selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+	switch (selected_map_->cell_type(orbit))
+	{
+		case Dart_Cell: {
+			QList<QListWidgetItem*> items = list_dartAttributes->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Vertex_Cell: {
+			QList<QListWidgetItem*> items = list_vertexAttributes->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Edge_Cell: {
+			QList<QListWidgetItem*> items = list_edgeAttributes->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Face_Cell: {
+			QList<QListWidgetItem*> items = list_faceAttributes->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Volume_Cell: {
+			QList<QListWidgetItem*> items = list_volumeAttributes->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+	}
+	updating_ui_ = false;
 }
 
 void ControlDock_MapTab::selected_map_bb_vertex_attribute_changed(const QString& name)
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+	int index = combo_bbVertexAttribute->findText(name);
+	if (index > 0)
+		combo_bbVertexAttribute->setCurrentIndex(index);
+	updating_ui_ = false;
 }
 
 void ControlDock_MapTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+	QList<QListWidgetItem*> items = list_vertexAttributes->findItems(QString::fromStdString(vbo->name()), Qt::MatchExactly);
+	if (!items.empty())
+		items[0]->setCheckState(Qt::Checked);
+	updating_ui_ = false;
 }
 
 void ControlDock_MapTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+	QList<QListWidgetItem*> items = list_vertexAttributes->findItems(QString::fromStdString(vbo->name()), Qt::MatchExactly);
+	if (!items.empty())
+		items[0]->setCheckState(Qt::Unchecked);
+	updating_ui_ = false;
 }
 
 void ControlDock_MapTab::selected_map_connectivity_changed()
@@ -369,14 +442,76 @@ void ControlDock_MapTab::selected_map_connectivity_changed()
 
 void ControlDock_MapTab::selected_map_cells_set_added(CellType ct, const QString& name)
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+	CellsSetGen* cs = selected_map_->get_cells_set(ct, name);
+	QListWidgetItem* item = nullptr;
+	switch (ct)
+	{
+		case Dart_Cell: {
+			item = new QListWidgetItem(name, list_dartSelectors);
+			break;
+		}
+		case Vertex_Cell: {
+			item = new QListWidgetItem(name, list_vertexSelectors);
+			break;
+		}
+		case Edge_Cell: {
+			item = new QListWidgetItem(name, list_edgeSelectors);
+			break;
+		}
+		case Face_Cell: {
+			item = new QListWidgetItem(name, list_faceSelectors);
+			break;
+		}
+		case Volume_Cell: {
+			item = new QListWidgetItem(name, list_volumeSelectors);
+			break;
+		}
+	}
+	if (item)
+	{
+		item->setFlags(item->flags() | Qt::ItemIsEditable);
+		if (cs->is_mutually_exclusive())
+			item->setCheckState(Qt::Checked);
+		else
+			item->setCheckState(Qt::Unchecked);
+	}
+	updating_ui_ = false;
 }
 
 void ControlDock_MapTab::selected_map_cells_set_removed(CellType ct, const QString& name)
 {
-	update_selected_map_info();
+	updating_ui_ = true;
+	switch (ct)
+	{
+		case Dart_Cell: {
+			QList<QListWidgetItem*> items = list_dartSelectors->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Vertex_Cell: {
+			QList<QListWidgetItem*> items = list_vertexSelectors->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Edge_Cell: {
+			QList<QListWidgetItem*> items = list_edgeSelectors->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Face_Cell: {
+			QList<QListWidgetItem*> items = list_faceSelectors->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+		case Volume_Cell: {
+			QList<QListWidgetItem*> items = list_volumeSelectors->findItems(name, Qt::MatchExactly);
+			if (!items.empty()) delete items[0];
+			break;
+		}
+	}
+	updating_ui_ = false;
 }
-
 
 void ControlDock_MapTab::update_selected_map_info()
 {

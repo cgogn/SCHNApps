@@ -276,6 +276,11 @@ void MapHandlerGen::unlink_view(View* view)
  * MANAGE ATTRIBUTES & CONNECTIVITY
  *********************************************************/
 
+void MapHandlerGen::notify_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	emit(attribute_added(orbit, attribute_name));
+}
+
 void MapHandlerGen::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	update_vbo(attribute_name);
