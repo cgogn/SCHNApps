@@ -70,7 +70,6 @@ private:
 
 	QAction* export_mesh_action_;
 	ExportDialog* export_dialog_;
-	QString map_name_;
 };
 
 } // namespace plugin_export
