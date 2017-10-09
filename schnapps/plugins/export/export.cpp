@@ -48,7 +48,6 @@ bool Plugin_Export::enable()
 	export_dialog_ = new ExportDialog(schnapps_, this);
 
 	export_mesh_action_ = schnapps_->add_menu_action("Export;Export Mesh", "export surface/volume mesh");
-
 	connect(export_mesh_action_, SIGNAL(triggered()), this, SLOT(export_mesh_from_file_dialog()));
 
 	return true;

@@ -34,46 +34,30 @@ namespace schnapps
 namespace merge_plugin
 {
 
-MergeDialog::MergeDialog(SCHNApps* s, MergePlugin* p)
+MergeDialog::MergeDialog(SCHNApps* s, MergePlugin* p) :
+	schnapps_(s),
+	plugin_(p)
 {
-	schnapps_ = s;
-	plugin_ = p;
-	updating_ui_ = false;
 	setupUi(this);
-
-	schnapps_->foreach_map([&](MapHandlerGen* mhg)
-	{
-		map_added(mhg);
-	});
 
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(merge_validated()));
-}
 
-void MergeDialog::map_added(MapHandlerGen* mhg)
-{
-	if (mhg)
+	schnapps_->foreach_map([&] (MapHandlerGen* mhg)
 	{
-		comboBoxMapSelection->addItem(mhg->get_name());
-		comboBoxMapSelection_2->addItem(mhg->get_name());
-	}
+		map_added(mhg);
+	});
 }
 
-void MergeDialog::map_removed(MapHandlerGen* mhg)
-{
-	if (mhg)
-	{
-		comboBoxMapSelection->removeItem(this->comboBoxMapSelection->findText(mhg->get_name()));
-		comboBoxMapSelection_2->removeItem(this->comboBoxMapSelection->findText(mhg->get_name()));
-	}
-}
-
+/*****************************************************************************/
+// slots called from UI signals
+/*****************************************************************************/
 
 void MergeDialog::merge_validated()
 {
-	MapHandlerGen* mhg1 = schnapps_->get_map(comboBoxMapSelection->currentText());
-	MapHandlerGen* mhg2 = schnapps_->get_map(comboBoxMapSelection_2->currentText());
+	MapHandlerGen* mhg1 = schnapps_->get_map(combo_mapSelection->currentText());
+	MapHandlerGen* mhg2 = schnapps_->get_map(combo_mapSelection_2->currentText());
 
 	if (!mhg1 || !mhg2)
 		return;
@@ -82,5 +66,28 @@ void MergeDialog::merge_validated()
 	plugin_->merge(copy_mhg1, mhg2);
 }
 
+/*****************************************************************************/
+// slots called from SCHNApps signals
+/*****************************************************************************/
+
+void MergeDialog::map_added(MapHandlerGen* mhg)
+{
+	if (mhg)
+	{
+		combo_mapSelection->addItem(mhg->get_name());
+		combo_mapSelection_2->addItem(mhg->get_name());
+	}
+}
+
+void MergeDialog::map_removed(MapHandlerGen* mhg)
+{
+	if (mhg)
+	{
+		combo_mapSelection->removeItem(combo_mapSelection->findText(mhg->get_name()));
+		combo_mapSelection_2->removeItem(combo_mapSelection_2->findText(mhg->get_name()));
+	}
+}
+
 } // namespace merge_plugin
+
 } // namespace schnapps

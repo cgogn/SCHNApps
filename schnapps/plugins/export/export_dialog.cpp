@@ -26,6 +26,8 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
+#include <cgogn/io/io_utils.h>
+
 #include <QFileDialog>
 
 namespace schnapps
@@ -43,10 +45,7 @@ ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
 
 	connect(combo_mapSelection, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(selected_map_changed(const QString&)));
 	connect(combo_positionSelection, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(position_attribute_changed(const QString&)));
-
 	connect(button_outputSelection, SIGNAL(pressed()),this, SLOT(choose_file()));
-	connect(lineEdit_output, SIGNAL(textEdited(const QString&)), this, SLOT(output_file_changed(const QString&)));
-
 	connect(buttonBox,SIGNAL(accepted()), this, SLOT(export_validated()));
 
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
@@ -57,6 +56,10 @@ ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
 		map_added(mhg);
 	});
 }
+
+/*****************************************************************************/
+// slots called from UI signals
+/*****************************************************************************/
 
 void ExportDialog::selected_map_changed(const QString& map_name)
 {
@@ -117,22 +120,6 @@ void ExportDialog::choose_file()
 		lineEdit_output->setText("- select output -");
 }
 
-void ExportDialog::map_added(MapHandlerGen* mhg)
-{
-	if (mhg)
-		combo_mapSelection->addItem(mhg->get_name());
-}
-
-void ExportDialog::map_removed(MapHandlerGen* mhg)
-{
-	if (mhg)
-	{
-		if (mhg == selected_map_)
-			selected_map_ = nullptr;
-		combo_mapSelection->removeItem(combo_mapSelection->findText(mhg->get_name()));
-	}
-}
-
 void ExportDialog::export_validated()
 {
 	if (selected_map_)
@@ -160,6 +147,26 @@ void ExportDialog::export_validated()
 		}
 
 		plugin_->export_mesh(selected_map_, export_params);
+	}
+}
+
+/*****************************************************************************/
+// slots called from SCHNApps signals
+/*****************************************************************************/
+
+void ExportDialog::map_added(MapHandlerGen* mhg)
+{
+	if (mhg)
+		combo_mapSelection->addItem(mhg->get_name());
+}
+
+void ExportDialog::map_removed(MapHandlerGen* mhg)
+{
+	if (mhg)
+	{
+		if (mhg == selected_map_)
+			selected_map_ = nullptr;
+		combo_mapSelection->removeItem(combo_mapSelection->findText(mhg->get_name()));
 	}
 }
 

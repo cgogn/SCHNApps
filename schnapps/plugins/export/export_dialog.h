@@ -27,8 +27,6 @@
 #include "dll.h"
 #include <ui_export_dialog.h>
 
-#include <cgogn/io/io_utils.h>
-
 namespace schnapps
 {
 
@@ -50,14 +48,15 @@ public:
 
 private slots:
 
+	// slots called from UI signals
 	void selected_map_changed(const QString& map_name);
 	void position_attribute_changed(const QString& pos_name);
 	void choose_file();
+	void export_validated();
 
+	// slots called from SCHNApps signals
 	void map_added(MapHandlerGen*);
 	void map_removed(MapHandlerGen*);
-
-	void export_validated();
 
 private:
 

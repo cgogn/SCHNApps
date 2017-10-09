@@ -1,8 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Merge plugin                                                                 *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -22,11 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
-#define SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
+#ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
+#define SCHNAPPS_PLUGIN_EMPTY_PLUGIN_H_
 
 #include "dll.h"
 #include <schnapps/core/plugin_processing.h>
+
 #include <QAction>
 
 namespace schnapps
@@ -38,8 +38,9 @@ namespace merge_plugin
 {
 
 class MergeDialog;
+
 /**
-* @brief Empty plugin example
+* @brief Merge plugin
 */
 class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergePlugin : public PluginProcessing
 {
@@ -51,25 +52,30 @@ public:
 
 	MergePlugin();
 	~MergePlugin() override;
-	/**
-	 * @brief merge second_map into first_map
-	 */
-	bool merge(MapHandlerGen* first_map, const MapHandlerGen* second_map);
 
 private:
 
 	bool enable() override;
 	void disable() override;
 
+public slots:
+	/**
+	 * @brief merge second_map into first_map
+	 */
+	bool merge(MapHandlerGen* first_map, const MapHandlerGen* second_map);
+
+private slots:
+
+	void merge_dialog();
+
+private:
+
 	QAction* merge_action_;
 	MergeDialog* merge_dialog_;
-
-	public slots:
-private slots:
-	void merge_dialog();
 };
 
 } // namespace merge_plugin
+
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
+#endif // SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
