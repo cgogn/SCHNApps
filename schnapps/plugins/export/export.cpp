@@ -23,11 +23,9 @@
 *******************************************************************************/
 
 #include <export.h>
+#include <export_dialog.h>
 
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-#include <export_dialog.h>
-#include <cgogn/io/map_export.h>
 
 #include <QFileDialog>
 #include <QFileInfo>
@@ -42,48 +40,16 @@ namespace plugin_export
 
 Plugin_Export::Plugin_Export() :
 	export_mesh_action_(nullptr),
-	export_dialog_(nullptr),
-	export_params_(nullptr),
-	map_name_()
-{
-	export_params_ = new cgogn::io::ExportOptions(cgogn::io::ExportOptions::create());
-}
-
-Plugin_Export::~Plugin_Export()
-{
-	delete export_params_;
-	delete export_dialog_;
-}
-
-void Plugin_Export::export_mesh()
-{
-	MapHandlerGen* mhg = schnapps_->get_map(map_name_);
-	if (mhg)
-	{
-		std::vector<std::pair<cgogn::Orbit, std::string>> other_attributes;
-		if (CMap2Handler* m2h = dynamic_cast<CMap2Handler*>(mhg))
-		{
-			CMap2& cmap2 = *m2h->get_map();
-			cgogn::io::export_surface(cmap2, *(this->export_params_));
-		}
-		else
-		{
-			if (CMap3Handler* m3h = dynamic_cast<CMap3Handler*>(mhg))
-			{
-				CMap3& cmap3 = *m3h->get_map();
-				cgogn::io::export_volume(cmap3, *(this->export_params_));
-			}
-		}
-	}
-}
+	export_dialog_(nullptr)
+{}
 
 bool Plugin_Export::enable()
 {
-	export_mesh_action_ = schnapps_->add_menu_action("Export;Export Mesh", "export surface/volume mesh");
-	connect(export_mesh_action_, SIGNAL(triggered()), this, SLOT(export_mesh_from_file_dialog()));
+	export_dialog_ = new ExportDialog(schnapps_, this);
 
-	if (!export_dialog_)
-		export_dialog_ = new ExportDialog(schnapps_, this);
+	export_mesh_action_ = schnapps_->add_menu_action("Export;Export Mesh", "export surface/volume mesh");
+
+	connect(export_mesh_action_, SIGNAL(triggered()), this, SLOT(export_mesh_from_file_dialog()));
 
 	return true;
 }
@@ -91,14 +57,28 @@ bool Plugin_Export::enable()
 void Plugin_Export::disable()
 {
 	schnapps_->remove_menu_action(export_mesh_action_);
+
+	delete export_dialog_;
 }
 
-void Plugin_Export::export_mesh(const QString& /*filename*/)
+void Plugin_Export::export_mesh(MapHandlerGen* mhg, cgogn::io::ExportOptions export_params)
 {
-	MapHandlerGen* mhg = schnapps_->get_selected_map();
-	if(!mhg)
-		return;
-	cgogn_log_warning("Plugin_Export::export_mesh()") << "TODO: Plugin_Export::export_mesh().";
+	if (mhg)
+	{
+		if (CMap2Handler* m2h = dynamic_cast<CMap2Handler*>(mhg))
+		{
+			CMap2& cmap2 = *m2h->get_map();
+			cgogn::io::export_surface(cmap2, export_params);
+		}
+		else
+		{
+			if (CMap3Handler* m3h = dynamic_cast<CMap3Handler*>(mhg))
+			{
+				CMap3& cmap3 = *m3h->get_map();
+				cgogn::io::export_volume(cmap3, export_params);
+			}
+		}
+	}
 }
 
 void Plugin_Export::export_mesh_from_file_dialog()
@@ -107,4 +87,5 @@ void Plugin_Export::export_mesh_from_file_dialog()
 }
 
 } // namespace plugin_export
+
 } // namespace schnapps
