@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <merge_plugin.h>
+#include <merge.h>
 #include <merge_dialog.h>
 
 #include <schnapps/core/schnapps.h>

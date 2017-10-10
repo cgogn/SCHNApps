@@ -23,10 +23,11 @@
 *******************************************************************************/
 
 #include <dll.h>
+#include <merge.h>
 #include <merge_dialog.h>
+
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
-#include <merge_plugin.h>
 
 namespace schnapps
 {
