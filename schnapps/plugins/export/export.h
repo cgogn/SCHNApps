@@ -49,8 +49,6 @@ class SCHNAPPS_PLUGIN_EXPORT_API Plugin_Export : public PluginProcessing
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
-	friend class ExportDialog;
-
 public:
 
 	Plugin_Export();
