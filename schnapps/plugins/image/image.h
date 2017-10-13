@@ -25,15 +25,20 @@
 #ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_
 
-#include <cstdint>
-#include <iostream>
-#include <cgogn/core/utils/logger.h>
 #include "dll.h"
+
+#include <schnapps/core/plugin_processing.h>
+
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/core/utils/endian.h>
+#include <cgogn/core/utils/logger.h>
 #include <cgogn/io/data_io.h>
-#include <schnapps/core/plugin_interaction.h>
+
 #include <QAction>
+
+#include <cstdint>
+#include <iostream>
+
 #ifdef PLUGIN_IMAGE_WITH_CGAL
 #include <CGAL/config.h>
 #include <CGAL/version.h>
@@ -86,11 +91,14 @@ public:
 	inline bool is_empty() const { return data_.get() == nullptr; }
 
 	static Image3D new_image_3d(const QString& image_path);
+
 private:
+
 	void import_inr(std::istream& inr_data);
 	void import_vtk(std::istream& vtk_data);
 
 private:
+
 	std::unique_ptr<DataInputGen> data_;
 	std::array<uint64, 3> image_dim_;
 	std::array<float64, 3> origin_;
@@ -100,45 +108,39 @@ private:
 	uint32 nb_components_;
 };
 
-class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginInteraction
+class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
 public:
+
 	Plugin_Image();
 
-	std::list<std::pair<QString, Image3D>> const& get_images() const;
-	const Image3D* get_image(const QString& im_path);
 private:
+
 	bool enable() override;
 	void disable() override;
 
-private:
-	void draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
-	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
-	void keyPress(View* view, QKeyEvent* event) override;
-	void keyRelease(View* view, QKeyEvent* event) override;
-	void mousePress(View* view, QMouseEvent* event) override;
-	void mouseRelease(View* view, QMouseEvent* event) override;
-	void mouseMove(View* view, QMouseEvent* event) override;
-	void wheelEvent(View* view, QWheelEvent* event) override;
-	void view_linked(View* view) override;
-	void view_unlinked(View* view) override;
-	void resizeGL(View* view, int width, int height) override;
+public:
 
 	void import_image(const QString& image_path);
+	std::list<std::pair<QString, Image3D>> const& get_images() const;
+	const Image3D* get_image(const QString& im_path);
 
 private slots:
+
 	void import_image_dialog();
 	void image_removed();
 
 signals:
+
 	void image_added(QString im_path);
 	void image_removed(QString im_path);
 
 private:
+
 	std::list<std::pair<QString, Image3D>> images_;
 	QAction* import_image_action_;
 	Image_DockTab*	dock_tab_;
@@ -152,6 +154,7 @@ private:
 SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename);
 
 } // namespace plugin_image
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_

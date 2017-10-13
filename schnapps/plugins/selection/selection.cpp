@@ -230,17 +230,20 @@ void Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 	{
 		if (event->key() == Qt::Key_Shift)
 		{
-			view->setMouseTracking(true);
-
 			MapParameters& p = get_parameters(view, map);
-			p.selecting_ = true;
 
-			// generate a false mouse move to update drawing on shift keypressed !
-			QPoint point = view->mapFromGlobal(QCursor::pos());
-			QMouseEvent me = QMouseEvent(QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton, Qt::ShiftModifier);
-			mouseMove(view, &me);
+			if (p.get_position_attribute().is_valid() && p.cells_set_)
+			{
+				view->setMouseTracking(true);
+				p.selecting_ = true;
 
-			view->update();
+				// generate a false mouse move to update drawing on shift keypressed !
+				QPoint point = view->mapFromGlobal(QCursor::pos());
+				QMouseEvent me = QMouseEvent(QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton, Qt::ShiftModifier);
+				mouseMove(view, &me);
+
+				view->update();
+			}
 		}
 	}
 }
@@ -262,7 +265,7 @@ void Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 	}
 }
 
-void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
+bool Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view))
@@ -270,146 +273,147 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 		MapParameters& p = get_parameters(view, map);
 		if (p.selecting_ && (event->button() == Qt::LeftButton || event->button() == Qt::RightButton))
 		{
-			if (p.get_position_attribute().is_valid() && p.cells_set_)
+			CellsSetGen* csg = p.cells_set_;
+			switch (csg->get_cell_type())
 			{
-				CellsSetGen* csg = p.cells_set_;
-				switch (p.cells_set_->get_cell_type())
-				{
-					case Dart_Cell:
-						break;
-					case Vertex_Cell: {
-						switch (p.selection_method_)
-						{
-							case MapParameters::SingleCell:
-								if (!p.selecting_vertex_.is_nil())
-								{
-									if (event->button() == Qt::LeftButton)
-										csg->select(p.selecting_vertex_);
-									else if (event->button() == Qt::RightButton)
-										csg->unselect(p.selecting_vertex_);
-									p.update_selected_cells_rendering();
-								}
-								break;
-							case MapParameters::WithinSphere: {
-								if (!p.selecting_vertex_.is_nil())
-								{
-									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
-									neighborhood->collect(p.selecting_vertex_);
-									if (event->button() == Qt::LeftButton)
-										csg->select(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
-									else if (event->button() == Qt::RightButton)
-										csg->unselect(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
-								}
-							}
-								break;
-							case MapParameters::NormalAngle:
-								break;
-						}
-					}
-						break;
-					case Edge_Cell: {
-						switch (p.selection_method_)
-						{
-							case MapParameters::SingleCell:
-								if (!p.selecting_edge_.is_nil())
-								{
-									if (event->button() == Qt::LeftButton)
-										csg->select(p.selecting_edge_);
-									else if (event->button() == Qt::RightButton)
-										csg->unselect(p.selecting_edge_);
-									p.update_selected_cells_rendering();
-								}
-								break;
-							case MapParameters::WithinSphere: {
-								if (!p.selecting_vertex_.is_nil())
-								{
-									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
-									if (neighborhood)
-									{
-										neighborhood->collect(p.selecting_vertex_);
-										const auto& cells = neighborhood->cells(map->orbit(CellType::Edge_Cell));
-										for (auto e : cells)
-										{
-											if (event->button() == Qt::LeftButton)
-												csg->select(e);
-											else if (event->button() == Qt::RightButton)
-												csg->unselect(e);
-										}
-									}
-								}
-							}
-								break;
-							case MapParameters::NormalAngle:
-								break;
-						}
-					}
-						break;
-					case Face_Cell:
+				case Dart_Cell:
+					break;
+				case Vertex_Cell: {
+					switch (p.selection_method_)
 					{
-						switch (p.selection_method_)
-						{
-							case MapParameters::SingleCell:
-								if (!p.selecting_face_.is_nil())
-								{
-									if (event->button() == Qt::LeftButton)
-										csg->select(p.selecting_face_);
-									else if (event->button() == Qt::RightButton)
-										csg->unselect(p.selecting_face_);
-									p.update_selected_cells_rendering();
-								}
-								break;
-							case MapParameters::WithinSphere: {
-								if (!p.selecting_vertex_.is_nil())
-								{
-									auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
-
-									if (neighborhood)
-									{
-										neighborhood->collect(p.selecting_vertex_);
-										const auto& cells = neighborhood->cells(map->orbit(CellType::Face_Cell));
-										for (auto f : cells)
-										{
-											if (event->button() == Qt::LeftButton)
-												csg->select(f);
-											else if  (event->button() == Qt::RightButton)
-												csg->unselect(f);
-										}
-									}
-								}
+						case MapParameters::SingleCell:
+							if (!p.selecting_vertex_.is_nil())
+							{
+								if (event->button() == Qt::LeftButton)
+									csg->select(p.selecting_vertex_);
+								else if (event->button() == Qt::RightButton)
+									csg->unselect(p.selecting_vertex_);
+								p.update_selected_cells_rendering();
 							}
-								break;
-							case MapParameters::NormalAngle:
-								break;
+							break;
+						case MapParameters::WithinSphere: {
+							if (!p.selecting_vertex_.is_nil())
+							{
+								auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
+								neighborhood->collect(p.selecting_vertex_);
+								if (event->button() == Qt::LeftButton)
+									csg->select(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
+								else if (event->button() == Qt::RightButton)
+									csg->unselect(neighborhood->cells(map->orbit(CellType::Vertex_Cell)));
+							}
 						}
+							break;
+						case MapParameters::NormalAngle:
+							break;
 					}
-						break;
-					case Volume_Cell:
-					{
-						switch (p.selection_method_)
-						{
-							case MapParameters::SingleCell:
-								if (!p.selecting_volume_.is_nil())
-								{
-									if (event->button() == Qt::LeftButton)
-										csg->select(p.selecting_volume_);
-									else if (event->button() == Qt::RightButton)
-										csg->unselect(p.selecting_volume_);
-									p.update_selected_cells_rendering();
-								}
-								break;
-							case MapParameters::WithinSphere:
-								break;
-							case MapParameters::NormalAngle:
-								break;
-						}
-					}
-						break;
-					default:
-						break;
 				}
+					break;
+				case Edge_Cell: {
+					switch (p.selection_method_)
+					{
+						case MapParameters::SingleCell:
+							if (!p.selecting_edge_.is_nil())
+							{
+								if (event->button() == Qt::LeftButton)
+									csg->select(p.selecting_edge_);
+								else if (event->button() == Qt::RightButton)
+									csg->unselect(p.selecting_edge_);
+								p.update_selected_cells_rendering();
+							}
+							break;
+						case MapParameters::WithinSphere: {
+							if (!p.selecting_vertex_.is_nil())
+							{
+								auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
+								if (neighborhood)
+								{
+									neighborhood->collect(p.selecting_vertex_);
+									const auto& cells = neighborhood->cells(map->orbit(CellType::Edge_Cell));
+									for (auto e : cells)
+									{
+										if (event->button() == Qt::LeftButton)
+											csg->select(e);
+										else if (event->button() == Qt::RightButton)
+											csg->unselect(e);
+									}
+								}
+							}
+						}
+							break;
+						case MapParameters::NormalAngle:
+							break;
+					}
+				}
+					break;
+				case Face_Cell:
+				{
+					switch (p.selection_method_)
+					{
+						case MapParameters::SingleCell:
+							if (!p.selecting_face_.is_nil())
+							{
+								if (event->button() == Qt::LeftButton)
+									csg->select(p.selecting_face_);
+								else if (event->button() == Qt::RightButton)
+									csg->unselect(p.selecting_face_);
+								p.update_selected_cells_rendering();
+							}
+							break;
+						case MapParameters::WithinSphere: {
+							if (!p.selecting_vertex_.is_nil())
+							{
+								auto neighborhood = collector_within_sphere(map, p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_, p.get_position_attribute());
+
+								if (neighborhood)
+								{
+									neighborhood->collect(p.selecting_vertex_);
+									const auto& cells = neighborhood->cells(map->orbit(CellType::Face_Cell));
+									for (auto f : cells)
+									{
+										if (event->button() == Qt::LeftButton)
+											csg->select(f);
+										else if  (event->button() == Qt::RightButton)
+											csg->unselect(f);
+									}
+								}
+							}
+						}
+							break;
+						case MapParameters::NormalAngle:
+							break;
+					}
+				}
+					break;
+				case Volume_Cell:
+				{
+					switch (p.selection_method_)
+					{
+						case MapParameters::SingleCell:
+							if (!p.selecting_volume_.is_nil())
+							{
+								if (event->button() == Qt::LeftButton)
+									csg->select(p.selecting_volume_);
+								else if (event->button() == Qt::RightButton)
+									csg->unselect(p.selecting_volume_);
+								p.update_selected_cells_rendering();
+							}
+							break;
+						case MapParameters::WithinSphere:
+							break;
+						case MapParameters::NormalAngle:
+							break;
+					}
+				}
+					break;
+				default:
+					break;
 			}
+
+			if (event->button() == Qt::RightButton)
+				return false;
 		}
 	}
+	return true;
 }
 
 void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)

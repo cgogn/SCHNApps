@@ -78,7 +78,7 @@ private:
 
 	void keyPress(View*, QKeyEvent*) override {}
 	void keyRelease(View*, QKeyEvent*) override {}
-	void mousePress(View*, QMouseEvent*) override {}
+	bool mousePress(View*, QMouseEvent*) override { return true; }
 	void mouseRelease(View*, QMouseEvent*) override {}
 	void mouseMove(View*, QMouseEvent*) override {}
 	void wheelEvent(View*, QWheelEvent*) override {}

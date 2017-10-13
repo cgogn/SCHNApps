@@ -71,11 +71,11 @@ private:
 
 	inline void keyPress(View*, QKeyEvent*) override {}
 	inline void keyRelease(View*, QKeyEvent*) override {}
-	void mousePress(View*, QMouseEvent*) override;
+	bool mousePress(View*, QMouseEvent*) override;
 	void mouseRelease(View*, QMouseEvent*) override;
 	void mouseMove(View*, QMouseEvent*) override;
 	inline void wheelEvent(View*, QWheelEvent*) override {}
-	void resizeGL(View*, int, int) override {}
+	inline void resizeGL(View*, int, int) override {}
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;

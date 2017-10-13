@@ -554,10 +554,12 @@ void View::mousePressEvent(QMouseEvent* event)
 			button_area_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
 		else
 		{
+			bool forward_event = true;
 			for (PluginInteraction* plugin : plugins_)
-				plugin->mousePress(this, event);
+				forward_event &= plugin->mousePress(this, event);
 
-			QOGLViewer::mousePressEvent(event);
+			if (forward_event)
+				QOGLViewer::mousePressEvent(event);
 		}
 	}
 }
