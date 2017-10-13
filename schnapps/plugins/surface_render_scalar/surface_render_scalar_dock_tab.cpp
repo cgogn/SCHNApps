@@ -178,11 +178,13 @@ void SurfaceRenderScalar_DockTab::selected_map_changed(MapHandlerGen* old, MapHa
 
 void SurfaceRenderScalar_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
+	updating_ui_ = true;
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 		combo_positionVBO->addItem(vbo_name);
 	else if (vbo->vector_dimension() == 1)
 		list_scalarVBO->addItem(vbo_name);
+	updating_ui_ = false;
 }
 
 void SurfaceRenderScalar_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
@@ -372,8 +374,8 @@ void SurfaceRenderScalar_DockTab::refresh_ui()
 void SurfaceRenderScalar_DockTab::update_after_scalar_vbo_changed()
 {
 	updating_ui_ = true;
-	MapHandlerGen* map = schnapps_->get_selected_map();
 	View* view = schnapps_->get_selected_view();
+	MapHandlerGen* map = schnapps_->get_selected_map();
 
 	const MapParameters& p = plugin_->get_parameters(view, map);
 
@@ -387,16 +389,6 @@ void SurfaceRenderScalar_DockTab::update_after_scalar_vbo_changed()
 		bool auto_update = p.get_auto_update_min_max();
 		spin_min->setEnabled(!auto_update);
 		spin_max->setEnabled(!auto_update);
-//		if (!p.get_auto_update_min_max())
-//		{
-//			spin_min->setEnabled(true);
-//			spin_max->setEnabled(true);
-//		}
-//		else
-//		{
-//			spin_min->setDisabled(true);
-//			spin_max->setDisabled(true);
-//		}
 		slider_expansion->setEnabled(true);
 		check_showIsoLines->setEnabled(true);
 		slider_nbIsoLevels->setEnabled(true);
@@ -417,8 +409,8 @@ void SurfaceRenderScalar_DockTab::update_after_scalar_vbo_changed()
 void SurfaceRenderScalar_DockTab::update_after_auto_update_min_max_changed()
 {
 	updating_ui_ = true;
-	MapHandlerGen* map = schnapps_->get_selected_map();
 	View* view = schnapps_->get_selected_view();
+	MapHandlerGen* map = schnapps_->get_selected_map();
 
 	const MapParameters& p = plugin_->get_parameters(view, map);
 
@@ -427,16 +419,6 @@ void SurfaceRenderScalar_DockTab::update_after_auto_update_min_max_changed()
 	bool auto_update = p.get_auto_update_min_max();
 	spin_min->setEnabled(!auto_update);
 	spin_max->setEnabled(!auto_update);
-//	if (!p.get_auto_update_min_max())
-//	{
-//		spin_min->setEnabled(true);
-//		spin_max->setEnabled(true);
-//	}
-//	else
-//	{
-//		spin_min->setDisabled(true);
-//		spin_max->setDisabled(true);
-//	}
 	updating_ui_ = false;
 }
 

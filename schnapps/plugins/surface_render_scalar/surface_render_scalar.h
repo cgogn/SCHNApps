@@ -34,8 +34,6 @@
 
 #include <map_parameters.h>
 
-#include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>
-
 namespace schnapps
 {
 

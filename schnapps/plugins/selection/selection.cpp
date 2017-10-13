@@ -26,16 +26,12 @@
 #include <schnapps/core/schnapps.h>
 
 #include <cgogn/geometry/algos/picking.h>
-#include <cgogn/geometry/algos/selection.h>
 
 namespace schnapps
 {
 
 namespace plugin_selection
 {
-
-Plugin_Selection::Plugin_Selection()
-{}
 
 MapParameters& Plugin_Selection::get_parameters(View* view, MapHandlerGen* map)
 {
@@ -53,30 +49,45 @@ MapParameters& Plugin_Selection::get_parameters(View* view, MapHandlerGen* map)
 		return view_param_set[map];
 }
 
+bool Plugin_Selection::check_docktab_activation()
+{
+	MapHandlerGen* map = schnapps_->get_selected_map();
+	View* view = schnapps_->get_selected_view();
+
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view))
+	{
+		schnapps_->enable_plugin_tab_widgets(this);
+		return true;
+	}
+	else
+	{
+		schnapps_->disable_plugin_tab_widgets(this);
+		return false;
+	}
+}
+
 bool Plugin_Selection::enable()
 {
-	dock_tab_ = cgogn::make_unique<Selection_DockTab>(this->schnapps_, this);
-	schnapps_->add_plugin_dock_tab(this, dock_tab_.get(), "Selection");
+	if (get_setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = get_setting("Auto load position attribute").toString();
+	else
+		setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position").toString();
 
-	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
-	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
-
-	update_dock_tab();
+	dock_tab_ = new Selection_DockTab(this->schnapps_, this);
+	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Selection");
 
 	return true;
 }
 
 void Plugin_Selection::disable()
 {
-	schnapps_->remove_plugin_dock_tab(this, dock_tab_.get());
-
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_dock_tab()));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_dock_tab()));
+	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
+	delete dock_tab_;
 }
 
 void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	if (map && view && /*map->dimension() == 2 && */ map->is_selected_map())
+	if (map && view && map->is_selected_map())
 	{
 		view->makeCurrent();
 		QOpenGLFunctions* ogl = QOpenGLContext::currentContext()->functions();
@@ -191,9 +202,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 					break;
 				case Volume_Cell:
 					if (p.cells_set_->get_nb_cells() > 0)
-					{
 						p.drawer_rend_selected_volumes_->draw(proj, mv, ogl33);
-					}
 					if (p.selecting_)
 					{
 						switch (p.selection_method_)
@@ -217,7 +226,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 void Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
+	if (map && map->is_linked_to_view(view))
 	{
 		if (event->key() == Qt::Key_Shift)
 		{
@@ -239,7 +248,7 @@ void Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 void Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
+	if (map && map->is_linked_to_view(view))
 	{
 		if (event->key() == Qt::Key_Shift)
 		{
@@ -256,7 +265,7 @@ void Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
+	if (map && map->is_linked_to_view(view))
 	{
 		MapParameters& p = get_parameters(view, map);
 		if (p.selecting_ && (event->button() == Qt::LeftButton || event->button() == Qt::RightButton))
@@ -388,7 +397,9 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 									p.update_selected_cells_rendering();
 								}
 								break;
-							default:
+							case MapParameters::WithinSphere:
+								break;
+							case MapParameters::NormalAngle:
 								break;
 						}
 					}
@@ -404,7 +415,7 @@ void Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
+	if (map && map->is_linked_to_view(view))
 	{
 		MapParameters& p = get_parameters(view, map);
 		if (p.selecting_)
@@ -414,7 +425,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 				qoglviewer::Vec P = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 0.0), &map->get_frame());
 				qoglviewer::Vec Q = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 1.0), &map->get_frame());
 
-	//			// TODO: apply inverse local map transformation
+				// TODO: apply inverse local map transformation
 
 				// put in VEC3 format
 				VEC3 A(P.x, P.y, P.z);
@@ -445,8 +456,6 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 					{
 						switch (p.selection_method_)
 						{
-							case MapParameters::NormalAngle:
-								break;
 							case MapParameters::SingleCell: {
 								auto picked = get_picked_cells(map, CellType::Edge_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
@@ -477,6 +486,8 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								}
 							}
 								break;
+							case MapParameters::NormalAngle:
+								break;
 						}
 					}
 						break;
@@ -484,8 +495,6 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 					{
 						switch (p.selection_method_)
 						{
-							case MapParameters::NormalAngle:
-								break;
 							case MapParameters::SingleCell:
 							{
 								auto picked = get_picked_cells(map, CellType::Face_Cell, p.get_position_attribute(), A, B);
@@ -499,11 +508,13 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 										VEC3 c;
 										if (map->dimension() == 2)
 										{
-											const CMap2Handler::VertexAttribute<VEC3>& pos = dynamic_cast<const CMap2Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
+											const CMap2Handler::VertexAttribute<VEC3>& pos = static_cast<const CMap2Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
 											cgogn::geometry::append_ear_triangulation<VEC3>(*map2, Face2(p.selecting_face_), pos, ears);
 											c = cgogn::geometry::centroid<VEC3>(*map2, Face2(p.selecting_face_), pos);
-										} else {
-											const CMap3Handler::VertexAttribute<VEC3>& pos = dynamic_cast<const CMap3Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
+										}
+										else
+										{
+											const CMap3Handler::VertexAttribute<VEC3>& pos = static_cast<const CMap3Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
 											cgogn::geometry::append_ear_triangulation<VEC3>(*map3, Face3(p.selecting_face_), pos, ears);
 											c = cgogn::geometry::centroid<VEC3>(*map3, Face3(p.selecting_face_), pos);
 										}
@@ -530,26 +541,26 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 								}
 							}
 								break;
+							case MapParameters::NormalAngle:
+								break;
 						}
 					}
 						break;
 					case Volume_Cell:
 						switch (p.selection_method_) {
-							case MapParameters::NormalAngle:
-								break;
 							case MapParameters::SingleCell:
 							{
 								auto picked = get_picked_cells(map, CellType::Volume_Cell, p.get_position_attribute(), A, B);
 								if (!picked.empty())
 								{
 									if (p.selecting_volume_.is_nil() || (!p.selecting_volume_.is_nil() && !map->same_cell(picked[0],p.selecting_volume_, CellType::Volume_Cell)))
-									{
 										p.selecting_volume_ = picked[0];
-									}
 								}
 								break;
 							}
-							default:
+							case MapParameters::WithinSphere:
+								break;
+							case MapParameters::NormalAngle:
 								break;
 						}
 						break;
@@ -566,7 +577,7 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 void Plugin_Selection::wheelEvent(View* view, QWheelEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
+	if (map && map->is_linked_to_view(view))
 	{
 		MapParameters& p = get_parameters(view, map);
 		if (p.selecting_)
@@ -581,7 +592,8 @@ void Plugin_Selection::wheelEvent(View* view, QWheelEvent* event)
 					else
 						p.selection_radius_scale_factor_ *= 1.1f;
 					view->update();
-					dock_tab_.get()->spin_angle_radius->setValue(p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_);
+					// TODO
+					dock_tab_->spin_angle_radius->setValue(p.vertex_base_size_ * 10.0f * p.selection_radius_scale_factor_);
 					break;
 				case MapParameters::NormalAngle:
 					break;
@@ -592,24 +604,26 @@ void Plugin_Selection::wheelEvent(View* view, QWheelEvent* event)
 
 void Plugin_Selection::view_linked(View* view)
 {
-	update_dock_tab();
+	if (check_docktab_activation())
+		dock_tab_->refresh_ui();
 
 	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_linked(map); }
+	for (MapHandlerGen* map : view->get_linked_maps()) { add_linked_map(view, map); }
 }
 
 void Plugin_Selection::view_unlinked(View* view)
 {
-	update_dock_tab();
+	if (check_docktab_activation())
+		dock_tab_->refresh_ui();
 
 	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { map_unlinked(map); }
+	for (MapHandlerGen* map : view->get_linked_maps()) { remove_linked_map(view, map); }
 }
 
 std::unique_ptr<Plugin_Selection::CollectorGen> Plugin_Selection::collector_within_sphere(MapHandlerGen* map, float64 radius, const MapHandlerGen::Attribute_T<VEC3>& position_att)
@@ -680,58 +694,65 @@ std::vector<cgogn::Dart> Plugin_Selection::get_picked_cells(MapHandlerGen* map, 
 		return res;
 }
 
-void Plugin_Selection::map_linked(MapHandlerGen* map)
+void Plugin_Selection::map_linked(MapHandlerGen *map)
 {
-	update_dock_tab();
-
-	if (map)
-	{
-		connect(map, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(linked_map_cells_set_added(CellType, const QString&)), Qt::UniqueConnection);
-		connect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)), Qt::UniqueConnection);
-		connect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
-		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
-		connect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
-		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
-	}
+	View* view = static_cast<View*>(sender());
+	add_linked_map(view, map);
 }
 
-void Plugin_Selection::map_unlinked(MapHandlerGen* map)
+void Plugin_Selection::add_linked_map(View* view, MapHandlerGen* map)
 {
-	update_dock_tab();
+	MapParameters& p = get_parameters(view, map);
+	p.set_position_attribute(setting_auto_load_position_attribute_);
 
-	if (map)
-	{
-		disconnect(map, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(linked_map_cells_set_added(CellType, const QString&)));
-		disconnect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)));
-		disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
-		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)));
-		disconnect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)));
-		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
-	}
+	connect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
+	connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
+	connect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
+	connect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)), Qt::UniqueConnection);
+	connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
+
+	if (check_docktab_activation())
+		dock_tab_->refresh_ui();
 }
 
-void Plugin_Selection::linked_map_cells_set_added(CellType ct, const QString& name)
+void Plugin_Selection::map_unlinked(MapHandlerGen *map)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
-
-	if (map->is_selected_map())
-		dock_tab_->selected_map_cells_set_added(ct, name);
+	View* view = static_cast<View*>(sender());
+	remove_linked_map(view, map);
 }
 
-void Plugin_Selection::linked_map_cells_set_removed(CellType ct, const QString& name)
+void Plugin_Selection::remove_linked_map(View* view, MapHandlerGen* map)
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+	disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
+	disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)));
+	disconnect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)));
+	disconnect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)));
+	disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 
-	if (map->is_selected_map())
-		dock_tab_->selected_map_cells_set_removed(ct, name);
+	if (check_docktab_activation())
+		dock_tab_->refresh_ui();
 }
 
 void Plugin_Selection::linked_map_attribute_added(cgogn::Orbit orbit, const QString& name)
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
-	if (map->is_selected_map() && map->cell_type(orbit) == Vertex_Cell)
-		dock_tab_->selected_map_vertex_attribute_added(name);
+	if (map->cell_type(orbit) == Vertex_Cell)
+	{
+		for (auto& it : parameter_set_)
+		{
+			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(map) > 0ul)
+			{
+				MapParameters& p = view_param_set[map];
+				if (!p.get_position_attribute().is_valid() && name == setting_auto_load_position_attribute_)
+					set_position_attribute(it.first, map, name, true);
+			}
+		}
+
+		for (View* view : map->get_linked_views())
+			view->update();
+	}
 }
 
 void Plugin_Selection::linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name)
@@ -747,12 +768,12 @@ void Plugin_Selection::linked_map_attribute_changed(cgogn::Orbit orbit, const QS
 			{
 				MapParameters& p = view_param_set[map];
 				if (p.get_position_attribute_name() == name)
-				{
 					p.update_selected_cells_rendering();
-					it.first->update();
-				}
 			}
 		}
+
+		for (View* view : map->get_linked_views())
+			view->update();
 	}
 }
 
@@ -760,7 +781,7 @@ void Plugin_Selection::linked_map_attribute_removed(cgogn::Orbit orbit, const QS
 {
 	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
 
-	if (map->is_selected_map() && map->cell_type(orbit) == Vertex_Cell)
+	if (map->cell_type(orbit) == Vertex_Cell)
 	{
 		for (auto& it : parameter_set_)
 		{
@@ -769,18 +790,35 @@ void Plugin_Selection::linked_map_attribute_removed(cgogn::Orbit orbit, const QS
 			{
 				MapParameters& p = view_param_set[map];
 				if (p.get_position_attribute_name() == name)
-				{
-					p.set_position_attribute("");
-					p.update_selected_cells_rendering();
-					it.first->update();
-				}
+					set_position_attribute(it.first, map, "", true);
 				if (p.get_normal_attribute_name() == name)
-					p.set_normal_attribute("");
+					set_normal_attribute(it.first, map, "", true);
 			}
 		}
 
-		dock_tab_->selected_map_vertex_attribute_removed(name);
+		for (View* view : map->get_linked_views())
+			view->update();
 	}
+}
+
+void Plugin_Selection::linked_map_cells_set_removed(CellType ct, const QString& name)
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+
+	for (auto& it : parameter_set_)
+	{
+		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(map) > 0ul)
+		{
+			MapParameters& p = view_param_set[map];
+			CellsSetGen* cs = p.get_cells_set();
+			if (cs && cs->get_cell_type() == ct && cs->get_name() == name)
+				set_cells_set(it.first, map, nullptr, true);
+		}
+	}
+
+	for (View* view : map->get_linked_views())
+		view->update();
 }
 
 void Plugin_Selection::linked_map_bb_changed()
@@ -797,6 +835,9 @@ void Plugin_Selection::linked_map_bb_changed()
 			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
 		}
 	}
+
+	for (View* view : map->get_linked_views())
+		view->update();
 }
 
 void Plugin_Selection::viewer_initialized()
@@ -810,18 +851,80 @@ void Plugin_Selection::viewer_initialized()
 	}
 }
 
-void Plugin_Selection::update_dock_tab()
+/******************************************************************************/
+/*                             PUBLIC INTERFACE                               */
+/******************************************************************************/
+
+void Plugin_Selection::set_position_attribute(View* view, MapHandlerGen* map, const QString& name, bool update_dock_tab)
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
-	if (map && view->is_linked_to_plugin(this) && map->is_linked_to_view(view) /*&& map->dimension() == 2*/)
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view))
 	{
-		schnapps_->enable_plugin_tab_widgets(this);
-		const MapParameters& p = get_parameters(view, map);
-		dock_tab_->update_map_parameters(map, p);
+		MapParameters& p = get_parameters(view, map);
+		p.set_position_attribute(name);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_position_attribute(name);
+		view->update();
 	}
-	else
-		schnapps_->disable_plugin_tab_widgets(this);
+}
+
+void Plugin_Selection::set_normal_attribute(View* view, MapHandlerGen* map, const QString& name, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view))
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_normal_attribute(name);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_normal_attribute(name);
+		view->update();
+	}
+}
+
+void Plugin_Selection::set_cells_set(View* view, MapHandlerGen* map, CellsSetGen* cs, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view))
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_cells_set(cs);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_cells_set(cs);
+		view->update();
+	}
+}
+
+void Plugin_Selection::set_selection_method(View* view, MapHandlerGen* map, MapParameters::SelectionMethod m, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view))
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.selection_method_ = m;
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_selection_method(m);
+		view->update();
+	}
+}
+
+void Plugin_Selection::set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view))
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_vertex_scale_factor(sf);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_vertex_scale_factor(sf);
+		view->update();
+	}
+}
+
+void Plugin_Selection::set_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view))
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.set_color(color);
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			dock_tab_->set_color(color);
+		view->update();
+	}
 }
 
 } // namespace plugin_selection

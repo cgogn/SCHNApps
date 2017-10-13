@@ -170,6 +170,7 @@ void SurfaceRenderVector_DockTab::selected_map_changed(MapHandlerGen* old, MapHa
 
 void SurfaceRenderVector_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
+	updating_ui_ = true;
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 	{
@@ -179,6 +180,7 @@ void SurfaceRenderVector_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* 
 		item->setFlags(item->flags() | Qt::ItemIsEditable);
 		item->setCheckState(Qt::Unchecked);
 	}
+	updating_ui_ = false;
 }
 
 void SurfaceRenderVector_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)

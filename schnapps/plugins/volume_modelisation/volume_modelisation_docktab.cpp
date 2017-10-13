@@ -55,7 +55,7 @@ void VolumeModelisation_DockTab::update(MapHandlerGen* map)
 	if (map)
 	{
 		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
-		const MapHandlerGen::ChunkArrayContainer<cgogn::numerics::uint32>* container = map->attribute_container(CellType::Vertex_Cell);
+		const MapHandlerGen::ChunkArrayContainer<uint32>* container = map->attribute_container(CellType::Vertex_Cell);
 		const std::vector<std::string>& names = container->names();
 		const std::vector<std::string>& type_names = container->type_names();
 

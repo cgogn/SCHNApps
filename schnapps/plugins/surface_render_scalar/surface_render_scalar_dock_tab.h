@@ -40,7 +40,6 @@ namespace plugin_surface_render_scalar
 {
 
 class Plugin_SurfaceRenderScalar;
-
 struct MapParameters;
 
 class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
