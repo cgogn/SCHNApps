@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include <empty_plugin.h>
+
 #include <schnapps/core/schnapps.h>
 
 namespace schnapps
@@ -29,12 +30,6 @@ namespace schnapps
 
 namespace plugin_empty_plugin
 {
-
-Plugin_EmptyPlugin::Plugin_EmptyPlugin()
-{}
-
-Plugin_EmptyPlugin::~Plugin_EmptyPlugin()
-{}
 
 bool Plugin_EmptyPlugin::enable()
 {

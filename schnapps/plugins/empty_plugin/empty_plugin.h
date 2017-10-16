@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
-#define SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
+#ifndef SCHNAPPS_PLUGIN_EMPTY_PLUGIN_H_
+#define SCHNAPPS_PLUGIN_EMPTY_PLUGIN_H_
 
 #include "dll.h"
 #include <schnapps/core/plugin_processing.h>
@@ -47,8 +47,8 @@ class SCHNAPPS_PLUGIN_EMPTY_PLUGIN_API Plugin_EmptyPlugin : public PluginProcess
 
 public:
 
-	Plugin_EmptyPlugin();
-	~Plugin_EmptyPlugin() override;
+	Plugin_EmptyPlugin() {}
+	~Plugin_EmptyPlugin() override {}
 
 private:
 
@@ -65,4 +65,4 @@ private slots:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_EMPTY_PLUGIN_EMPTY_PLUGIN_H_
+#endif // SCHNAPPS_PLUGIN_EMPTY_PLUGIN_H_

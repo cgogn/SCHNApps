@@ -67,7 +67,7 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	inline void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
+	inline void draw(View*, const QMatrix4x4&, const QMatrix4x4&) override {}
 	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
 	inline bool keyPress(View*, QKeyEvent*) override { return true; }
