@@ -33,10 +33,10 @@ namespace schnapps
 class SCHNApps;
 class MapHandlerGen;
 
-namespace merge_plugin
+namespace plugin_merge
 {
 
-class MergePlugin;
+class Plugin_Merge;
 
 class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergeDialog : public QDialog, public Ui::MergeDialog
 {
@@ -44,7 +44,7 @@ class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergeDialog : public QDialog, public Ui::
 
 public:
 
-	MergeDialog(SCHNApps* s, MergePlugin* p);
+	MergeDialog(SCHNApps* s, Plugin_Merge* p);
 
 private slots:
 
@@ -58,10 +58,10 @@ private slots:
 private:
 
 	SCHNApps* schnapps_;
-	MergePlugin* plugin_;
+	Plugin_Merge* plugin_;
 };
 
-} // namespace merge_plugin
+} // namespace plugin_merge
 
 } // namespace schnapps
 

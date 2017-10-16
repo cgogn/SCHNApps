@@ -34,7 +34,7 @@ namespace schnapps
 
 class MapHandlerGen;
 
-namespace merge_plugin
+namespace plugin_merge
 {
 
 class MergeDialog;
@@ -42,7 +42,7 @@ class MergeDialog;
 /**
 * @brief Merge plugin
 */
-class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergePlugin : public PluginProcessing
+class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API Plugin_Merge : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -50,31 +50,36 @@ class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergePlugin : public PluginProcessing
 
 public:
 
-	MergePlugin();
-	~MergePlugin() override;
+	Plugin_Merge();
+	~Plugin_Merge() override;
 
 private:
 
 	bool enable() override;
 	void disable() override;
 
+private slots:
+
+	// slots called from SCHNApps signals
+	void schnapps_closing();
+
+	// slots called from action signals
+	void merge_dialog();
+
 public slots:
+
 	/**
 	 * @brief merge second_map into first_map
 	 */
 	bool merge(MapHandlerGen* first_map, const MapHandlerGen* second_map);
 
-private slots:
-
-	void merge_dialog();
-
 private:
 
-	QAction* merge_action_;
 	MergeDialog* merge_dialog_;
+	QAction* merge_action_;
 };
 
-} // namespace merge_plugin
+} // namespace plugin_merge
 
 } // namespace schnapps
 

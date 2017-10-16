@@ -38,7 +38,7 @@ namespace plugin_export
 
 class Plugin_Export;
 
-class SCHNAPPS_PLUGIN_EXPORT_API ExportDialog : public QDialog, public Ui::MapExport
+class SCHNAPPS_PLUGIN_EXPORT_API ExportDialog : public QDialog, public Ui::ExportDialog
 {
 	Q_OBJECT
 

@@ -31,10 +31,10 @@
 namespace schnapps
 {
 
-namespace merge_plugin
+namespace plugin_merge
 {
 
-MergeDialog::MergeDialog(SCHNApps* s, MergePlugin* p) :
+MergeDialog::MergeDialog(SCHNApps* s, Plugin_Merge* p) :
 	schnapps_(s),
 	plugin_(p)
 {
@@ -88,6 +88,6 @@ void MergeDialog::map_removed(MapHandlerGen* mhg)
 	}
 }
 
-} // namespace merge_plugin
+} // namespace plugin_merge
 
 } // namespace schnapps

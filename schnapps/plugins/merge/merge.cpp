@@ -30,15 +30,15 @@
 namespace schnapps
 {
 
-namespace merge_plugin
+namespace plugin_merge
 {
 
-MergePlugin::MergePlugin() :
+Plugin_Merge::Plugin_Merge() :
 	merge_action_(nullptr),
 	merge_dialog_(nullptr)
 {}
 
-bool MergePlugin::enable()
+bool Plugin_Merge::enable()
 {
 	merge_dialog_ = new MergeDialog(schnapps_, this);
 
@@ -48,23 +48,28 @@ bool MergePlugin::enable()
 	return true;
 }
 
-void MergePlugin::disable()
+void Plugin_Merge::disable()
 {
 	schnapps_->remove_menu_action(merge_action_);
 
 	delete merge_dialog_;
 }
 
-bool MergePlugin::merge(MapHandlerGen* first_map, const MapHandlerGen* second_map)
+void Plugin_Merge::schnapps_closing()
 {
-	return first_map->merge(second_map);
+	merge_dialog_->close();
 }
 
-void MergePlugin::merge_dialog()
+void Plugin_Merge::merge_dialog()
 {
 	merge_dialog_->show();
 }
 
-} // namespace merge_plugin
+bool Plugin_Merge::merge(MapHandlerGen* first_map, const MapHandlerGen* second_map)
+{
+	return first_map->merge(second_map);
+}
+
+} // namespace plugin_merge
 
 } // namespace schnapps

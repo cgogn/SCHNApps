@@ -223,7 +223,7 @@ void Plugin_Selection::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4
 	}
 }
 
-void Plugin_Selection::keyPress(View* view, QKeyEvent* event)
+bool Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view))
@@ -246,9 +246,10 @@ void Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 			}
 		}
 	}
+	return true;
 }
 
-void Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
+bool Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view))
@@ -263,6 +264,7 @@ void Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 			view->update();
 		}
 	}
+	return true;
 }
 
 bool Plugin_Selection::mousePress(View* view, QMouseEvent* event)
@@ -416,7 +418,7 @@ bool Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 	return true;
 }
 
-void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
+bool Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view))
@@ -576,9 +578,10 @@ void Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 			}
 		}
 	}
+	return true;
 }
 
-void Plugin_Selection::wheelEvent(View* view, QWheelEvent* event)
+bool Plugin_Selection::wheelEvent(View* view, QWheelEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view))
@@ -604,6 +607,7 @@ void Plugin_Selection::wheelEvent(View* view, QWheelEvent* event)
 			}
 		}
 	}
+	return true;
 }
 
 void Plugin_Selection::view_linked(View* view)
