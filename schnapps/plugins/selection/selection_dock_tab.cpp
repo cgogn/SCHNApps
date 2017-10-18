@@ -249,7 +249,7 @@ void Selection_DockTab::set_normal_attribute(const QString& name)
 	updating_ui_ = false;
 }
 
-void Selection_DockTab::set_cells_set(CellsSetGen *cs)
+void Selection_DockTab::set_cells_set(CellsSetGen* cs)
 {
 	update_after_cells_set_changed();
 }
@@ -319,7 +319,6 @@ void Selection_DockTab::refresh_ui()
 			++i;
 		}
 	}
-
 
 	CellType ct = static_cast<CellType>(combo_cellType->currentIndex());
 	CellsSetGen* cs = p.get_cells_set();

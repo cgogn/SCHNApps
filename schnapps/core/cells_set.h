@@ -35,6 +35,7 @@ namespace schnapps
 {
 
 class SCHNApps;
+class MapHandlerGen;
 
 class SCHNAPPS_CORE_API CellsSetGen : public QObject
 {
@@ -56,19 +57,21 @@ public:
 
 	inline const QString& get_name() { return name_; }
 
+	virtual const MapHandlerGen* get_map() const = 0;
 	virtual CellType get_cell_type() const = 0;
-
 	virtual std::size_t get_nb_cells() const = 0;
 
 	inline void set_mutually_exclusive(bool b) { mutually_exclusive_ = b; }
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
 	virtual void set_mutually_exclusive_sets(const std::vector<CellsSetGen*>& mex) = 0;
+
 	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
 
 	virtual void select(cgogn::Dart d, bool emit_signal = true) = 0;
 	virtual void select(const std::vector<cgogn::Dart>& cells) = 0;
 	virtual void unselect(cgogn::Dart d, bool emit_signal = true) = 0;
 	virtual void unselect(const std::vector<cgogn::Dart>& cells) = 0;
+	virtual bool is_selected(cgogn::Dart d) = 0;
 	virtual void clear() = 0;
 
 private slots:
@@ -113,8 +116,13 @@ public:
 		marker_(*map_.get_map())
 	{}
 
-	~CellsSet()
+	~CellsSet() override
 	{}
+
+	inline const MapHandlerGen* get_map() const override
+	{
+		return &map_;
+	}
 
 	inline CellType get_cell_type() const override;
 
@@ -178,7 +186,12 @@ public:
 		this->emit_if_selection_changed();
 	}
 
-	inline void clear()
+	inline bool is_selected(CELL c)
+	{
+		return marker_.is_marked(c);
+	}
+
+	inline void clear() override
 	{
 		bool was_not_empty = cells_.size() > 0;
 		cells_.clear();
@@ -235,6 +248,11 @@ public:
 	virtual void unselect(const std::vector<cgogn::Dart>& cells) override
 	{
 		this->unselect(reinterpret_cast<const std::vector<CELL>&>(cells));
+	}
+
+	virtual bool is_selected(cgogn::Dart d) override
+	{
+		return this->is_selected(CELL(d));
 	}
 
 protected:

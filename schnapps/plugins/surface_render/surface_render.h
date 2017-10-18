@@ -55,7 +55,6 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_API Plugin_SurfaceRender : public PluginInt
 public:
 
 	inline Plugin_SurfaceRender() {}
-
 	~Plugin_SurfaceRender() override {}
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);

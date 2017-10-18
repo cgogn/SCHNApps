@@ -384,7 +384,7 @@ public:
 	using Volume = typename MAP_TYPE::Volume;
 
 	template <typename CELL>
-	using CellSet = ::schnapps::CellsSet<MAP_TYPE, CELL>;
+	using CellSet = CellsSet<MAP_TYPE, CELL>;
 	using DartSet	= CellSet<CDart>;
 	using VertexSet	= CellSet<Vertex>;
 	using EdgeSet	= CellSet<Edge>;
