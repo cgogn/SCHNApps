@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 #ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
-#define SCHNAPPS_PLUGIN_EMPTY_PLUGIN_H_
+#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
 
 #include "dll.h"
 #include <schnapps/core/plugin_processing.h>
