@@ -72,12 +72,13 @@ private:
 	virtual void draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
 	virtual void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
 
-	virtual void keyPress(View* view, QKeyEvent* event) = 0;
-	virtual void keyRelease(View* view, QKeyEvent* event) = 0;
-	virtual void mousePress(View* view, QMouseEvent* event) = 0;
-	virtual void mouseRelease(View* view, QMouseEvent* event) = 0;
-	virtual void mouseMove(View* view, QMouseEvent* event) = 0;
-	virtual void wheelEvent(View* view, QWheelEvent* event) = 0;
+	virtual bool keyPress(View* view, QKeyEvent* event) = 0;
+	virtual bool keyRelease(View* view, QKeyEvent* event) = 0;
+	virtual bool mousePress(View* view, QMouseEvent* event) = 0;
+	virtual bool mouseRelease(View* view, QMouseEvent* event) = 0;
+	virtual bool mouseMove(View* view, QMouseEvent* event) = 0;
+	virtual bool wheelEvent(View* view, QWheelEvent* event) = 0;
+
 	virtual void resizeGL(View* view, int width, int height) = 0;
 
 	virtual void view_linked(View* view) = 0;

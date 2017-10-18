@@ -1,8 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Merge plugin                                                                 *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -22,20 +21,66 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_H_
-#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_H_
+#ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
+#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
 
+#include "dll.h"
+#include <schnapps/core/plugin_processing.h>
 
-#ifdef WIN32
-#ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_API
-#if defined SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_EXPORT
-#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_API __declspec(dllexport)
-#else
-#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_API __declspec(dllimport)
-#endif
-#endif
-#else
-#define SCHNAPPS_PLUGIN_MERGE_PLUGIN_API
-#endif
+#include <QAction>
 
-#endif // SCHNAPPS_PLUGIN_MERGE_PLUGIN_DLL_H_
+namespace schnapps
+{
+
+class MapHandlerGen;
+
+namespace plugin_merge
+{
+
+class MergeDialog;
+
+/**
+* @brief Merge plugin
+*/
+class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API Plugin_Merge : public PluginProcessing
+{
+	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
+
+public:
+
+	Plugin_Merge();
+	~Plugin_Merge() override;
+
+private:
+
+	bool enable() override;
+	void disable() override;
+
+private slots:
+
+	// slots called from SCHNApps signals
+	void schnapps_closing();
+
+	// slots called from action signals
+	void merge_dialog();
+
+public slots:
+
+	/**
+	 * @brief merge second_map into first_map
+	 */
+	bool merge(MapHandlerGen* first_map, const MapHandlerGen* second_map);
+
+private:
+
+	MergeDialog* merge_dialog_;
+	QAction* merge_action_;
+};
+
+} // namespace plugin_merge
+
+} // namespace schnapps
+
+#endif // SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_

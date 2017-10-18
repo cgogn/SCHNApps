@@ -50,7 +50,6 @@
 #include <QAction>
 #include <list>
 
-
 namespace schnapps
 {
 
@@ -409,8 +408,6 @@ MapHandlerGen* SCHNApps::duplicate_map(const QString& name)
 	}
 }
 
-
-
 MapHandlerGen* SCHNApps::get_map(const QString& name) const
 {
 	if (maps_.count(name) > 0ul)
@@ -480,23 +477,10 @@ void SCHNApps::set_selected_view(View* view)
 {
 	int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
 
-//	if (selected_view_)
-//	{
-//		for (PluginInteraction* p : selected_view_->get_linked_plugins())
-//			disable_plugin_tab_widgets(p);
-//		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-//		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
-//	}
-
 	View* old_selected = selected_view_;
 	selected_view_ = view;
 	if (old_selected)
 		old_selected->hide_dialogs();
-
-//	for (PluginInteraction* p : selected_view_->get_linked_plugins())
-//		enable_plugin_tab_widgets(p);
-//	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-//	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
 
 	window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
 
@@ -637,6 +621,7 @@ void SCHNApps::set_split_view_positions(QString positions)
 /*********************************************************
  * MANAGE MENU ACTIONS
  *********************************************************/
+
 QAction* SCHNApps::add_menu_action(const QString& menu_path, const QString& action_text)
 {
 	return window_->add_menu_action(menu_path, action_text);
@@ -671,7 +656,6 @@ void SCHNApps::set_window_size(int w, int h)
 	window_->resize(w, h);
 }
 
-
 /*********************************************************
  * EXPORT SETTINGS
  *********************************************************/
@@ -681,7 +665,6 @@ void SCHNApps::export_settings()
 	QString filename = QFileDialog::getSaveFileName(nullptr, "Export", settings_path_, "Settings Files (*.json)");
 	if (! filename.isEmpty())
 		settings_->to_file(filename);
-
 }
 
 } // namespace schnapps

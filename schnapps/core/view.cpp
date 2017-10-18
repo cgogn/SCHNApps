@@ -478,10 +478,8 @@ void View::keyPressEvent(QKeyEvent* event)
 			schnapps_->cycle_selected_view();
 			break;
 
-		case Qt::Key_S:
-		{
+		case Qt::Key_S: {
 			save_snapshots_ = !save_snapshots_;
-
 			if (save_snapshots_)
 			{
 				QMessageBox msg_box;
@@ -504,24 +502,26 @@ void View::keyPressEvent(QKeyEvent* event)
 				disconnect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
 				cgogn_log_info("View::keyPressEvent") <<"Stop frame snapshot.";
 			}
+			break;
 		}
-		break;
+
+		case Qt::Key_Escape: {
+			QMessageBox msg_box;
+			msg_box.setText("Really quit SCHNApps ?");
+			msg_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+			msg_box.setDefaultButton(QMessageBox::Ok);
+			if (msg_box.exec() == QMessageBox::Ok)
+				schnapps_->close_window();
+			break;
+		}
 
 		default:
 		{
+			bool forward_event = true;
 			for (PluginInteraction* plugin : plugins_)
-				plugin->keyPress(this, event);
+				forward_event &= plugin->keyPress(this, event);
 
-			if (event->key() == Qt::Key_Escape)
-			{
-				QMessageBox msg_box;
-				msg_box.setText("Really quit SCHNApps ?");
-				msg_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-				msg_box.setDefaultButton(QMessageBox::Ok);
-				if (msg_box.exec() == QMessageBox::Ok)
-					schnapps_->close_window();
-			}
-			else
+			if (forward_event)
 				QOGLViewer::keyPressEvent(event);
 		}
 	}
@@ -529,10 +529,12 @@ void View::keyPressEvent(QKeyEvent* event)
 
 void View::keyReleaseEvent(QKeyEvent *event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->keyRelease(this, event);
+		forward_event &= plugin->keyRelease(this, event);
 
-	QOGLViewer::keyReleaseEvent(event);
+	if (forward_event)
+		QOGLViewer::keyReleaseEvent(event);
 }
 
 void View::mousePressEvent(QMouseEvent* event)
@@ -554,36 +556,44 @@ void View::mousePressEvent(QMouseEvent* event)
 			button_area_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
 		else
 		{
+			bool forward_event = true;
 			for (PluginInteraction* plugin : plugins_)
-				plugin->mousePress(this, event);
+				forward_event &= plugin->mousePress(this, event);
 
-			QOGLViewer::mousePressEvent(event);
+			if (forward_event)
+				QOGLViewer::mousePressEvent(event);
 		}
 	}
 }
 
 void View::mouseReleaseEvent(QMouseEvent* event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->mouseRelease(this, event);
+		forward_event &= plugin->mouseRelease(this, event);
 
-	QOGLViewer::mouseReleaseEvent(event);
+	if (forward_event)
+		QOGLViewer::mouseReleaseEvent(event);
 }
 
 void View::mouseMoveEvent(QMouseEvent* event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->mouseMove(this, event);
+		forward_event &= plugin->mouseMove(this, event);
 
-	QOGLViewer::mouseMoveEvent(event);
+	if (forward_event)
+		QOGLViewer::mouseMoveEvent(event);
 }
 
 void View::wheelEvent(QWheelEvent* event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->wheelEvent(this, event);
+		forward_event &= plugin->wheelEvent(this, event);
 
-	QOGLViewer::wheelEvent(event);
+	if (forward_event)
+		QOGLViewer::wheelEvent(event);
 }
 
 void View::hide_dialogs()

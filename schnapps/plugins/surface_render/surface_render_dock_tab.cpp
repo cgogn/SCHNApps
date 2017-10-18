@@ -306,6 +306,7 @@ void SurfaceRender_DockTab::selected_map_changed(MapHandlerGen* old, MapHandlerG
 
 void SurfaceRender_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
+	updating_ui_ = true;
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 	{
@@ -313,6 +314,7 @@ void SurfaceRender_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 		combo_normalVBO->addItem(vbo_name);
 		combo_colorVBO->addItem(vbo_name);
 	}
+	updating_ui_ = false;
 }
 
 void SurfaceRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
@@ -320,15 +322,15 @@ void SurfaceRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 	{
-		int index = combo_positionVBO->findText(vbo_name);
+		int index = combo_positionVBO->findText(vbo_name, Qt::MatchExactly);
 		if (index > 0)
 			combo_positionVBO->removeItem(index);
 
-		index = combo_normalVBO->findText(vbo_name);
+		index = combo_normalVBO->findText(vbo_name, Qt::MatchExactly);
 		if (index > 0)
 			combo_normalVBO->removeItem(index);
 
-		index = combo_colorVBO->findText(vbo_name);
+		index = combo_colorVBO->findText(vbo_name, Qt::MatchExactly);
 		if (index > 0)
 			combo_colorVBO->removeItem(index);
 	}

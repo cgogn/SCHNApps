@@ -157,7 +157,7 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 	}
 }
 
-void Plugin_VolumeRender::mousePress(View* view, QMouseEvent* event)
+bool Plugin_VolumeRender::mousePress(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
@@ -173,9 +173,10 @@ void Plugin_VolumeRender::mousePress(View* view, QMouseEvent* event)
 			view->update();
 		}
 	}
+	return true;
 }
 
-void Plugin_VolumeRender::mouseRelease(View* view, QMouseEvent* event)
+bool Plugin_VolumeRender::mouseRelease(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
@@ -187,9 +188,10 @@ void Plugin_VolumeRender::mouseRelease(View* view, QMouseEvent* event)
 			view->update();
 		}
 	}
+	return true;
 }
 
-void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
+bool Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
 {
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
@@ -203,6 +205,7 @@ void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
 			view->update();
 		}
 	}
+	return true;
 }
 
 void Plugin_VolumeRender::view_linked(View* view)

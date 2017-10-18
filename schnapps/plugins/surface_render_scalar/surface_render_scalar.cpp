@@ -97,7 +97,7 @@ void Plugin_SurfaceRenderScalar::draw_map(View* view, MapHandlerGen* map, const 
 		view->makeCurrent();
 		const MapParameters& p = get_parameters(view, map);
 
-		if (p.get_position_vbo() && p.get_scalar_vbo())
+		if (p.position_vbo_ && p.scalar_vbo_)
 		{
 			glEnable(GL_POLYGON_OFFSET_FILL);
 			glPolygonOffset(1.0f, 1.0f);

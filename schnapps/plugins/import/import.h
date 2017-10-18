@@ -24,8 +24,10 @@
 #ifndef SCHNAPPS_PLUGIN_IMPORT_H_
 #define SCHNAPPS_PLUGIN_IMPORT_H_
 
+#include "dll.h"
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/plugins/import/dll.h>
+
 #include <QAction>
 
 namespace schnapps
@@ -92,7 +94,7 @@ private:
 
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
-	//	QAction* import_2D_image_action_;
+//	QAction* import_2D_image_action_;
 };
 
 } // namespace plugin_import

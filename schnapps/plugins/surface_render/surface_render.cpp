@@ -317,10 +317,10 @@ void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 
 void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
-
 	if (vbo->vector_dimension() == 3)
 	{
+		MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+
 		for (auto& it : parameter_set_)
 		{
 			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;

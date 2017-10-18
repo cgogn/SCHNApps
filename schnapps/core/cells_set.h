@@ -69,6 +69,7 @@ public:
 	virtual void select(const std::vector<cgogn::Dart>& cells) = 0;
 	virtual void unselect(cgogn::Dart d, bool emit_signal = true) = 0;
 	virtual void unselect(const std::vector<cgogn::Dart>& cells) = 0;
+	virtual void clear() = 0;
 
 private slots:
 
@@ -175,6 +176,15 @@ public:
 		for (CELL c : cells)
 			unselect(c, false);
 		this->emit_if_selection_changed();
+	}
+
+	inline void clear()
+	{
+		bool was_not_empty = cells_.size() > 0;
+		cells_.clear();
+		marker_.unmark_all();
+		if (was_not_empty)
+			emit(selected_cells_changed());
 	}
 
 	inline void set_mutually_exclusive_sets(const std::vector<Inherit*>& mex) override

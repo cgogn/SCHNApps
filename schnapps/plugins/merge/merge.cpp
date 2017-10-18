@@ -1,8 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Merge plugin                                                                 *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -22,52 +21,55 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <merge_plugin.h>
+#include <merge.h>
 #include <merge_dialog.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-namespace merge_plugin
+namespace plugin_merge
 {
 
-MergePlugin::MergePlugin() :
+Plugin_Merge::Plugin_Merge() :
 	merge_action_(nullptr),
 	merge_dialog_(nullptr)
 {}
 
-MergePlugin::~MergePlugin()
+bool Plugin_Merge::enable()
 {
-	delete merge_dialog_;
-}
+	merge_dialog_ = new MergeDialog(schnapps_, this);
 
-bool MergePlugin::merge(MapHandlerGen* first_map, const MapHandlerGen* second_map)
-{
-	return first_map->merge(second_map);
-}
-
-bool MergePlugin::enable()
-{
 	merge_action_ = schnapps_->add_menu_action("Merge;Merge Meshes", "merge meshes");
 	connect(merge_action_, SIGNAL(triggered()), this, SLOT(merge_dialog()));
-
-	if (!merge_dialog_)
-		merge_dialog_ = new MergeDialog(schnapps_, this);
 
 	return true;
 }
 
-void MergePlugin::disable()
+void Plugin_Merge::disable()
 {
 	schnapps_->remove_menu_action(merge_action_);
+
+	delete merge_dialog_;
 }
 
-void MergePlugin::merge_dialog()
+void Plugin_Merge::schnapps_closing()
+{
+	merge_dialog_->close();
+}
+
+void Plugin_Merge::merge_dialog()
 {
 	merge_dialog_->show();
 }
 
-} // namespace merge_plugin
+bool Plugin_Merge::merge(MapHandlerGen* first_map, const MapHandlerGen* second_map)
+{
+	return first_map->merge(second_map);
+}
+
+} // namespace plugin_merge
+
 } // namespace schnapps

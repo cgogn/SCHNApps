@@ -8,12 +8,12 @@ find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
 set(HEADER_FILES
 	dll.h
-	merge_plugin.h
+	merge.h
 	merge_dialog.h
 )
 
 set(SOURCE_FILES
-	merge_plugin.cpp
+	merge.cpp
 	merge_dialog.cpp
 )
 

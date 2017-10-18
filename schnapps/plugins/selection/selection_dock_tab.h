@@ -26,58 +26,79 @@
 
 #include "dll.h"
 #include <ui_selection.h>
+
+#include <map_parameters.h>
+
 #include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-
 namespace plugin_selection
 {
 
 class Plugin_Selection;
-struct MapParameters;
 
 class SCHNAPPS_PLUGIN_SELECTION_API Selection_DockTab : public QWidget, public Ui::Selection_TabWidget
 {
 	Q_OBJECT
 
-	friend class Plugin_Selection;
-
 public:
 
 	Selection_DockTab(SCHNApps* s, Plugin_Selection* p);
-
-private slots:
-
-	void position_attribute_changed(int index);
-	void normal_attribute_changed(int index);
-	void selection_method_changed(int index);
-	void cell_type_changed(int index);
-	void cells_set_changed(int index);
-	void selected_map_cells_set_added(CellType ct, const QString& name);
-	void selected_map_cells_set_removed(CellType ct, const QString& name);
-	void selected_map_vertex_attribute_added(const QString& name);
-	void selected_map_vertex_attribute_removed(const QString& name);
-	void vertices_scale_factor_changed(int i);
-	void color_changed(int i);
-	void clear_clicked();
+	~Selection_DockTab() override;
 
 private:
-
-	void set_current_cells_set(CellsSetGen* cs);
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
 
 	SCHNApps* schnapps_;
 	Plugin_Selection* plugin_;
 
+	MapHandlerGen* selected_map_;
 	bool updating_ui_;
 
-	CellsSetGen* current_cells_set_;
+private slots:
+
+	// slots called from UI signals
+	void position_attribute_changed(int index);
+	void normal_attribute_changed(int index);
+	void cell_type_changed(int index);
+	void cells_set_changed(int index);
+	void selection_method_changed(int index);
+	void clear_clicked();
+	void vertex_scale_factor_changed(int i);
+	void color_changed(int i);
+
+	// slots called from SCHNApps signals
+	void selected_view_changed(View* old, View* cur);
+	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
+
+	// slots called from MapHandlerGen signals
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_added(CellType ct, const QString& name);
+	void selected_map_cells_set_removed(CellType ct, const QString& name);
+
+public:
+
+	// methods used to update the UI from the plugin
+	void set_position_attribute(const QString& name);
+	void set_normal_attribute(const QString& name);
+	void set_cells_set(CellsSetGen* cs);
+	void set_selection_method(MapParameters::SelectionMethod m);
+	void set_vertex_scale_factor(float sf);
+	void set_color(const QColor& color);
+
+	void refresh_ui();
+
+private:
+
+	// internal UI cascading updates
+	void update_after_cells_set_changed();
+	void update_after_selection_method_changed();
 };
 
 } // namespace plugin_selection
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_

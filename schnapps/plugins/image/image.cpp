@@ -22,15 +22,18 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "image.h"
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QDir>
+#include <image.h>
 #include <image_dock_tab.h>
+
 #include <schnapps/core/schnapps.h>
+
 #include <cgogn/io/c_locale.h>
 #include <cgogn/io/formats/vtk.h>
 #include <cgogn/core/utils/string.h>
+
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QDir>
 
 #ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 #include <boost/iostreams/filtering_streambuf.hpp>
@@ -49,21 +52,6 @@ Plugin_Image::Plugin_Image() :
 	import_image_action_(nullptr),
 	dock_tab_(nullptr)
 {}
-
-const std::list<std::pair<QString, Image3D> >& Plugin_Image::get_images() const
-{
-	return images_;
-}
-
-const Image3D*Plugin_Image::get_image(const QString& im_path)
-{
-	if (images_.empty())
-		return nullptr;
-	for (const auto& it : images_)
-		if (it.first == im_path)
-			return &(it.second);
-	return nullptr;
-}
 
 bool Plugin_Image::enable()
 {
@@ -84,39 +72,6 @@ void Plugin_Image::disable()
 	dock_tab_ = nullptr;
 }
 
-void Plugin_Image::draw(schnapps::View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{}
-
-void Plugin_Image::draw_map(schnapps::View* view, schnapps::MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{}
-
-void Plugin_Image::keyPress(schnapps::View* view, QKeyEvent* event)
-{}
-
-void Plugin_Image::keyRelease(schnapps::View* view, QKeyEvent* event)
-{}
-
-void Plugin_Image::mousePress(schnapps::View* view, QMouseEvent* event)
-{}
-
-void Plugin_Image::mouseRelease(schnapps::View* view, QMouseEvent* event)
-{}
-
-void Plugin_Image::mouseMove(schnapps::View* view, QMouseEvent* event)
-{}
-
-void Plugin_Image::wheelEvent(schnapps::View* view, QWheelEvent* event)
-{}
-
-void Plugin_Image::view_linked(schnapps::View* view)
-{}
-
-void Plugin_Image::view_unlinked(schnapps::View* view)
-{}
-
-void Plugin_Image::resizeGL(View* /*view*/, int /*width*/, int /*height*/)
-{}
-
 void Plugin_Image::import_image(const QString& image_path)
 {
 	QFileInfo fileinfo(image_path);
@@ -128,7 +83,21 @@ void Plugin_Image::import_image(const QString& image_path)
 		else
 			images_.pop_back();
 	}
+}
 
+const std::list<std::pair<QString, Image3D> >& Plugin_Image::get_images() const
+{
+	return images_;
+}
+
+const Image3D*Plugin_Image::get_image(const QString& im_path)
+{
+	if (images_.empty())
+		return nullptr;
+	for (const auto& it : images_)
+		if (it.first == im_path)
+			return &(it.second);
+	return nullptr;
 }
 
 void Plugin_Image::import_image_dialog()
@@ -180,7 +149,6 @@ Image3D::Image3D(Image3D&& im) :
 	nb_components_(im.nb_components_)
 {}
 
-
 Image3D& Image3D::operator=(Image3D&& im)
 {
 	if (this != &im)
@@ -214,7 +182,9 @@ Image3D Image3D::new_image_3d(const QString& image_path)
 				res_img = std::move(Image3D::new_image_3d(temp_image_path));
 				QFile::remove(temp_image_path);
 			}
-		} else {
+		}
+		else
+		{
 			if (!QString::compare(complete_suffix, "inr", Qt::CaseInsensitive))
 				res_img.import_inr(in_file);
 			else
@@ -302,37 +272,43 @@ void Image3D::import_inr(std::istream& inr_data)
 
 	const bool little_endian = (cpu == "decm" || cpu == "pc" || cpu == "alpha");
 
-
 	if (type == "unsigned fixed")
-		switch (data_size) {
-		case 1: data_ = cgogn::make_unique<DataInput<uint8, value_type>>(); break;
-		case 2: data_ = cgogn::make_unique<DataInput<uint16, value_type>>(); break;
-		case 4: data_ = cgogn::make_unique<DataInput<uint32, value_type>>(); break;
-		case 8: data_ = cgogn::make_unique<DataInput<uint64, value_type>>(); break;
+	{
+		switch (data_size)
+		{
+			case 1: data_ = cgogn::make_unique<DataInput<uint8, value_type>>(); break;
+			case 2: data_ = cgogn::make_unique<DataInput<uint16, value_type>>(); break;
+			case 4: data_ = cgogn::make_unique<DataInput<uint32, value_type>>(); break;
+			case 8: data_ = cgogn::make_unique<DataInput<uint64, value_type>>(); break;
 			default: break;
-		} else {
-		if (type == "signed fixed")
-			switch (data_size) {
+		}
+	}
+	else if (type == "signed fixed")
+	{
+		switch (data_size)
+		{
 			case 1: data_ = cgogn::make_unique<DataInput<int8, value_type>>(); break;
 			case 2: data_ = cgogn::make_unique<DataInput<int16, value_type>>(); break;
 			case 4: data_ = cgogn::make_unique<DataInput<int32, value_type>>(); break;
 			case 8: data_ = cgogn::make_unique<DataInput<int64, value_type>>(); break;
-				default: break;
-			} else {
-			if (type == "float")
-				switch (data_size) {
-				case 4: data_ = cgogn::make_unique<DataInput<float32, value_type>>(); break;
-				case 8: data_ = cgogn::make_unique<DataInput<float64, value_type>>(); break;
-					default: break;
-				}
+			default: break;
 		}
 	}
+	else if (type == "float")
+	{
+		switch (data_size)
+		{
+			case 4: data_ = cgogn::make_unique<DataInput<float32, value_type>>(); break;
+			case 8: data_ = cgogn::make_unique<DataInput<float64, value_type>>(); break;
+			default: break;
+		}
+	}
+
 	if (data_)
 	{
 		data_->read_n(inr_data, image_dim_[0] * image_dim_[1] * image_dim_[2] * nb_components_ , true, !little_endian);
 		data_ = data_->simplify();
 	}
-
 }
 
 void Image3D::import_vtk(std::istream& vtk_data)
@@ -364,14 +340,13 @@ void Image3D::import_vtk(std::istream& vtk_data)
 
 	origin_.fill(0);
 
-	while(!vtk_data.eof())
+	while (!vtk_data.eof())
 	{
 		std::getline(vtk_data,line);
 		word.clear();
 		std::istringstream sstream(line);
 		sstream >> word;
 		word = to_upper(word);
-
 
 		if (word == "DIMENSIONS")
 			sstream >> image_dim_[0] >> image_dim_[1] >> image_dim_[2];
@@ -380,10 +355,7 @@ void Image3D::import_vtk(std::istream& vtk_data)
 			sstream >> voxel_dim_[0] >> voxel_dim_[1] >> voxel_dim_[2];
 
 		if (word == "ORIGIN")
-		{
 			sstream >> origin_[0] >> origin_[1] >> origin_[2];
-		}
-
 
 		if (word == "POINT_DATA")
 		{
@@ -391,7 +363,8 @@ void Image3D::import_vtk(std::istream& vtk_data)
 			sstream >> nb_data;
 
 			std::ifstream::pos_type previous_pos;
-			do {
+			do
+			{
 				previous_pos = vtk_data.tellg();
 				std::getline(vtk_data, line);
 				sstream.str(line);
@@ -453,8 +426,6 @@ void Image3D::import_vtk(std::istream& vtk_data)
 	}
 }
 
-
-
 SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
 {
 #ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
@@ -482,4 +453,5 @@ SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
 }
 
 } // namespace plugin_image
+
 } // namespace schnapps
