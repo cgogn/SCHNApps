@@ -10,6 +10,7 @@ find_package(QOGLViewer REQUIRED)
 set(HEADER_FILES
 	dll.h
 	schnapps_window.h
+	schnapps_window_factory.h
 	schnapps.h
 	camera.h
 	view.h

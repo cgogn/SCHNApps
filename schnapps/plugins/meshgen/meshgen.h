@@ -25,9 +25,11 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_H_
 #define SCHNAPPS_PLUGIN_MESHGEN_H_
 
-#include "dll.h"
-#include <meshgen_dialog.h>
+#include <schnapps/plugins/meshgen/dll.h>
+#include <schnapps/plugins/meshgen/meshgen_dialog.h>
+
 #include <schnapps/core/plugin_processing.h>
+
 #include <cgogn/core/cmap/cmap2.h>
 
 namespace schnapps

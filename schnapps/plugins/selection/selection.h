@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SELECTION_H_
 #define SCHNAPPS_PLUGIN_SELECTION_H_
 
-#include "dll.h"
+#include <schnapps/plugins/selection/dll.h>
+
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
@@ -32,15 +33,15 @@
 
 #include <cgogn/geometry/algos/selection.h>
 
-#include <selection_dock_tab.h>
-
-#include <map_parameters.h>
+#include <schnapps/plugins/selection/map_parameters.h>
 
 namespace schnapps
 {
 
 namespace plugin_selection
 {
+
+class Selection_DockTab;
 
 /**
 * @brief Plugin for cells selection
@@ -113,7 +114,7 @@ private slots:
 
 	void viewer_initialized();
 
-public slots:
+public:
 
 	void set_position_attribute(View* view, MapHandlerGen* map, const QString& name, bool update_dock_tab);
 	void set_normal_attribute(View* view, MapHandlerGen* map, const QString& name, bool update_dock_tab);

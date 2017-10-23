@@ -61,9 +61,8 @@ public:
 	virtual CellType get_cell_type() const = 0;
 	virtual std::size_t get_nb_cells() const = 0;
 
-	inline void set_mutually_exclusive(bool b) { mutually_exclusive_ = b; }
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
-	virtual void set_mutually_exclusive_sets(const std::vector<CellsSetGen*>& mex) = 0;
+	virtual void set_mutually_exclusive(bool b) = 0;
 
 	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
 
@@ -200,18 +199,42 @@ public:
 			emit(selected_cells_changed());
 	}
 
-	inline void set_mutually_exclusive_sets(const std::vector<Inherit*>& mex) override
+private:
+
+	inline void set_mutually_exclusive_sets(const std::vector<Self*>& mex)
 	{
 		mutually_exclusive_sets_.clear();
-		for (Inherit* cs : mex)
+		if (this->is_mutually_exclusive())
 		{
-			if (cs != this)
+			for (Self* cs : mex)
 			{
-				Self* s = dynamic_cast<Self*>(cs);
-				if (s)
-					mutually_exclusive_sets_.push_back(s);
+				if (cs != this)
+					mutually_exclusive_sets_.push_back(cs);
 			}
 		}
+	}
+
+public:
+
+	inline void set_mutually_exclusive(bool b) override
+	{
+		this->mutually_exclusive_ = b;
+
+		std::vector<Self*> mex;
+		map_.foreach_cells_set(map_.cell_type(CELL::ORBIT), [&] (CellsSetGen* csg)
+		{
+			Self* cs = dynamic_cast<Self*>(csg);
+			if (cs && cs->is_mutually_exclusive())
+				mex.push_back(cs);
+		});
+		map_.foreach_cells_set(map_.cell_type(CELL::ORBIT), [&] (CellsSetGen* csg)
+		{
+			Self* cs = dynamic_cast<Self*>(csg);
+			if (cs)
+				cs->set_mutually_exclusive_sets(mex);
+		});
+
+		map_.notify_cells_set_mutually_exclusive_change(map_.cell_type(CELL::ORBIT), this->name_);
 	}
 
 	inline void rebuild() override;

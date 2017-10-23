@@ -21,13 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "surface_render_transp.h"
+#include <schnapps/plugins/surface_render_transp/surface_render_transp.h>
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
 #include <cgogn/geometry/algos/selection.h>
-
 #include <cgogn/rendering/transparency_volume_drawer.h>
 
 namespace schnapps

@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
 
-#include "dll.h"
+#include <schnapps/plugins/shallow_water_2/dll.h>
+
 #include <ui_shallow_water.h>
 
 namespace schnapps

@@ -21,8 +21,9 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "export_dialog.h"
-#include "export.h"
+#include <schnapps/plugins/export/export_dialog.h>
+#include <schnapps/plugins/export/export.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 

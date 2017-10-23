@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SELECTION_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_SELECTION_MAP_PARAMETERS_H_
 
-#include "dll.h"
+#include <schnapps/plugins/selection/dll.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>

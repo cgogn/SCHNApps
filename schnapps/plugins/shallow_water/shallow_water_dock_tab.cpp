@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <shallow_water_dock_tab.h>
-#include <shallow_water.h>
+#include <schnapps/plugins/shallow_water/shallow_water_dock_tab.h>
+#include <schnapps/plugins/shallow_water/shallow_water.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>

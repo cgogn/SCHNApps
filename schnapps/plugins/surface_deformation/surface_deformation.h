@@ -24,18 +24,18 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_deformation/dll.h>
+#include <schnapps/plugins/surface_deformation/map_parameters.h>
+
 #include <schnapps/core/plugin_interaction.h>
-
-#include <surface_deformation_dock_tab.h>
-
-#include <map_parameters.h>
 
 namespace schnapps
 {
 
 namespace plugin_surface_deformation
 {
+
+class SurfaceDeformation_DockTab;
 
 /**
 * @brief Surface deformation

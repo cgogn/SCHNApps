@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_EMPTY_PLUGIN_H_
 #define SCHNAPPS_PLUGIN_EMPTY_PLUGIN_H_
 
-#include "dll.h"
+#include <schnapps/plugins/empty_plugin/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
 // OR #include <schnapps/core/plugin_interaction.h>
 

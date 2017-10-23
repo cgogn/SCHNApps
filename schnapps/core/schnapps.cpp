@@ -109,7 +109,6 @@ SCHNApps::~SCHNApps()
 	settings_->to_file(settings_path_);
 
 	// first safely unload every plugins (this has to be done before the views get deleted)
-
 	std::list<QString> plugins_ordered;
 	for (auto& pp : plugins_)
 	{
@@ -118,7 +117,6 @@ SCHNApps::~SCHNApps()
 		else
 			plugins_ordered.push_front(pp.first);
 	}
-
 	for (const auto& p : plugins_ordered)
 		this->disable_plugin(p);
 }

@@ -22,11 +22,13 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <meshgen.h>
-#include <meshgen_dialog.h>
+#include <schnapps/plugins/meshgen/meshgen.h>
+#include <schnapps/plugins/meshgen/meshgen_dialog.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
-#include "image.h"
+
+#include <schnapps/plugins/image/image.h>
 
 namespace schnapps
 {

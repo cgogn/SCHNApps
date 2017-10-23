@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_MAP_PARAMETERS_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_deformation/dll.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
@@ -108,10 +108,15 @@ struct MapParameters
 					diff_coord_[v] = centroid - position_[v];
 				};
 
-				free_vertex_set_->foreach_cell(compute_diff_coord);
-				handle_vertex_set_->foreach_cell(compute_diff_coord);
+				map2->foreach_cell(compute_diff_coord);
+//				free_vertex_set_->foreach_cell(compute_diff_coord);
+//				handle_vertex_set_->foreach_cell(compute_diff_coord);
 
 				nb_vertices_ = 0;
+//				map2->foreach_cell([&] (CMap2::Vertex v)
+//				{
+//					v_index_[v] = nb_vertices_++;
+//				});
 				free_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
 				{
 					map_->get_map()->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool

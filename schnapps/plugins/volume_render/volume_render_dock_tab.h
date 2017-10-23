@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 
-#include "dll.h"
+#include <schnapps/plugins/volume_render/dll.h>
+
 #include <ui_volume_render.h>
 
 #include <QColorDialog>

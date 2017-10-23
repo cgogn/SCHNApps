@@ -21,7 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_deformation.h>
+#include <schnapps/plugins/surface_deformation/surface_deformation.h>
+#include <schnapps/plugins/surface_deformation/surface_deformation_dock_tab.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -397,6 +398,7 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				}
 				p.vertex_rotation_matrix_[v] = R;
 			};
+//			map2->parallel_foreach_cell(compute_rotation_matrix);
 			p.free_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
 			{
 				if (!p.free_boundary_mark_->is_marked(v))
@@ -416,9 +418,9 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				});
 				r += p.vertex_rotation_matrix_[v];
 				r /= degree + 1;
-				const VEC3& dc = p.diff_coord_[v];
-				p.rotated_diff_coord_[v] = r * dc;
+				p.rotated_diff_coord_[v] = r * p.diff_coord_[v];
 			};
+//			map2->parallel_foreach_cell(compute_rotated_diff_coord);
 			p.free_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
 			{
 				if (!p.free_boundary_mark_->is_marked(v))
@@ -434,6 +436,12 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 
 				nlBegin(NL_SYSTEM);
 
+//				map2->foreach_cell([&] (CMap2::Vertex v)
+//				{
+//					nlSetVariable(p.v_index_[v], p.position_[v][coord]);
+//					if (!p.free_vertex_set_->is_selected(v))
+//						nlLockVariable(p.v_index_[v]);
+//				});
 				p.free_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
 				{
 					nlSetVariable(p.v_index_[v], p.position_[v][coord]);
@@ -470,6 +478,7 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 
 				nlBegin(NL_MATRIX);
 				nlEnable(NL_NORMALIZE_ROWS);
+//				map2->foreach_cell(add_row);
 				p.free_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
 				{
 					if (!p.free_boundary_mark_->is_marked(v))
@@ -483,10 +492,18 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 
 				nlSolve();
 
+//				map2->foreach_cell([&] (CMap2::Vertex v)
+//				{
+//					(p.position_[v])[coord] = SCALAR(nlGetVariable(p.v_index_[v]));
+//				});
 				p.free_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
 				{
 					if (!p.free_boundary_mark_->is_marked(v))
 						(p.position_[v])[coord] = SCALAR(nlGetVariable(p.v_index_[v]));
+				});
+				p.handle_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
+				{
+					(p.position_[v])[coord] = SCALAR(nlGetVariable(p.v_index_[v]));
 				});
 
 				nlDeleteContext(context);

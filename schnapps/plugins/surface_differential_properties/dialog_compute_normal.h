@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_differential_properties/dll.h>
+
 #include <ui_dialog_compute_normal.h>
 
 #include <schnapps/core/map_handler.h>

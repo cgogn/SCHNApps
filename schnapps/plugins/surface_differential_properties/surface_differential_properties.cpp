@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_differential_properties.h>
+#include <schnapps/plugins/surface_differential_properties/surface_differential_properties.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>

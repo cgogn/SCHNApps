@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <image.h>
-#include <image_dock_tab.h>
+#include <schnapps/plugins/image/image.h>
+#include <schnapps/plugins/image/image_dock_tab.h>
 
 #include <schnapps/core/schnapps.h>
 

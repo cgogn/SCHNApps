@@ -21,7 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <shallow_water.h>
+#include <schnapps/plugins/shallow_water/shallow_water.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>

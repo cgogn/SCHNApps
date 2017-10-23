@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_deformation_dock_tab.h>
-#include <surface_deformation.h>
+#include <schnapps/plugins/surface_deformation/surface_deformation_dock_tab.h>
+#include <schnapps/plugins/surface_deformation/surface_deformation.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>

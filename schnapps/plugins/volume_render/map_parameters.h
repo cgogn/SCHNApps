@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_MAP_PARAMETERS_H_
 
-#include "dll.h"
+#include <schnapps/plugins/volume_render/dll.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>

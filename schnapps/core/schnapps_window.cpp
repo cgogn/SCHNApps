@@ -29,6 +29,7 @@
 
 namespace schnapps
 {
+
 /**
  * @brief generate a SCHNApps_window (no need of schnapps_window.h !)
  */
@@ -36,7 +37,6 @@ SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(const QSt
 {
 	return cgogn::make_unique<SCHNAppsWindow>(app_path, settings_path);
 }
-
 
 SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_path) :
 	QMainWindow()
@@ -93,7 +93,7 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_
 
 	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, this);
 
-	connect(action_Export_settings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
+	connect(action_ExportSettings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()

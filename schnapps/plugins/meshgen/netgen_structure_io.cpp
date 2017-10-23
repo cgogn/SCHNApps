@@ -22,8 +22,9 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <meshgen.h>
-#include <netgen_structure_io.h>
+#include <schnapps/plugins/meshgen/meshgen.h>
+#include <schnapps/plugins/meshgen/netgen_structure_io.h>
+
 #include <netgen/libsrc/meshing/meshing.hpp>
 #include <netgen/nglib/nglib.h>
 

@@ -25,11 +25,13 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
 
-#include "dll.h"
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/core/types.h>
-class QAction;
+#include <schnapps/plugins/attribute_editor/dll.h>
 
+#include <schnapps/core/plugin_processing.h>
+
+#include <schnapps/core/types.h>
+
+class QAction;
 
 namespace schnapps
 {
@@ -71,6 +73,7 @@ private:
 };
 
 } // namespace plugin_attribute_editor
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_

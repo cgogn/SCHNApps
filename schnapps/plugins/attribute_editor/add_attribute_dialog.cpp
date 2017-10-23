@@ -22,12 +22,14 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dll.h>
-#include <add_attribute_dialog.h>
-#include <attribute_editor.h>
+#include <schnapps/plugins/attribute_editor/dll.h>
+#include <schnapps/plugins/attribute_editor/add_attribute_dialog.h>
+#include <schnapps/plugins/attribute_editor/attribute_editor.h>
+#include <schnapps/plugins/attribute_editor/attribute_factory.h>
+
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
-#include <attribute_factory.h>
+
 #include <map>
 #include <string>
 

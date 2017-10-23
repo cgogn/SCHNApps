@@ -24,10 +24,10 @@
 #ifndef SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
 
-#include "dll.h"
-#include <ui_selection.h>
+#include <schnapps/plugins/selection/dll.h>
+#include <schnapps/plugins/selection/map_parameters.h>
 
-#include <map_parameters.h>
+#include <ui_selection.h>
 
 #include <schnapps/core/map_handler.h>
 

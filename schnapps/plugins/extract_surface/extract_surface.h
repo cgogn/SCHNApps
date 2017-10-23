@@ -25,8 +25,10 @@
 #ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
 #define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
 
-#include "dll.h"
+#include <schnapps/plugins/extract_surface/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
+
 #include <QAction>
 
 namespace schnapps

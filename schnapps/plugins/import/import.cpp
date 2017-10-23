@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <import.h>
+#include <schnapps/plugins/import/import.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>

@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <empty_plugin.h>
+#include <schnapps/plugins/empty_plugin/empty_plugin.h>
 
 #include <schnapps/core/schnapps.h>
 

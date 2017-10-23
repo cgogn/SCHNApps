@@ -24,11 +24,11 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
 
-#include <schnapps/core/plugin_processing.h>
+#include <schnapps/plugins/surface_modelisation/dll.h>
+#include <schnapps/plugins/surface_modelisation/dialog_decimation.h>
+#include <schnapps/plugins/surface_modelisation/dialog_subdivision.h>
 
-#include "dll.h"
-#include <dialog_decimation.h>
-#include <dialog_subdivision.h>
+#include <schnapps/core/plugin_processing.h>
 
 #include <QAction>
 

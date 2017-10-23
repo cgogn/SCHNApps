@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_render.h>
+#include <schnapps/plugins/volume_render/volume_render.h>
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>

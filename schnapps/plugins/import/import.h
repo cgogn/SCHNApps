@@ -24,9 +24,9 @@
 #ifndef SCHNAPPS_PLUGIN_IMPORT_H_
 #define SCHNAPPS_PLUGIN_IMPORT_H_
 
-#include "dll.h"
-#include <schnapps/core/plugin_processing.h>
 #include <schnapps/plugins/import/dll.h>
+
+#include <schnapps/core/plugin_processing.h>
 
 #include <QAction>
 
@@ -57,34 +57,25 @@ private:
 	bool enable() override;
 	void disable() override;
 
-public slots:
+private slots:
 
 	/**
-		* @brief import a surface mesh from a file
-		* @param filename file name of mesh file
-		* @return a new MapHandlerGen that handles the mesh
-		*/
-	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
-
-	/**
-		* @brief import a surface mesh by opening a FileDialog
-		*/
+	* @brief import a surface mesh by opening a FileDialog
+	*/
 	void import_surface_mesh_from_file_dialog();
 
-	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
 	void import_volume_mesh_from_file_dialog();
 
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh from a file
-	//	 * @param filename file name of mesh file
-	//	 * @return a new MapHandlerGen that handles the mesh
-	//	 */
-	//	MapHandlerGen* import_2D_image_from_file(const QString& filename);
+public:
 
-	//	/**
-	//	 * @brief import a 2D image into a surface mesh by opening a FileDialog
-	//	 */
-	//	void import_2D_image_from_file_dialog();
+	/**
+	* @brief import a surface mesh from a file
+	* @param filename file name of mesh file
+	* @return a new MapHandlerGen that handles the mesh
+	*/
+	MapHandlerGen* import_surface_mesh_from_file(const QString& filename);
+
+	MapHandlerGen* import_volume_mesh_from_file(const QString& filename);
 
 private:
 
@@ -94,7 +85,6 @@ private:
 
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
-//	QAction* import_2D_image_action_;
 };
 
 } // namespace plugin_import

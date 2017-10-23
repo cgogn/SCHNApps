@@ -25,7 +25,8 @@
 #ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
 #define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
 
-#include <dll.h>
+#include <schnapps/plugins/extract_surface/dll.h>
+
 #include <ui_extract_dialog.h>
 
 namespace schnapps

@@ -24,15 +24,15 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render_vector/dll.h>
+
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
-#include <surface_render_vector_dock_tab.h>
-
-#include <map_parameters.h>
+#include <schnapps/plugins/surface_render_vector/surface_render_vector_dock_tab.h>
+#include <schnapps/plugins/surface_render_vector/map_parameters.h>
 
 #include <cgogn/rendering/shaders/shader_vector_per_vertex.h>
 

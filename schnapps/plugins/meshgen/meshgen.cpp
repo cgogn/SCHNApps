@@ -22,17 +22,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <meshgen.h>
-#include <tetgen_structure_io.h>
+#include <schnapps/plugins/meshgen/meshgen.h>
+#include <schnapps/plugins/meshgen/tetgen_structure_io.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
+
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/io/map_export.h>
 #ifdef PLUGIN_MESHGEN_WITH_CGAL
 #include <cgogn/modeling/algos/refinements.h>
 #include <cgal/c3t3_import.h>
 #endif // PLUGIN_MESHGEN_WITH_CGAL
-#include <image.h>
+#include <schnapps/plugins/image/image.h>
+
 #include <tetgen/tetgen.h>
 #include <netgen_structure_io.h>
 #include <netgen/nglib/nglib.h>

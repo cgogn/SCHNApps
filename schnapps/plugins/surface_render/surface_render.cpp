@@ -21,10 +21,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "surface_render.h"
+#include <schnapps/plugins/surface_render/surface_render.h>
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
+
 #ifdef USE_TRANSPARENCY
 #include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
 #endif

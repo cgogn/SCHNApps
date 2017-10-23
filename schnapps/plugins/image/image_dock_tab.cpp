@@ -22,8 +22,9 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "image_dock_tab.h"
-#include <image.h>
+#include <schnapps/plugins/image/image_dock_tab.h>
+#include <schnapps/plugins/image/image.h>
+
 #include <schnapps/core/schnapps.h>
 
 namespace schnapps
@@ -44,8 +45,8 @@ Image_DockTab::Image_DockTab(SCHNApps* s, Plugin_Image* p) :
 	});
 
 	connect(this->pushButton_remove, SIGNAL(pressed()), p, SLOT(image_removed()));
-
 }
 
 } // namespace schnapps
+
 } // namespace plugin_image

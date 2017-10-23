@@ -21,9 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dialog_decimation.h>
-
-#include <surface_modelisation.h>
+#include <schnapps/plugins/surface_modelisation/dialog_decimation.h>
+#include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>

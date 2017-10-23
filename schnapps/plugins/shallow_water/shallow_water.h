@@ -24,11 +24,12 @@
 #ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
 #define SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
 
-#include "dll.h"
+#include <schnapps/plugins/shallow_water/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
 
-#include <shallow_water_dock_tab.h>
+#include <schnapps/plugins/shallow_water/shallow_water_dock_tab.h>
 
 #include <chrono>
 

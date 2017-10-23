@@ -22,8 +22,11 @@
 *******************************************************************************/
 
 #include <cgogn/core/utils/logger.h>
+
 #include <schnapps/core/schnapps_window_factory.h>
+
 #include <QOGLViewer/qoglviewer.h>
+
 #include <QApplication>
 #include <QSplashScreen>
 

@@ -4,7 +4,6 @@ if (Qt5Widgets_VERSION VERSION_GREATER 5.5.99)
 project(plugin_surface_render_transp
 	LANGUAGES CXX)
 
-
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_rendering REQUIRED)
 find_package(QOGLViewer REQUIRED)

@@ -24,13 +24,14 @@
 #ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_
 #define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_H_
 
-#include "dll.h"
+#include <schnapps/plugins/shallow_water_2/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
 
 #include <cgogn/topology/types/adaptive_tri_quad_cmap2.h>
 
-#include <shallow_water_dock_tab.h>
+#include <schnapps/plugins/shallow_water_2/shallow_water_dock_tab.h>
 
 namespace schnapps
 {

@@ -25,11 +25,14 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_FACTORY_H_
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_FACTORY_H_
 
-#include "dll.h"
+#include <schnapps/plugins/attribute_editor/dll.h>
+
 #include <schnapps/core/map_handler.h>
+
 #include <string>
 #include <unordered_map>
 #include <functional>
+
 #include <QStringList>
 
 namespace schnapps
@@ -157,7 +160,7 @@ private:
 };
 
 } // namespace plugin_attribute_editor
-} // namespace schnapps
 
+} // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_FACTORY_H_

@@ -22,10 +22,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_modelisation_docktab.h>
+#include <schnapps/plugins/volume_modelisation/volume_modelisation_docktab.h>
+#include <schnapps/plugins/volume_modelisation/volume_modelisation.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
-#include <volume_modelisation.h>
 
 namespace schnapps
 {

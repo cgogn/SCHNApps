@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_scalar_dock_tab.h>
-#include <surface_render_scalar.h>
+#include <schnapps/plugins/surface_render_scalar/surface_render_scalar_dock_tab.h>
+#include <schnapps/plugins/surface_render_scalar/surface_render_scalar.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>

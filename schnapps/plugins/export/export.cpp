@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <export.h>
-#include <export_dialog.h>
+#include <schnapps/plugins/export/export.h>
+#include <schnapps/plugins/export/export_dialog.h>
 
 #include <schnapps/core/schnapps.h>
 

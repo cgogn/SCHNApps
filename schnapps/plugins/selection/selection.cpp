@@ -21,7 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <selection.h>
+#include <schnapps/plugins/selection/selection.h>
+#include <schnapps/plugins/selection/selection_dock_tab.h>
 
 #include <schnapps/core/schnapps.h>
 

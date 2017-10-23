@@ -22,11 +22,13 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <attribute_editor.h>
+#include <schnapps/plugins/attribute_editor/attribute_editor.h>
+#include <schnapps/plugins/attribute_editor/add_attribute_dialog.h>
+#include <schnapps/plugins/attribute_editor/edit_attribute_dialog.h>
+
 #include <schnapps/core/schnapps.h>
+
 #include <QAction>
-#include <add_attribute_dialog.h>
-#include <edit_attribute_dialog.h>
 
 namespace schnapps
 {
