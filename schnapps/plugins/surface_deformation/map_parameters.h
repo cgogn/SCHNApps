@@ -29,6 +29,9 @@
 #include <schnapps/core/types.h>
 #include <schnapps/core/map_handler.h>
 
+#include <cgogn/geometry/algos/angle.h>
+#include <cgogn/geometry/algos/area.h>
+
 #include <thirdparty/OpenNL/OpenNL_psm.h>
 
 namespace schnapps
@@ -94,6 +97,32 @@ struct MapParameters
 
 				map2->copy_attribute(position_init_, position_);
 
+				MAT33 m;
+				m.setZero();
+				vertex_rotation_matrix_.set_all_values(m);
+
+				v_index_.set_all_values(-1);
+
+				CMap2::CellMarker<CMap2::Vertex::ORBIT> marker(*map2);
+				variable_vertices_->build<CMap2::Vertex>([&] (CMap2::Vertex v) -> bool
+				{
+					if (handle_vertex_set_->is_selected(v)) return true;
+					if (free_vertex_set_->is_selected(v))
+					{
+						map2->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av)
+						{
+							if (!free_vertex_set_->is_selected(av) &&
+								!handle_vertex_set_->is_selected(av) &&
+								!marker.is_marked(av))
+							{
+								variable_vertices_->add(av);
+							}
+						});
+						return true;
+					}
+					return false;
+				});
+
 				auto compute_diff_coord = [&] (CMap2::Vertex v)
 				{
 					VEC3 centroid;
@@ -108,41 +137,13 @@ struct MapParameters
 					diff_coord_[v] = centroid - position_[v];
 				};
 
-				map2->foreach_cell(compute_diff_coord);
-//				free_vertex_set_->foreach_cell(compute_diff_coord);
-//				handle_vertex_set_->foreach_cell(compute_diff_coord);
+				map2->parallel_foreach_cell(compute_diff_coord, *variable_vertices_);
 
 				nb_vertices_ = 0;
-//				map2->foreach_cell([&] (CMap2::Vertex v)
-//				{
-//					v_index_[v] = nb_vertices_++;
-//				});
-				free_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
-				{
-					map_->get_map()->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool
-					{
-						if (!free_vertex_set_->is_selected(av) && !handle_vertex_set_->is_selected(av))
-						{
-							free_boundary_mark_->mark(v);
-							return false;
-						}
-						return true;
-					});
-					v_index_[v] = nb_vertices_++;
-				});
-				handle_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
-				{
-					map_->get_map()->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool
-					{
-						if (!free_vertex_set_->is_selected(av) && !handle_vertex_set_->is_selected(av))
-						{
-							std::cout << "handle vertex should not be on the boundary of the free zone" << std::endl;
-							return false;
-						}
-						return true;
-					});
-					v_index_[v] = nb_vertices_++;
-				});
+				map2->foreach_cell(
+					[&] (CMap2::Vertex v) { v_index_[v] = nb_vertices_++; },
+					*variable_vertices_
+				);
 
 				initialized_ = true;
 			}
@@ -193,7 +194,8 @@ private:
 	}
 
 	CMap2Handler* map_;
-	std::unique_ptr<CMap2::CellMarker<CMap2::Vertex::ORBIT>> free_boundary_mark_;
+	std::unique_ptr<CMap2::CellCache> variable_vertices_;
+//	std::unique_ptr<CMap2::CellMarker<CMap2::Vertex::ORBIT>> free_boundary_mark_;
 
 	CMap2::VertexAttribute<VEC3> position_;
 
