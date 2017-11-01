@@ -7,7 +7,9 @@ project(${SCHNAPPS_EXEC_NAME}
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
+# to get Qt5core_dir
+find_package(QOGLViewer REQUIRED)
+find_package(Qt5 5.4.0 COMPONENTS Core Gui Widgets REQUIRED)
 find_package(cgogn_core REQUIRED)
 
 add_executable(${PROJECT_NAME} MACOSX_BUNDLE main.cpp)

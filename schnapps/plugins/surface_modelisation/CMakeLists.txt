@@ -2,10 +2,10 @@ project(plugin_surface_modelisation
 	LANGUAGES CXX
 )
 
-find_package(cgogn_core REQUIRED)
+#find_package(cgogn_core REQUIRED)
 find_package(cgogn_modeling REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(QOGLViewer REQUIRED)
+#find_package(Qt5 COMPONENTS Widgets REQUIRED)
+#find_package(QOGLViewer REQUIRED)
 
 set(HEADER_FILES
 	dll.h

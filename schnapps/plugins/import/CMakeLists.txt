@@ -2,9 +2,9 @@ project(plugin_import
 	LANGUAGES CXX
 )
 
-find_package(cgogn_core REQUIRED)
+#find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+#find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(lm6 REQUIRED)
 find_package(ply REQUIRED)

@@ -4,7 +4,7 @@ project(plugin_attribute_editor
 
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_geometry REQUIRED) #for Eigen
-find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
+#find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
 set(HEADER_FILES
 	dll.h
