@@ -40,6 +40,6 @@ build_script:
   - cd ../..
   - md build
   - cd build
-  - cmake -Wno-dev -Wno-deprecated "-G%GENERATOR%" ../ -DCMAKE_SUPPRESS_REGENERATION=1 -DCMAKE_PREFIX_PATH="C:\Program Files\CGoGN"
+  - cmake -Wno-dev -Wno-deprecated "-G%GENERATOR%" ../ -DCMAKE_SUPPRESS_REGENERATION=1 -DCMAKE_PREFIX_PATH="C:\Program Files\CGoGN" -DUSE_PLUGIN_image=OFF -DUSE_PLUGIN_meshgen=OFF
   - cmake --build . --config "%CONFIG%" -- /verbosity:minimal
   

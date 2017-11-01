@@ -24,5 +24,5 @@ branches:
 script:
   - mkdir build
   - cd build
-  - cmake .. -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 
+  - cmake .. -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 -DUSE_PLUGIN_image=OFF -DUSE_PLUGIN_meshgen=OFF
   - make -j2
