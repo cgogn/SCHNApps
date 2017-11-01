@@ -1,0 +1,28 @@
+language: cpp
+
+dist: trusty
+
+sudo: required
+
+os: linux
+
+install:
+  - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
+  - cd CGoGN_2
+  - bash .travis_install.sh
+  - mkdir build
+  - cd build
+  - cmake .. -DQt5_DIR=/opt/5.6.3/gcc_64/lib/cmake/Qt5 -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 
+  - make -j2
+  - sudo make install
+  - cd ../..
+    
+branches:
+  only:
+  - develop
+
+script:
+  - mkdir build
+  - cd build
+  - cmake .. -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 
+  - make -j2

@@ -1,4 +1,4 @@
-﻿find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
+﻿#find_package(Qt5 5.4.0 COMPONENTS Widgets REQUIRED)
 
 file(GLOB plugin_dirs RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/*)
 foreach(plug_dir ${plugin_dirs})
