@@ -2,8 +2,6 @@ project(plugin_extract_surface
 	LANGUAGES CXX
 )
 
-#find_package(cgogn_core REQUIRED)
-#find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 find_package(cgogn_io REQUIRED)
 
 set(HEADER_FILES

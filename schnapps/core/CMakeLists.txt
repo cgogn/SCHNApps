@@ -2,10 +2,7 @@ project(schnapps_core
 	LANGUAGES CXX
 )
 
-find_package(cgogn_core REQUIRED)
 find_package(cgogn_rendering REQUIRED)
-find_package(QOGLViewer REQUIRED)
-find_package(Qt5 5.4.0 COMPONENTS Core Gui Widgets REQUIRED)
 
 
 set(HEADER_FILES

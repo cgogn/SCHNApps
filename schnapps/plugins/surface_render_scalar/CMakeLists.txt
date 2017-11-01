@@ -2,10 +2,8 @@ project(plugin_surface_render_scalar
 	LANGUAGES CXX
 )
 
-#find_package(cgogn_core REQUIRED)
 find_package(cgogn_rendering REQUIRED)
-#find_package(Qt5 COMPONENTS Widgets REQUIRED)
-#find_package(QOGLViewer REQUIRED)
+
 
 set(HEADER_FILES
 	dll.h
