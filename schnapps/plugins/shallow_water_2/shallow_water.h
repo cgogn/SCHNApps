@@ -82,12 +82,12 @@ private:
 		SCALAR s2R; /**< Quantité de mouvement associée well-balancing du terme source pour la maille droite de l'interface **/
 	};
 
-	Str_Riemann_Flux Solv_HLLC(SCALAR g, SCALAR hmin, SCALAR small,
+	Str_Riemann_Flux Solv_HLLC(SCALAR g, SCALAR hmin, SCALAR smalll,
 							   SCALAR zbL,SCALAR zbR,
 							   SCALAR PhiL,SCALAR PhiR,
 							   SCALAR hL,SCALAR qL,SCALAR rL,SCALAR hR,SCALAR qR,SCALAR rR);
 
-	Str_Riemann_Flux Solv_PorAS(SCALAR g, SCALAR hmin, SCALAR small,
+	Str_Riemann_Flux Solv_PorAS(SCALAR g, SCALAR hmin, SCALAR smalll,
 								SCALAR zbL,SCALAR zbR,
 								SCALAR PhiL,SCALAR PhiR,
 								SCALAR hL,SCALAR qL,SCALAR rL,SCALAR hR,SCALAR qR,SCALAR rR);
@@ -96,7 +96,7 @@ private:
 			std::string typBC, SCALAR ValBC,
 			SCALAR NormX, SCALAR NormY,
 			SCALAR q, SCALAR r, SCALAR z, SCALAR zb,
-			SCALAR g, SCALAR hmin, SCALAR small);
+			SCALAR g, SCALAR hmin, SCALAR smalll);
 
 	void try_subdivision();
 	void try_simplification();
