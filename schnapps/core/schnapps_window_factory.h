@@ -36,7 +36,11 @@ namespace schnapps
 * factory of SCHNApps_Window (avoid include of schnapps_window.h)
 * definition in schnapps_window.cpp
 */
-SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(const QString& app_path, const QString& settings_path);
+SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(
+	const QString& app_path,
+	const QString& settings_path,
+	const QString& init_plugin_name
+);
 
 }
 

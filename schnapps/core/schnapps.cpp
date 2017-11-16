@@ -53,7 +53,12 @@
 namespace schnapps
 {
 
-SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window) :
+SCHNApps::SCHNApps(
+	const QString& app_path,
+	const QString& settings_path,
+	const QString& init_plugin_name,
+	SCHNAppsWindow* window
+) :
 	app_path_(app_path),
 	settings_path_(settings_path),
 	first_view_(nullptr),
@@ -94,9 +99,11 @@ SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAp
 	settings_ = Settings::from_file(settings_path_);
 	settings_->set_widget(window->settings_widget_.get());
 	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
-		this->register_plugins_directory(plugin_dir_v.toString());
+		register_plugins_directory(plugin_dir_v.toString());
 	for (const QVariant& plugin_v : get_core_setting("Load modules").toList())
-		this->enable_plugin(plugin_v.toString());
+		enable_plugin(plugin_v.toString());
+
+	connect(first_view_, &View::viewerInitialized, [this, &init_plugin_name] () { enable_plugin("init_" + init_plugin_name); });
 }
 
 SCHNApps::~SCHNApps()
@@ -171,12 +178,10 @@ void SCHNApps::register_plugins_directory(const QString& path)
 	QDir directory(QDir::cleanPath(path));
 	if (directory.exists())
 	{
-		QStringList filters;
-		filters << "lib*plugin*.so";
-		filters << "lib*plugin*.dylib";
-		filters << "*plugin*.dll";
-
-		QStringList plugin_files = directory.entryList(filters, QDir::Files);
+		QStringList plugin_files = directory.entryList(
+			{ "lib*plugin*.so", "lib*plugin*.dylib", "*plugin*.dll" },
+			QDir::Files
+		);
 
 		for (const QString& plugin_file : plugin_files)
 		{
@@ -187,8 +192,8 @@ void SCHNApps::register_plugins_directory(const QString& path)
 			QString plugin_name = pfi.baseName().remove(0, 3);
 #endif
 			if (plugin_name.endsWith("_d"))
-				plugin_name = plugin_name.left(plugin_name.size() -2);
-			if(plugin_name.startsWith("plugin_",  Qt::CaseInsensitive))
+				plugin_name = plugin_name.left(plugin_name.size() - 2);
+			if (plugin_name.startsWith("plugin_",  Qt::CaseInsensitive))
 				plugin_name = plugin_name.right(plugin_name.size() - 7);
 
 			QString plugin_file_path = directory.absoluteFilePath(plugin_file);
@@ -199,9 +204,7 @@ void SCHNApps::register_plugins_directory(const QString& path)
 				emit(plugin_available_added(plugin_name));
 			}
 			else
-			{
 				cgogn_log_info("SCHNApps::register_plugins_directory") << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded.";
-			}
 		}
 	}
 }
@@ -242,7 +245,9 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 				delete plugin;
 				return nullptr;
 			}
-		} else { // if loading fails
+		}
+		else // if loading fails
+		{
 			cgogn_log_warning("SCHNApps::enable_plugin") << "Loader.instance() failed with error \"" << loader.errorString().toStdString() << "\".";
 			return nullptr;
 		}

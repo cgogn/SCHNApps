@@ -29,6 +29,7 @@
 
 #include <QApplication>
 #include <QSplashScreen>
+#include <QCommandLineParser>
 
 int main(int argc, char* argv[])
 {
@@ -40,23 +41,33 @@ int main(int argc, char* argv[])
 	splash.show();
 	splash.showMessage("Welcome to SCHNApps", Qt::AlignBottom | Qt::AlignCenter);
 
-	QString settings_path;
-	if (argc == 2)
-		settings_path = QString(argv[1]);
-	if (! settings_path.endsWith(".json", Qt::CaseInsensitive))
-	{
-		if (!settings_path.isEmpty())
-			cgogn_log_warning("Main Application") << "Invalid settings file: " << settings_path.toStdString() << " is not a json file";
+	QString default_settings_path;
 #if defined (WIN32)
-		settings_path = app.applicationDirPath() + QString("/settings.json");
+	default_settings_path = app.applicationDirPath() + QString("/settings.json");
 #elif defined (__APPLE__)
-		settings_path = app.applicationDirPath() + QString("/lib/settings.json");
+	default_settings_path = app.applicationDirPath() + QString("/lib/settings.json");
 #else
-		settings_path = app.applicationDirPath() + QString("/../lib/settings.json");
+	default_settings_path = app.applicationDirPath() + QString("/../lib/settings.json");
 #endif
+
+	QCommandLineParser parser;
+	parser.addOptions({
+		{ { "s", "settings" }, "Settings file path", "settings", default_settings_path },
+		{ { "i", "init" }, "Initialization plugin name", "init" }
+	});
+
+	parser.process(app);
+
+	QString settings_path = parser.value("s");
+	if (!settings_path.endsWith(".json", Qt::CaseInsensitive))
+	{
+		cgogn_log_warning("Main Application") << "Invalid settings file: " << settings_path.toStdString() << " is not a json file";
+		settings_path.clear();
 	}
 
-	std::unique_ptr<QMainWindow> w = schnapps::schnapps_window_factory(app.applicationDirPath(), settings_path);
+	QString init_plugin_name = parser.value("i");
+
+	std::unique_ptr<QMainWindow> w = schnapps::schnapps_window_factory(app.applicationDirPath(), settings_path, init_plugin_name);
 	w->show();
 	splash.finish(w.get());
 

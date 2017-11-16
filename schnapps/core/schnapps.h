@@ -60,7 +60,7 @@ class SCHNAPPS_CORE_API SCHNApps : public QObject
 
 public:
 
-	SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window);
+	SCHNApps(const QString& app_path, const QString& settings_path, const QString& init_plugin_name, SCHNAppsWindow* window);
 	~SCHNApps();
 
 public slots:
