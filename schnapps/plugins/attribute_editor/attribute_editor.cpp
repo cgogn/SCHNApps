@@ -22,11 +22,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <attribute_editor.h>
+#include "attribute_editor.h"
 #include <schnapps/core/schnapps.h>
 #include <QAction>
-#include <add_attribute_dialog.h>
-#include <edit_attribute_dialog.h>
+#include "add_attribute_dialog.h"
+#include "edit_attribute_dialog.h"
 
 namespace schnapps
 {
@@ -34,11 +34,19 @@ namespace schnapps
 namespace plugin_attribute_editor
 {
 
+QString AttributeEditorPlugin::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+
 AttributeEditorPlugin::AttributeEditorPlugin() :
 	add_attribute_action_(nullptr),
 	add_attribute_dialog_(nullptr),
 	edit_attribute_dialog_(nullptr)
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 AttributeEditorPlugin::~AttributeEditorPlugin()
 {

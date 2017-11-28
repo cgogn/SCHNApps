@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <empty_plugin.h>
+#include "empty_plugin.h"
 
 #include <schnapps/core/schnapps.h>
 
@@ -30,6 +30,16 @@ namespace schnapps
 
 namespace plugin_empty_plugin
 {
+
+QString Plugin_EmptyPlugin::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+Plugin_EmptyPlugin::Plugin_EmptyPlugin()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_EmptyPlugin::enable()
 {

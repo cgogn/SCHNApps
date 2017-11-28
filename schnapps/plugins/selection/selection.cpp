@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <selection.h>
+#include "selection.h"
 
 #include <schnapps/core/schnapps.h>
 
@@ -32,6 +32,16 @@ namespace schnapps
 
 namespace plugin_selection
 {
+
+QString Plugin_Selection::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+Plugin_Selection::Plugin_Selection()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 MapParameters& Plugin_Selection::get_parameters(View* view, MapHandlerGen* map)
 {

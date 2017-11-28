@@ -58,6 +58,8 @@ public:
 
 	~Plugin_SurfaceRenderTransp() override;
 
+	static QString plugin_name();
+
 	inline bool auto_activate() override { return true; }
 
 	void add_tr_flat(View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);

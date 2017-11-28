@@ -49,8 +49,9 @@ class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API Plugin_ShallowWater : public PluginPro
 
 public:
 
-	Plugin_ShallowWater() {}
-	~Plugin_ShallowWater() override {}
+	Plugin_ShallowWater();
+	inline ~Plugin_ShallowWater() override {}
+	static QString plugin_name();
 
 private:
 

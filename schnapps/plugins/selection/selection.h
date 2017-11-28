@@ -62,8 +62,10 @@ public:
 	using Volume = CMap3::Volume;
 	using CollectorGen = cgogn::geometry::CollectorGen<VEC3>;
 
-	Plugin_Selection() {}
-	~Plugin_Selection() override {}
+	Plugin_Selection();
+	inline ~Plugin_Selection() override {}
+
+	static QString plugin_name();
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
 	bool check_docktab_activation();

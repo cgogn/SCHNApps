@@ -118,6 +118,8 @@ public:
 
 	Plugin_Image();
 
+	static QString plugin_name();
+
 private:
 
 	bool enable() override;

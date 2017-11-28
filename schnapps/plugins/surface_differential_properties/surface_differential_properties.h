@@ -53,9 +53,11 @@ class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties : public Plug
 
 public:
 
-	Plugin_SurfaceDifferentialProperties() {}
+	Plugin_SurfaceDifferentialProperties();
 
-	~Plugin_SurfaceDifferentialProperties() override {}
+	inline ~Plugin_SurfaceDifferentialProperties() override {}
+
+	static QString plugin_name();
 
 private:
 

@@ -54,9 +54,11 @@ class SCHNAPPS_PLUGIN_VOLUME_RENDER_API Plugin_VolumeRender : public PluginInter
 
 public:
 
-	inline Plugin_VolumeRender() {}
+	Plugin_VolumeRender();
 
-	~Plugin_VolumeRender() override {}
+	inline ~Plugin_VolumeRender() override {}
+
+	static QString plugin_name();
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
 	bool check_docktab_activation();

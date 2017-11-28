@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <export.h>
-#include <export_dialog.h>
+#include "export.h"
+#include "export_dialog.h"
 
 #include <schnapps/core/schnapps.h>
 
@@ -37,10 +37,17 @@ namespace schnapps
 namespace plugin_export
 {
 
+QString Plugin_Export::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 Plugin_Export::Plugin_Export() :
 	export_mesh_action_(nullptr),
 	export_dialog_(nullptr)
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_Export::enable()
 {

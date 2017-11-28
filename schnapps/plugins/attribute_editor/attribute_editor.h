@@ -51,6 +51,8 @@ public:
 	AttributeEditorPlugin();
 	~AttributeEditorPlugin() override;
 
+	static QString plugin_name();
+
 	static CellType get_cell_type();
 
 private:
