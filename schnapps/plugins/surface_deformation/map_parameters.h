@@ -109,7 +109,6 @@ struct MapParameters
 				CMap2* map2 = map_->get_map();
 
 				CMap2::CellMarker<CMap2::Vertex::ORBIT> working_vertices_marker(*map2);
-				CMap2::CellMarker<CMap2::Edge::ORBIT> working_edges_marker(*map2);
 
 				map2->copy_attribute(position_init_, position_);
 
@@ -179,15 +178,10 @@ struct MapParameters
 				working_cells_->build<CMap2::Edge>([&] (CMap2::Edge e) -> bool
 				{
 					auto vertices = map2->vertices(e);
-					if (
+					return (
 						working_vertices_marker.is_marked(vertices.first) &&
 						working_vertices_marker.is_marked(vertices.second)
-					)
-					{
-						working_edges_marker.mark(e);
-						return true;
-					}
-					return false;
+					);
 				});
 
 				// index the working area vertices
