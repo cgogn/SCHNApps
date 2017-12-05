@@ -46,7 +46,7 @@ MapParameters& Plugin_SurfaceDeformation::get_parameters(MapHandlerGen* map)
 	{
 		MapParameters& p = parameter_set_[map];
 		p.map_ = static_cast<CMap2Handler*>(map);
-		p.variable_vertices_ = cgogn::make_unique<CMap2::CellCache>(*p.map_->get_map());
+		p.working_cells_ = cgogn::make_unique<CMap2::CellCache>(*p.map_->get_map());
 		return p;
 	}
 	else
@@ -401,7 +401,7 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				}
 				p.vertex_rotation_matrix_[v] = R;
 			};
-			map2->parallel_foreach_cell(compute_rotation_matrix, *p.variable_vertices_);
+			map2->parallel_foreach_cell(compute_rotation_matrix, *p.working_cells_);
 
 			auto compute_rotated_diff_coord = [&] (CMap2::Vertex v)
 			{
@@ -417,66 +417,57 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				r /= degree + 1;
 				p.rotated_diff_coord_[v] = r * p.diff_coord_[v];
 			};
-			map2->parallel_foreach_cell(compute_rotated_diff_coord, *p.variable_vertices_);
+			map2->parallel_foreach_cell(compute_rotated_diff_coord, *p.working_cells_);
+
+			Eigen::MatrixXd rdiff(p.nb_vertices_, 3);
+			map2->foreach_cell(
+				[&] (CMap2::Vertex v)
+				{
+					const VEC3& rdcv = p.rotated_diff_coord_[v];
+					rdiff(p.v_index_[v], 0) = rdcv[0];
+					rdiff(p.v_index_[v], 1) = rdcv[1];
+					rdiff(p.v_index_[v], 2) = rdcv[2];
+				},
+				*p.working_cells_
+			);
+			Eigen::MatrixXd rbdiff(p.nb_vertices_, 3);
+			rbdiff = p.L * rdiff;
+			map2->foreach_cell(
+				[&] (CMap2::Vertex v)
+				{
+					VEC3& rbdcv = p.rotated_bi_diff_coord_[v];
+					rbdcv[0] = rbdiff(p.v_index_[v], 0);
+					rbdcv[1] = rbdiff(p.v_index_[v], 1);
+					rbdcv[2] = rbdiff(p.v_index_[v], 2);
+				},
+				*p.working_cells_
+			);
+
+			Eigen::VectorXd x(p.nb_vertices_);
+			Eigen::VectorXd b(p.nb_vertices_);
 
 			for (uint32 coord = 0; coord < 3; ++coord)
 			{
-				NLContext context = nlNewContext();
-				nlSolverParameteri(NL_NB_VARIABLES, p.nb_vertices_);
-				nlSolverParameteri(NL_LEAST_SQUARES, NL_TRUE);
+				map2->foreach_cell(
+					[&] (CMap2::Vertex v)
+					{
+						if (p.free_vertex_set_->is_selected(v))
+							b[p.v_index_[v]] = p.rotated_bi_diff_coord_[v][coord];
+						else
+							b[p.v_index_[v]] = p.position_[v][coord];
+					},
+					*p.working_cells_
+				);
 
-				nlBegin(NL_SYSTEM);
+				x = p.solver->solve(b);
 
 				map2->foreach_cell(
 					[&] (CMap2::Vertex v)
 					{
-						nlSetVariable(p.v_index_[v], p.position_[v][coord]);
-						if (!p.free_vertex_set_->is_selected(v))
-							nlLockVariable(p.v_index_[v]);
+						p.position_[v][coord] = x[p.v_index_[v]];
 					},
-					*p.variable_vertices_
+					*p.working_cells_
 				);
-
-				auto add_row = [&] (CMap2::Vertex v)
-				{
-					std::vector<std::pair<uint32, SCALAR>> coeffs; coeffs.reserve(16);
-					SCALAR norm2(0);
-					SCALAR aii(0);
-					map2->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av)
-					{
-						if (p.v_index_[av] == -1)
-							return;
-						SCALAR aij(1);
-						aii += aij;
-						coeffs.push_back(std::make_pair(p.v_index_[av], aij));
-						norm2 += aij * aij;
-					});
-					coeffs.push_back(std::make_pair(p.v_index_[v], -aii));
-					norm2 += aii * aii;
-
-					nlRightHandSide(p.rotated_diff_coord_[v][coord] * std::sqrt(norm2));
-					nlBegin(NL_ROW);
-					for (const auto& c : coeffs)
-						nlCoefficient(c.first, c.second);
-					nlEnd(NL_ROW);
-				};
-
-				nlBegin(NL_MATRIX);
-				nlEnable(NL_NORMALIZE_ROWS);
-				map2->foreach_cell(add_row, *p.variable_vertices_);
-				nlDisable(NL_NORMALIZE_ROWS);
-				nlEnd(NL_MATRIX);
-
-				nlEnd(NL_SYSTEM);
-
-				nlSolve();
-
-				map2->foreach_cell(
-					[&] (CMap2::Vertex v) { (p.position_[v])[coord] = SCALAR(nlGetVariable(p.v_index_[v])); },
-					*p.variable_vertices_
-				);
-
-				nlDeleteContext(context);
 			}
 		}
 	}
