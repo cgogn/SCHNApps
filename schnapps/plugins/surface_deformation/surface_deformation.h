@@ -100,7 +100,9 @@ public slots:
 	void set_position_attribute(MapHandlerGen* map, const QString& name, bool update_dock_tab);
 	void set_free_vertex_set(MapHandlerGen* map, CellsSetGen* cs, bool update_dock_tab);
 	void set_handle_vertex_set(MapHandlerGen* map, CellsSetGen* cs, bool update_dock_tab);
-	void start_stop(MapHandlerGen* map, bool update_dock_tab);
+
+	void initialize(MapHandlerGen* map, bool update_dock_tab);
+	void stop(MapHandlerGen* map, bool update_dock_tab);
 
 	void as_rigid_as_possible(MapHandlerGen* map);
 

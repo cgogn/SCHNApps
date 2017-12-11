@@ -73,7 +73,7 @@ SurfaceDeformation_DockTab::~SurfaceDeformation_DockTab()
 void SurfaceDeformation_DockTab::position_attribute_changed(int index)
 {
 	if (!updating_ui_)
-		plugin_->set_position_attribute(schnapps_->get_selected_map(), combo_positionAttribute->currentText(), false);
+		plugin_->set_position_attribute(selected_map_, combo_positionAttribute->currentText(), false);
 }
 
 void SurfaceDeformation_DockTab::free_vertex_set_changed(int index)
@@ -97,7 +97,16 @@ void SurfaceDeformation_DockTab::handle_vertex_set_changed(int index)
 void SurfaceDeformation_DockTab::start_stop_button_clicked()
 {
 	if (!updating_ui_)
-		plugin_->start_stop(schnapps_->get_selected_map(), true);
+	{
+		if (selected_map_)
+		{
+			const MapParameters& p = plugin_->get_parameters(selected_map_);
+			if (!p.get_initialized())
+				plugin_->initialize(selected_map_, true);
+			else
+				plugin_->stop(selected_map_, true);
+		}
+	}
 }
 
 /*****************************************************************************/

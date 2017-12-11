@@ -66,7 +66,7 @@ struct MapParameters
 	CMap2Handler::VertexSet* get_handle_vertex_set() const { return handle_vertex_set_; }
 	bool get_initialized() const { return initialized_; }
 
-	void start_stop()
+	void initialize()
 	{
 		if (!initialized_ && position_.is_valid())
 		{
@@ -130,7 +130,7 @@ struct MapParameters
 			});
 
 			// compute vertices laplacian
-			uint32 nb_vertices;
+			uint32 nb_vertices = 0;
 			map2->foreach_cell([&] (CMap2::Vertex v)
 			{
 				v_index_[v] = nb_vertices++;
@@ -153,7 +153,7 @@ struct MapParameters
 			});
 			LAPL.setFromTriplets(LAPLcoeffs.begin(), LAPLcoeffs.end());
 			Eigen::MatrixXd vpos(nb_vertices, 3);
-			map2->foreach_cell([&] (CMap2::Vertex v)
+			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				const VEC3& pv = position_[v];
 				vpos(v_index_[v], 0) = pv[0];
@@ -162,7 +162,7 @@ struct MapParameters
 			});
 			Eigen::MatrixXd lapl(nb_vertices, 3);
 			lapl = LAPL * vpos;
-			map2->foreach_cell([&] (CMap2::Vertex v)
+			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				VEC3& dcv = diff_coord_[v];
 				dcv[0] = lapl(v_index_[v], 0);
@@ -175,7 +175,7 @@ struct MapParameters
 			BILAPL = LAPL * LAPL;
 			Eigen::MatrixXd bilapl(nb_vertices, 3);
 			bilapl = BILAPL * vpos;
-			map2->foreach_cell([&] (CMap2::Vertex v)
+			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				VEC3& bdcv = bi_diff_coord_[v];
 				bdcv[0] = bilapl(v_index_[v], 0);
@@ -186,16 +186,31 @@ struct MapParameters
 			initialized_ = true;
 			solver_ready_ = false;
 		}
-		else
+	}
+
+	void stop()
+	{
+		if (solver_)
 		{
-			initialized_ = false;
-			solver_ready_ = false;
+			delete solver_;
+			solver_ = nullptr;
 		}
+
+		working_cells_->clear<CMap2::Vertex>();
+		working_cells_->clear<CMap2::Edge>();
+
+		working_LAPL_.setZero();
+		working_BILAPL_.setZero();
+
+		initialized_ = false;
+		solver_ready_ = false;
 	}
 
 	void build_solver()
 	{
-		if (initialized_ && !solver_ready_)
+		if (initialized_ && !solver_ready_ &&
+			free_vertex_set_ && free_vertex_set_->get_nb_cells() > 0 &&
+			handle_vertex_set_ && handle_vertex_set_->get_nb_cells() > 0)
 		{
 			CMap2* map2 = map_->get_map();
 			CMap2::CellMarkerStore<CMap2::Vertex::ORBIT> working_vertices_marker(*map2);
@@ -318,10 +333,7 @@ struct MapParameters
 
 			if (solver_)
 				delete solver_;
-
 			solver_ = new Eigen::SparseLU<Eigen::SparseMatrix<SCALAR, Eigen::ColMajor>>(working_BILAPL_);
-			solver_->analyzePattern(working_BILAPL_);
-			solver_->factorize(working_BILAPL_);
 
 			solver_ready_ = true;
 		}
@@ -340,9 +352,12 @@ private:
 
 	bool set_free_vertex_set(CellsSetGen* cs)
 	{
+		if (free_vertex_set_)
+			QObject::disconnect(fvs_connection_);
 		if (cs && cs->get_map() == map_ && cs->get_cell_type() == Vertex_Cell)
 		{
 			free_vertex_set_ = static_cast<CMap2Handler::VertexSet*>(cs);
+			fvs_connection_ = QObject::connect(free_vertex_set_, &CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
 			return true;
 		}
 		else
@@ -354,9 +369,12 @@ private:
 
 	bool set_handle_vertex_set(CellsSetGen* cs)
 	{
+		if (handle_vertex_set_)
+			QObject::disconnect(hvs_connection_);
 		if (cs && cs->get_map() == map_ && cs->get_cell_type() == Vertex_Cell)
 		{
 			handle_vertex_set_ = static_cast<CMap2Handler::VertexSet*>(cs);
+			hvs_connection_ = QObject::connect(handle_vertex_set_, &CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
 			return true;
 		}
 		else
@@ -373,6 +391,8 @@ private:
 
 	CMap2Handler::VertexSet* free_vertex_set_;
 	CMap2Handler::VertexSet* handle_vertex_set_;
+	QMetaObject::Connection fvs_connection_;
+	QMetaObject::Connection hvs_connection_;
 
 	Eigen::SparseMatrix<SCALAR, Eigen::ColMajor> working_LAPL_;
 	Eigen::SparseMatrix<SCALAR, Eigen::ColMajor> working_BILAPL_;

@@ -321,6 +321,7 @@ void Plugin_SurfaceDeformation::set_position_attribute(MapHandlerGen* map, const
 			else
 				dock_tab_->set_position_attribute("");
 		}
+		stop(map, true);
 	}
 }
 
@@ -337,6 +338,7 @@ void Plugin_SurfaceDeformation::set_free_vertex_set(MapHandlerGen* map, CellsSet
 			else
 				dock_tab_->set_free_vertex_set(nullptr);
 		}
+		stop(map, true);
 	}
 }
 
@@ -353,17 +355,35 @@ void Plugin_SurfaceDeformation::set_handle_vertex_set(MapHandlerGen* map, CellsS
 			else
 				dock_tab_->set_handle_vertex_set(nullptr);
 		}
+		stop(map, true);
 	}
 }
 
-void Plugin_SurfaceDeformation::start_stop(MapHandlerGen* map, bool update_dock_tab)
+void Plugin_SurfaceDeformation::initialize(MapHandlerGen* map, bool update_dock_tab)
 {
 	if (map && map->dimension() == 2)
 	{
 		MapParameters& p = get_parameters(map);
-		p.start_stop();
-		if (update_dock_tab && map->is_selected_map())
-			dock_tab_->set_deformation_initialized(p.initialized_);
+		if (!p.initialized_)
+		{
+			p.initialize();
+			if (update_dock_tab && map->is_selected_map())
+				dock_tab_->set_deformation_initialized(p.initialized_);
+		}
+	}
+}
+
+void Plugin_SurfaceDeformation::stop(MapHandlerGen* map, bool update_dock_tab)
+{
+	if (map && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(map);
+		if (p.initialized_)
+		{
+			p.stop();
+			if (update_dock_tab && map->is_selected_map())
+				dock_tab_->set_deformation_initialized(p.initialized_);
+		}
 	}
 }
 
@@ -374,10 +394,10 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 		MapParameters& p = get_parameters(map);
 		if (p.initialized_)
 		{
-			CMap2* map2 = p.map_->get_map();
-
 			if (!p.solver_ready_)
 				p.build_solver();
+
+			CMap2* map2 = p.map_->get_map();
 
 			auto compute_rotation_matrix = [&] (CMap2::Vertex v)
 			{
@@ -425,7 +445,7 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 			uint32 nb_vertices = p.working_cells_->size<CMap2::Vertex>();
 
 			Eigen::MatrixXd rdiff(nb_vertices, 3);
-			map2->foreach_cell(
+			map2->parallel_foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					const VEC3& rdcv = p.rotated_diff_coord_[v];
@@ -437,7 +457,7 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 			);
 			Eigen::MatrixXd rbdiff(nb_vertices, 3);
 			rbdiff = p.working_LAPL_ * rdiff;
-			map2->foreach_cell(
+			map2->parallel_foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					VEC3& rbdcv = p.rotated_bi_diff_coord_[v];
@@ -448,32 +468,44 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				*p.working_cells_
 			);
 
-			Eigen::VectorXd x(nb_vertices);
-			Eigen::VectorXd b(nb_vertices);
+			Eigen::MatrixXd x(nb_vertices, 3);
+			Eigen::MatrixXd b(nb_vertices, 3);
 
-			for (uint32 coord = 0; coord < 3; ++coord)
-			{
-				map2->foreach_cell(
-					[&] (CMap2::Vertex v)
+			map2->parallel_foreach_cell(
+				[&] (CMap2::Vertex v)
+				{
+					uint32 vidx = p.v_index_[v];
+					if (p.free_vertex_set_->is_selected(v))
 					{
-						if (p.free_vertex_set_->is_selected(v))
-							b[p.v_index_[v]] = p.rotated_bi_diff_coord_[v][coord];
-						else
-							b[p.v_index_[v]] = p.position_[v][coord];
-					},
-					*p.working_cells_
-				);
-
-				x = p.solver_->solve(b);
-
-				map2->foreach_cell(
-					[&] (CMap2::Vertex v)
+						const VEC3& rbdc = p.rotated_bi_diff_coord_[v];
+						b.coeffRef(vidx, 0) = rbdc[0];
+						b.coeffRef(vidx, 1) = rbdc[1];
+						b.coeffRef(vidx, 2) = rbdc[2];
+					}
+					else
 					{
-						p.position_[v][coord] = x[p.v_index_[v]];
-					},
-					*p.working_cells_
-				);
-			}
+						const VEC3& pos = p.position_[v];
+						b.coeffRef(vidx, 0) = pos[0];
+						b.coeffRef(vidx, 1) = pos[1];
+						b.coeffRef(vidx, 2) = pos[2];
+					}
+				},
+				*p.working_cells_
+			);
+
+			x = p.solver_->solve(b);
+
+			map2->parallel_foreach_cell(
+				[&] (CMap2::Vertex v)
+				{
+					uint32 vidx = p.v_index_[v];
+					VEC3& pos = p.position_[v];
+					pos[0] = x(vidx, 0);
+					pos[1] = x(vidx, 1);
+					pos[2] = x(vidx, 2);
+				},
+				*p.working_cells_
+			);
 		}
 	}
 }
