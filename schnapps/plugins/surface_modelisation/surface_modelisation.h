@@ -51,9 +51,9 @@ class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Plugin_SurfaceModelisation : publ
 
 public:
 
-	Plugin_SurfaceModelisation() {}
-
-	~Plugin_SurfaceModelisation() {}
+	Plugin_SurfaceModelisation();
+	inline ~Plugin_SurfaceModelisation() {}
+	static QString plugin_name();
 
 private:
 

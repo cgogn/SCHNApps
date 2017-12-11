@@ -75,7 +75,6 @@ public slots:
 
 private:
 
-	inline void set_name(const QString& name) { name_ = name; }
 
 	inline void set_file_path(const QString& f) { file_path_ = f; }
 

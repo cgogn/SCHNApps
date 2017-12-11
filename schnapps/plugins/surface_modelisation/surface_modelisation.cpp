@@ -38,6 +38,16 @@ namespace schnapps
 namespace plugin_surface_modelisation
 {
 
+Plugin_SurfaceModelisation::Plugin_SurfaceModelisation()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceModelisation::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 bool Plugin_SurfaceModelisation::enable()
 {
 	decimation_dialog_ = new Decimation_Dialog(schnapps_, this);

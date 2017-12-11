@@ -51,7 +51,8 @@ class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API VolumeModelisationPlugin : public 
 public:
 
 	VolumeModelisationPlugin();
-	~VolumeModelisationPlugin() override;
+	inline ~VolumeModelisationPlugin() override {}
+	static QString plugin_name();
 
 private:
 

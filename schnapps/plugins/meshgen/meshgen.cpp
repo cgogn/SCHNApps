@@ -110,7 +110,14 @@ Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
 	plugin_image_(nullptr),
 	generation_parameters_(),
 	dialog_(nullptr)
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_VolumeMeshFromSurface::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_VolumeMeshFromSurface::enable()
 {

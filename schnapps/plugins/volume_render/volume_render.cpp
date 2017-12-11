@@ -37,6 +37,16 @@ namespace schnapps
 namespace plugin_volume_render
 {
 
+inline Plugin_VolumeRender::Plugin_VolumeRender()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_VolumeRender::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* map)
 {
 	cgogn_message_assert(view, "Try to access parameters for null view");

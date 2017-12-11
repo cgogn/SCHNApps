@@ -35,6 +35,16 @@ namespace schnapps
 namespace plugin_surface_render_scalar
 {
 
+Plugin_SurfaceRenderScalar::Plugin_SurfaceRenderScalar()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceRenderScalar::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandlerGen* map)
 {
 	cgogn_message_assert(view, "Try to access parameters for null view");

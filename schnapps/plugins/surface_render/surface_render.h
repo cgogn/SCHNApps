@@ -54,8 +54,9 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_API Plugin_SurfaceRender : public PluginInt
 
 public:
 
-	inline Plugin_SurfaceRender() {}
-	~Plugin_SurfaceRender() override {}
+	Plugin_SurfaceRender();
+	inline ~Plugin_SurfaceRender() override {}
+	static QString plugin_name();
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
 	bool check_docktab_activation();

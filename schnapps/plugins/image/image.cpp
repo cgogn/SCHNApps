@@ -51,7 +51,14 @@ Plugin_Image::Plugin_Image() :
 	images_(),
 	import_image_action_(nullptr),
 	dock_tab_(nullptr)
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Image::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_Image::enable()
 {

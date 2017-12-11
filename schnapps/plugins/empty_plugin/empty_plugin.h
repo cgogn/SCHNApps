@@ -48,8 +48,9 @@ class SCHNAPPS_PLUGIN_EMPTY_PLUGIN_API Plugin_EmptyPlugin : public PluginProcess
 
 public:
 
-	Plugin_EmptyPlugin() {}
-	~Plugin_EmptyPlugin() override {}
+	Plugin_EmptyPlugin();
+	inline ~Plugin_EmptyPlugin() override {}
+	static QString plugin_name();
 
 private:
 

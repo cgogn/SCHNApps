@@ -117,6 +117,8 @@ class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProcessing
 public:
 
 	Plugin_Image();
+	inline ~Plugin_Image() override {}
+	static QString plugin_name();
 
 private:
 

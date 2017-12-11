@@ -35,11 +35,15 @@ namespace schnapps
 namespace plugin_surface_render_transp
 {
 
-Plugin_SurfaceRenderTransp::~Plugin_SurfaceRenderTransp()
-{}
-
 Plugin_SurfaceRenderTransp::Plugin_SurfaceRenderTransp()
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceRenderTransp::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_SurfaceRenderTransp::enable()
 {

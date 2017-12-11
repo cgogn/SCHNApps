@@ -51,7 +51,8 @@ class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AttributeEditorPlugin : public Plugin
 public:
 
 	AttributeEditorPlugin();
-	~AttributeEditorPlugin() override;
+	inline ~AttributeEditorPlugin() override {}
+	static QString plugin_name();
 
 	static CellType get_cell_type();
 
@@ -66,6 +67,7 @@ private:
 	void edit_attribute_dialog();
 
 private:
+
 	QAction* add_attribute_action_;
 	QAction* edit_attribute_action_;
 	AddAttributeDialog* add_attribute_dialog_;

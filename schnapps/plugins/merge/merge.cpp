@@ -33,6 +33,18 @@ namespace schnapps
 namespace plugin_merge
 {
 
+Plugin_Merge::Plugin_Merge() :
+	merge_action_(nullptr),
+	merge_dialog_(nullptr)
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Merge::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 bool Plugin_Merge::enable()
 {
 	merge_dialog_ = new MergeDialog(schnapps_, this);

@@ -57,8 +57,8 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API Plugin_SurfaceRenderTransp: publ
 public:
 
 	Plugin_SurfaceRenderTransp();
-
-	~Plugin_SurfaceRenderTransp() override;
+	inline ~Plugin_SurfaceRenderTransp() override {}
+	static QString plugin_name();
 
 	inline bool auto_activate() override { return true; }
 

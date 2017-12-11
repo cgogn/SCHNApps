@@ -37,6 +37,18 @@ namespace schnapps
 namespace plugin_surface_deformation
 {
 
+Plugin_SurfaceDeformation::Plugin_SurfaceDeformation() :
+	drag_init_(false),
+	dragging_(false)
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceDeformation::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 MapParameters& Plugin_SurfaceDeformation::get_parameters(MapHandlerGen* map)
 {
 	cgogn_message_assert(map, "Try to access parameters for null map");

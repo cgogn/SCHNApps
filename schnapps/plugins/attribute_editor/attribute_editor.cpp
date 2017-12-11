@@ -40,25 +40,26 @@ AttributeEditorPlugin::AttributeEditorPlugin() :
 	add_attribute_action_(nullptr),
 	add_attribute_dialog_(nullptr),
 	edit_attribute_dialog_(nullptr)
-{}
-
-AttributeEditorPlugin::~AttributeEditorPlugin()
 {
-	delete add_attribute_dialog_;
-	delete edit_attribute_dialog_;
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString AttributeEditorPlugin::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool AttributeEditorPlugin::enable()
 {
-	if (!add_attribute_dialog_)
-		add_attribute_dialog_ = new AddAttributeDialog(schnapps_, this);
-	if (!edit_attribute_dialog_)
-		edit_attribute_dialog_ = new EditAttributeDialog(schnapps_, this);
+	add_attribute_dialog_ = new AddAttributeDialog(schnapps_, this);
+	edit_attribute_dialog_ = new EditAttributeDialog(schnapps_, this);
 
 	add_attribute_action_ = schnapps_->add_menu_action("Attribute;Add attribute", "Add attribute");
 	edit_attribute_action_ = schnapps_->add_menu_action("Attribute;Edit attribute", "Edit attribute");
+
 	connect(add_attribute_action_, SIGNAL(triggered()), this, SLOT(add_attribute_dialog()));
 	connect(edit_attribute_action_, SIGNAL(triggered()), this, SLOT(edit_attribute_dialog()));
+
 	return true;
 }
 
@@ -66,8 +67,12 @@ void AttributeEditorPlugin::disable()
 {
 	disconnect(add_attribute_action_, SIGNAL(triggered()), this, SLOT(add_attribute_dialog()));
 	disconnect(edit_attribute_action_, SIGNAL(triggered()), this, SLOT(edit_attribute_dialog()));
+
 	schnapps_->remove_menu_action(add_attribute_action_);
 	schnapps_->remove_menu_action(edit_attribute_action_);
+
+	delete add_attribute_dialog_;
+	delete edit_attribute_dialog_;
 }
 
 void AttributeEditorPlugin::add_attribute_dialog()
@@ -81,4 +86,5 @@ void AttributeEditorPlugin::edit_attribute_dialog()
 }
 
 } // namespace plugin_attribute_editor
+
 } // namespace schnapps

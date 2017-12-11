@@ -40,7 +40,14 @@ namespace plugin_export
 Plugin_Export::Plugin_Export() :
 	export_mesh_action_(nullptr),
 	export_dialog_(nullptr)
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Export::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_Export::enable()
 {
@@ -54,6 +61,8 @@ bool Plugin_Export::enable()
 
 void Plugin_Export::disable()
 {
+	disconnect(export_mesh_action_, SIGNAL(triggered()), this, SLOT(export_mesh_from_file_dialog()));
+
 	schnapps_->remove_menu_action(export_mesh_action_);
 
 	delete export_dialog_;

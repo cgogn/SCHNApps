@@ -53,7 +53,8 @@ class SCHNAPPS_PLUGIN_EXPORT_API Plugin_Export : public PluginProcessing
 public:
 
 	Plugin_Export();
-	~Plugin_Export() override {}
+	inline ~Plugin_Export() override {}
+	static QString plugin_name();
 
 private:
 

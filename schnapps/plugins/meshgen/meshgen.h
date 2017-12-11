@@ -149,6 +149,8 @@ public:
 	using MapHandler3 = schnapps::MapHandler<Map3>;
 
 	Plugin_VolumeMeshFromSurface();
+	inline ~Plugin_VolumeMeshFromSurface() override {}
+	static QString plugin_name();
 
 	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const NetgenParameters& params);
 	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args);

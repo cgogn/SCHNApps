@@ -48,11 +48,15 @@ class SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API Plugin_ExtractSurface : public PluginP
 	Q_INTERFACES(schnapps::Plugin)
 
 public:
+
 	Plugin_ExtractSurface();
-	~Plugin_ExtractSurface() override;
+	inline ~Plugin_ExtractSurface() override {}
+	static QString plugin_name();
+
 	void extract_surface(MapHandlerGen* in_map3, MapHandlerGen* out_map2, const QString& pos_att_name);
 
 private:
+
 	bool enable() override;
 	void disable() override;
 	QAction* extract_surface_action_;
@@ -64,6 +68,7 @@ private:
 };
 
 } // namespace plugin_extract_surface
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H

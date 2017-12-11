@@ -51,9 +51,9 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API Plugin_SurfaceRenderScalar : pub
 
 public:
 
-	inline Plugin_SurfaceRenderScalar() {}
-
+	Plugin_SurfaceRenderScalar();
 	~Plugin_SurfaceRenderScalar() override {}
+	static QString plugin_name();
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
 	bool check_docktab_activation();

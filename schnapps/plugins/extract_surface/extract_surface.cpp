@@ -37,29 +37,34 @@ namespace plugin_extract_surface
 {
 
 Plugin_ExtractSurface::Plugin_ExtractSurface() :
-	extract_surface_action_(nullptr)
-	,extract_dialog_(nullptr)
-{}
-
-Plugin_ExtractSurface::~Plugin_ExtractSurface()
+	extract_surface_action_(nullptr),
+	extract_dialog_(nullptr)
 {
-	delete extract_dialog_;
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_ExtractSurface::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_ExtractSurface::enable()
 {
+	extract_dialog_ = new ExtractDialog(schnapps_, this);
+
 	extract_surface_action_ = schnapps_->add_menu_action("Export;Extract Surface", "extract surface");
 	connect(extract_surface_action_, SIGNAL(triggered()), this, SLOT(extract_surface_dialog()));
-
-	if (!extract_dialog_)
-		extract_dialog_ = new ExtractDialog(schnapps_, this);
 
 	return true;
 }
 
 void Plugin_ExtractSurface::disable()
 {
+	disconnect(extract_surface_action_, SIGNAL(triggered()), this, SLOT(extract_surface_dialog()));
+
 	schnapps_->remove_menu_action(extract_surface_action_);
+
+	delete extract_dialog_;
 }
 
 void Plugin_ExtractSurface::extract_surface_dialog()

@@ -37,6 +37,16 @@ namespace schnapps
 namespace plugin_import
 {
 
+Plugin_Import::Plugin_Import()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Import::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 bool Plugin_Import::enable()
 {
 	import_surface_mesh_action_ = schnapps_->add_menu_action("Import;Surface Mesh", "import surface mesh");

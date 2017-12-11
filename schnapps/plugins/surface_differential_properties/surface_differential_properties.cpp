@@ -37,6 +37,16 @@ namespace schnapps
 namespace plugin_sdp
 {
 
+Plugin_SurfaceDifferentialProperties::Plugin_SurfaceDifferentialProperties()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceDifferentialProperties::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 bool Plugin_SurfaceDifferentialProperties::enable()
 {
 	compute_normal_dialog_ = new ComputeNormal_Dialog(schnapps_, this);

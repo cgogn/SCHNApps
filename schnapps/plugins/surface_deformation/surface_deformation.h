@@ -48,11 +48,9 @@ class SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_API Plugin_SurfaceDeformation : public
 
 public:
 
-	Plugin_SurfaceDeformation() :
-		drag_init_(false),
-		dragging_(false)
-	{}
+	Plugin_SurfaceDeformation();
 	~Plugin_SurfaceDeformation() override {}
+	static QString plugin_name();
 
 	MapParameters& get_parameters(MapHandlerGen* map);
 	bool check_docktab_activation();

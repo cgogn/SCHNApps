@@ -51,12 +51,9 @@ class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API Plugin_Merge : public PluginProcessing
 
 public:
 
-	Plugin_Merge() :
-		merge_action_(nullptr),
-		merge_dialog_(nullptr)
-	{}
-
-	~Plugin_Merge() override {}
+	Plugin_Merge();
+	inline ~Plugin_Merge() override {}
+	static QString plugin_name();
 
 private:
 

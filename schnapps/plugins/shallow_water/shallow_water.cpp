@@ -40,6 +40,17 @@ namespace schnapps
 namespace plugin_shallow_water
 {
 
+Plugin_ShallowWater::Plugin_ShallowWater() :
+	simu_running_(false)
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_ShallowWater::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 bool Plugin_ShallowWater::enable()
 {
 	dock_tab_ = new ShallowWater_DockTab(this->schnapps_, this);

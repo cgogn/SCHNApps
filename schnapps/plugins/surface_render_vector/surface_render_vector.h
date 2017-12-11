@@ -55,9 +55,9 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API Plugin_SurfaceRenderVector : pub
 
 public:
 
-	inline Plugin_SurfaceRenderVector() {}
-
-	~Plugin_SurfaceRenderVector() override {}
+	Plugin_SurfaceRenderVector();
+	inline ~Plugin_SurfaceRenderVector() override {}
+	static QString plugin_name();
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
 	bool check_docktab_activation();

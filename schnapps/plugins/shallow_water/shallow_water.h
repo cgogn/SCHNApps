@@ -50,10 +50,9 @@ class SCHNAPPS_PLUGIN_SHALLOW_WATER_API Plugin_ShallowWater : public PluginProce
 
 public:
 
-	Plugin_ShallowWater() :
-		simu_running_(false)
-	{}
+	Plugin_ShallowWater();
 	~Plugin_ShallowWater() override {}
+	static QString plugin_name();
 
 private:
 

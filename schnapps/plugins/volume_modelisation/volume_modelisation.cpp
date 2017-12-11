@@ -37,8 +37,15 @@ namespace schnapps
 namespace plugin_volume_modelisation
 {
 
+QString VolumeModelisationPlugin::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 VolumeModelisationPlugin::VolumeModelisationPlugin()
 {
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+
 	operations_ = cgogn::make_unique<VolumeOperation>();
 
 	operations_->add_operation("Merge incident volumes of edge", CellType::Edge_Cell, [=] (MapHandlerGen* mhg, MapHandlerGen::Attribute_T<VEC3>& pos_attr, const std::vector<cgogn::Dart>& darts) -> std::vector<cgogn::Dart>
@@ -205,9 +212,6 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 		return res;
 	});
 }
-
-VolumeModelisationPlugin::~VolumeModelisationPlugin()
-{}
 
 bool VolumeModelisationPlugin::enable()
 {
