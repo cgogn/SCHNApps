@@ -33,11 +33,6 @@ namespace schnapps
 namespace plugin_merge
 {
 
-Plugin_Merge::Plugin_Merge() :
-	merge_action_(nullptr),
-	merge_dialog_(nullptr)
-{}
-
 bool Plugin_Merge::enable()
 {
 	merge_dialog_ = new MergeDialog(schnapps_, this);

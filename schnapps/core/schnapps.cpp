@@ -103,7 +103,13 @@ SCHNApps::SCHNApps(
 	for (const QVariant& plugin_v : get_core_setting("Load modules").toList())
 		enable_plugin(plugin_v.toString());
 
-	connect(first_view_, &View::viewerInitialized, [this, &init_plugin_name] () { enable_plugin("init_" + init_plugin_name); });
+	connect(first_view_, &View::viewerInitialized, [this, &init_plugin_name] ()
+	{
+		if (enable_plugin("init_" + init_plugin_name))
+			cgogn_log_info("SCHNApps") << "Init Plugin \"" <<  init_plugin_name.toStdString() << "\" successfully loaded.";
+		else
+			cgogn_log_info("SCHNApps") << "Init Plugin \"" <<  init_plugin_name.toStdString() << "\" could not be loaded.";
+	});
 }
 
 SCHNApps::~SCHNApps()

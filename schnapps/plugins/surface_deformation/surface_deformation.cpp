@@ -376,6 +376,9 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 		{
 			CMap2* map2 = p.map_->get_map();
 
+			if (!p.solver_ready_)
+				p.build_solver();
+
 			auto compute_rotation_matrix = [&] (CMap2::Vertex v)
 			{
 				MAT33 cov;
@@ -419,7 +422,9 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 			};
 			map2->parallel_foreach_cell(compute_rotated_diff_coord, *p.working_cells_);
 
-			Eigen::MatrixXd rdiff(p.nb_vertices_, 3);
+			uint32 nb_vertices = p.working_cells_->size<CMap2::Vertex>();
+
+			Eigen::MatrixXd rdiff(nb_vertices, 3);
 			map2->foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
@@ -430,8 +435,8 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				},
 				*p.working_cells_
 			);
-			Eigen::MatrixXd rbdiff(p.nb_vertices_, 3);
-			rbdiff = p.L * rdiff;
+			Eigen::MatrixXd rbdiff(nb_vertices, 3);
+			rbdiff = p.working_LAPL_ * rdiff;
 			map2->foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
@@ -443,8 +448,8 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				*p.working_cells_
 			);
 
-			Eigen::VectorXd x(p.nb_vertices_);
-			Eigen::VectorXd b(p.nb_vertices_);
+			Eigen::VectorXd x(nb_vertices);
+			Eigen::VectorXd b(nb_vertices);
 
 			for (uint32 coord = 0; coord < 3; ++coord)
 			{
@@ -459,7 +464,7 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 					*p.working_cells_
 				);
 
-				x = p.solver->solve(b);
+				x = p.solver_->solve(b);
 
 				map2->foreach_cell(
 					[&] (CMap2::Vertex v)
