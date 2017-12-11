@@ -53,6 +53,8 @@ public:
 	Plugin_Merge();
 	~Plugin_Merge() override;
 
+	static QString plugin_name();
+
 private:
 
 	bool enable() override;

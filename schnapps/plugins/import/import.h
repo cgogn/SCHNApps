@@ -49,8 +49,10 @@ class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
 
 public:
 
-	inline Plugin_Import() {}
+	Plugin_Import();
 	~Plugin_Import() override {}
+
+	static QString plugin_name();
 
 private:
 

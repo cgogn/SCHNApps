@@ -50,6 +50,7 @@ public:
 
 	VolumeModelisationPlugin();
 	~VolumeModelisationPlugin() override;
+	static QString plugin_name();
 
 private:
 

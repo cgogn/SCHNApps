@@ -48,6 +48,9 @@ class SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API Plugin_ExtractSurface : public PluginP
 public:
 	Plugin_ExtractSurface();
 	~Plugin_ExtractSurface() override;
+
+	static QString plugin_name();
+
 	void extract_surface(MapHandlerGen* in_map3, MapHandlerGen* out_map2, const QString& pos_att_name);
 
 private:

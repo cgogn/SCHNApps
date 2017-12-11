@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <meshgen.h>
-#include <tetgen_structure_io.h>
+#include "meshgen.h"
+#include "tetgen_structure_io.h"
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 #include <cgogn/core/utils/unique_ptr.h>
@@ -102,12 +102,20 @@ MeshGeneratorParameters::MeshGeneratorParameters() :
 	tetgen()
 {}
 
+QString Plugin_VolumeMeshFromSurface::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+
 Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
 	gen_mesh_action_(nullptr),
 	plugin_image_(nullptr),
 	generation_parameters_(),
 	dialog_(nullptr)
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_VolumeMeshFromSurface::enable()
 {

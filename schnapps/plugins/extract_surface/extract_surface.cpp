@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <extract_surface.h>
-#include <extract_dialog.h>
+#include "extract_surface.h"
+#include "extract_dialog.h"
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 #include <cgogn/io/surface_import.h>
@@ -34,10 +34,17 @@ namespace schnapps
 namespace plugin_extract_surface
 {
 
+QString Plugin_ExtractSurface::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
 Plugin_ExtractSurface::Plugin_ExtractSurface() :
 	extract_surface_action_(nullptr)
 	,extract_dialog_(nullptr)
-{}
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 Plugin_ExtractSurface::~Plugin_ExtractSurface()
 {

@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <shallow_water.h>
+#include "shallow_water.h"
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
@@ -44,6 +44,17 @@ namespace schnapps
 
 namespace plugin_shallow_water_2
 {
+
+
+QString Plugin_ShallowWater::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+Plugin_ShallowWater::Plugin_ShallowWater()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_ShallowWater::enable()
 {
@@ -348,7 +359,8 @@ bool Plugin_ShallowWater::enable()
 	// the last column is not read like the others because it ends with a new line instead of a tab
 	if (Number_of_BC > 0)
 	{
-		uint32 tab_ns[Number_of_BC];
+//		uint32 tab_ns[Number_of_BC];
+		std::vector<uint32> tab_ns(Number_of_BC); // VLA unsupported on visual
 		std::getline(file_bc, str, '\t'); // read "NS"
 
 		for (uint32 i = 0; i < Number_of_BC - 1; ++i)
@@ -373,7 +385,8 @@ bool Plugin_ShallowWater::enable()
 
 		std::getline(file_bc, str); // read line "========================="
 		std::getline(file_bc, str); // read line "Time	Value"
-		SCALAR tab_value[Number_of_BC];
+		//SCALAR tab_value[Number_of_BC];
+		std::vector<SCALAR> tab_value(Number_of_BC); // VLA unsupported on visual
 		std::getline(file_bc, str, '\t'); // read time
 		for (uint32 i = 0; i < Number_of_BC - 1; ++i)
 		{
@@ -451,7 +464,8 @@ bool Plugin_ShallowWater::enable()
 		// the last column is not read like the others because it ends with a new line instead of a tab
 		if (Number_of_BC > 0)
 		{
-			uint32 tab_ns[Number_of_BC];
+			//uint32 tab_ns[Number_of_BC];
+			std::vector<uint32> tab_ns(Number_of_BC); // VLA unsupported on visual
 			std::getline(file_bc_1d, str, '\t'); // read "NS"
 
 			for (uint32 i = 0; i < Number_of_BC - 1; ++i)
@@ -476,7 +490,8 @@ bool Plugin_ShallowWater::enable()
 
 			std::getline(file_bc_1d, str); // read line "========================="
 			std::getline(file_bc_1d, str); // read line "Time	Value"
-			SCALAR tab_value[Number_of_BC];
+			//SCALAR tab_value[Number_of_BC];
+			std::vector<SCALAR> tab_value(Number_of_BC); // VLA unsupported on visual
 			std::getline(file_bc_1d, str, '\t'); // read time
 			for (uint32 i = 0; i < Number_of_BC - 1; ++i)
 			{
@@ -1348,7 +1363,7 @@ void Plugin_ShallowWater::try_simplification()
 }
 
 Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_HLLC(
-	SCALAR g, SCALAR hmin, SCALAR small,
+	SCALAR g, SCALAR hmin, SCALAR smalll,
 	SCALAR zbL,SCALAR zbR,
 	SCALAR PhiL,SCALAR PhiR,
 	SCALAR hL, SCALAR qL, SCALAR rL, SCALAR hR, SCALAR qR, SCALAR rR
@@ -1373,38 +1388,38 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_HLLC(
 		//There is water in both cells or one of the cells
 		//can fill the other one
 		//-----wave speed--------
-		SCALAR L1L = qL / std::max(hL, small) - sqrt(g * std::max(hL, small));
-		SCALAR L3L = qL / std::max(hL, small) + sqrt(g * std::max(hL, small));
-		SCALAR L1R = qR / std::max(hR, small) - sqrt(g * std::max(hR, small));
-		SCALAR L3R = qR / std::max(hR, small) + sqrt(g * std::max(hR, small));
+		SCALAR L1L = qL / std::max(hL, smalll) - sqrt(g * std::max(hL, smalll));
+		SCALAR L3L = qL / std::max(hL, smalll) + sqrt(g * std::max(hL, smalll));
+		SCALAR L1R = qR / std::max(hR, smalll) - sqrt(g * std::max(hR, smalll));
+		SCALAR L3R = qR / std::max(hR, smalll) + sqrt(g * std::max(hR, smalll));
 		SCALAR L1LR = std::min({ L1L, L1R, 0e0 });
 		SCALAR L3LR = std::max({ L3L, L3R, 0e0 });
 		//========================
 		SCALAR PhiLR = std::min(PhiL, PhiR);
 		//------compute F1--------
 		F1 = L3LR * qL - L1LR * qR + L1LR * L3LR * (zR - zL);
-		F1 = F1 * PhiLR / std::max(L3LR - L1LR, small);
+		F1 = F1 * PhiLR / std::max(L3LR - L1LR, smalll);
 		//========================
 		//-----compute F2---------
-		SCALAR F2L = (qL * qL) / std::max(hL, small) + 5e-1 * g * hL * hL;
-		SCALAR F2R = (qR * qR) / std::max(hR, small) + 5e-1 * g * hR * hR;
+		SCALAR F2L = (qL * qL) / std::max(hL, smalll) + 5e-1 * g * hL * hL;
+		SCALAR F2R = (qR * qR) / std::max(hR, smalll) + 5e-1 * g * hR * hR;
 		F2 = (L3LR * PhiL * F2L - L1LR * PhiR * F2R + L1LR * L3LR * (PhiR * qR - PhiL * qL))
-				/ std::max(L3LR-L1LR, small);
+				/ std::max(L3LR-L1LR, smalll);
 		//==========================
 		//-----Compute S2L and S2R---
 		SCALAR Fact = 0.5 * PhiLR * (hL + hR);
 		s2L = 0.5 * (PhiL * hL * hL - PhiR * hR * hR)
 				- Fact * (zL - zR);
-		s2L = g * L1LR * s2L / std::max(L3LR - L1LR, small);
+		s2L = g * L1LR * s2L / std::max(L3LR - L1LR, smalll);
 		s2R = 0.5 * (PhiR * hR * hR - PhiL * hL * hL)
 				- Fact * (zR - zL);
-		s2R = g * L3LR * s2R / std::max(L3LR - L1LR, small);
+		s2R = g * L3LR * s2R / std::max(L3LR - L1LR, smalll);
 		//============================
 		//------Compute F3------------
 		if (F1 > 0)
-			F3 = F1 * rL / std::max(hL, small);
+			F3 = F1 * rL / std::max(hL, smalll);
 		else
-			F3 = F1 * rR / std::max(hR, small);
+			F3 = F1 * rR / std::max(hR, smalll);
 	}
 	//===================================
 	else if ((hL < hmin) && (zR < zbL) && (hR > hmin))
@@ -1451,7 +1466,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_HLLC(
 }
 
 Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
-	SCALAR g, SCALAR hmin, SCALAR small,
+	SCALAR g, SCALAR hmin, SCALAR smalll,
 	SCALAR zbL, SCALAR zbR,
 	SCALAR PhiL, SCALAR PhiR,
 	SCALAR hL,SCALAR qL,SCALAR rL,
@@ -1471,12 +1486,12 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 		SCALAR cR = sqrt(g * hR);           // pressure wave speed on the right side
 		SCALAR uL;                          // velocity on the left side
 		if (hL > hmin)
-			uL = qL / std::max(hL, small);
+			uL = qL / std::max(hL, smalll);
 		else
 			uL = 0;
 		SCALAR uR;                          // velocity on the right side
 		if (hR > hmin)
-			uR = qR / std::max(hR, small);
+			uR = qR / std::max(hR, smalll);
 		else
 			uR = 0;
 
@@ -1536,7 +1551,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 			// ???? PFG : pourquoi dans cet ordre ????
 			if (fabs(hI - hL) > hmin)
 				L1L = (uI * hI - uL * hL) / (hI - hL);
-			/** @todo remplacer @a hmin par @a small ??? **/
+			/** @todo remplacer @a hmin par @a smalll ??? **/
 			if (fabs(uI * hI - uL * hL) > hmin)
 				L1L = (pow(uI, 2) * hI - pow(uL, 2) * hL + 5e-1 * g * pow(hI, 2) - 5e-1 * g * pow(hL, 2)) / (uI * hI - uL * hL);
 			L1I = L1L;
@@ -1549,7 +1564,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 			// ???? PFG : pourquoi dans cet ordre ????
 			if (fabs(hI - hR) > hmin)
 				L2R = (uI * hI - uR * hR) / (hI - hR);
-			/** @todo remplacer @a hmin par @a small ??? **/
+			/** @todo remplacer @a hmin par @a smalll ??? **/
 			if (fabs(uI * hI - uR * hR) > hmin)
 				L2R = (pow(uR, 2) * hR - pow(uI, 2) * hI + 5e-1 * g * pow(hR, 2) - 5e-1 * g * pow(hI, 2)) / (uR * hR - uI * hI);
 			L2I = L2R;
@@ -1569,8 +1584,8 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 			// Ecoulement critique de la maille L vers la maille R
 			// Critical flow from L-cell to R-cell
 			SCALAR PhiLR = PhiL;
-			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / std::max(L2LR - L1LR, small);
-			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, small);
+			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / std::max(L2LR - L1LR, smalll);
+			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, smalll);
 		}
 		else if ((L1I <0) && (L2I >= 0))
 		{
@@ -1578,16 +1593,16 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 			// Calcul des flux dans la zone intermédiaire d'état constant
 			// Subcritical flow between the L-cell and R-cell
 			// Flux computation in the constant intermediate zone
-			Riemann_Flux.F1 = ((F2L - F2R - L1LR * F1L + L2LR * F1R) + (Phi_Term - Bot_Term)) / std::max(L2LR - L1LR, small);
-			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, small);
+			Riemann_Flux.F1 = ((F2L - F2R - L1LR * F1L + L2LR * F1R) + (Phi_Term - Bot_Term)) / std::max(L2LR - L1LR, smalll);
+			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, smalll);
 		}
 		else if ((L2I < 0) && (L2R >= 0))
 		{
 			// Ecoulement critique de la maille R vers la maille L
 			// Critical flow from R-cell to L-cell
 			SCALAR PhiLR = PhiR;
-			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / std::max(L2LR - L1LR, small);
-			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, small);
+			Riemann_Flux.F1 = (L2LR * F1L - L1LR * F1R - L1LR * L2LR * PhiLR * (zL - zR)) / std::max(L2LR - L1LR, smalll);
+			Riemann_Flux.F2 = (L2LR * F2L - L1LR * F2R - L1LR * L2LR * (F1L - F1R)) / std::max(L2LR - L1LR, smalll);
 		}
 		else if (L2R < 0)
 		{
@@ -1599,12 +1614,12 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::Solv_PorAS(
 
 		// Computation of F3
 		if (Riemann_Flux.F1 > 0e0)
-			Riemann_Flux.F3 = Riemann_Flux.F1 * rL / std::max(hL, small);
+			Riemann_Flux.F3 = Riemann_Flux.F1 * rL / std::max(hL, smalll);
 		else
-			Riemann_Flux.F3 = Riemann_Flux.F1 * rR / std::max(hR, small);
+			Riemann_Flux.F3 = Riemann_Flux.F1 * rR / std::max(hR, smalll);
 		// Upwind computation of the source term s2L and s2R
-		Riemann_Flux.s2L = - L1LR * (-Bot_Term + Phi_Term) / std::max(L2LR - L1LR, small);
-		Riemann_Flux.s2R = L2LR * (-Bot_Term + Phi_Term) / std::max(L2LR - L1LR, small);
+		Riemann_Flux.s2L = - L1LR * (-Bot_Term + Phi_Term) / std::max(L2LR - L1LR, smalll);
+		Riemann_Flux.s2R = L2LR * (-Bot_Term + Phi_Term) / std::max(L2LR - L1LR, smalll);
 	}
 	else if ((hL <= hmin) && (zR < zbL) && (hR > hmin))
 	{
@@ -1643,7 +1658,7 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 	std::string typBC, SCALAR ValBC,
 	SCALAR NormX, SCALAR NormY,
 	SCALAR q, SCALAR r, SCALAR z, SCALAR zb,
-	SCALAR g, SCALAR hmin, SCALAR small)
+	SCALAR g, SCALAR hmin, SCALAR smalll)
 {
 	Str_Riemann_Flux Flux;
 
@@ -1665,8 +1680,8 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 
 	// Characteristic variables
 	SCALAR c1 = sqrt(g * h1);
-	SCALAR u1 = q1 / std::max(h1, small);
-	SCALAR v1 = r1 / std::max(h1, small);
+	SCALAR u1 = q1 / std::max(h1, smalll);
+	SCALAR v1 = r1 / std::max(h1, smalll);
 	SCALAR L1 = std::max(u1 + c1, 0.);
 	//===================================================================
 
@@ -1756,13 +1771,13 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 		SCALAR hc=pow(((F1*F1)/g),1/3);
 		if (hc>=h1)
 		{
-			F2=(q1*q1)/std::max(hc,small)+
+			F2=(q1*q1)/std::max(hc,smalll)+
 					0.5*g*h1*h1+
 					(F1-q1)*L1;
 		}
 		else
 		{
-			F2=(q1*q1)/std::max(h1,small)+
+			F2=(q1*q1)/std::max(h1,smalll)+
 					0.5*g*h1*h1+
 					(F1-q1)*L1;
 		}
@@ -1779,14 +1794,14 @@ Plugin_ShallowWater::Str_Riemann_Flux Plugin_ShallowWater::border_condition(
 		{
 			//No z:weir elevation not reached
 			F1=0;
-			F2=(q1*q1)/std::max(h1,small)
+			F2=(q1*q1)/std::max(h1,smalll)
 					+0.5*g*h1*h1;
 		}
 		else
 		{
 			// Weir overtoped
 			F1=-0.42*sqrt(2*g)*pow((h1-ValBC),3/2);
-			F2=(q1*q1)/std::max(h1,small)
+			F2=(q1*q1)/std::max(h1,smalll)
 					+0.5*g*h1*h1;
 		}
 	}

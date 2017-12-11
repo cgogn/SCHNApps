@@ -2,10 +2,8 @@ project(plugin_image
 	LANGUAGES CXX
 )
 
-find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(QOGLViewer REQUIRED)
+
 if(MSVC)
 	find_package(Boost COMPONENTS system iostreams zlib)
 else()

@@ -2,10 +2,8 @@ project(plugin_volume_modelisation
 	LANGUAGES CXX
 )
 
-find_package(cgogn_core REQUIRED)
 find_package(cgogn_geometry REQUIRED)
 find_package(cgogn_modeling REQUIRED)
-find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
 set(HEADER_FILES
 	dll.h

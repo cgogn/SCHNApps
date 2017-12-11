@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_scalar.h>
+#include "surface_render_scalar.h"
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
@@ -34,6 +34,16 @@ namespace schnapps
 
 namespace plugin_surface_render_scalar
 {
+
+QString Plugin_SurfaceRenderScalar::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+Plugin_SurfaceRenderScalar::Plugin_SurfaceRenderScalar()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 MapParameters& Plugin_SurfaceRenderScalar::get_parameters(View* view, MapHandlerGen* map)
 {

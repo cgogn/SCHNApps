@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_render.h>
+#include "volume_render.h"
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
@@ -36,6 +36,16 @@ namespace schnapps
 
 namespace plugin_volume_render
 {
+
+QString Plugin_VolumeRender::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+inline Plugin_VolumeRender::Plugin_VolumeRender()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* map)
 {

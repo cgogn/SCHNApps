@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_differential_properties.h>
+#include "surface_differential_properties.h"
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -36,6 +36,16 @@ namespace schnapps
 
 namespace plugin_sdp
 {
+
+QString Plugin_SurfaceDifferentialProperties::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+Plugin_SurfaceDifferentialProperties::Plugin_SurfaceDifferentialProperties()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
 
 bool Plugin_SurfaceDifferentialProperties::enable()
 {
