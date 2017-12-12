@@ -32,8 +32,6 @@
 #include <cgogn/geometry/algos/angle.h>
 #include <cgogn/geometry/algos/area.h>
 
-#include <thirdparty/OpenNL/OpenNL_psm.h>
-
 namespace schnapps
 {
 
