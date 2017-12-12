@@ -21,7 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "selection.h"
+#include <schnapps/plugins/selection/selection.h>
+#include <schnapps/plugins/selection/selection_dock_tab.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -33,14 +34,14 @@ namespace schnapps
 namespace plugin_selection
 {
 
-QString Plugin_Selection::plugin_name()
-{
-	return SCHNAPPS_PLUGIN_NAME;
-}
-
 Plugin_Selection::Plugin_Selection()
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Selection::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 MapParameters& Plugin_Selection::get_parameters(View* view, MapHandlerGen* map)
@@ -723,7 +724,7 @@ void Plugin_Selection::add_linked_map(View* view, MapHandlerGen* map)
 	MapParameters& p = get_parameters(view, map);
 	p.set_position_attribute(setting_auto_load_position_attribute_);
 
-	connect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
+	connect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 	connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 	connect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 	connect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)), Qt::UniqueConnection);
@@ -785,7 +786,8 @@ void Plugin_Selection::linked_map_attribute_changed(cgogn::Orbit orbit, const QS
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.get_position_attribute_name() == name)
+				const MapHandlerGen::Attribute_T<VEC3>& pos = p.get_position_attribute();
+				if (pos.is_valid() && QString::fromStdString(pos.name()) == name)
 					p.update_selected_cells_rendering();
 			}
 		}
@@ -807,9 +809,11 @@ void Plugin_Selection::linked_map_attribute_removed(cgogn::Orbit orbit, const QS
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.get_position_attribute_name() == name)
+				const MapHandlerGen::Attribute_T<VEC3>& pos = p.get_position_attribute();
+				const MapHandlerGen::Attribute_T<VEC3>& nor = p.get_normal_attribute();
+				if (pos.is_valid() && QString::fromStdString(pos.name()) == name)
 					set_position_attribute(it.first, map, "", true);
-				if (p.get_normal_attribute_name() == name)
+				if (nor.is_valid() && QString::fromStdString(nor.name()) == name)
 					set_normal_attribute(it.first, map, "", true);
 			}
 		}

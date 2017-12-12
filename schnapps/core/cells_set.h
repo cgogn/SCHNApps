@@ -35,6 +35,7 @@ namespace schnapps
 {
 
 class SCHNApps;
+class MapHandlerGen;
 
 class SCHNAPPS_CORE_API CellsSetGen : public QObject
 {
@@ -56,19 +57,20 @@ public:
 
 	inline const QString& get_name() { return name_; }
 
+	virtual const MapHandlerGen* get_map() const = 0;
 	virtual CellType get_cell_type() const = 0;
-
 	virtual std::size_t get_nb_cells() const = 0;
 
-	inline void set_mutually_exclusive(bool b) { mutually_exclusive_ = b; }
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
-	virtual void set_mutually_exclusive_sets(const std::vector<CellsSetGen*>& mex) = 0;
+	virtual void set_mutually_exclusive(bool b) = 0;
+
 	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
 
 	virtual void select(cgogn::Dart d, bool emit_signal = true) = 0;
 	virtual void select(const std::vector<cgogn::Dart>& cells) = 0;
 	virtual void unselect(cgogn::Dart d, bool emit_signal = true) = 0;
 	virtual void unselect(const std::vector<cgogn::Dart>& cells) = 0;
+	virtual bool is_selected(cgogn::Dart d) = 0;
 	virtual void clear() = 0;
 
 private slots:
@@ -113,8 +115,13 @@ public:
 		marker_(*map_.get_map())
 	{}
 
-	~CellsSet()
+	~CellsSet() override
 	{}
+
+	inline const MapHandlerGen* get_map() const override
+	{
+		return &map_;
+	}
 
 	inline CellType get_cell_type() const override;
 
@@ -178,7 +185,12 @@ public:
 		this->emit_if_selection_changed();
 	}
 
-	inline void clear()
+	inline bool is_selected(CELL c)
+	{
+		return marker_.is_marked(c);
+	}
+
+	inline void clear() override
 	{
 		bool was_not_empty = cells_.size() > 0;
 		cells_.clear();
@@ -187,18 +199,42 @@ public:
 			emit(selected_cells_changed());
 	}
 
-	inline void set_mutually_exclusive_sets(const std::vector<Inherit*>& mex) override
+private:
+
+	inline void set_mutually_exclusive_sets(const std::vector<Self*>& mex)
 	{
 		mutually_exclusive_sets_.clear();
-		for (Inherit* cs : mex)
+		if (this->is_mutually_exclusive())
 		{
-			if (cs != this)
+			for (Self* cs : mex)
 			{
-				Self* s = dynamic_cast<Self*>(cs);
-				if (s)
-					mutually_exclusive_sets_.push_back(s);
+				if (cs != this)
+					mutually_exclusive_sets_.push_back(cs);
 			}
 		}
+	}
+
+public:
+
+	inline void set_mutually_exclusive(bool b) override
+	{
+		this->mutually_exclusive_ = b;
+
+		std::vector<Self*> mex;
+		map_.foreach_cells_set(map_.cell_type(CELL::ORBIT), [&] (CellsSetGen* csg)
+		{
+			Self* cs = dynamic_cast<Self*>(csg);
+			if (cs && cs->is_mutually_exclusive())
+				mex.push_back(cs);
+		});
+		map_.foreach_cells_set(map_.cell_type(CELL::ORBIT), [&] (CellsSetGen* csg)
+		{
+			Self* cs = dynamic_cast<Self*>(csg);
+			if (cs)
+				cs->set_mutually_exclusive_sets(mex);
+		});
+
+		map_.notify_cells_set_mutually_exclusive_change(map_.cell_type(CELL::ORBIT), this->name_);
 	}
 
 	inline void rebuild() override;
@@ -235,6 +271,11 @@ public:
 	virtual void unselect(const std::vector<cgogn::Dart>& cells) override
 	{
 		this->unselect(reinterpret_cast<const std::vector<CELL>&>(cells));
+	}
+
+	virtual bool is_selected(cgogn::Dart d) override
+	{
+		return this->is_selected(CELL(d));
 	}
 
 protected:

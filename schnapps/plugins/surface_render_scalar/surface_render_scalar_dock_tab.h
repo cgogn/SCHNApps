@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render_scalar/dll.h>
+
 #include <ui_surface_render_scalar.h>
 
 #include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>

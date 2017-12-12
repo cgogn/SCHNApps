@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "import.h"
+#include <schnapps/plugins/import/import.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -37,14 +37,14 @@ namespace schnapps
 namespace plugin_import
 {
 
-QString Plugin_Import::plugin_name()
-{
-	return SCHNAPPS_PLUGIN_NAME;
-}
-
 Plugin_Import::Plugin_Import()
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Import::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_Import::enable()

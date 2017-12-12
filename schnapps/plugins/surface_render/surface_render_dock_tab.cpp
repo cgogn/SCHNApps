@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_dock_tab.h>
-#include <surface_render.h>
+#include <schnapps/plugins/surface_render/surface_render_dock_tab.h>
+#include <schnapps/plugins/surface_render/surface_render.h>
 
 #ifdef USE_TRANSPARENCY
 #include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>

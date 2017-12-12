@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_MERGE_PLUGIN_MERGE_DIALOG_H
 #define SCHNAPPS_MERGE_PLUGIN_MERGE_DIALOG_H
 
-#include <dll.h>
+#include <schnapps/plugins/merge/dll.h>
+
 #include <ui_merge_dialog.h>
 
 namespace schnapps

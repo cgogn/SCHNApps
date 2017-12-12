@@ -24,8 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
 
-
 #include <schnapps/plugins/surface_render_transp/dll.h>
+
 #include <cgogn/rendering/transparency_shaders/shader_transparent_flat.h>
 #include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>
 #include <cgogn/rendering/transparency_volume_drawer.h>

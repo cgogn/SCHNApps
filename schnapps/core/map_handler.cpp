@@ -227,20 +227,6 @@ CellsSetGen* MapHandlerGen::get_cells_set(CellType ct, const QString& name)
 		return nullptr;
 }
 
-void MapHandlerGen::update_mutually_exclusive_cells_sets(CellType ct)
-{
-	std::vector<CellsSetGen*> mex;
-	foreach_cells_set(ct, [&] (CellsSetGen* cs)
-	{
-		if (cs->is_mutually_exclusive())
-			mex.push_back(cs);
-	});
-	foreach_cells_set(ct, [&] (CellsSetGen* cs)
-	{
-		cs->set_mutually_exclusive_sets(mex);
-	});
-}
-
 void MapHandlerGen::viewer_initialized()
 {
 	View* view = dynamic_cast<View*>(sender());

@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_MAP_PARAMETERS__H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_MAP_PARAMETERS__H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render/dll.h>
 
 #include <schnapps/core/types.h>
 

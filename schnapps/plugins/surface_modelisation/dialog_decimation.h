@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_DECIMATION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_DECIMATION_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_modelisation/dll.h>
+
 #include <ui_dialog_decimation.h>
 
 #include <schnapps/core/map_handler.h>

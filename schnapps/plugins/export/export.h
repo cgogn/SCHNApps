@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_EXPORT_H_
 #define SCHNAPPS_PLUGIN_EXPORT_H_
 
-#include "dll.h"
+#include <schnapps/plugins/export/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
 
@@ -53,7 +54,6 @@ public:
 
 	Plugin_Export();
 	inline ~Plugin_Export() override {}
-
 	static QString plugin_name();
 
 private:

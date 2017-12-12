@@ -2,7 +2,7 @@
 <ui version="4.0">
  <exportmacro>SCHNAPPS_CORE_API</exportmacro>
  <class>SCHNAppsWindow</class>
- <widget class="QMainWindow" name="SCHNApps">
+ <widget class="QMainWindow" name="SCHNAppsWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -33,7 +33,7 @@
     <addaction name="action_TogglePluginDock"/>
     <addaction name="separator"/>
     <addaction name="action_Settings"/>
-    <addaction name="action_Export_settings"/>
+    <addaction name="action_ExportSettings"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
    </widget>
@@ -77,7 +77,7 @@
     <string>Settings</string>
    </property>
   </action>
-  <action name="action_Export_settings">
+  <action name="action_ExportSettings">
    <property name="text">
     <string>Export settings</string>
    </property>
@@ -88,7 +88,7 @@
   <connection>
    <sender>action_Quit</sender>
    <signal>triggered()</signal>
-   <receiver>SCHNApps</receiver>
+   <receiver>SCHNAppsWindow</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">

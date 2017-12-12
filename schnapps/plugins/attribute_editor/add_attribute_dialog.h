@@ -25,7 +25,8 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
 
-#include <dll.h>
+#include <schnapps/plugins/attribute_editor/dll.h>
+
 #include <ui_add_attribute_dialog.h>
 
 namespace schnapps

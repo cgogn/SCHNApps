@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render_transp/dll.h>
+
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
@@ -34,6 +35,7 @@
 #include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>
 #include <cgogn/rendering/transparency_volume_drawer.h>
 #include <cgogn/rendering/transparency_drawer.h>
+
 #include <QAction>
 #include <map>
 
@@ -55,9 +57,7 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API Plugin_SurfaceRenderTransp: publ
 public:
 
 	Plugin_SurfaceRenderTransp();
-
-	~Plugin_SurfaceRenderTransp() override;
-
+	inline ~Plugin_SurfaceRenderTransp() override {}
 	static QString plugin_name();
 
 	inline bool auto_activate() override { return true; }

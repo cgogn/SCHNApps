@@ -236,12 +236,17 @@ public slots:
 	 * MANAGE CELLS SETS                                      *
 	 *********************************************************/
 
-	virtual CellsSetGen* add_cells_set(CellType ct, const QString& name) = 0;
+	virtual CellsSetGen* add_cells_set(CellType ct, QString name = "") = 0;
 	virtual void remove_cells_set(CellType ct, const QString& name) = 0;
 
 	CellsSetGen* get_cells_set(CellType ct, const QString& name);
 
 public:
+
+	void notify_cells_set_mutually_exclusive_change(CellType ct, const QString& name)
+	{
+		emit(cells_set_mutually_exclusive_changed(ct, name));
+	}
 
 	template <typename FUNC>
 	void foreach_cells_set(CellType ct, const FUNC& f) const
@@ -250,8 +255,6 @@ public:
 		for (const auto& cells_set_it : cells_sets_[ct])
 			f(cells_set_it.second.get());
 	}
-
-	void update_mutually_exclusive_cells_sets(CellType ct);
 
 private slots:
 
@@ -309,14 +312,14 @@ signals:
 	void vbo_added(cgogn::rendering::VBO*);
 	void vbo_removed(cgogn::rendering::VBO*);
 
-//	void selected_cells_changed(CellsSetGen*);
-
 	void attribute_added(cgogn::Orbit, const QString&);
 	void attribute_removed(cgogn::Orbit, const QString&);
 	void attribute_changed(cgogn::Orbit, const QString&);
 
 	void cells_set_added(CellType, const QString&);
 	void cells_set_removed(CellType, const QString&);
+//	void cells_set_selected_cells_changed(CellType, const QString&);
+	void cells_set_mutually_exclusive_changed(CellType, const QString&);
 
 	void connectivity_changed();
 
@@ -384,7 +387,7 @@ public:
 	using Volume = typename MAP_TYPE::Volume;
 
 	template <typename CELL>
-	using CellSet = ::schnapps::CellsSet<MAP_TYPE, CELL>;
+	using CellSet = CellsSet<MAP_TYPE, CELL>;
 	using DartSet	= CellSet<CDart>;
 	using VertexSet	= CellSet<Vertex>;
 	using EdgeSet	= CellSet<Edge>;
@@ -921,8 +924,11 @@ protected:
 	 * MANAGE CELLS SETS
 	 *********************************************************/
 
-	CellsSetGen* add_cells_set(CellType ct, const QString& name) override
+	CellsSetGen* add_cells_set(CellType ct, QString name = "") override
 	{
+		if (name.isEmpty())
+			name = QString::fromStdString(cell_type_name(ct)) + QString("_set_") + QString::number(CellsSetGen::cells_set_count_);
+
 		if (this->cells_sets_[ct].count(name) > 0ul)
 			return nullptr;
 

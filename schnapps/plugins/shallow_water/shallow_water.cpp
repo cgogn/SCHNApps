@@ -21,7 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "shallow_water.h"
+#include <schnapps/plugins/shallow_water/shallow_water.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
@@ -39,15 +40,15 @@ namespace schnapps
 namespace plugin_shallow_water
 {
 
+Plugin_ShallowWater::Plugin_ShallowWater() :
+	simu_running_(false)
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
 QString Plugin_ShallowWater::plugin_name()
 {
 	return SCHNAPPS_PLUGIN_NAME;
-}
-
-Plugin_ShallowWater::Plugin_ShallowWater() :
-simu_running_(false)
-{
-	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_ShallowWater::enable()

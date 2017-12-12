@@ -22,11 +22,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dll.h>
-#include <extract_dialog.h>
+#include <schnapps/plugins/extract_surface/dll.h>
+#include <schnapps/plugins/extract_surface/extract_surface.h>
+#include <schnapps/plugins/extract_surface/extract_dialog.h>
+
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
-#include <extract_surface.h>
 
 namespace schnapps
 {

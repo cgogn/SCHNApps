@@ -26,9 +26,9 @@
 
 #include <schnapps/core/plugin_processing.h>
 
-#include "dll.h"
-#include <dialog_compute_normal.h>
-#include <dialog_compute_curvature.h>
+#include <schnapps/plugins/surface_differential_properties/dll.h>
+#include <schnapps/plugins/surface_differential_properties/dialog_compute_normal.h>
+#include <schnapps/plugins/surface_differential_properties/dialog_compute_curvature.h>
 
 #include <QAction>
 
@@ -54,9 +54,7 @@ class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties : public Plug
 public:
 
 	Plugin_SurfaceDifferentialProperties();
-
 	inline ~Plugin_SurfaceDifferentialProperties() override {}
-
 	static QString plugin_name();
 
 private:

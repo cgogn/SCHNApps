@@ -25,9 +25,11 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_H_
 #define SCHNAPPS_PLUGIN_MESHGEN_H_
 
-#include "dll.h"
-#include <meshgen_dialog.h>
+#include <schnapps/plugins/meshgen/dll.h>
+#include <schnapps/plugins/meshgen/meshgen_dialog.h>
+
 #include <schnapps/core/plugin_processing.h>
+
 #include <cgogn/core/cmap/cmap2.h>
 
 namespace schnapps
@@ -147,7 +149,7 @@ public:
 	using MapHandler3 = schnapps::MapHandler<Map3>;
 
 	Plugin_VolumeMeshFromSurface();
-
+	inline ~Plugin_VolumeMeshFromSurface() override {}
 	static QString plugin_name();
 
 	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const NetgenParameters& params);

@@ -22,8 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "image.h"
-#include "image_dock_tab.h"
+#include <schnapps/plugins/image/image.h>
+#include <schnapps/plugins/image/image_dock_tab.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -47,17 +47,17 @@ namespace schnapps
 namespace plugin_image
 {
 
-QString Plugin_Image::plugin_name()
-{
-	return SCHNAPPS_PLUGIN_NAME;
-}
-
 Plugin_Image::Plugin_Image() :
 	images_(),
 	import_image_action_(nullptr),
 	dock_tab_(nullptr)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Image::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_Image::enable()

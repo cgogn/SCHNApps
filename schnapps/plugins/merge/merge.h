@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
 #define SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
 
-#include "dll.h"
+#include <schnapps/plugins/merge/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
 
 #include <QAction>
@@ -51,8 +52,7 @@ class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API Plugin_Merge : public PluginProcessing
 public:
 
 	Plugin_Merge();
-	~Plugin_Merge() override;
-
+	inline ~Plugin_Merge() override {}
 	static QString plugin_name();
 
 private:

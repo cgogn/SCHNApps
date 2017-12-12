@@ -29,16 +29,24 @@
 
 namespace schnapps
 {
+
 /**
  * @brief generate a SCHNApps_window (no need of schnapps_window.h !)
  */
-SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(const QString& app_path, const QString& settings_path)
+SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(
+	const QString& app_path,
+	const QString& settings_path,
+	const QString& init_plugin_name
+)
 {
-	return cgogn::make_unique<SCHNAppsWindow>(app_path, settings_path);
+	return cgogn::make_unique<SCHNAppsWindow>(app_path, settings_path, init_plugin_name);
 }
 
-
-SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_path) :
+SCHNAppsWindow::SCHNAppsWindow(
+	const QString& app_path,
+	const QString& settings_path,
+	const QString& init_plugin_name
+) :
 	QMainWindow()
 {
 	this->setupUi(this);
@@ -91,9 +99,9 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_
 	settings_widget_ = cgogn::make_unique<SettingsWidget>();
 	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
-	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, this);
+	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, init_plugin_name, this);
 
-	connect(action_Export_settings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
+	connect(action_ExportSettings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()

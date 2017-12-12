@@ -25,9 +25,9 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MODELISATION_VOLUME_OPERATION_H
 #define SCHNAPPS_PLUGIN_VOLUME_MODELISATION_VOLUME_OPERATION_H
 
-#include "dll.h"
-#include <schnapps/core/types.h>
+#include <schnapps/plugins/volume_modelisation/dll.h>
 
+#include <schnapps/core/types.h>
 #include <cgogn/core/basic/dart.h>
 #include <cgogn/core/utils/logger.h>
 

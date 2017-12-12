@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_vector_dock_tab.h>
-#include <surface_render_vector.h>
+#include <schnapps/plugins/surface_render_vector/surface_render_vector_dock_tab.h>
+#include <schnapps/plugins/surface_render_vector/surface_render_vector.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>

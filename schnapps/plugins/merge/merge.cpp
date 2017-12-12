@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "merge.h"
-#include "merge_dialog.h"
+#include <schnapps/plugins/merge/merge.h>
+#include <schnapps/plugins/merge/merge_dialog.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
@@ -33,16 +33,16 @@ namespace schnapps
 namespace plugin_merge
 {
 
-QString Plugin_Merge::plugin_name()
-{
-	return SCHNAPPS_PLUGIN_NAME;
-}
-
 Plugin_Merge::Plugin_Merge() :
 	merge_action_(nullptr),
 	merge_dialog_(nullptr)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_Merge::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_Merge::enable()

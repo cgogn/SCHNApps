@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 #define SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 
-#include "dll.h"
+#include <schnapps/plugins/export/dll.h>
+
 #include <ui_export_dialog.h>
 
 namespace schnapps

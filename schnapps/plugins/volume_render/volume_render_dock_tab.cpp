@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_render_dock_tab.h>
-#include <volume_render.h>
+#include <schnapps/plugins/volume_render/volume_render_dock_tab.h>
+#include <schnapps/plugins/volume_render/volume_render.h>
 
 #ifdef USE_TRANSPARENCY
 #include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>

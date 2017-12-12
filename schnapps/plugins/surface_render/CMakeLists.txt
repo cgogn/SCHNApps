@@ -33,7 +33,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-
 if (USE_TRANSPARENCY)
 	target_link_libraries(${PROJECT_NAME}
 		schnapps_core

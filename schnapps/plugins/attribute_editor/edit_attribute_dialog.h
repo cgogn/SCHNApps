@@ -25,8 +25,10 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H
 
-#include <dll.h>
+#include <schnapps/plugins/attribute_editor/dll.h>
+
 #include <ui_edit_attribute_dialog.h>
+
 #include <schnapps/core/types.h>
 
 namespace schnapps
@@ -67,6 +69,7 @@ private:
 };
 
 } // namespace plugin_attribute_editor
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H

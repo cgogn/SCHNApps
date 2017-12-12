@@ -24,11 +24,12 @@
 #ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
 #define SCHNAPPS_PLUGIN_SHALLOW_WATER_H_
 
-#include "dll.h"
+#include <schnapps/plugins/shallow_water/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/map_handler.h>
 
-#include <shallow_water_dock_tab.h>
+#include <schnapps/plugins/shallow_water/shallow_water_dock_tab.h>
 
 #include <chrono>
 
@@ -49,11 +50,9 @@ class SCHNAPPS_PLUGIN_SHALLOW_WATER_API Plugin_ShallowWater : public PluginProce
 
 public:
 
-	static QString plugin_name();
-
 	Plugin_ShallowWater();
-
 	~Plugin_ShallowWater() override {}
+	static QString plugin_name();
 
 private:
 

@@ -50,7 +50,7 @@ class SCHNAPPS_CORE_API SCHNAppsWindow : public QMainWindow, public Ui::SCHNApps
 
 public:
 
-	SCHNAppsWindow(const QString& app_path, const QString& settings_path);
+	SCHNAppsWindow(const QString& app_path, const QString& settings_path, const QString& init_plugin_name);
 	~SCHNAppsWindow();
 
 private slots:

@@ -22,10 +22,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "extract_surface.h"
-#include "extract_dialog.h"
+#include <schnapps/plugins/extract_surface/extract_surface.h>
+#include <schnapps/plugins/extract_surface/extract_dialog.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
+
 #include <cgogn/io/surface_import.h>
 
 namespace schnapps
@@ -34,37 +36,35 @@ namespace schnapps
 namespace plugin_extract_surface
 {
 
+Plugin_ExtractSurface::Plugin_ExtractSurface() :
+	extract_surface_action_(nullptr),
+	extract_dialog_(nullptr)
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
 QString Plugin_ExtractSurface::plugin_name()
 {
 	return SCHNAPPS_PLUGIN_NAME;
 }
 
-Plugin_ExtractSurface::Plugin_ExtractSurface() :
-	extract_surface_action_(nullptr)
-	,extract_dialog_(nullptr)
-{
-	this->name_ = SCHNAPPS_PLUGIN_NAME;
-}
-
-Plugin_ExtractSurface::~Plugin_ExtractSurface()
-{
-	delete extract_dialog_;
-}
-
 bool Plugin_ExtractSurface::enable()
 {
+	extract_dialog_ = new ExtractDialog(schnapps_, this);
+
 	extract_surface_action_ = schnapps_->add_menu_action("Export;Extract Surface", "extract surface");
 	connect(extract_surface_action_, SIGNAL(triggered()), this, SLOT(extract_surface_dialog()));
-
-	if (!extract_dialog_)
-		extract_dialog_ = new ExtractDialog(schnapps_, this);
 
 	return true;
 }
 
 void Plugin_ExtractSurface::disable()
 {
+	disconnect(extract_surface_action_, SIGNAL(triggered()), this, SLOT(extract_surface_dialog()));
+
 	schnapps_->remove_menu_action(extract_surface_action_);
+
+	delete extract_dialog_;
 }
 
 void Plugin_ExtractSurface::extract_surface_dialog()

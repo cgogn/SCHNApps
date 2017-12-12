@@ -25,17 +25,23 @@
 #define SCHNAPPS_CORE_SCHNAPPS_WINDOW_FACTORY_H_
 
 #include <schnapps/core/dll.h>
+
 #include <QMainWindow>
 #include <QString>
 
-
 namespace schnapps
 {
+
 /**
 * factory of SCHNApps_Window (avoid include of schnapps_window.h)
 * definition in schnapps_window.cpp
 */
-SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(const QString& app_path, const QString& settings_path);
+SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(
+	const QString& app_path,
+	const QString& settings_path,
+	const QString& init_plugin_name
+);
+
 }
 
-#endif // SCHNAPPS_CORE_SCHNAPPS_FACTORY_H_
+#endif // SCHNAPPS_CORE_SCHNAPPS_WINDOW_FACTORY_H_

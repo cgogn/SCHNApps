@@ -22,11 +22,13 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dll.h>
-#include <edit_attribute_dialog.h>
-#include <attribute_editor.h>
+#include <schnapps/plugins/attribute_editor/dll.h>
+#include <schnapps/plugins/attribute_editor/edit_attribute_dialog.h>
+#include <schnapps/plugins/attribute_editor/attribute_editor.h>
+
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>
+
 #include <sstream>
 
 namespace schnapps
@@ -219,6 +221,6 @@ void EditAttributeDialog::update_attribute_list(MapHandlerGen* mhg, CellType ct)
 	}
 }
 
-
 } // namespace plugin_attribute_editor
+
 } // namespace schnapps

@@ -21,9 +21,9 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dll.h>
-#include <merge.h>
-#include <merge_dialog.h>
+#include <schnapps/plugins/merge/dll.h>
+#include <schnapps/plugins/merge/merge.h>
+#include <schnapps/plugins/merge/merge_dialog.h>
 
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/schnapps.h>

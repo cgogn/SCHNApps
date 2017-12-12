@@ -21,13 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "surface_render_transp.h"
+#include <schnapps/plugins/surface_render_transp/surface_render_transp.h>
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
 #include <cgogn/geometry/algos/selection.h>
-
 #include <cgogn/rendering/transparency_volume_drawer.h>
 
 namespace schnapps
@@ -36,17 +35,14 @@ namespace schnapps
 namespace plugin_surface_render_transp
 {
 
-QString Plugin_SurfaceRenderTransp::plugin_name()
-{
-	return SCHNAPPS_PLUGIN_NAME;
-}
-
-Plugin_SurfaceRenderTransp::~Plugin_SurfaceRenderTransp()
-{}
-
 Plugin_SurfaceRenderTransp::Plugin_SurfaceRenderTransp()
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceRenderTransp::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_SurfaceRenderTransp::enable()

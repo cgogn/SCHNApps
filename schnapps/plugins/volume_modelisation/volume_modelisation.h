@@ -24,12 +24,14 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MODELISATION_VOLUME_MODELISATION_
 #define SCHNAPPS_PLUGIN_VOLUME_MODELISATION_VOLUME_MODELISATION_
 
-#include "dll.h"
+#include <schnapps/plugins/volume_modelisation/dll.h>
+
 #include <schnapps/core/plugin_processing.h>
-#include <volume_modelisation_docktab.h>
-#include <volume_operation.h>
+#include <schnapps/plugins/volume_modelisation/volume_modelisation_docktab.h>
+#include <schnapps/plugins/volume_modelisation/volume_operation.h>
 
 #include <cgogn/core/basic/cell.h>
+
 #include <memory>
 
 namespace schnapps
@@ -49,7 +51,7 @@ class SCHNAPPS_PLUGIN_VOLUME_MODELISATION_API VolumeModelisationPlugin : public 
 public:
 
 	VolumeModelisationPlugin();
-	~VolumeModelisationPlugin() override;
+	inline ~VolumeModelisationPlugin() override {}
 	static QString plugin_name();
 
 private:

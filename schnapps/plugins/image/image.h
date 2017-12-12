@@ -25,7 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_
 
-#include "dll.h"
+#include <schnapps/plugins/image/dll.h>
 
 #include <schnapps/core/plugin_processing.h>
 
@@ -117,7 +117,7 @@ class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProcessing
 public:
 
 	Plugin_Image();
-
+	inline ~Plugin_Image() override {}
 	static QString plugin_name();
 
 private:

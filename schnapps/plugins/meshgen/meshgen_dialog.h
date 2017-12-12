@@ -25,12 +25,15 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_
 #define SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_
 
-#include "dll.h"
+#include <schnapps/plugins/meshgen/dll.h>
+
 #include <schnapps/core/types.h>
+
 #include <ui_cgal_export.h>
 #include <ui_tetgen_export.h>
 #include <ui_netgen_export.h>
 #include <ui_export_dialog.h>
+
 #include <memory>
 
 namespace schnapps

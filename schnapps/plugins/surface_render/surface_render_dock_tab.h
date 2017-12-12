@@ -24,10 +24,10 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 
-#include "dll.h"
-#include <ui_surface_render.h>
+#include <schnapps/plugins/surface_render/dll.h>
+#include <schnapps/plugins/surface_render/map_parameters.h>
 
-#include <map_parameters.h>
+#include <ui_surface_render.h>
 
 #include <QColorDialog>
 

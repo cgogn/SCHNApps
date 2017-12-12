@@ -25,8 +25,10 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_MODELISATION_VOLUME_MODELISATION_DOCKTAB_H
 #define SCHNAPPS_PLUGIN_VOLUME_MODELISATION_VOLUME_MODELISATION_DOCKTAB_H
 
-#include "dll.h"
+#include <schnapps/plugins/volume_modelisation/dll.h>
+
 #include <ui_volume_modelisation.h>
+
 #include <schnapps/core/types.h>
 
 namespace schnapps

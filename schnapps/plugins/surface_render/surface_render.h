@@ -24,15 +24,15 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render/dll.h>
+
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
-#include <surface_render_dock_tab.h>
-
-#include <map_parameters.h>
+#include <schnapps/plugins/surface_render/surface_render_dock_tab.h>
+#include <schnapps/plugins/surface_render/map_parameters.h>
 
 #include <QAction>
 #include <map>
@@ -55,9 +55,7 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_API Plugin_SurfaceRender : public PluginInt
 public:
 
 	Plugin_SurfaceRender();
-
 	inline ~Plugin_SurfaceRender() override {}
-
 	static QString plugin_name();
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);

@@ -21,10 +21,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "surface_render.h"
+#include <schnapps/plugins/surface_render/surface_render.h>
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
+
 #ifdef USE_TRANSPARENCY
 #include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
 #endif
@@ -37,14 +38,14 @@ namespace schnapps
 namespace plugin_surface_render
 {
 
-QString Plugin_SurfaceRender::plugin_name()
-{
-	return SCHNAPPS_PLUGIN_NAME;
-}
-
 Plugin_SurfaceRender::Plugin_SurfaceRender()
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceRender::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 MapParameters& Plugin_SurfaceRender::get_parameters(View* view, MapHandlerGen* map)

@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "surface_modelisation.h"
+#include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -38,14 +38,14 @@ namespace schnapps
 namespace plugin_surface_modelisation
 {
 
-QString Plugin_SurfaceModelisation::plugin_name()
-{
-	return SCHNAPPS_PLUGIN_NAME;
-}
-
 Plugin_SurfaceModelisation::Plugin_SurfaceModelisation()
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_SurfaceModelisation::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_SurfaceModelisation::enable()

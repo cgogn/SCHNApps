@@ -24,15 +24,15 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render_scalar/dll.h>
+
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
-#include <surface_render_scalar_dock_tab.h>
-
-#include <map_parameters.h>
+#include <schnapps/plugins/surface_render_scalar/surface_render_scalar_dock_tab.h>
+#include <schnapps/plugins/surface_render_scalar/map_parameters.h>
 
 namespace schnapps
 {
@@ -52,9 +52,7 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API Plugin_SurfaceRenderScalar : pub
 public:
 
 	Plugin_SurfaceRenderScalar();
-
 	~Plugin_SurfaceRenderScalar() override {}
-
 	static QString plugin_name();
 
 	MapParameters& get_parameters(View* view, MapHandlerGen* map);
