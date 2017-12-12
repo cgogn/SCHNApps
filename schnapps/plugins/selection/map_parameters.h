@@ -92,9 +92,7 @@ public:
 	}
 
 	const MapHandlerGen::Attribute_T<VEC3>& get_position_attribute() const { return *position_; }
-	QString get_position_attribute_name() const { return QString::fromStdString(position_->name()); }
 	const MapHandlerGen::Attribute_T<VEC3>& get_normal_attribute() const { return *normal_; }
-	QString get_normal_attribute_name() const { return QString::fromStdString(normal_->name()); }
 	const QColor& get_color() const { return color_; }
 	float32 get_vertex_base_size() const { return vertex_base_size_; }
 	float32 get_vertex_scale_factor() const { return vertex_scale_factor_; }
@@ -110,6 +108,8 @@ private:
 			position_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(static_cast<CMap2Handler*>(map_)->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name));
 		else
 			position_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(static_cast<CMap3Handler*>(map_)->get_attribute<VEC3, CMap3Handler::Vertex::ORBIT>(attribute_name));
+
+		update_selected_cells_rendering();
 	}
 
 	void set_normal_attribute(const QString& attribute_name)

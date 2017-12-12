@@ -309,11 +309,13 @@ void Selection_DockTab::refresh_ui()
 		if (type == vec3_type_name)
 		{
 			combo_positionAttribute->addItem(name);
-			if (p.get_position_attribute().is_valid() && p.get_position_attribute_name() == name)
+			const MapHandlerGen::Attribute_T<VEC3>& pos = p.get_position_attribute();
+			if (pos.is_valid() && QString::fromStdString(pos.name()) == name)
 				combo_positionAttribute->setCurrentIndex(i);
 
 			combo_normalAttribute->addItem(name);
-			if (p.get_normal_attribute().is_valid() && p.get_normal_attribute_name() == name)
+			const MapHandlerGen::Attribute_T<VEC3>& nor = p.get_normal_attribute();
+			if (nor.is_valid() && QString::fromStdString(nor.name()) == name)
 				combo_normalAttribute->setCurrentIndex(i);
 
 			++i;

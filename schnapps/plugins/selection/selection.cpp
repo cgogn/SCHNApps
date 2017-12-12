@@ -786,7 +786,8 @@ void Plugin_Selection::linked_map_attribute_changed(cgogn::Orbit orbit, const QS
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.get_position_attribute_name() == name)
+				const MapHandlerGen::Attribute_T<VEC3>& pos = p.get_position_attribute();
+				if (pos.is_valid() && QString::fromStdString(pos.name()) == name)
 					p.update_selected_cells_rendering();
 			}
 		}
@@ -808,9 +809,11 @@ void Plugin_Selection::linked_map_attribute_removed(cgogn::Orbit orbit, const QS
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.get_position_attribute_name() == name)
+				const MapHandlerGen::Attribute_T<VEC3>& pos = p.get_position_attribute();
+				const MapHandlerGen::Attribute_T<VEC3>& nor = p.get_normal_attribute();
+				if (pos.is_valid() && QString::fromStdString(pos.name()) == name)
 					set_position_attribute(it.first, map, "", true);
-				if (p.get_normal_attribute_name() == name)
+				if (nor.is_valid() && QString::fromStdString(nor.name()) == name)
 					set_normal_attribute(it.first, map, "", true);
 			}
 		}

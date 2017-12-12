@@ -135,11 +135,13 @@ bool Plugin_SurfaceDeformation::keyPress(View* view, QKeyEvent* event)
 				const MapParameters& p = get_parameters(mhg);
 				if (p.initialized_)
 				{
+					view->get_current_camera()->disable_views_bb_fitting();
 					as_rigid_as_possible(mhg);
 					mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
 
 					for (View* view : mhg->get_linked_views())
 						view->update();
+					view->get_current_camera()->enable_views_bb_fitting();
 				}
 			}
 			break;
