@@ -72,6 +72,9 @@ private:
 
 	inline void resizeGL(View*, int, int) override {}
 
+	void start_dragging(View* view);
+	void stop_dragging(View* view);
+
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
 
@@ -102,7 +105,7 @@ public slots:
 	void initialize(MapHandlerGen* map, bool update_dock_tab);
 	void stop(MapHandlerGen* map, bool update_dock_tab);
 
-	void as_rigid_as_possible(MapHandlerGen* map);
+	bool as_rigid_as_possible(MapHandlerGen* map);
 
 private:
 
