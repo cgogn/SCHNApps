@@ -233,7 +233,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 			// set the plugin with correct parameters (name, filepath, SCHNApps)
 //			plugin->set_name(plugin_name);
 			if (plugin_name != plugin->get_name())
-				cgogn_log_warning("SCHNApps::enable_plugin") << "plugin name incompatibility: "<< plugin_name.toStdString() << " != " << plugin->get_name().toStdString();
+				cgogn_log_warning("SCHNApps::enable_plugin") << "plugin name incompatibility: " << plugin_name.toStdString() << " != " << plugin->get_name().toStdString();
 			plugin->set_file_path(plugin_file_path);
 			plugin->set_schnapps(this);
 

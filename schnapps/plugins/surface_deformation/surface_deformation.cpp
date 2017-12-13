@@ -111,19 +111,9 @@ bool Plugin_SurfaceDeformation::keyPress(View* view, QKeyEvent* event)
 			{
 				const MapParameters& p = get_parameters(mhg);
 				if (!dragging_ && p.get_handle_vertex_set() && p.get_handle_vertex_set()->get_nb_cells() > 0)
-				{
-					dragging_ = true;
-					drag_init_ = false;
-					view->setMouseTracking(true);
-					view->get_current_camera()->disable_views_bb_fitting();
-				}
+					start_dragging(view);
 				else
-				{
-					dragging_ = false;
-					drag_init_ = false;
-					view->setMouseTracking(false);
-					view->get_current_camera()->enable_views_bb_fitting();
-				}
+					stop_dragging(view);
 			}
 			break;
 		}
@@ -149,6 +139,22 @@ bool Plugin_SurfaceDeformation::keyPress(View* view, QKeyEvent* event)
 	}
 
 	return true;
+}
+
+void Plugin_SurfaceDeformation::start_dragging(View* view)
+{
+	dragging_ = true;
+	drag_init_ = false;
+	view->setMouseTracking(true);
+	view->get_current_camera()->disable_views_bb_fitting();
+}
+
+void Plugin_SurfaceDeformation::stop_dragging(View* view)
+{
+	dragging_ = false;
+	drag_init_ = false;
+	view->setMouseTracking(false);
+	view->get_current_camera()->enable_views_bb_fitting();
 }
 
 bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
@@ -177,25 +183,37 @@ bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
 			}
 			else
 			{
-				qoglviewer::Vec pp(event->x(), event->y(), drag_z_);
-				qoglviewer::Vec qq = view->camera()->unprojectedCoordinatesOf(pp);
-
-				qoglviewer::Vec vec = qq - drag_previous_;
-				VEC3 t(vec.x, vec.y, vec.z);
-				p.handle_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
-				{
-					p.position_[v] += t;
-				});
-
-				drag_previous_ = qq;
-
 				if (p.initialized_)
-					as_rigid_as_possible(mhg);
+				{
+					qoglviewer::Vec pp(event->x(), event->y(), drag_z_);
+					qoglviewer::Vec qq = view->camera()->unprojectedCoordinatesOf(pp);
 
-				mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
+					qoglviewer::Vec vec = qq - drag_previous_;
+					VEC3 t(vec.x, vec.y, vec.z);
+					p.handle_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
+					{
+						p.position_[v] += t;
+					});
 
-				for (View* view : mhg->get_linked_views())
-					view->update();
+					drag_previous_ = qq;
+
+					if (as_rigid_as_possible(mhg))
+					{
+						mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
+
+						for (View* view : mhg->get_linked_views())
+							view->update();
+					}
+					else
+					{
+						// undo handle displacement & stop dragging
+						p.handle_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
+						{
+							p.position_[v] -= t;
+						});
+						stop_dragging(view);
+					}
+				}
 			}
 		}
 	}
@@ -401,7 +419,7 @@ void Plugin_SurfaceDeformation::stop(MapHandlerGen* map, bool update_dock_tab)
 	}
 }
 
-void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
+bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 {
 	if (map && map->dimension() == 2)
 	{
@@ -409,7 +427,8 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 		if (p.initialized_)
 		{
 			if (!p.solver_ready_)
-				p.build_solver();
+				if (!p.build_solver())
+					return false;
 
 			CMap2* map2 = p.map_->get_map();
 
@@ -520,8 +539,18 @@ void Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				},
 				*p.working_cells_
 			);
+
+			return true;
+		}
+		else
+		{
+			cgogn_log_warning("surface_deformation") << "initial state not initialized";
+			return false;
 		}
 	}
+
+	cgogn_log_warning("surface_deformation") << "wrong map dimension";
+	return false;
 }
 
 } // namespace plugin_surface_deformation

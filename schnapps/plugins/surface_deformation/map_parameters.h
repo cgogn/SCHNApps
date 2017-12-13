@@ -204,7 +204,7 @@ struct MapParameters
 		solver_ready_ = false;
 	}
 
-	void build_solver()
+	bool build_solver()
 	{
 		if (initialized_ && !solver_ready_ &&
 			free_vertex_set_ && free_vertex_set_->get_nb_cells() > 0 &&
@@ -213,12 +213,32 @@ struct MapParameters
 			CMap2* map2 = map_->get_map();
 			CMap2::CellMarkerStore<CMap2::Vertex::ORBIT> working_vertices_marker(*map2);
 
+			// check that handle vertices are surrounded only by handle or free vertices
+			bool handle_ok = true;
+			map2->foreach_cell([&] (CMap2::Vertex v) -> bool
+			{
+				if (handle_vertex_set_->is_selected(v))
+				{
+					map2->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool
+					{
+						if (!handle_vertex_set_->is_selected(av) && !free_vertex_set_->is_selected(av))
+							handle_ok = false;
+						return handle_ok;
+					});
+				}
+				return handle_ok;
+			});
+			if (!handle_ok)
+			{
+				cgogn_log_warning("surface_deformation") << "Handle is not defined in the free area";
+				return false;
+			}
+
 			// build the cell cache of working area vertices (and mark them)
 			working_cells_->build<CMap2::Vertex>([&] (CMap2::Vertex v) -> bool
 			{
 				if (handle_vertex_set_->is_selected(v)) // handle vertices
 				{
-					// TODO: check that it is surrounded only by handle or free vertices
 					working_vertices_marker.mark(v);
 					return true;
 				}
@@ -335,6 +355,8 @@ struct MapParameters
 
 			solver_ready_ = true;
 		}
+
+		return solver_ready_;
 	}
 
 private:
