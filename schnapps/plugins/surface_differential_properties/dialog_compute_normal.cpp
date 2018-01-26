@@ -63,20 +63,9 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferenti
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 }
 
-void ComputeNormal_Dialog::compute_normal()
-{
-	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
-	if (!currentItems.empty())
-	{
-		const QString& map_name = currentItems[0]->text();
-		QString position_name = combo_positionAttribute->currentText();
-		QString normal_name = normal_attribute_name->text();
-		bool create_vbo_normal = check_create_vbo_normal->isChecked();
-		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
-
-		plugin_->compute_normal(map_name, position_name, normal_name, create_vbo_normal, auto_update);
-	}
-}
+/*****************************************************************************/
+// slots called from UI signals
+/*****************************************************************************/
 
 void ComputeNormal_Dialog::selected_map_changed()
 {
@@ -111,9 +100,9 @@ void ComputeNormal_Dialog::selected_map_changed()
 						combo_positionAttribute->addItem(name);
 				}
 
-				if (plugin_->has_compute_normal_last_parameters(map_name))
+				if (plugin_->has_compute_normal_last_parameters(selected_map_))
 				{
-					const Plugin_SurfaceDifferentialProperties::ComputeNormalParameters& p = plugin_->get_compute_normal_last_parameters(map_name);
+					const Plugin_SurfaceDifferentialProperties::ComputeNormalParameters& p = plugin_->get_compute_normal_last_parameters(selected_map_);
 
 					int idx = combo_positionAttribute->findText(p.position_name_);
 					if (idx == -1)
@@ -141,6 +130,25 @@ void ComputeNormal_Dialog::selected_map_changed()
 		selected_map_ = nullptr;
 }
 
+void ComputeNormal_Dialog::compute_normal()
+{
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		QString position_name = combo_positionAttribute->currentText();
+		QString normal_name = normal_attribute_name->text();
+		bool create_vbo_normal = check_create_vbo_normal->isChecked();
+		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
+
+		plugin_->compute_normal(map_name, position_name, normal_name, create_vbo_normal, auto_update);
+	}
+}
+
+/*****************************************************************************/
+// slots called from SCHNApps signals
+/*****************************************************************************/
+
 void ComputeNormal_Dialog::map_added(MapHandlerGen* map)
 {
 	if (map->dimension() == 2)
@@ -162,6 +170,10 @@ void ComputeNormal_Dialog::map_removed(MapHandlerGen* map)
 		selected_map_ = nullptr;
 	}
 }
+
+/*****************************************************************************/
+// slots called from MapHandlerGen signals
+/*****************************************************************************/
 
 void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
 {

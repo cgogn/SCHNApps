@@ -184,9 +184,9 @@ void ComputeCurvature_Dialog::selected_map_changed()
 					}
 				}
 
-				if (plugin_->has_compute_curvature_last_parameters(map_name))
+				if (plugin_->has_compute_curvature_last_parameters(selected_map_))
 				{
-					const Plugin_SurfaceDifferentialProperties::ComputeCurvatureParameters& p = plugin_->get_compute_curvature_last_parameters(map_name);
+					const Plugin_SurfaceDifferentialProperties::ComputeCurvatureParameters& p = plugin_->get_compute_curvature_last_parameters(selected_map_);
 
 					int idx = combo_positionAttribute->findText(p.position_name_);
 					if (idx == -1)

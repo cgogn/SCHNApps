@@ -60,10 +60,15 @@ private:
 
 private slots:
 
-	void compute_normal();
+	// slots called from UI signals
 	void selected_map_changed();
+	void compute_normal();
+
+	// slots called from SCHNApps signals
 	void map_added(MapHandlerGen* map);
 	void map_removed(MapHandlerGen* map);
+
+	// slots called from MapHandlerGen signals
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 };
 
