@@ -482,9 +482,10 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				[&] (CMap2::Vertex v)
 				{
 					const VEC3& rdcv = p.rotated_diff_coord_[v];
-					rdiff(p.v_index_[v], 0) = rdcv[0];
-					rdiff(p.v_index_[v], 1) = rdcv[1];
-					rdiff(p.v_index_[v], 2) = rdcv[2];
+					uint32 vidx = p.v_index_[v];
+					rdiff(vidx, 0) = rdcv[0];
+					rdiff(vidx, 1) = rdcv[1];
+					rdiff(vidx, 2) = rdcv[2];
 				},
 				*p.working_cells_
 			);
@@ -494,9 +495,10 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				[&] (CMap2::Vertex v)
 				{
 					VEC3& rbdcv = p.rotated_bi_diff_coord_[v];
-					rbdcv[0] = rbdiff(p.v_index_[v], 0);
-					rbdcv[1] = rbdiff(p.v_index_[v], 1);
-					rbdcv[2] = rbdiff(p.v_index_[v], 2);
+					uint32 vidx = p.v_index_[v];
+					rbdcv[0] = rbdiff(vidx, 0);
+					rbdcv[1] = rbdiff(vidx, 1);
+					rbdcv[2] = rbdiff(vidx, 2);
 				},
 				*p.working_cells_
 			);

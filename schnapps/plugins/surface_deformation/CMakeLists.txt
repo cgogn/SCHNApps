@@ -5,8 +5,6 @@ project(plugin_surface_deformation
 find_package(cgogn_core REQUIRED)
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
-find_package(OpenNL REQUIRED)
-
 set(HEADER_FILES
 	dll.h
 	map_parameters.h
@@ -30,7 +28,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SURFACE_DE
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
-	$<BUILD_INTERFACE:${CGOGN_THIRDPARTY_OPEN_NL_INCLUDE_DIR}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )

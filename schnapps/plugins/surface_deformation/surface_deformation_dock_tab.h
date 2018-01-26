@@ -25,7 +25,8 @@
 #define SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_DOCK_TAB_H_
 
 #include <schnapps/plugins/surface_deformation/dll.h>
-#include <schnapps/plugins/surface_deformation/map_parameters.h>
+
+#include <schnapps/core/map_handler.h>
 
 #include <ui_surface_deformation.h>
 
@@ -34,7 +35,6 @@ namespace schnapps
 
 class SCHNApps;
 class View;
-class MapHandlerGen;
 
 namespace plugin_surface_deformation
 {
