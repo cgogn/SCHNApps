@@ -46,16 +46,6 @@ Cage3dDeformation_Dialog::Cage3dDeformation_Dialog(SCHNApps* s, Plugin_Cage3dDef
 	combo_deformedPositionAttribute->setEnabled(false);
 	button_linkUnlink->setEnabled(false);
 
-	if (plugin_->get_setting("Auto load control position attribute").isValid())
-		setting_auto_load_control_position_attribute_ = plugin_->get_setting("Auto load control position attribute").toString();
-	else
-		setting_auto_load_control_position_attribute_ = plugin_->add_setting("Auto load control position attribute", "position").toString();
-
-	if (plugin_->get_setting("Auto load deformed position attribute").isValid())
-		setting_auto_load_deformed_position_attribute_ = plugin_->get_setting("Auto load deformed position attribute").toString();
-	else
-		setting_auto_load_deformed_position_attribute_ = plugin_->add_setting("Auto load deformedposition attribute", "position").toString();
-
 	connect(list_control_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_control_map_changed()));
 	connect(combo_controlPositionAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(control_position_attribute_changed(int)));
 	connect(list_deformed_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_deformed_map_changed()));

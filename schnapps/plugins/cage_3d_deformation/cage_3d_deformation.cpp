@@ -61,6 +61,16 @@ MapParameters& Plugin_Cage3dDeformation::get_parameters(CMap2Handler* map)
 
 bool Plugin_Cage3dDeformation::enable()
 {
+	if (get_setting("Auto load control position attribute").isValid())
+		setting_auto_load_control_position_attribute_ = get_setting("Auto load control position attribute").toString();
+	else
+		setting_auto_load_control_position_attribute_ = add_setting("Auto load control position attribute", "position").toString();
+
+	if (get_setting("Auto load deformed position attribute").isValid())
+		setting_auto_load_deformed_position_attribute_ = get_setting("Auto load deformed position attribute").toString();
+	else
+		setting_auto_load_deformed_position_attribute_ = add_setting("Auto load deformedposition attribute", "position").toString();
+
 	cage_3d_deformation_dialog_ = new Cage3dDeformation_Dialog(this->schnapps_, this);
 
 	setup_cage3d_deformation_action = schnapps_->add_menu_action("Deformation;Cage 3d", "setup 3d cage deformation");
@@ -99,6 +109,30 @@ void Plugin_Cage3dDeformation::map_removed(MapHandlerGen *map)
 {
 	if (map->dimension() == 2)
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
+}
+
+void Plugin_Cage3dDeformation::attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+
+	if (map->cell_type(orbit) == Vertex_Cell)
+	{
+		for (auto& it : parameter_set_)
+		{
+			CMap2Handler* cmap2 = static_cast<CMap2Handler*>(it.first);
+			MapParameters& p = it.second;
+			if (it.first == map)
+			{
+				if (!p.get_control_position_attribute().is_valid() && attribute_name == setting_auto_load_control_position_attribute_)
+					set_control_position_attribute(cmap2, attribute_name, true);
+			}
+			else
+			{
+				if (p.deformed_map_ == map && !p.get_deformed_position_attribute().is_valid() && attribute_name == setting_auto_load_deformed_position_attribute_)
+					set_deformed_position_attribute(cmap2, attribute_name, true);
+			}
+		}
+	}
 }
 
 void Plugin_Cage3dDeformation::attribute_changed(cgogn::Orbit orbit, const QString& attribute_name)

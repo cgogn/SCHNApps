@@ -77,20 +77,33 @@ struct MapParameters
 			if (deformed_map_->dimension() == 2)
 			{
 				CMap2Handler* dmh2 = static_cast<CMap2Handler*>(deformed_map_);
-				coord_ = dmh2->get_attribute<std::vector<double>, CMap2Handler::Vertex::ORBIT>("__mvc_coord");
-				if (!coord_.is_valid())
-					coord_ = dmh2->add_attribute<std::vector<double>, CMap2Handler::Vertex::ORBIT>("__mvc_coord");
+				CMap2* dm2 = dmh2->get_map();
+				uint32 nbdv = dm2->nb_cells<CMap2::Vertex>();
 
 				CMap2* cm2 = control_map_->get_map();
 				uint32 nbcv = cm2->nb_cells<CMap2::Vertex>();
-				CMap2* dm2 = dmh2->get_map();
+
+				coords_.setZero();
+				coords_.resize(nbdv, nbcv);
+
+				cage_pos_.setZero();
+				cage_pos_.resize(nbcv, 3);
+
+				def_pos_.setZero();
+				def_pos_.resize(nbdv, 3);
+
+				std::vector<double> coords_tmp(nbcv);
+
+				uint32 dvidx = 0;
 				dm2->foreach_cell([&] (CMap2::Vertex dv)
 				{
 					const VEC3& dv_pos = deformed_position_[dv.dart];
-					std::vector<double>& dv_coords = coord_[dv.dart];
-					dv_coords.clear();
-					dv_coords.reserve(nbcv);
+
+					for (auto& c : coords_tmp) c = 0.;
+
 					double coords_sum = 0.;
+
+					uint32 cvidx = 0;
 					cm2->foreach_cell([&] (CMap2::Vertex cv)
 					{
 						const VEC3& cv_pos = control_position_[cv];
@@ -120,18 +133,26 @@ struct MapParameters
 						});
 						double w = sum / r;
 						coords_sum += w;
-						dv_coords.push_back(w);
+
+						coords_tmp[cvidx] = w;
+
+						++cvidx;
 					});
-					for (auto& dvc : dv_coords)
-						dvc /= coords_sum;
+
+					cvidx = 0;
+					for (auto& c : coords_tmp)
+					{
+						c /= coords_sum;
+						coords_(dvidx, cvidx) = c;
+						++cvidx;
+					}
+
+					++dvidx;
 				});
 			}
 			else // deformed_map_->dimension() == 3
 			{
-				CMap3Handler* dm3 = static_cast<CMap3Handler*>(deformed_map_);
-				coord_ = dm3->get_attribute<std::vector<double>, CMap3Handler::Vertex::ORBIT>("__mvc_coord");
-				if (!coord_.is_valid())
-					coord_ = dm3->add_attribute<std::vector<double>, CMap3Handler::Vertex::ORBIT>("__mvc_coord");
+
 			}
 
 			linked_ = true;
@@ -150,22 +171,30 @@ struct MapParameters
 			if (deformed_map_->dimension() == 2)
 			{
 				CMap2Handler* dmh2 = static_cast<CMap2Handler*>(deformed_map_);
-				CMap2* cm2 = control_map_->get_map();
 				CMap2* dm2 = dmh2->get_map();
+
+				CMap2* cm2 = control_map_->get_map();
+
+				uint32 cvidx = 0;
+				cm2->foreach_cell([&] (CMap2::Vertex cv)
+				{
+					const VEC3& cvp = control_position_[cv];
+					cage_pos_(cvidx, 0) = cvp[0];
+					cage_pos_(cvidx, 1) = cvp[1];
+					cage_pos_(cvidx, 2) = cvp[2];
+					++cvidx;
+				});
+
+				def_pos_ = coords_ * cage_pos_;
+
+				uint32 dvidx = 0;
 				dm2->foreach_cell([&] (CMap2::Vertex dv)
 				{
-					VEC3 newpos(0,0,0);
-
-					std::vector<double>& dv_coords = coord_[dv.dart];
-					uint32 cvidx = 0;
-					cm2->foreach_cell([&] (CMap2::Vertex cv)
-					{
-						const VEC3& cv_pos = control_position_[cv];
-						newpos += dv_coords[cvidx] * cv_pos;
-						++cvidx;
-					});
-
-					deformed_position_[dv.dart] = newpos;
+					VEC3& def = deformed_position_[dv.dart];
+					def[0] = def_pos_(dvidx, 0);
+					def[1] = def_pos_(dvidx, 1);
+					def[2] = def_pos_(dvidx, 2);
+					++dvidx;
 				});
 
 				deformed_map_->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(deformed_position_.name()));
@@ -212,6 +241,10 @@ private:
 	MapHandlerGen* deformed_map_;
 	MapHandlerGen::Attribute_T<VEC3> deformed_position_;
 	MapHandlerGen::Attribute_T<std::vector<double>> coord_;
+
+	Eigen::MatrixXd coords_;
+	Eigen::MatrixXd cage_pos_;
+	Eigen::MatrixXd def_pos_;
 
 	bool linked_;
 };

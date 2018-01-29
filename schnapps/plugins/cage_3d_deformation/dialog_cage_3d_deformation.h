@@ -58,9 +58,6 @@ private:
 
 	bool updating_ui_;
 
-	QString setting_auto_load_control_position_attribute_;
-	QString setting_auto_load_deformed_position_attribute_;
-
 private slots:
 
 	// slots called from UI signals

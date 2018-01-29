@@ -67,6 +67,7 @@ private slots:
 	void schnapps_closing();
 
 	// slots called from MapHandler signals
+	void attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 	void attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
 	void connectivity_changed();
 
@@ -84,6 +85,9 @@ private:
 
 	Cage3dDeformation_Dialog* cage_3d_deformation_dialog_;
 	QAction* setup_cage3d_deformation_action;
+
+	QString setting_auto_load_control_position_attribute_;
+	QString setting_auto_load_deformed_position_attribute_;
 
 	std::map<CMap2Handler*, MapParameters> parameter_set_;
 };
