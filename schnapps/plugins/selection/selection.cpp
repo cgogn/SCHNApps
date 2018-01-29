@@ -239,7 +239,7 @@ bool Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view))
 	{
-		if (event->key() == Qt::Key_Shift)
+		if (event->key() == Qt::Key_S)
 		{
 			MapParameters& p = get_parameters(view, map);
 
@@ -248,9 +248,9 @@ bool Plugin_Selection::keyPress(View* view, QKeyEvent* event)
 				view->setMouseTracking(true);
 				p.selecting_ = true;
 
-				// generate a false mouse move to update drawing on shift keypressed !
+				// generate a false mouse move to update drawing on S keypressed !
 				QPoint point = view->mapFromGlobal(QCursor::pos());
-				QMouseEvent me = QMouseEvent(QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton, Qt::ShiftModifier);
+				QMouseEvent me = QMouseEvent(QEvent::MouseMove, point, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
 				mouseMove(view, &me);
 
 				view->update();
@@ -265,7 +265,7 @@ bool Plugin_Selection::keyRelease(View* view, QKeyEvent* event)
 	MapHandlerGen* map = schnapps_->get_selected_map();
 	if (map && map->is_linked_to_view(view))
 	{
-		if (event->key() == Qt::Key_Shift)
+		if (event->key() == Qt::Key_S)
 		{
 			view->setMouseTracking(false);
 
@@ -421,9 +421,6 @@ bool Plugin_Selection::mousePress(View* view, QMouseEvent* event)
 				default:
 					break;
 			}
-
-			if (event->button() == Qt::RightButton)
-				return false;
 		}
 	}
 	return true;

@@ -183,24 +183,23 @@ bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
 			}
 			else
 			{
+				qoglviewer::Vec pp(event->x(), event->y(), drag_z_);
+				qoglviewer::Vec qq = view->camera()->unprojectedCoordinatesOf(pp);
+
+				qoglviewer::Vec vec = qq - drag_previous_;
+				VEC3 t(vec.x, vec.y, vec.z);
+				p.handle_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
+				{
+					p.position_[v] += t;
+				});
+
+				drag_previous_ = qq;
+
 				if (p.initialized_)
 				{
-					qoglviewer::Vec pp(event->x(), event->y(), drag_z_);
-					qoglviewer::Vec qq = view->camera()->unprojectedCoordinatesOf(pp);
-
-					qoglviewer::Vec vec = qq - drag_previous_;
-					VEC3 t(vec.x, vec.y, vec.z);
-					p.handle_vertex_set_->foreach_cell([&] (CMap2::Vertex v)
-					{
-						p.position_[v] += t;
-					});
-
-					drag_previous_ = qq;
-
 					if (as_rigid_as_possible(mhg))
 					{
 						mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
-
 						for (View* view : mhg->get_linked_views())
 							view->update();
 					}
@@ -213,6 +212,12 @@ bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
 						});
 						stop_dragging(view);
 					}
+				}
+				else
+				{
+					mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
+					for (View* view : mhg->get_linked_views())
+						view->update();
 				}
 			}
 		}

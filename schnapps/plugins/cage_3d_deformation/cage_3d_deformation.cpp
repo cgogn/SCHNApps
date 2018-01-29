@@ -67,13 +67,19 @@ bool Plugin_Cage3dDeformation::enable()
 
 	connect(setup_cage3d_deformation_action, SIGNAL(triggered()), this, SLOT(open_dialog()));
 
+	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
+
+	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 
 	return true;
 }
 
 void Plugin_Cage3dDeformation::disable()
 {
+	disconnect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
+	disconnect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 	disconnect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
 	disconnect(setup_cage3d_deformation_action, SIGNAL(triggered()), this, SLOT(open_dialog()));
@@ -100,6 +106,9 @@ void Plugin_Cage3dDeformation::attribute_changed(cgogn::Orbit orbit, const QStri
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
 		CMap2Handler* map = static_cast<CMap2Handler*>(sender());
+		MapParameters& p = get_parameters(map);
+		if (p.get_linked() && p.get_control_position_attribute_name() == attribute_name)
+			p.update_deformed_map();
 	}
 }
 
