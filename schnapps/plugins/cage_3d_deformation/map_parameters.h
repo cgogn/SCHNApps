@@ -74,86 +74,76 @@ struct MapParameters
 			deformed_position_.is_valid()
 		)
 		{
-			if (deformed_map_->dimension() == 2)
+			CMap2* cm2 = control_map_->get_map();
+			uint32 nbcv = cm2->nb_cells<CMap2::Vertex>();
+			uint32 nbdv = deformed_map_->nb_cells(CellType::Vertex_Cell);
+
+			coords_.setZero();
+			coords_.resize(nbdv, nbcv);
+
+			cage_pos_.setZero();
+			cage_pos_.resize(nbcv, 3);
+
+			def_pos_.setZero();
+			def_pos_.resize(nbdv, 3);
+
+			std::vector<double> coords_tmp(nbcv);
+
+			uint32 dvidx = 0;
+			deformed_map_->foreach_cell(CellType::Vertex_Cell, [&] (cgogn::Dart d)
 			{
-				CMap2Handler* dmh2 = static_cast<CMap2Handler*>(deformed_map_);
-				CMap2* dm2 = dmh2->get_map();
-				uint32 nbdv = dm2->nb_cells<CMap2::Vertex>();
+				const VEC3& dv_pos = deformed_position_[d];
 
-				CMap2* cm2 = control_map_->get_map();
-				uint32 nbcv = cm2->nb_cells<CMap2::Vertex>();
+				for (auto& c : coords_tmp) c = 0.;
 
-				coords_.setZero();
-				coords_.resize(nbdv, nbcv);
+				double coords_sum = 0.;
 
-				cage_pos_.setZero();
-				cage_pos_.resize(nbcv, 3);
-
-				def_pos_.setZero();
-				def_pos_.resize(nbdv, 3);
-
-				std::vector<double> coords_tmp(nbcv);
-
-				uint32 dvidx = 0;
-				dm2->foreach_cell([&] (CMap2::Vertex dv)
+				uint32 cvidx = 0;
+				cm2->foreach_cell([&] (CMap2::Vertex cv)
 				{
-					const VEC3& dv_pos = deformed_position_[dv.dart];
-
-					for (auto& c : coords_tmp) c = 0.;
-
-					double coords_sum = 0.;
-
-					uint32 cvidx = 0;
-					cm2->foreach_cell([&] (CMap2::Vertex cv)
+					const VEC3& cv_pos = control_position_[cv];
+					VEC3 e = cv_pos - dv_pos;
+					double r = e.norm();
+					e.normalize();
+					double sum = 0.;
+					cm2->foreach_incident_face(cv, [&] (CMap2::Face cvif)
 					{
-						const VEC3& cv_pos = control_position_[cv];
-						VEC3 e = cv_pos - dv_pos;
-						double r = e.norm();
-						e.normalize();
-						double sum = 0.;
-						cm2->foreach_incident_face(cv, [&] (CMap2::Face cvif)
-						{
-							VEC3 prev_pos = control_position_[cm2->phi_1(cvif.dart)];
-							VEC3 next_pos = control_position_[cm2->phi1(cvif.dart)];
+						VEC3 prev_pos = control_position_[cm2->phi_1(cvif.dart)];
+						VEC3 next_pos = control_position_[cm2->phi1(cvif.dart)];
 
-							VEC3 prev_e = (prev_pos - dv_pos).normalized();
-							VEC3 next_e = (next_pos - dv_pos).normalized();
+						VEC3 prev_e = (prev_pos - dv_pos).normalized();
+						VEC3 next_e = (next_pos - dv_pos).normalized();
 
-							VEC3 n_pv = prev_e.cross(e).normalized();
-							VEC3 n_vn = e.cross(next_e).normalized();
-							VEC3 n_np = next_e.cross(prev_e).normalized();
+						VEC3 n_pv = prev_e.cross(e).normalized();
+						VEC3 n_vn = e.cross(next_e).normalized();
+						VEC3 n_np = next_e.cross(prev_e).normalized();
 
-							double a_pv = cgogn::geometry::angle(prev_e, e);
-							double a_vn = cgogn::geometry::angle(e, next_e);
-							double a_np = cgogn::geometry::angle(next_e, prev_e);
+						double a_pv = cgogn::geometry::angle(prev_e, e);
+						double a_vn = cgogn::geometry::angle(e, next_e);
+						double a_np = cgogn::geometry::angle(next_e, prev_e);
 
-							double u = ( a_np + ((a_vn * n_vn).dot(n_np)) + ((a_pv * n_pv).dot(n_np)) ) / ((2.0*e).dot(n_np));
+						double u = ( a_np + ((a_vn * n_vn).dot(n_np)) + ((a_pv * n_pv).dot(n_np)) ) / ((2.0*e).dot(n_np));
 
-							sum += u;
-						});
-						double w = sum / r;
-						coords_sum += w;
-
-						coords_tmp[cvidx] = w;
-
-						++cvidx;
+						sum += u;
 					});
+					double w = sum / r;
+					coords_sum += w;
 
-					cvidx = 0;
-					for (auto& c : coords_tmp)
-					{
-						c /= coords_sum;
-						coords_(dvidx, cvidx) = c;
-						++cvidx;
-					}
+					coords_tmp[cvidx] = w;
 
-					++dvidx;
+					++cvidx;
 				});
-			}
-			else // deformed_map_->dimension() == 3
-			{
 
-			}
+				cvidx = 0;
+				for (auto& c : coords_tmp)
+				{
+					c /= coords_sum;
+					coords_(dvidx, cvidx) = c;
+					++cvidx;
+				}
+
+				++dvidx;
+			});
 
 			linked_ = true;
 		}
@@ -168,41 +158,31 @@ struct MapParameters
 	{
 		if (linked_)
 		{
-			if (deformed_map_->dimension() == 2)
+			CMap2* cm2 = control_map_->get_map();
+
+			uint32 cvidx = 0;
+			cm2->foreach_cell([&] (CMap2::Vertex cv)
 			{
-				CMap2Handler* dmh2 = static_cast<CMap2Handler*>(deformed_map_);
-				CMap2* dm2 = dmh2->get_map();
+				const VEC3& cvp = control_position_[cv];
+				cage_pos_(cvidx, 0) = cvp[0];
+				cage_pos_(cvidx, 1) = cvp[1];
+				cage_pos_(cvidx, 2) = cvp[2];
+				++cvidx;
+			});
 
-				CMap2* cm2 = control_map_->get_map();
+			def_pos_ = coords_ * cage_pos_;
 
-				uint32 cvidx = 0;
-				cm2->foreach_cell([&] (CMap2::Vertex cv)
-				{
-					const VEC3& cvp = control_position_[cv];
-					cage_pos_(cvidx, 0) = cvp[0];
-					cage_pos_(cvidx, 1) = cvp[1];
-					cage_pos_(cvidx, 2) = cvp[2];
-					++cvidx;
-				});
-
-				def_pos_ = coords_ * cage_pos_;
-
-				uint32 dvidx = 0;
-				dm2->foreach_cell([&] (CMap2::Vertex dv)
-				{
-					VEC3& def = deformed_position_[dv.dart];
-					def[0] = def_pos_(dvidx, 0);
-					def[1] = def_pos_(dvidx, 1);
-					def[2] = def_pos_(dvidx, 2);
-					++dvidx;
-				});
-
-				deformed_map_->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(deformed_position_.name()));
-			}
-			else // deformed_map_->dimension() == 3
+			uint32 dvidx = 0;
+			deformed_map_->foreach_cell(CellType::Vertex_Cell, [&] (cgogn::Dart d)
 			{
+				VEC3& def = deformed_position_[d];
+				def[0] = def_pos_(dvidx, 0);
+				def[1] = def_pos_(dvidx, 1);
+				def[2] = def_pos_(dvidx, 2);
+				++dvidx;
+			});
 
-			}
+			deformed_map_->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(deformed_position_.name()));
 		}
 	}
 
