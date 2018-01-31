@@ -4,7 +4,7 @@ project(plugin_import
 
 find_package(cgogn_io REQUIRED)
 find_package(tinyxml2 REQUIRED)
-find_package(lm6 REQUIRED)
+find_package(Meshb REQUIRED)
 find_package(ply REQUIRED)
 
 set(HEADER_FILES
@@ -25,7 +25,7 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMPORT_DLL
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	${tinyxml2_INCLUDE_DIRS}
-	${lm6_INCLUDE_DIRS}
+	${Meshb_INCLUDE_DIRS}
 	${ply_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
@@ -39,7 +39,7 @@ target_link_libraries(${PROJECT_NAME}
 	${cgogn_io_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
 	${tinyxml2_LIBRARIES}
-	${lm6_LIBRARIES}
+	${Meshb_LIBRARIES}
 	${ply_LIBRARIES}
 )
 
