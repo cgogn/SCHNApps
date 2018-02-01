@@ -59,6 +59,18 @@ private:
 	bool enable() override;
 	void disable() override;
 
+	void load_project(const QString& dir);
+	void load_input_file(const QString& filename);
+	void load_hydrau_param_file(const QString& filename);
+	void init_map_attributes();
+	void load_1D_constrained_edges();
+	void load_2D_constrained_edges();
+	void load_1D_initial_cond_file(const QString& filename);
+	void load_2D_initial_cond_file(const QString& filename);
+	void load_1D_boundary_cond_file(const QString& filename);
+	void load_2D_boundary_cond_file(const QString& filename);
+	void sew_1D_2D_meshes();
+
 public slots:
 
 	void init();
@@ -113,18 +125,30 @@ private:
 
 	ShallowWater_DockTab* dock_tab_;
 
+	QString project_dir_;
+	QString mesh_1D_filename_;
+	QString mesh_2D_filename_;
+
+	uint8 dim_;
+
 	SCALAR t_;
+	SCALAR t_max_;
+	SCALAR dt_max_;
+
 	SCALAR dt_;
+
+	uint8 friction_;
+	SCALAR v_max_;
+	SCALAR Fr_max_;
+
+	SCALAR phi_default_;
+	SCALAR kx_;
+	SCALAR ky_;
+	SCALAR alphaK_;
+
 	SCALAR hmin_;
 	SCALAR small_;
 	uint8 solver_;
-	SCALAR v_max_;
-	SCALAR Fr_max_;
-	SCALAR t_max_;
-	SCALAR dt_max_;
-	uint8 friction_;
-	SCALAR alphaK_;
-	SCALAR kx_;
 	uint32 nb_iter_;
 	uint32 max_depth_;
 
@@ -153,6 +177,9 @@ private:
 	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
 	std::unique_ptr<CMap2::DartMarker> edge_left_side_;
 
+	uint32 nb_faces_2d_;
+	uint32 nb_vertices_2d_;
+
 	CMap2::VertexAttribute<VEC3> position_; // vertices position
 	CMap2::VertexAttribute<SCALAR> scalar_value_h_;
 	CMap2::VertexAttribute<SCALAR> scalar_value_u_;
@@ -165,8 +192,8 @@ private:
 	CMap2::FaceAttribute<SCALAR> h_; // hauteur d'eau
 	CMap2::FaceAttribute<SCALAR> q_; // flux de quantité de mouvement dans la direction X
 	CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
-	CMap2::FaceAttribute<VEC3> centroid_;   // cell centroid
-	CMap2::FaceAttribute<SCALAR> area_; //cell area
+	CMap2::FaceAttribute<VEC3> centroid_; // cell centroid
+	CMap2::FaceAttribute<SCALAR> area_; // cell area
 	CMap2::FaceAttribute<SCALAR> swept_;
 	CMap2::FaceAttribute<SCALAR> discharge_;
 	CMap2::FaceAttribute<uint8> dimension_;

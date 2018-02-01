@@ -478,7 +478,7 @@ void View::keyPressEvent(QKeyEvent* event)
 			schnapps_->cycle_selected_view();
 			break;
 
-		case Qt::Key_S: {
+		case Qt::Key_F: {
 			save_snapshots_ = !save_snapshots_;
 			if (save_snapshots_)
 			{

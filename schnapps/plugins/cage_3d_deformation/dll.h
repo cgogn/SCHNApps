@@ -21,59 +21,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
-#define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
+#ifndef SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DLL_H_
+#define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DLL_H_
 
-#include <schnapps/plugins/surface_differential_properties/dll.h>
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API
+#if defined SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API
+#endif
 
-#include <ui_dialog_compute_normal.h>
-
-#include <schnapps/core/map_handler.h>
-
-namespace schnapps
-{
-
-class SCHNApps;
-
-namespace plugin_sdp
-{
-
-class Plugin_SurfaceDifferentialProperties;
-
-class SCHNAPPS_PLUGIN_SDP_API ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
-{
-	Q_OBJECT
-
-public:
-
-	ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_SurfaceDifferentialProperties* plugin_;
-
-	CMap2Handler* selected_map_;
-
-	QString setting_auto_load_position_attribute_;
-	QString setting_default_normal_attribute_name_;
-
-private slots:
-
-	// slots called from UI signals
-	void selected_map_changed();
-	void compute_normal();
-
-	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
-
-	// slots called from MapHandlerGen signals
-	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
-};
-
-} // namespace plugin_sdp
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
+#endif // SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DLL_H_

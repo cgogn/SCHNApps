@@ -34,10 +34,12 @@
 #include <cgogn/geometry/algos/length.h>
 #include <cgogn/geometry/algos/area.h>
 
+#include <cgogn/io/io_utils.h>
 #include <cgogn/io/map_import.h>
 
 #include <cgogn/core/utils/thread.h>
 
+#include <QFileInfo>
 #include <QFileDialog>
 
 namespace schnapps
@@ -65,147 +67,241 @@ bool Plugin_ShallowWater::enable()
 	qtrav_ = cgogn::make_unique<CMap2::QuickTraversor>(*map2_);
 	edge_left_side_ = cgogn::make_unique<CMap2::DartMarker>(*map2_);
 
+	draw_timer_ = new QTimer(this);
+	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
+
 	QString dossier = QFileDialog::getExistingDirectory(nullptr);
-	std::string file = dossier.toStdString();
-	file = file + "/";
-	std::string str;
-	std::string File_Mesh_1D; // Name of the 1D mesh file
-	std::string File_Mesh_2D; // Name of the 2D mesh file
+	load_project(dossier);
 
-	std::ifstream file_2d (file + "2d.in", std::ios::in); // open file "2d.in"
+	return true;
+}
 
-	std::getline(file_2d, str); // read line "Input parameters for 2D simulation-version_2"
-	std::getline(file_2d, str); // read line "==== Files & Folders"
-	std::getline(file_2d, str, ':'); // read "1D Mesh (2dm):"
-	std::getline(file_2d, str, ' '); // read space after :
-	std::getline(file_2d, File_Mesh_1D);// read name of the 1D mesh file
-	std::getline(file_2d, str, ':'); // read "2D Mesh (2dm):"
-	std::getline(file_2d, str, ' '); // read space after :
-	std::getline(file_2d, File_Mesh_2D);// read name of the 2D mesh file
-	std::getline(file_2d, str); // read line "==== Physical Phenomenon"
-	std::getline(file_2d, str, '\t'); // read "Friction"
-	std::getline(file_2d, str); // read value of friction
-	friction_ = std::stoi(str); // convert string to int
-	std::getline(file_2d, str); // read line "==== Numerical Parameters"
-	std::getline(file_2d, str, '\t'); // read "Solver"
-	std::getline(file_2d, str); // read value of solver
-	solver_ = std::stoi(str); // convert string to int
-	std::getline(file_2d, str); // read line "Parallel   0"
-	std::getline(file_2d, str); // read line "T0	Tmax	Dtmax	DtStore	NbStepMax"
-	std::getline(file_2d, str, '\t'); // read value of T0
-	t_ = std::stod(str); // convert string to SCALAR
-	std::getline(file_2d, str, '\t'); // read value of Tmax
-	t_max_ = std::stod(str); // convert string to SCALAR
-	std::getline(file_2d, str, '\t'); // read value of Dtmax
-	dt_max_ = std::stod(str); // convert string to SCALAR
-	std::getline(file_2d, str); // read the end of the line
-	std::getline(file_2d, str); // read line "Eps"
-	std::getline(file_2d, str); // read the value of Eps
-	std::getline(file_2d, str); // read line "==== Hydraulic Parameters"
-	std::getline(file_2d, str); // read line "Vmax	Frmax"
-	std::getline(file_2d, str, '\t'); // read value of Vmax
-	v_max_ = std::stod(str); // convert string to SCALAR
-	std::getline(file_2d,str); // read the value of Frmax
-	Fr_max_ = std::stod(str); // convert string to SCALAR
-	file_2d.close(); // close file 2d.in
+void Plugin_ShallowWater::disable()
+{
+	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
+	schnapps_->remove_map("shallow_water_2");
+	delete dock_tab_;
+}
 
-	uint8 dim;
-	if (File_Mesh_1D.compare("None") == 0) dim = 2;
-	else dim = 12;
+void Plugin_ShallowWater::load_project(const QString& dir)
+{
+	project_dir_ = dir;
 
-	// open file "Hydrau_Param_2D.txt"
-	std::ifstream file_hydrau (file + "Hydrau_Param_2D.txt", std::ios::in);
-	std::getline(file_hydrau,str); // read line "Unif	1"
-	std::getline(file_hydrau,str); // read line "==== Default Param"
-	std::getline(file_hydrau,str); // read line "Phi	Kx	Ky	Alpha"
-	std::getline(file_hydrau,str, '\t'); // read the value of phi
-	SCALAR phi = std::stod(str); // convert string to SCALAR
-	std::getline(file_hydrau,str, '\t'); // read the value of Kx
-	kx_ = std::stod(str); // convert string to SCALAR
-	std::getline(file_hydrau,str, '\t'); // read the value of Ky
-	std::getline(file_hydrau,str, '\t'); // read the value of Alpha
-	alphaK_ = std::stod(str); // convert string to SCALAR
-	file_hydrau.close(); // close file "Hydrau_Param_2D.txt"
+	load_input_file(dir + "/2d.in");
+	load_hydrau_param_file(dir + "/Hydrau_Param_2D.txt");
 
-	// import mesh
-	cgogn::io::import_surface<VEC3>(*map2_, file + File_Mesh_2D);
+	if (mesh_1D_filename_ == "None")
+		dim_ = 2;
+	else
+		dim_ = 12;
+
+	// import 2D mesh
+	QString mesh_2D_filepath = dir + "/" + mesh_2D_filename_;
+	cgogn::io::import_surface<VEC3>(*map2_, mesh_2D_filepath.toStdString());
 
 	dimension_ = map_->add_attribute<uint8, CMap2::Face::ORBIT>("dimension");
-	uint32 nb_faces_2d = 0;
-	map2_->foreach_cell([&] (CMap2::Face f)
-	{
-		dimension_[f] = 2;
-		++nb_faces_2d;
-	});
-	uint32 nb_vertices_2d = map2_->nb_cells<CMap2::Vertex>();
+	dimension_.set_all_values(2);
 
-	if (dim == 12)
+	nb_faces_2d_ = map2_->nb_cells<CMap2::Face>();
+	nb_vertices_2d_ = map2_->nb_cells<CMap2::Vertex>();
+
+	if (dim_ == 12)
 	{
+		// import 1D mesh
 		CMap2 map2_tmp;
-		cgogn::io::import_surface<VEC3>(map2_tmp, file + File_Mesh_1D);
+		QString mesh_1D_filepath = dir + "/" + mesh_1D_filename_;
+		cgogn::io::import_surface<VEC3>(map2_tmp, mesh_1D_filepath.toStdString());
 		map2_tmp.enforce_unique_orbit_embedding<CMap2::Vertex::ORBIT>();
 		CMap2::DartMarker dm(*map2_);
 		map2_->merge(map2_tmp, dm);
 		map2_->parallel_foreach_cell([&] (CMap2::Face f)
 		{
-			if (dimension_[f] != 2) dimension_[f] = 1;
+			if (dimension_[f] != 2)
+				dimension_[f] = 1;
 		});
 	}
 
-	position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+	init_map_attributes();
 
-	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
-	zb_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("zb");
-	h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h");
-	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q");
-	r_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r");
-	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
-	area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
-	swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
-	discharge_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("discharge");
+	atq_map_ = cgogn::make_unique<cgogn::AdaptiveTriQuadCMap2>(*map2_);
+	atq_map_->init();
 
-	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
-	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
-	f3_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f3");
-	s2L_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2L");
-	s2R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2R");
-	normX_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normX");
-	normY_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normY");
-	length_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("length");
-	val_bc_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("val_bc");
-	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
-	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
+	load_2D_constrained_edges();
+	if (dim_ == 12)
+		load_2D_constrained_edges();
 
-	scalar_value_h_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_h");
-	scalar_value_u_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_u");
-	scalar_value_v_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_v");
-	water_position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("water_position");
-	flow_velocity_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("flow_velocity");
+	load_2D_initial_cond_file(dir + "/Initial_Cond_2D.txt");
+	if (dim_ == 12)
+		load_1D_initial_cond_file(dir + "/Initial_Cond_1D.txt");
 
-	cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
-	cgogn::geometry::compute_area<VEC3, CMap2::Face>(*map2_, position_, area_);
+	load_2D_boundary_cond_file(dir + "/BC_2D.lim");
+	if (dim_ == 12)
+		load_1D_boundary_cond_file(dir + "/BC_1D.lim");
 
-	qtrav_->build<CMap2::Vertex>();
-	qtrav_->build<CMap2::Edge>();
-	qtrav_->build<CMap2::Face>();
+	if (dim_ == 12)
+		sew_1D_2D_meshes();
 
-	map2_->copy_attribute(water_position_, position_);
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Face f)
+		{
+			uint32 nbv = 0;
+			map2_->foreach_incident_vertex(f, [&] (CMap2::Vertex v)
+			{
+				zb_[f] += position_[v][2];
+				nbv++;
+			});
+			zb_[f] /= nbv;
+			h_[f] -= zb_[f];
+			// z is read in initial_cond file, not h
 
-	NS_.set_all_values(0.);
+			phi_[f] = phi_default_;
+		},
+		*qtrav_
+	);
 
-	// open file "mesh.2dm" to read the NS part
-	std::ifstream file_mesh (file + File_Mesh_2D, std::ios::in);
-	std::string tag;
+	init();
+}
+
+void Plugin_ShallowWater::load_input_file(const QString& filename)
+{
+	std::ifstream input_file(filename.toStdString(), std::ios::in); // open input file
+	std::string str;
+
+	cgogn::io::getline_safe(input_file, str); // read line "Input parameters for 2D simulation-version_2"
+
+	cgogn::io::getline_safe(input_file, str); // read line "==== Files & Folders"
+
+	cgogn::io::getline_safe(input_file, str, ':'); // read "1D Mesh (2dm):"
+	cgogn::io::getline_safe(input_file, str, ' '); // read space after :
+	cgogn::io::getline_safe(input_file, str); // read name of the 1D mesh file
+	mesh_1D_filename_ = QString::fromStdString(str);
+
+	cgogn::io::getline_safe(input_file, str, ':'); // read "2D Mesh (2dm):"
+	cgogn::io::getline_safe(input_file, str, ' '); // read space after :
+	cgogn::io::getline_safe(input_file, str); // read name of the 2D mesh file
+	mesh_2D_filename_ = QString::fromStdString(str);
+
+	cgogn::io::getline_safe(input_file, str); // read line "==== Physical Phenomenon"
+
+	cgogn::io::getline_safe(input_file, str, '\t'); // read "Friction"
+	cgogn::io::getline_safe(input_file, str); // read value of friction
+	friction_ = std::stoi(str);
+
+	cgogn::io::getline_safe(input_file, str); // read line "==== Numerical Parameters"
+
+	cgogn::io::getline_safe(input_file, str, '\t'); // read "Solver"
+	cgogn::io::getline_safe(input_file, str); // read value of solver
+	solver_ = std::stoi(str);
+
+	cgogn::io::getline_safe(input_file, str); // read line "Parallel	0"
+
+	cgogn::io::getline_safe(input_file, str); // read line "T0	Tmax	Dtmax	DtStore	NbStepMax"
+
+	input_file >> t_; // read value of T0
+	input_file >> t_max_; // read value of Tmax
+	input_file >> dt_max_; // read value of Dtmax
+	cgogn::io::getline_safe(input_file, str); // read the end of the line
+
+	cgogn::io::getline_safe(input_file, str); // read line "Eps"
+	cgogn::io::getline_safe(input_file, str); // read the value of Eps
+
+	cgogn::io::getline_safe(input_file, str); // read line "==== Hydraulic Parameters"
+
+	cgogn::io::getline_safe(input_file, str); // read line "Vmax	Frmax"
+	input_file >> v_max_; // read value of Vmax
+	input_file >> Fr_max_; // read value of Frmax
+
+	input_file.close(); // close input file
+}
+
+void Plugin_ShallowWater::load_hydrau_param_file(const QString& filename)
+{
+	std::ifstream file_hydrau(filename.toStdString(), std::ios::in);
+	std::string str;
+
+	cgogn::io::getline_safe(file_hydrau, str); // read line "Unif	1"
+	cgogn::io::getline_safe(file_hydrau, str); // read line "==== Default Param"
+	cgogn::io::getline_safe(file_hydrau, str); // read line "Phi	Kx	Ky	Alpha"
+	file_hydrau >> phi_default_; // read the value of Phi
+	file_hydrau >> kx_; // read the value of Kx
+	file_hydrau >> ky_; // read the value of Ky
+	file_hydrau >> alphaK_; // read the value of Alpha
+
+	file_hydrau.close(); // close file "Hydrau_Param_2D.txt"
+}
+
+void Plugin_ShallowWater::load_1D_constrained_edges()
+{
+	// open 1D mesh file to read the NS part
+	QString mesh_1D_filepath = project_dir_ + "/" + mesh_1D_filename_;
+	std::ifstream file_mesh_1D(mesh_1D_filepath.toStdString(), std::ios::in);
+	std::string str, tag;
+
 	do
 	{
-		file_mesh >> tag;
-		cgogn::io::getline_safe(file_mesh, str);
-	} while (tag != std::string("NS") && (!file_mesh.eof()));
+		file_mesh_1D >> tag;
+		cgogn::io::getline_safe(file_mesh_1D, str);
+	} while (tag != std::string("NS") && (!file_mesh_1D.eof()));
+
 	if (tag == std::string("NS"))
 	{
 		do
 		{
 			if (tag == std::string("NS")) // lecture d'une face
+			{
+				std::stringstream oss(str);
+				uint32 vertex_id_int = 0;
+				std::vector<uint32> vertex_id_vect;
+				while (oss >> vertex_id_int)
+					vertex_id_vect.push_back(vertex_id_int);
+
+				uint32 ns_num = vertex_id_vect.back();
+				vertex_id_vect.pop_back();
+				vertex_id_vect.back() *= -1;
+
+				for (uint32 i = 0; i < vertex_id_vect.size() - 1; ++i)
+				{
+					CMap2::Vertex v = qtrav_->cell_from_index<CMap2::Vertex>(vertex_id_vect[i] + nb_vertices_2d_ - 1);
+					bool ns_edge_found = false;
+					map2_->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool
+					{
+						if (map2_->embedding(av) == vertex_id_vect[i+1] + nb_vertices_2d_ - 1)
+						{
+							NS_[CMap2::Edge(av.dart)] = ns_num;
+							ns_edge_found = true;
+						}
+						return !ns_edge_found;
+					});
+					if (!ns_edge_found)
+						std::cout << "WARNING: NS edge not found 1D " << vertex_id_vect[i] << "\t" << vertex_id_vect[i+1] << std::endl;
+				}
+			}
+
+			file_mesh_1D >> tag;
+			cgogn::io::getline_safe(file_mesh_1D, str);
+		} while (!file_mesh_1D.eof());
+	}
+	file_mesh_1D.close(); // close 1D mesh file
+}
+
+void Plugin_ShallowWater::load_2D_constrained_edges()
+{
+	// open 2D mesh file to read the NS part
+	QString mesh_2D_filepath = project_dir_ + "/" + mesh_2D_filename_;
+	std::ifstream file_mesh_2D(mesh_2D_filepath.toStdString(), std::ios::in);
+	std::string str, tag;
+
+	do
+	{
+		file_mesh_2D >> tag;
+		cgogn::io::getline_safe(file_mesh_2D, str);
+	} while (tag != std::string("NS") && (!file_mesh_2D.eof()));
+
+	if (tag == std::string("NS"))
+	{
+		do
+		{
+			if (tag == std::string("NS"))
 			{
 				std::stringstream oss(str);
 				uint32 vertex_id_int = 0;
@@ -231,170 +327,186 @@ bool Plugin_ShallowWater::enable()
 						return !ns_edge_found;
 					});
 					if (!ns_edge_found)
-						std::cout << "WARNING: NS edge not found  " << vertex_id_vect[i] << "\t" << vertex_id_vect[i+1] << std::endl;
+						std::cout << "WARNING: NS edge not found 2D " << vertex_id_vect[i] << "\t" << vertex_id_vect[i+1] << std::endl;
 				}
 			}
 
-			file_mesh >> tag;
-			cgogn::io::getline_safe(file_mesh, str);
-		} while (!file_mesh.eof());
+			file_mesh_2D >> tag;
+			cgogn::io::getline_safe(file_mesh_2D, str);
+		} while (!file_mesh_2D.eof());
 	}
-	file_mesh.close(); // close file "mesh.2dm"
+	file_mesh_2D.close(); // close 2D mesh file
+}
 
-	if (dim == 12)
-	{
-		// open file "mesh.2dm" to read the NS part
-		std::ifstream file_mesh_1d (file + File_Mesh_1D, std::ios::in);
-		std::string tag;
-		do
-		{
-			file_mesh_1d >> tag;
-			cgogn::io::getline_safe(file_mesh_1d, str);
-		} while (tag != std::string("NS") && (!file_mesh_1d.eof()));
-		if (tag == std::string("NS"))
-		{
-			do
-			{
-				if (tag == std::string("NS")) // lecture d'une face
-				{
-					std::stringstream oss(str);
-					uint32 vertex_id_int = 0;
-					std::vector<uint32> vertex_id_vect;
-					while (oss >> vertex_id_int)
-						vertex_id_vect.push_back(vertex_id_int);
+void Plugin_ShallowWater::init_map_attributes()
+{
+	position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+	scalar_value_h_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_h");
+	scalar_value_u_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_u");
+	scalar_value_v_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_v");
+	water_position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("water_position");
+	flow_velocity_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("flow_velocity");
 
-					uint32 ns_num = vertex_id_vect.back();
-					vertex_id_vect.pop_back();
-					vertex_id_vect.back() *= -1;
+	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
+	zb_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("zb");
+	h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h");
+	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q");
+	r_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r");
+	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
+	area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
+	swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
+	discharge_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("discharge");
 
-					for (uint32 i = 0; i < vertex_id_vect.size() - 1; ++i)
-					{
-						CMap2::Vertex v = qtrav_->cell_from_index<CMap2::Vertex>(vertex_id_vect[i] + nb_vertices_2d - 1);
-						bool ns_edge_found = false;
-						map2_->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool
-						{
-							if (map2_->embedding(av) == vertex_id_vect[i+1] + nb_vertices_2d - 1)
-							{
-								NS_[CMap2::Edge(av.dart)] = ns_num;
-								ns_edge_found = true;
-							}
-							return !ns_edge_found;
-						});
-						if (!ns_edge_found)
-							std::cout << "WARNING: NS edge not found 1D  " << vertex_id_vect[i] << "\t" << vertex_id_vect[i+1] << std::endl;
-					}
-				}
+	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
+	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
+	f3_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f3");
+	s2L_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2L");
+	s2R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2R");
+	normX_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normX");
+	normY_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normY");
+	length_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("length");
+	val_bc_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("val_bc");
+	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
+	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
 
-				file_mesh_1d >> tag;
-				cgogn::io::getline_safe(file_mesh_1d, str);
-			} while (!file_mesh_1d.eof());
-		}
-		file_mesh_1d.close(); // close file "1D.2dm"
-	}
+	cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
+	cgogn::geometry::compute_area<VEC3, CMap2::Face>(*map2_, position_, area_);
 
-	// open file "Initial_Cond_2D.txt"
-	std::ifstream file_ic (file + "Initial_Cond_2D.txt", std::ios::in);
-	std::getline(file_ic, str); // read line "Unif   0"
-	std::getline(file_ic, str); // read line "==== Default Param"
-	std::getline(file_ic, str); // read line "z  u	v"
-	std::getline(file_ic, str, '\t'); // read default param z
-	SCALAR h_default = std::stod(str);
-	h_.set_all_values(h_default);
-	std::getline(file_ic, str, '\t'); // read default param u
-	SCALAR s = std::stod(str);
-	q_.set_all_values(h_default*s);
-	std::getline(file_ic, str); // read default param v
-	s = std::stod(str);
-	r_.set_all_values(h_default*s);
-	std::getline(file_ic, str); // read line "==== Distrib"
+	qtrav_->build<CMap2::Vertex>();
+	qtrav_->build<CMap2::Edge>();
+	qtrav_->build<CMap2::Face>();
+
+	map2_->copy_attribute(water_position_, position_);
+
+	NS_.set_all_values(0.);
+}
+
+void Plugin_ShallowWater::load_2D_initial_cond_file(const QString& filename)
+{
+	std::ifstream initial_cond_file(filename.toStdString(), std::ios::in); // open initial cond file
+	std::string str;
+
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "Unif	0"
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "==== Default Param"
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "z  u	v"
+
+	SCALAR z;
+	initial_cond_file >> z; // read default param z
+	h_.set_all_values(z);
+
+	SCALAR u;
+	initial_cond_file >> u; // read default param u
+	q_.set_all_values(z * u);
+
+	SCALAR v;
+	initial_cond_file >> v;  // read default param v
+	r_.set_all_values(z * v);
+
+	cgogn::io::getline_safe(initial_cond_file, str); // read the end line character
+
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "==== Distrib"
+
 	uint32 line = 1; // line number
-	// each face has a face_id witch match the line number of the file
-	while (std::getline(file_ic, str, '\t')) // read value of h
+	// each face has a face_id that matches the line number of the file
+	cgogn::io::getline_safe(initial_cond_file, str);
+	do
 	{
-		CMap2::Face f = qtrav_->cell_from_index<CMap2::Face>(line-1);
-		h_[f] = std::stod(str); // convert string to SCALAR
-		std::getline(file_ic, str, '\t'); // read value of q
-		q_[f] = std::stod(str); // convert string to SCALAR
-		std::getline(file_ic, str); // read value of r
-		r_[f] = std::stod(str); // convert string to SCALAR
+		std::stringstream oss(str);
+		CMap2::Face f = qtrav_->cell_from_index<CMap2::Face>(line - 1);
+		oss >> h_[f];
+		oss >> q_[f];
+		oss >> r_[f];
+		cgogn::io::getline_safe(initial_cond_file, str);
 		++line;
-	}
-	file_ic.close(); // close file "Initial_Cond_2D.txt"
+	} while (!initial_cond_file.eof());
 
-	if (dim == 12)
+	initial_cond_file.close(); // close initial cond file
+}
+
+void Plugin_ShallowWater::load_1D_initial_cond_file(const QString& filename)
+{
+	std::ifstream initial_cond_file(filename.toStdString(), std::ios::in); // open initial cond file
+	std::string str;
+
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "Unif	0"
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "==== Default Param"
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "z  u	v"
+
+	cgogn::io::getline_safe(initial_cond_file, str); // read (and skip) default param values
+	cgogn::io::getline_safe(initial_cond_file, str); // read line "==== Distrib"
+
+	uint32 line = nb_faces_2d_; // line number
+	// each face has a face_id that matches the line number of the file
+	cgogn::io::getline_safe(initial_cond_file, str);
+	do
 	{
-		// open file "Initial_Cond_1D.txt"
-		std::ifstream file_ic_1d (file + "Initial_Cond_1D.txt", std::ios::in);
-		std::getline(file_ic_1d, str); // read line "Unif   0"
-		std::getline(file_ic_1d, str); // read line "==== Default Param"
-		std::getline(file_ic_1d, str); // read line "z  u	v"
-		std::getline(file_ic_1d, str); // read default param values
-		std::getline(file_ic_1d, str); // read line "==== Distrib"
-		uint32 line = nb_faces_2d; // line number
-		// each face has a face_id that matches the line number of the file
-		while (std::getline(file_ic_1d, str, '\t')) // read value of h
-		{
-			CMap2::Face f = qtrav_->cell_from_index<CMap2::Face>(line - 1);
-			h_[f] = std::stod(str); // convert string to SCALAR
-			std::getline(file_ic_1d, str, '\t'); // read value of q
-			q_[f] = std::stod(str); // convert string to SCALAR
-			std::getline(file_ic_1d, str); // read value of r
-			r_[f] = std::stod(str); // convert string to SCALAR
-			++line;
-		}
-		file_ic_1d.close(); // close file "Initial_Cond_1D.txt"
-	}
+		std::stringstream oss(str);
+		CMap2::Face f = qtrav_->cell_from_index<CMap2::Face>(line - 1);
+		oss >> h_[f];
+		oss >> q_[f];
+		oss >> r_[f];
+		cgogn::io::getline_safe(initial_cond_file, str);
+		++line;
+	} while (!initial_cond_file.eof());
 
-	// open file "BC_2D.lim"
-	std::ifstream file_bc (file + "BC_2D.lim", std::ios::in);
-	std::getline(file_bc, str); // read line "2D BC time series"
-	std::getline(file_bc, str, '\t'); // read "Number_of_BC"
-	std::getline(file_bc, str); // read the number of boundary conditions
-	uint32 Number_of_BC = std::stoi(str); // convert string to int
-	std::getline(file_bc, str); // read line "Number_of_values_in_the_time_series" (only the first time serie is used)
-	std::getline(file_bc, str); // read line "========================="
+	initial_cond_file.close(); // close initial cond file
+}
+
+void Plugin_ShallowWater::load_2D_boundary_cond_file(const QString& filename)
+{
+	std::ifstream boundary_cond_file(filename.toStdString(), std::ios::in); // open boundary cond file
+	std::string str;
+
+	cgogn::io::getline_safe(boundary_cond_file, str); // read line "2D BC time series"
+	cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read "number_of_BC"
+	uint32 number_of_BC;
+	boundary_cond_file >> number_of_BC; // read the number of boundary conditions
+	cgogn::io::getline_safe(boundary_cond_file, str); // read the end line character
+
+	cgogn::io::getline_safe(boundary_cond_file, str); // read line "Number_of_values_in_the_time_series" (only the first time serie is used)
+	cgogn::io::getline_safe(boundary_cond_file, str); // read line "========================="
+
 	// for NS, Type and Value (only one value instead of Number_of_values_in_the_time_series values),
-	// there is Number_of_BC int, char or SCALAR to store
+	// there is number_of_BC int, char or SCALAR to store
 	// the last column is not read like the others because it ends with a new line instead of a tab
-	if (Number_of_BC > 0)
+	if (number_of_BC > 0)
 	{
-//		uint32 tab_ns[Number_of_BC];
-		std::vector<uint32> tab_ns(Number_of_BC); // VLA unsupported on visual
-		std::getline(file_bc, str, '\t'); // read "NS"
+		std::vector<uint32> tab_ns(number_of_BC);
+		cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read "NS"
 
-		for (uint32 i = 0; i < Number_of_BC - 1; ++i)
+		for (uint32 i = 0; i < number_of_BC - 1; ++i)
 		{
-			std::getline(file_bc, str, '\t'); // read the less than 0 nodestring
+			cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read the less than 0 nodestring
 			tab_ns[i] = - std::stoi(str); // convert string to int and change sign
 		}
 		// last column
-		std::getline(file_bc, str);
-		tab_ns[Number_of_BC - 1] = - std::stoi(str);
+		cgogn::io::getline_safe(boundary_cond_file, str);
+		tab_ns[number_of_BC - 1] = - std::stoi(str);
 
-		std::vector<std::string> tab_type(Number_of_BC);
-		std::getline(file_bc, str, '\t'); // read "Type"
-		for (uint32 i = 0; i < Number_of_BC - 1; ++i)
+		std::vector<std::string> tab_type(number_of_BC);
+		cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read "Type"
+		for (uint32 i = 0; i < number_of_BC - 1; ++i)
 		{
-			std::getline(file_bc, str, '\t'); // read char
+			cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read char
 			tab_type[i] = str;
 		}
 		// last column
-		std::getline(file_bc, str);
-		tab_type[Number_of_BC - 1] = str;
+		cgogn::io::getline_safe(boundary_cond_file, str);
+		tab_type[number_of_BC - 1] = str;
 
-		std::getline(file_bc, str); // read line "========================="
-		std::getline(file_bc, str); // read line "Time	Value"
-		//SCALAR tab_value[Number_of_BC];
-		std::vector<SCALAR> tab_value(Number_of_BC); // VLA unsupported on visual
-		std::getline(file_bc, str, '\t'); // read time
-		for (uint32 i = 0; i < Number_of_BC - 1; ++i)
+		cgogn::io::getline_safe(boundary_cond_file, str); // read line "========================="
+		cgogn::io::getline_safe(boundary_cond_file, str); // read line "Time	Value"
+
+		std::vector<SCALAR> tab_value(number_of_BC);
+		cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read time
+		for (uint32 i = 0; i < number_of_BC - 1; ++i)
 		{
-			std::getline(file_bc, str, '\t'); // read value
+			cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read value
 			tab_value[i] = std::stod(str); // convert string to SCALAR
 		}
 		// last column
-		std::getline(file_bc, str); // read value
-		tab_value[Number_of_BC - 1] = std::stod(str); // convert string to SCALAR
+		cgogn::io::getline_safe(boundary_cond_file, str); // read value
+		tab_value[number_of_BC - 1] = std::stod(str); // convert string to SCALAR
 
 		map2_->parallel_foreach_cell(
 			[&] (CMap2::Edge e)
@@ -411,7 +523,7 @@ bool Plugin_ShallowWater::enable()
 				{
 					typ_bc_[e] = "m2"; // if the edge has a nodestring without value, it will be merged with 1D mesh
 					val_bc_[e] = 0.;
-					for (uint32 i = 0; i < Number_of_BC; ++i)
+					for (uint32 i = 0; i < number_of_BC; ++i)
 					{
 						if (NS_[e] == tab_ns[i])
 						{
@@ -446,173 +558,139 @@ bool Plugin_ShallowWater::enable()
 			*qtrav_
 		);
 	}
-	file_bc.close(); // close file "BC_2D.lim"
-
-	if(dim == 12)
-	{
-		// open file "BC_1D.lim"
-		std::ifstream file_bc_1d (file + "BC_1D.lim", std::ios::in);
-		std::getline(file_bc_1d, str); // read line "2D BC time series"
-		std::getline(file_bc_1d, str, '\t'); // read "Number_of_BC"
-		std::getline(file_bc_1d, str); // read the number of boundary conditions
-		uint32 Number_of_BC = std::stoi(str); // convert string to int
-		std::getline(file_bc_1d, str); // read line "Number_of_values_in_the_time_series" (only the first time serie is used)
-		std::getline(file_bc_1d, str); // read line "========================="
-		// for NS, Type and Value (only one value instead of Number_of_values_in_the_time_series values),
-		// there is Number_of_BC int, char or SCALAR to store
-		// the last column is not read like the others because it ends with a new line instead of a tab
-		if (Number_of_BC > 0)
-		{
-			//uint32 tab_ns[Number_of_BC];
-			std::vector<uint32> tab_ns(Number_of_BC); // VLA unsupported on visual
-			std::getline(file_bc_1d, str, '\t'); // read "NS"
-
-			for (uint32 i = 0; i < Number_of_BC - 1; ++i)
-			{
-				std::getline(file_bc_1d, str, '\t'); // read the less than 0 nodestring
-				tab_ns[i] = - std::stoi(str); // convert string to int and change sign
-			}
-			// last column
-			std::getline(file_bc_1d, str);
-			tab_ns[Number_of_BC - 1] = - std::stoi(str);
-
-			std::vector<std::string> tab_type(Number_of_BC);
-			std::getline(file_bc_1d, str, '\t'); // read "Type"
-			for (uint32 i = 0; i < Number_of_BC - 1; ++i)
-			{
-				std::getline(file_bc_1d, str, '\t'); // read char
-				tab_type[i] = str;
-			}
-			// last column
-			std::getline(file_bc_1d, str);
-			tab_type[Number_of_BC - 1] = str;
-
-			std::getline(file_bc_1d, str); // read line "========================="
-			std::getline(file_bc_1d, str); // read line "Time	Value"
-			//SCALAR tab_value[Number_of_BC];
-			std::vector<SCALAR> tab_value(Number_of_BC); // VLA unsupported on visual
-			std::getline(file_bc_1d, str, '\t'); // read time
-			for (uint32 i = 0; i < Number_of_BC - 1; ++i)
-			{
-				std::getline(file_bc_1d, str, '\t'); // read value
-				tab_value[i] = std::stod(str.c_str()); // convert string to SCALAR
-			}
-			// last column
-			std::getline(file_bc_1d, str); // read value
-			tab_value[Number_of_BC - 1] = std::stod(str); // convert string to SCALAR
-
-			map2_->parallel_foreach_cell(
-				[&] (CMap2::Edge e)
-				{
-					if (!map2_->is_incident_to_boundary(e))
-						return;
-
-					if (dimension_[CMap2::Face(e.dart)] == 2)
-						return;
-
-					if (NS_[e] == 0)
-					{
-						typ_bc_[e] = "q";
-						val_bc_[e] = 0.;
-					}
-					else
-					{
-						typ_bc_[e] = "m1"; // if the edge has a nodestring without value, it will be merged with 2D mesh
-						val_bc_[e] = 0.;
-						for (uint32 i = 0; i < Number_of_BC; ++i)
-						{
-							if (NS_[e] == tab_ns[i])
-							{
-								typ_bc_[e] = tab_type[i];
-								val_bc_[e] = tab_value[i];
-							}
-						}
-					}
-				},
-				*qtrav_
-			);
-		}
-		else
-		{
-			map2_->parallel_foreach_cell(
-				[&] (CMap2::Edge e)
-				{
-					if (!map2_->is_incident_to_boundary(e))
-						return;
-
-					if (dimension_[CMap2::Face(e.dart)] == 2)
-						return;
-
-					if (NS_[e] == 0)
-					{
-						typ_bc_[e] = "q";
-						val_bc_[e] = 0.;
-					}
-					else
-					{
-						typ_bc_[e] = "m1"; // if the edge has a nodestring without value, it will be merged with 2D mesh
-						val_bc_[e] = 0.;
-					}
-				},
-				*qtrav_
-			);
-		}
-		file_bc_1d.close(); // close file "BC_1D.lim"
-	}
-
-	// sew faces
-	if (dim == 12)
-	{
-		map2_->foreach_cell(
-			[&] (CMap2::Edge e1)
-			{
-				if (typ_bc_[e1].compare("m1") != 0)
-					return;
-
-				map2_->foreach_cell([&] (CMap2::Edge e2) -> bool
-				{
-					if (typ_bc_[e2].compare("m2") != 0)
-						return true;
-					return sew_faces_recursive(e1, e2);
-				});
-			}
-		);
-	}
-
-	map2_->parallel_foreach_cell(
-		[&] (CMap2::Face f)
-		{
-			uint32 nbv = 0;
-			map2_->foreach_incident_vertex(f, [&] (CMap2::Vertex v)
-			{
-				zb_[f] += position_[v][2];
-				nbv++;
-			});
-			zb_[f] /= nbv;
-			h_[f] -= zb_[f];
-			// z is read in initial_cond file, not h
-
-			phi_[f] = phi;
-		},
-		*qtrav_
-	);
-
-	atq_map_ = cgogn::make_unique<cgogn::AdaptiveTriQuadCMap2>(*map2_);
-	atq_map_->init();
-
-	draw_timer_ = new QTimer(this);
-	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
-
-	init();
-
-	return true;
+	boundary_cond_file.close(); // close boundary cond file
 }
 
-void Plugin_ShallowWater::disable()
+void Plugin_ShallowWater::load_1D_boundary_cond_file(const QString& filename)
 {
-	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
-	schnapps_->remove_map("shallow_water_2");
-	delete dock_tab_;
+	std::ifstream boundary_cond_file(filename.toStdString(), std::ios::in); // open boundary cond file
+	std::string str;
+
+	cgogn::io::getline_safe(boundary_cond_file, str); // read line "2D BC time series"
+	cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read "number_of_BC"
+	uint32 number_of_BC;
+	boundary_cond_file >> number_of_BC; // read the number of boundary conditions
+
+	cgogn::io::getline_safe(boundary_cond_file, str); // read line "Number_of_values_in_the_time_series" (only the first time serie is used)
+	cgogn::io::getline_safe(boundary_cond_file, str); // read line "========================="
+
+	// for NS, Type and Value (only one value instead of Number_of_values_in_the_time_series values),
+	// there is number_of_BC int, char or SCALAR to store
+	// the last column is not read like the others because it ends with a new line instead of a tab
+	if (number_of_BC > 0)
+	{
+		std::vector<uint32> tab_ns(number_of_BC);
+		cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read "NS"
+
+		for (uint32 i = 0; i < number_of_BC - 1; ++i)
+		{
+			cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read the less than 0 nodestring
+			tab_ns[i] = - std::stoi(str); // convert string to int and change sign
+		}
+		// last column
+		cgogn::io::getline_safe(boundary_cond_file, str);
+		tab_ns[number_of_BC - 1] = - std::stoi(str);
+
+		std::vector<std::string> tab_type(number_of_BC);
+		cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read "Type"
+		for (uint32 i = 0; i < number_of_BC - 1; ++i)
+		{
+			cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read char
+			tab_type[i] = str;
+		}
+		// last column
+		cgogn::io::getline_safe(boundary_cond_file, str);
+		tab_type[number_of_BC - 1] = str;
+
+		cgogn::io::getline_safe(boundary_cond_file, str); // read line "========================="
+		cgogn::io::getline_safe(boundary_cond_file, str); // read line "Time	Value"
+
+		std::vector<SCALAR> tab_value(number_of_BC);
+		cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read time
+		for (uint32 i = 0; i < number_of_BC - 1; ++i)
+		{
+			cgogn::io::getline_safe(boundary_cond_file, str, '\t'); // read value
+			tab_value[i] = std::stod(str.c_str()); // convert string to SCALAR
+		}
+		// last column
+		cgogn::io::getline_safe(boundary_cond_file, str); // read value
+		tab_value[number_of_BC - 1] = std::stod(str); // convert string to SCALAR
+
+		map2_->parallel_foreach_cell(
+			[&] (CMap2::Edge e)
+			{
+				if (!map2_->is_incident_to_boundary(e))
+					return;
+
+				if (dimension_[CMap2::Face(e.dart)] == 2)
+					return;
+
+				if (NS_[e] == 0)
+				{
+					typ_bc_[e] = "q";
+					val_bc_[e] = 0.;
+				}
+				else
+				{
+					typ_bc_[e] = "m1"; // if the edge has a nodestring without value, it will be merged with 2D mesh
+					val_bc_[e] = 0.;
+					for (uint32 i = 0; i < number_of_BC; ++i)
+					{
+						if (NS_[e] == tab_ns[i])
+						{
+							typ_bc_[e] = tab_type[i];
+							val_bc_[e] = tab_value[i];
+						}
+					}
+				}
+			},
+			*qtrav_
+		);
+	}
+	else
+	{
+		map2_->parallel_foreach_cell(
+			[&] (CMap2::Edge e)
+			{
+				if (!map2_->is_incident_to_boundary(e))
+					return;
+
+				if (dimension_[CMap2::Face(e.dart)] == 2)
+					return;
+
+				if (NS_[e] == 0)
+				{
+					typ_bc_[e] = "q";
+					val_bc_[e] = 0.;
+				}
+				else
+				{
+					typ_bc_[e] = "m1"; // if the edge has a nodestring without value, it will be merged with 2D mesh
+					val_bc_[e] = 0.;
+				}
+			},
+			*qtrav_
+		);
+	}
+	boundary_cond_file.close(); // close boundary cond file
+}
+
+void Plugin_ShallowWater::sew_1D_2D_meshes()
+{
+	map2_->foreach_cell(
+		[&] (CMap2::Edge e1)
+		{
+			if (typ_bc_[e1].compare("m1") != 0)
+				return;
+
+			map2_->foreach_cell([&] (CMap2::Edge e2) -> bool
+			{
+				if (typ_bc_[e2].compare("m2") != 0)
+					return true;
+				return sew_faces_recursive(e1, e2);
+			});
+		}
+	);
 }
 
 void Plugin_ShallowWater::init()

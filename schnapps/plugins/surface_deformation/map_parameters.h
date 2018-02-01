@@ -154,18 +154,20 @@ struct MapParameters
 			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				const VEC3& pv = position_[v];
-				vpos(v_index_[v], 0) = pv[0];
-				vpos(v_index_[v], 1) = pv[1];
-				vpos(v_index_[v], 2) = pv[2];
+				uint32 vidx = v_index_[v];
+				vpos(vidx, 0) = pv[0];
+				vpos(vidx, 1) = pv[1];
+				vpos(vidx, 2) = pv[2];
 			});
 			Eigen::MatrixXd lapl(nb_vertices, 3);
 			lapl = LAPL * vpos;
 			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				VEC3& dcv = diff_coord_[v];
-				dcv[0] = lapl(v_index_[v], 0);
-				dcv[1] = lapl(v_index_[v], 1);
-				dcv[2] = lapl(v_index_[v], 2);
+				uint32 vidx = v_index_[v];
+				dcv[0] = lapl(vidx, 0);
+				dcv[1] = lapl(vidx, 1);
+				dcv[2] = lapl(vidx, 2);
 			});
 
 			// compute vertices bi-laplacian
@@ -176,9 +178,10 @@ struct MapParameters
 			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				VEC3& bdcv = bi_diff_coord_[v];
-				bdcv[0] = bilapl(v_index_[v], 0);
-				bdcv[1] = bilapl(v_index_[v], 1);
-				bdcv[2] = bilapl(v_index_[v], 2);
+				uint32 vidx = v_index_[v];
+				bdcv[0] = bilapl(vidx, 0);
+				bdcv[1] = bilapl(vidx, 1);
+				bdcv[2] = bilapl(vidx, 2);
 			});
 
 			initialized_ = true;

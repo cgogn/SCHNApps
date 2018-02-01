@@ -106,7 +106,7 @@ private:
 	{
 		if (map_->dimension() == 2)
 			position_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(static_cast<CMap2Handler*>(map_)->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name));
-		else
+		else // map_->dimension() == 3
 			position_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(static_cast<CMap3Handler*>(map_)->get_attribute<VEC3, CMap3Handler::Vertex::ORBIT>(attribute_name));
 
 		update_selected_cells_rendering();
@@ -116,7 +116,7 @@ private:
 	{
 		if (map_->dimension() == 2)
 			normal_ = cgogn::make_unique<CMap2Handler::VertexAttribute<VEC3>>(static_cast<CMap2Handler*>(map_)->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name));
-		else
+		else // map_->dimension() == 3
 			normal_ = cgogn::make_unique<CMap3Handler::VertexAttribute<VEC3>>(static_cast<CMap3Handler*>(map_)->get_attribute<VEC3, CMap3Handler::Vertex::ORBIT>(attribute_name));
 	}
 
@@ -238,7 +238,7 @@ private slots:
 								cgogn::geometry::append_ear_triangulation<VEC3>(*map2, CMap2::Face(f), *pos, ears);
 							});
 						}
-						else
+						else // map_->dimension() == 3
 						{
 							CMap3* map3 = dynamic_cast<CMap3Handler*>(map_)->get_map();
 							CMap3Handler::VertexAttribute<VEC3>* pos = static_cast<CMap3Handler::VertexAttribute<VEC3>*>(position_.get());

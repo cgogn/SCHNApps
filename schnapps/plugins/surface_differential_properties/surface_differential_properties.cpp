@@ -107,10 +107,10 @@ void Plugin_SurfaceDifferentialProperties::attribute_changed(cgogn::Orbit orbit,
 {
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
-		if (compute_normal_last_parameters_.count(map->get_name()) > 0ul)
+		CMap2Handler* map = static_cast<CMap2Handler*>(sender());
+		if (has_compute_normal_last_parameters(map))
 		{
-			ComputeNormalParameters& params = compute_normal_last_parameters_[map->get_name()];
+			ComputeNormalParameters& params = compute_normal_last_parameters_[map];
 			if (params.auto_update_ && params.position_name_ == attribute_name)
 				compute_normal(
 					map->get_name(),
@@ -119,9 +119,9 @@ void Plugin_SurfaceDifferentialProperties::attribute_changed(cgogn::Orbit orbit,
 					true
 				);
 		}
-		if (compute_curvature_last_parameters_.count(map->get_name()) > 0ul)
+		if (has_compute_curvature_last_parameters(map))
 		{
-			ComputeCurvatureParameters& params = compute_curvature_last_parameters_[map->get_name()];
+			ComputeCurvatureParameters& params = compute_curvature_last_parameters_[map];
 			if (params.auto_update_ && (params.position_name_ == attribute_name || params.normal_name_ == attribute_name))
 				compute_curvature(
 					map->get_name(),
@@ -180,7 +180,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	if (create_vbo_normal)
 		mh->create_vbo(normal_attribute_name);
 
-	compute_normal_last_parameters_[map_name] =
+	compute_normal_last_parameters_[mh] =
 		ComputeNormalParameters(
 			position_attribute_name,
 			normal_attribute_name,
@@ -317,7 +317,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 			mh->create_vbo(kgaussian_attribute_name);
 	}
 
-	compute_curvature_last_parameters_[map_name] =
+	compute_curvature_last_parameters_[mh] =
 		ComputeCurvatureParameters(
 			position_attribute_name, normal_attribute_name,
 			Kmax_attribute_name, create_vbo_Kmax,

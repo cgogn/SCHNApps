@@ -21,74 +21,79 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DIALOG_H_
+#define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DIALOG_H_
 
-#include <schnapps/plugins/surface_deformation/dll.h>
+#include <schnapps/plugins/cage_3d_deformation/dll.h>
 
 #include <schnapps/core/map_handler.h>
 
-#include <ui_surface_deformation.h>
+#include <ui_dialog_cage_3d_deformation.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class View;
 
-namespace plugin_surface_deformation
+namespace plugin_cage_3d_deformation
 {
 
-class Plugin_SurfaceDeformation;
+class Plugin_Cage3dDeformation;
 
-class SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_API SurfaceDeformation_DockTab : public QWidget, public Ui::SurfaceDeformation_TabWidget
+class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Cage3dDeformation_Dialog : public QDialog, public Ui::Cage3dDeformation_Dialog
 {
 	Q_OBJECT
 
 public:
 
-	SurfaceDeformation_DockTab(SCHNApps* s, Plugin_SurfaceDeformation* p);
-	~SurfaceDeformation_DockTab() override;
+	Cage3dDeformation_Dialog(SCHNApps* s, Plugin_Cage3dDeformation* p);
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_SurfaceDeformation* plugin_;
+	Plugin_Cage3dDeformation* plugin_;
 
-	CMap2Handler* selected_map_;
+	CMap2Handler* selected_control_map_;
+	MapHandlerGen* selected_deformed_map_;
+
 	bool updating_ui_;
 
 private slots:
 
 	// slots called from UI signals
-	void position_attribute_changed(int index);
-	void free_vertex_set_changed(int index);
-	void handle_vertex_set_changed(int index);
-	void start_stop_button_clicked();
+	void selected_control_map_changed();
+	void control_position_attribute_changed(int index);
+	void selected_deformed_map_changed();
+	void deformed_position_attribute_changed(int index);
+	void toggle_control();
 
 	// slots called from SCHNApps signals
-	void selected_view_changed(View* old, View* cur);
-	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
+	void map_added(MapHandlerGen* map);
+	void map_removed(MapHandlerGen* map);
 
 	// slots called from MapHandlerGen signals
-	void selected_map_cells_set_added(CellType ct, const QString& name);
-	void selected_map_cells_set_removed(CellType ct, const QString& name);
-	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
-	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
+	void selected_control_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void selected_deformed_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 
 public:
 
-	// methods used to update the UI from the plugin
-	void set_position_attribute(const QString& name);
-	void set_free_vertex_set(CellsSetGen* cs);
-	void set_handle_vertex_set(CellsSetGen* cs);
-	void set_deformation_initialized(bool b);
+	CMap2Handler* selected_control_map() const { return selected_control_map_; }
 
-	void refresh_ui();
+	// methods used to update the UI from the plugin
+	void set_control_position_attribute(const QString& name);
+	void set_selected_deformed_map(MapHandlerGen* deformed_map);
+	void set_deformed_position_attribute(const QString& name);
+	void set_linked(bool state);
+
+private:
+
+	// internal UI cascading updates
+	void update_after_selected_control_map_changed();
+	void update_after_selected_deformed_map_changed();
 };
 
-} // namespace plugin_surface_deformation
+} // namespace plugin_cage_3d_deformation
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DIALOG_H_

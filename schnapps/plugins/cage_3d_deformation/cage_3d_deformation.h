@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
 *                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -21,59 +21,79 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
-#define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
+#ifndef SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_
+#define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_
 
-#include <schnapps/plugins/surface_differential_properties/dll.h>
+#include <schnapps/plugins/cage_3d_deformation/dll.h>
+#include <schnapps/plugins/cage_3d_deformation/map_parameters.h>
 
-#include <ui_dialog_compute_normal.h>
-
-#include <schnapps/core/map_handler.h>
+#include <schnapps/core/plugin_processing.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-
-namespace plugin_sdp
+namespace plugin_cage_3d_deformation
 {
 
-class Plugin_SurfaceDifferentialProperties;
+class Cage3dDeformation_Dialog;
 
-class SCHNAPPS_PLUGIN_SDP_API ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
+/**
+* @brief Cage 3d deformation
+*/
+class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Plugin_Cage3dDeformation : public PluginProcessing
 {
 	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
 
 public:
 
-	ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
+	Plugin_Cage3dDeformation();
+	~Plugin_Cage3dDeformation() override {}
+	static QString plugin_name();
+
+	MapParameters& get_parameters(CMap2Handler* map);
 
 private:
 
-	SCHNApps* schnapps_;
-	Plugin_SurfaceDifferentialProperties* plugin_;
-
-	CMap2Handler* selected_map_;
-
-	QString setting_auto_load_position_attribute_;
-	QString setting_default_normal_attribute_name_;
+	bool enable() override;
+	void disable() override;
 
 private slots:
-
-	// slots called from UI signals
-	void selected_map_changed();
-	void compute_normal();
 
 	// slots called from SCHNApps signals
 	void map_added(MapHandlerGen* map);
 	void map_removed(MapHandlerGen* map);
+	void schnapps_closing();
 
-	// slots called from MapHandlerGen signals
-	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	// slots called from MapHandler signals
+	void attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
+	void connectivity_changed();
+
+	// slots called from action signals
+	void open_dialog();
+
+public slots:
+
+	void set_control_position_attribute(CMap2Handler* map, const QString& name, bool update_dialog);
+	void set_deformed_map(CMap2Handler* map, MapHandlerGen* deformed, bool update_dialog);
+	void set_deformed_position_attribute(CMap2Handler* map, const QString& name, bool update_dialog);
+	void toggle_control(CMap2Handler* map, bool update_dialog);
+
+private:
+
+	Cage3dDeformation_Dialog* cage_3d_deformation_dialog_;
+	QAction* setup_cage3d_deformation_action;
+
+	QString setting_auto_load_control_position_attribute_;
+	QString setting_auto_load_deformed_position_attribute_;
+
+	std::map<CMap2Handler*, MapParameters> parameter_set_;
 };
 
-} // namespace plugin_sdp
+} // namespace plugin_cage_3d_deformation
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
+#endif // SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_

@@ -159,14 +159,14 @@ public:
 		bool auto_update_;
 	};
 
-	bool has_compute_normal_last_parameters(const QString& map_name)
+	bool has_compute_normal_last_parameters(CMap2Handler* map)
 	{
-		return compute_normal_last_parameters_.count(map_name) > 0;
+		return compute_normal_last_parameters_.count(map) > 0;
 	}
-	const ComputeNormalParameters& get_compute_normal_last_parameters(const QString& map_name)
+	const ComputeNormalParameters& get_compute_normal_last_parameters(CMap2Handler* map)
 	{
-		cgogn_message_assert(has_compute_normal_last_parameters(map_name), "Getting inexistant parameters");
-		return compute_normal_last_parameters_[map_name];
+		cgogn_message_assert(has_compute_normal_last_parameters(map), "Getting inexistant parameters");
+		return compute_normal_last_parameters_[map];
 	}
 
 	struct ComputeCurvatureParameters
@@ -213,14 +213,14 @@ public:
 		bool auto_update_;
 	};
 
-	bool has_compute_curvature_last_parameters(const QString& map_name)
+	bool has_compute_curvature_last_parameters(CMap2Handler* map)
 	{
-		return compute_curvature_last_parameters_.count(map_name) > 0;
+		return compute_curvature_last_parameters_.count(map) > 0;
 	}
-	const ComputeCurvatureParameters& get_compute_curvature_last_parameters(const QString& map_name)
+	const ComputeCurvatureParameters& get_compute_curvature_last_parameters(CMap2Handler* map)
 	{
-		cgogn_message_assert(has_compute_curvature_last_parameters(map_name), "Getting inexistant parameters");
-		return compute_curvature_last_parameters_[map_name];
+		cgogn_message_assert(has_compute_curvature_last_parameters(map), "Getting inexistant parameters");
+		return compute_curvature_last_parameters_[map];
 	}
 
 private:
@@ -231,8 +231,8 @@ private:
 	QAction* compute_normal_action_;
 	QAction* compute_curvature_action_;
 
-	std::map<QString, ComputeNormalParameters> compute_normal_last_parameters_;
-	std::map<QString, ComputeCurvatureParameters> compute_curvature_last_parameters_;
+	std::map<CMap2Handler*, ComputeNormalParameters> compute_normal_last_parameters_;
+	std::map<CMap2Handler*, ComputeCurvatureParameters> compute_curvature_last_parameters_;
 };
 
 } // namespace plugin_sdp
