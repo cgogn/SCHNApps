@@ -102,6 +102,7 @@ void Plugin_Cage3dDeformation::map_added(MapHandlerGen *map)
 {
 	if (map->dimension() == 2)
 		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
+	connect(map, SIGNAL(connectivity_changed()), this, SLOT(connectivity_changed()));
 	connect(map, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(attribute_added(cgogn::Orbit, const QString&)));
 }
 
@@ -109,6 +110,7 @@ void Plugin_Cage3dDeformation::map_removed(MapHandlerGen *map)
 {
 	if (map->dimension() == 2)
 		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
+	disconnect(map, SIGNAL(connectivity_changed()), this, SLOT(connectivity_changed()));
 	disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(attribute_added(cgogn::Orbit, const QString&)));
 }
 
@@ -151,7 +153,25 @@ void Plugin_Cage3dDeformation::attribute_changed(cgogn::Orbit orbit, const QStri
 
 void Plugin_Cage3dDeformation::connectivity_changed()
 {
-	CMap2Handler* map = static_cast<CMap2Handler*>(sender());
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+
+	for (auto& it : parameter_set_)
+	{
+		MapParameters& p = it.second;
+		if (it.first == map) // map is deformed map
+		{
+
+		}
+		else
+		{
+			if (p.get_linked() && p.control_map_ == map)
+			{
+				p.toggle_control();
+				p.toggle_control();
+				p.update_deformed_map();
+			}
+		}
+	}
 }
 
 void Plugin_Cage3dDeformation::schnapps_closing()
