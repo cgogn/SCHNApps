@@ -158,18 +158,11 @@ void Plugin_Cage3dDeformation::connectivity_changed()
 	for (auto& it : parameter_set_)
 	{
 		MapParameters& p = it.second;
-		if (it.first == map) // map is deformed map
+		if (p.get_linked() && (it.first == map || p.control_map_ == map))
 		{
-
-		}
-		else
-		{
-			if (p.get_linked() && p.control_map_ == map)
-			{
-				p.toggle_control();
-				p.toggle_control();
-				p.update_deformed_map();
-			}
+			p.toggle_control();
+			p.toggle_control();
+			p.update_deformed_map();
 		}
 	}
 }
