@@ -173,7 +173,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 		normal = mh->add_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
 	}
 
-	cgogn::geometry::compute_normal<VEC3>(*mh->get_map(), position, normal);
+	cgogn::geometry::compute_normal(*mh->get_map(), position, normal);
 
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, normal_attribute_name);
 
@@ -253,13 +253,13 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 
 	CMap2* map2 = mh->get_map();
 
-	cgogn::geometry::compute_angle_between_face_normals<VEC3>(*map2, position, edge_angle);
-	cgogn::geometry::compute_area<VEC3, CMap2::Edge>(*map2, position, edge_area);
+	cgogn::geometry::compute_angle_between_face_normals(*map2, position, edge_angle);
+	cgogn::geometry::compute_area<CMap2::Edge>(*map2, position, edge_area);
 
-	SCALAR mean_edge_length = cgogn::geometry::mean_edge_length<VEC3>(*map2, position);
+	SCALAR mean_edge_length = cgogn::geometry::mean_edge_length(*map2, position);
 	float32 radius = 2.5f * mean_edge_length;
 
-	cgogn::geometry::compute_curvature<VEC3>(*map2, radius, position, normal, edge_angle, edge_area, kmax, kmin, Kmax, Kmin, Knormal);
+	cgogn::geometry::compute_curvature(*map2, radius, position, normal, edge_angle, edge_area, kmax, kmin, Kmax, Kmin, Knormal);
 
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, Kmax_attribute_name);
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, kmax_attribute_name);

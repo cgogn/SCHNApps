@@ -369,8 +369,8 @@ void Plugin_ShallowWater::init_map_attributes()
 	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
 	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
 
-	cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
-	cgogn::geometry::compute_area<VEC3, CMap2::Face>(*map2_, position_, area_);
+	cgogn::geometry::compute_centroid<CMap2::Face>(*map2_, position_, centroid_);
+	cgogn::geometry::compute_area<CMap2::Face>(*map2_, position_, area_);
 
 	qtrav_->build<CMap2::Vertex>();
 	qtrav_->build<CMap2::Edge>();
@@ -1178,8 +1178,8 @@ void Plugin_ShallowWater::try_subdivision()
 								nbv++;
 							});
 							zb_[cfidx] = zb / nbv;
-							centroid_[cfidx] = cgogn::geometry::centroid<VEC3>(*map2_, cf, position_);
-							area_[cfidx] = cgogn::geometry::area<VEC3>(*map2_, cf, position_);
+							centroid_[cfidx] = cgogn::geometry::centroid(*map2_, cf, position_);
+							area_[cfidx] = cgogn::geometry::area(*map2_, cf, position_);
 							dimension_[cfidx] = 2;
 
 							map2_->foreach_incident_edge(cf, [&] (CMap2::Edge ie)
@@ -1205,8 +1205,8 @@ void Plugin_ShallowWater::try_subdivision()
 									nbv++;
 								});
 								zb_[afidx] = zb / nbv;
-								centroid_[afidx] = cgogn::geometry::centroid<VEC3>(*map2_, af, position_);
-								area_[afidx] = cgogn::geometry::area<VEC3>(*map2_, af, position_);
+								centroid_[afidx] = cgogn::geometry::centroid(*map2_, af, position_);
+								area_[afidx] = cgogn::geometry::area(*map2_, af, position_);
 								dimension_[afidx] = 2;
 							});
 						}
@@ -1243,8 +1243,8 @@ void Plugin_ShallowWater::try_subdivision()
 									nbv++;
 								});
 								zb_[afidx] = zb / nbv;
-								centroid_[afidx] = cgogn::geometry::centroid<VEC3>(*map2_, af, position_);
-								area_[afidx] = cgogn::geometry::area<VEC3>(*map2_, af, position_);
+								centroid_[afidx] = cgogn::geometry::centroid(*map2_, af, position_);
+								area_[afidx] = cgogn::geometry::area(*map2_, af, position_);
 								dimension_[afidx] = 2;
 							});
 						}
@@ -1417,7 +1417,7 @@ void Plugin_ShallowWater::try_simplification()
 				q_[fidx] = q / area;
 				r_[fidx] = r / area;
 				phi_[fidx] = phi / area;
-				area_[fidx] = cgogn::geometry::area<VEC3>(*map2_, f, position_);
+				area_[fidx] = cgogn::geometry::area(*map2_, f, position_);
 
 				SCALAR zb = 0.;
 				nb = 0;
@@ -1918,7 +1918,7 @@ void Plugin_ShallowWater::get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Fa
 
 void Plugin_ShallowWater::compute_edge_length_and_normal(CMap2::Edge e)
 {
-	SCALAR l = cgogn::geometry::length<VEC3>(*map2_, e, position_);
+	SCALAR l = cgogn::geometry::length(*map2_, e, position_);
 	length_[e] = l;
 	VEC3 vec = position_[CMap2::Vertex(map2_->phi2(e.dart))] - position_[CMap2::Vertex(e.dart)];
 	normX_[e] = vec[1] / l;
