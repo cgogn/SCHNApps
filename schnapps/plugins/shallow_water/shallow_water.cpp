@@ -129,15 +129,15 @@ bool Plugin_ShallowWater::enable()
 		}
 	});
 
-	cgogn::geometry::compute_centroid<VEC3, CMap2::Face>(*map2_, position_, centroid_);
+	cgogn::geometry::compute_centroid<CMap2::Face>(*map2_, position_, centroid_);
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
 			CMap2::Edge e1(f.dart);
 			CMap2::Edge e2(map2_->phi1(f.dart));
-			phi_[f] = cgogn::geometry::length<VEC3>(*map2_, e1, position_);
-			length_[f] = cgogn::geometry::length<VEC3>(*map2_, e2, position_);
+			phi_[f] = cgogn::geometry::length(*map2_, e1, position_);
+			length_[f] = cgogn::geometry::length(*map2_, e2, position_);
 			subd_code_[f] = 1;
 		},
 		*qtrav_
@@ -655,14 +655,14 @@ void Plugin_ShallowWater::subdivide_face(CMap2::Face f, CMap2::CellMarker<CMap2:
 	q_[fL] = old_q;
 	q_[fR] = old_q;
 
-	centroid_[fL] = cgogn::geometry::centroid<VEC3>(*map2_, fL, position_);
-	centroid_[fR] = cgogn::geometry::centroid<VEC3>(*map2_, fR, position_);
+	centroid_[fL] = cgogn::geometry::centroid(*map2_, fL, position_);
+	centroid_[fR] = cgogn::geometry::centroid(*map2_, fR, position_);
 
-	length_[fL] = cgogn::geometry::length<VEC3>(*map2_, CMap2::Edge(map2_->phi1(eL.dart)), position_);
-	length_[fR] = cgogn::geometry::length<VEC3>(*map2_, CMap2::Edge(map2_->phi1(eR.dart)), position_);
+	length_[fL] = cgogn::geometry::length(*map2_, CMap2::Edge(map2_->phi1(eL.dart)), position_);
+	length_[fR] = cgogn::geometry::length(*map2_, CMap2::Edge(map2_->phi1(eR.dart)), position_);
 
-	phi_[fL] = cgogn::geometry::length<VEC3>(*map2_, eL, position_);
-	phi_[fR] = cgogn::geometry::length<VEC3>(*map2_, eR, position_);
+	phi_[fL] = cgogn::geometry::length(*map2_, eL, position_);
+	phi_[fR] = cgogn::geometry::length(*map2_, eR, position_);
 
 	nbr_cell_++;
 }
@@ -703,9 +703,9 @@ void Plugin_ShallowWater::remove_edge(CMap2::Edge e)
 	h_[f] = (old_l_1*old_h_1+old_l_2*old_h_2)/(old_l_1+old_l_2);
 	q_[f] = (old_l_1*old_q_1+old_l_2*old_q_2)/(old_l_1+old_l_2);
 
-	centroid_[f] = cgogn::geometry::centroid<VEC3>(*map2_, f, position_);
-	length_[f] = cgogn::geometry::length<VEC3>(*map2_, CMap2::Edge(d1), position_);
-	phi_[f] = cgogn::geometry::length<VEC3>(*map2_, CMap2::Edge(map2_->phi_1(d1)), position_);
+	centroid_[f] = cgogn::geometry::centroid(*map2_, f, position_);
+	length_[f] = cgogn::geometry::length(*map2_, CMap2::Edge(d1), position_);
+	phi_[f] = cgogn::geometry::length(*map2_, CMap2::Edge(map2_->phi_1(d1)), position_);
 
 	nbr_cell_--;
 }

@@ -253,7 +253,7 @@ private:
 				return;
 			}
 
-			topo_drawer_->update<VEC3>(*map_->get_map(), pos_attr);
+			topo_drawer_->update(*map_->get_map(), pos_attr);
 		}
 	}
 
@@ -268,10 +268,10 @@ private:
 				position_vbo_ = nullptr;
 				return;
 			}
-			volume_drawer_->update_edge<VEC3>(*map_->get_map(), pos_attr);
-			volume_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
+			volume_drawer_->update_edge(*map_->get_map(), pos_attr);
+			volume_drawer_->update_face(*map_->get_map(), pos_attr);
 #ifdef USE_TRANSPARENCY
-			volume_transparency_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
+			volume_transparency_drawer_->update_face(*map_->get_map(), pos_attr);
 #endif
 		}
 	}
