@@ -21,49 +21,59 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
+#include <schnapps/plugins/shallow_water_2/dialog_shallow_water.h>
+#include <schnapps/plugins/shallow_water_2/shallow_water.h>
 
-#include <schnapps/plugins/shallow_water_2/dll.h>
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/map_handler.h>
+#include <schnapps/core/view.h>
 
-#include <ui_shallow_water.h>
+#include <QFileDialog>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
-
 namespace plugin_shallow_water_2
 {
 
-class Plugin_ShallowWater;
-
-class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API ShallowWater_DockTab : public QWidget, public Ui::ShallowWater_TabWidget
+ShallowWater_Dialog::ShallowWater_Dialog(SCHNApps* s, Plugin_ShallowWater* p) :
+	schnapps_(s),
+	plugin_(p)
 {
-	Q_OBJECT
+	setupUi(this);
 
-	friend class Plugin_ShallowWater;
+	connect(button_load, SIGNAL(clicked()), this, SLOT(load()));
+	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
+	connect(button_1_step, SIGNAL(clicked()), this, SLOT(step()));
+}
 
-public:
+void ShallowWater_Dialog::simu_running_state_changed()
+{
+	if (plugin_->is_simu_running())
+		button_start_stop->setText("Stop");
+	else
+		button_start_stop->setText("Start");
+}
 
-	ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p);
-	void simu_running_state_changed();
+void ShallowWater_Dialog::load()
+{
+	QString dossier = QFileDialog::getExistingDirectory(nullptr);
+	plugin_->load_project(dossier);
+}
 
-private:
+void ShallowWater_Dialog::start_stop()
+{
+	if (!plugin_->is_simu_running())
+		plugin_->start();
+	else
+		plugin_->stop();
+}
 
-	SCHNApps* schnapps_;
-	Plugin_ShallowWater* plugin_;
-
-private slots:
-
-	void init();
-	void start_stop();
-	void step();
-};
+void ShallowWater_Dialog::step()
+{
+	plugin_->step();
+}
 
 } // namespace plugin_shallow_water_2
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_

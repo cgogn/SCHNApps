@@ -21,56 +21,52 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/shallow_water_2/shallow_water_dock_tab.h>
-#include <schnapps/plugins/shallow_water_2/shallow_water.h>
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DIALOG_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DIALOG_H_
 
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-#include <schnapps/core/view.h>
+#include <schnapps/plugins/shallow_water_2/dll.h>
+
+#include <ui_dialog_shallow_water.h>
 
 namespace schnapps
 {
 
+class SCHNApps;
+class MapHandlerGen;
+
 namespace plugin_shallow_water_2
 {
 
-ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) :
-	schnapps_(s),
-	plugin_(p)
-{
-	setupUi(this);
+class Plugin_ShallowWater;
 
-	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
-	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
-	connect(button_1_step, SIGNAL(clicked()), this, SLOT(step()));
-}
-
-void ShallowWater_DockTab::simu_running_state_changed()
+class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API ShallowWater_Dialog: public QDialog, public Ui::ShallowWater_Dialog
 {
-	if (plugin_->is_simu_running())
-		button_start_stop->setText("Stop");
-	else
-		button_start_stop->setText("Start");
-}
+	Q_OBJECT
 
-void ShallowWater_DockTab::init()
-{
-	plugin_->init();
-}
+public:
 
-void ShallowWater_DockTab::start_stop()
-{
-	if (!plugin_->is_simu_running())
-		plugin_->start();
-	else
-		plugin_->stop();
-}
+	ShallowWater_Dialog(SCHNApps* s, Plugin_ShallowWater* p);
 
-void ShallowWater_DockTab::step()
-{
-	plugin_->step();
-}
+private:
+
+	SCHNApps* schnapps_;
+	Plugin_ShallowWater* plugin_;
+
+private slots:
+
+	// slots called from UI signals
+	void load();
+	void start_stop();
+	void step();
+
+public:
+
+	// methods used to update the UI from the plugin
+	void simu_running_state_changed();
+};
 
 } // namespace plugin_shallow_water_2
 
 } // namespace schnapps
+
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DIALOG_H_

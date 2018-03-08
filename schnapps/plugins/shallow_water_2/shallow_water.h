@@ -31,7 +31,7 @@
 
 #include <cgogn/topology/types/adaptive_tri_quad_cmap2.h>
 
-#include <schnapps/plugins/shallow_water_2/shallow_water_dock_tab.h>
+#include <schnapps/plugins/shallow_water_2/dialog_shallow_water.h>
 
 namespace schnapps
 {
@@ -59,10 +59,9 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	void load_project(const QString& dir);
+	void clean_map();
 	void load_input_file(const QString& filename);
 	void load_hydrau_param_file(const QString& filename);
-	void init_map_attributes();
 	void load_1D_constrained_edges();
 	void load_2D_constrained_edges();
 	void load_1D_initial_cond_file(const QString& filename);
@@ -71,15 +70,24 @@ private:
 	void load_2D_boundary_cond_file(const QString& filename);
 	void sew_1D_2D_meshes();
 
+	void init_map_attributes();
+	void init();
+
 public slots:
 
-	void init();
+	void load_project(const QString& dir);
 	void start();
 	void stop();
 	void step();
 	bool is_simu_running();
 
 private slots:
+
+	// slots called from SCHNApps signals
+	void schnapps_closing();
+
+	// slots called from action signals
+	void open_dialog();
 
 	void update_draw_data();
 	void update_time_step();
@@ -123,7 +131,8 @@ private:
 
 	void compute_edge_length_and_normal(CMap2::Edge e);
 
-	ShallowWater_DockTab* dock_tab_;
+	ShallowWater_Dialog* shallow_water_dialog_;
+	QAction* shallow_water_action;
 
 	QString project_dir_;
 	QString mesh_1D_filename_;
@@ -173,9 +182,9 @@ private:
 
 	CMap2Handler* map_;
 	CMap2* map2_;
-	std::unique_ptr<cgogn::AdaptiveTriQuadCMap2> atq_map_;
-	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
-	std::unique_ptr<CMap2::DartMarker> edge_left_side_;
+	cgogn::AdaptiveTriQuadCMap2* atq_map_;
+	CMap2::QuickTraversor* qtrav_;
+	CMap2::DartMarker* edge_left_side_;
 
 	uint32 nb_faces_2d_;
 	uint32 nb_vertices_2d_;

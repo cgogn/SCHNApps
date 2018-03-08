@@ -40,7 +40,6 @@
 #include <cgogn/core/utils/thread.h>
 
 #include <QFileInfo>
-#include <QFileDialog>
 
 namespace schnapps
 {
@@ -48,10 +47,16 @@ namespace schnapps
 namespace plugin_shallow_water_2
 {
 
-Plugin_ShallowWater::Plugin_ShallowWater()
+Plugin_ShallowWater::Plugin_ShallowWater() :
+	map_(nullptr),
+	map2_(nullptr),
+	atq_map_(nullptr),
+	qtrav_(nullptr),
+	edge_left_side_(nullptr)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
+
 QString Plugin_ShallowWater::plugin_name()
 {
 	return SCHNAPPS_PLUGIN_NAME;
@@ -59,107 +64,43 @@ QString Plugin_ShallowWater::plugin_name()
 
 bool Plugin_ShallowWater::enable()
 {
-	dock_tab_ = new ShallowWater_DockTab(this->schnapps_, this);
-	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Shallow Water 2");
+	shallow_water_dialog_ = new ShallowWater_Dialog(this->schnapps_, this);
 
-	map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water_2", 2));
-	map2_ = static_cast<CMap2*>(map_->get_map());
-	qtrav_ = cgogn::make_unique<CMap2::QuickTraversor>(*map2_);
-	edge_left_side_ = cgogn::make_unique<CMap2::DartMarker>(*map2_);
+	shallow_water_action = schnapps_->add_menu_action("Simulation;Shallow Water", "shallow water simulation");
+	connect(shallow_water_action, SIGNAL(triggered()), this, SLOT(open_dialog()));
 
 	draw_timer_ = new QTimer(this);
 	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
 
-	QString dossier = QFileDialog::getExistingDirectory(nullptr);
-	load_project(dossier);
+	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
+
+	open_dialog();
 
 	return true;
 }
 
 void Plugin_ShallowWater::disable()
 {
-	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
-	schnapps_->remove_map("shallow_water_2");
-	delete dock_tab_;
+	disconnect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
+
+	disconnect(shallow_water_action, SIGNAL(triggered()), this, SLOT(open_dialog()));
+	schnapps_->remove_menu_action(shallow_water_action);
+
+	delete draw_timer_;
+	delete shallow_water_dialog_;
 }
 
-void Plugin_ShallowWater::load_project(const QString& dir)
+void Plugin_ShallowWater::clean_map()
 {
-	project_dir_ = dir;
-
-	load_input_file(dir + "/2d.in");
-	load_hydrau_param_file(dir + "/Hydrau_Param_2D.txt");
-
-	if (mesh_1D_filename_ == "None")
-		dim_ = 2;
-	else
-		dim_ = 12;
-
-	// import 2D mesh
-	QString mesh_2D_filepath = dir + "/" + mesh_2D_filename_;
-	cgogn::io::import_surface<VEC3>(*map2_, mesh_2D_filepath.toStdString());
-
-	dimension_ = map_->add_attribute<uint8, CMap2::Face::ORBIT>("dimension");
-	dimension_.set_all_values(2);
-
-	nb_faces_2d_ = map2_->nb_cells<CMap2::Face>();
-	nb_vertices_2d_ = map2_->nb_cells<CMap2::Vertex>();
-
-	if (dim_ == 12)
-	{
-		// import 1D mesh
-		CMap2 map2_tmp;
-		QString mesh_1D_filepath = dir + "/" + mesh_1D_filename_;
-		cgogn::io::import_surface<VEC3>(map2_tmp, mesh_1D_filepath.toStdString());
-		map2_tmp.enforce_unique_orbit_embedding<CMap2::Vertex::ORBIT>();
-		CMap2::DartMarker dm(*map2_);
-		map2_->merge(map2_tmp, dm);
-		map2_->parallel_foreach_cell([&] (CMap2::Face f)
-		{
-			if (dimension_[f] != 2)
-				dimension_[f] = 1;
-		});
-	}
-
-	init_map_attributes();
-
-	atq_map_ = cgogn::make_unique<cgogn::AdaptiveTriQuadCMap2>(*map2_);
-	atq_map_->init();
-
-	load_2D_constrained_edges();
-	if (dim_ == 12)
-		load_2D_constrained_edges();
-
-	load_2D_initial_cond_file(dir + "/Initial_Cond_2D.txt");
-	if (dim_ == 12)
-		load_1D_initial_cond_file(dir + "/Initial_Cond_1D.txt");
-
-	load_2D_boundary_cond_file(dir + "/BC_2D.lim");
-	if (dim_ == 12)
-		load_1D_boundary_cond_file(dir + "/BC_1D.lim");
-
-	if (dim_ == 12)
-		sew_1D_2D_meshes();
-
-	map2_->parallel_foreach_cell(
-		[&] (CMap2::Face f)
-		{
-			uint32 nbv = 0;
-			map2_->foreach_incident_vertex(f, [&] (CMap2::Vertex v)
-			{
-				zb_[f] += position_[v][2];
-				nbv++;
-			});
-			zb_[f] /= nbv;
-			h_[f] -= zb_[f];
-			// z is read in initial_cond file, not h
-
-			phi_[f] = phi_default_;
-		},
-		*qtrav_
-	);
-
-	init();
+	schnapps_->remove_map("shallow_water_2");
+	map_ = nullptr;
+	map2_ = nullptr;
+	delete atq_map_;
+	atq_map_ = nullptr;
+	delete qtrav_;
+	qtrav_ = nullptr;
+	delete edge_left_side_;
+	edge_left_side_ = nullptr;
 }
 
 void Plugin_ShallowWater::load_input_file(const QString& filename)
@@ -336,49 +277,6 @@ void Plugin_ShallowWater::load_2D_constrained_edges()
 		} while (!file_mesh_2D.eof());
 	}
 	file_mesh_2D.close(); // close 2D mesh file
-}
-
-void Plugin_ShallowWater::init_map_attributes()
-{
-	position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
-	scalar_value_h_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_h");
-	scalar_value_u_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_u");
-	scalar_value_v_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_v");
-	water_position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("water_position");
-	flow_velocity_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("flow_velocity");
-
-	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
-	zb_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("zb");
-	h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h");
-	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q");
-	r_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r");
-	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
-	area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
-	swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
-	discharge_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("discharge");
-
-	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
-	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
-	f3_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f3");
-	s2L_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2L");
-	s2R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2R");
-	normX_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normX");
-	normY_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normY");
-	length_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("length");
-	val_bc_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("val_bc");
-	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
-	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
-
-	cgogn::geometry::compute_centroid<CMap2::Face>(*map2_, position_, centroid_);
-	cgogn::geometry::compute_area<CMap2::Face>(*map2_, position_, area_);
-
-	qtrav_->build<CMap2::Vertex>();
-	qtrav_->build<CMap2::Edge>();
-	qtrav_->build<CMap2::Face>();
-
-	map2_->copy_attribute(water_position_, position_);
-
-	NS_.set_all_values(0.);
 }
 
 void Plugin_ShallowWater::load_2D_initial_cond_file(const QString& filename)
@@ -693,6 +591,139 @@ void Plugin_ShallowWater::sew_1D_2D_meshes()
 	);
 }
 
+void Plugin_ShallowWater::load_project(const QString& dir)
+{
+	// clean
+	if (map_)
+		clean_map();
+
+	project_dir_ = dir;
+
+	load_input_file(dir + "/2d.in");
+	load_hydrau_param_file(dir + "/Hydrau_Param_2D.txt");
+
+	if (mesh_1D_filename_ == "None")
+		dim_ = 2;
+	else
+		dim_ = 12;
+
+	// create map
+	map_ = static_cast<CMap2Handler*>(schnapps_->add_map("shallow_water_2", 2));
+	map2_ = static_cast<CMap2*>(map_->get_map());
+	qtrav_ = new CMap2::QuickTraversor(*map2_);
+	edge_left_side_ = new CMap2::DartMarker(*map2_);
+
+	// import 2D mesh
+	QString mesh_2D_filepath = dir + "/" + mesh_2D_filename_;
+	cgogn::io::import_surface<VEC3>(*map2_, mesh_2D_filepath.toStdString());
+
+	dimension_ = map_->add_attribute<uint8, CMap2::Face::ORBIT>("dimension");
+	dimension_.set_all_values(2);
+
+	nb_faces_2d_ = map2_->nb_cells<CMap2::Face>();
+	nb_vertices_2d_ = map2_->nb_cells<CMap2::Vertex>();
+
+	if (dim_ == 12)
+	{
+		// import 1D mesh
+		CMap2 map2_tmp;
+		QString mesh_1D_filepath = dir + "/" + mesh_1D_filename_;
+		cgogn::io::import_surface<VEC3>(map2_tmp, mesh_1D_filepath.toStdString());
+		map2_tmp.enforce_unique_orbit_embedding<CMap2::Vertex::ORBIT>();
+		CMap2::DartMarker dm(*map2_);
+		map2_->merge(map2_tmp, dm);
+		map2_->parallel_foreach_cell([&] (CMap2::Face f)
+		{
+			if (dimension_[f] != 2)
+				dimension_[f] = 1;
+		});
+	}
+
+	init_map_attributes();
+
+	// create adaptive tri/quad handler
+	atq_map_ = new cgogn::AdaptiveTriQuadCMap2(*map2_);
+	atq_map_->init();
+
+	load_2D_constrained_edges();
+	if (dim_ == 12)
+		load_2D_constrained_edges();
+
+	load_2D_initial_cond_file(dir + "/Initial_Cond_2D.txt");
+	if (dim_ == 12)
+		load_1D_initial_cond_file(dir + "/Initial_Cond_1D.txt");
+
+	load_2D_boundary_cond_file(dir + "/BC_2D.lim");
+	if (dim_ == 12)
+		load_1D_boundary_cond_file(dir + "/BC_1D.lim");
+
+	if (dim_ == 12)
+		sew_1D_2D_meshes();
+
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Face f)
+		{
+			uint32 nbv = 0;
+			map2_->foreach_incident_vertex(f, [&] (CMap2::Vertex v)
+			{
+				zb_[f] += position_[v][2];
+				nbv++;
+			});
+			zb_[f] /= nbv;
+			h_[f] -= zb_[f];
+			// z is read in initial_cond file, not h
+
+			phi_[f] = phi_default_;
+		},
+		*qtrav_
+	);
+
+	init();
+}
+
+void Plugin_ShallowWater::init_map_attributes()
+{
+	position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+	scalar_value_h_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_h");
+	scalar_value_u_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_u");
+	scalar_value_v_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_v");
+	water_position_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("water_position");
+	flow_velocity_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("flow_velocity");
+
+	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
+	zb_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("zb");
+	h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h");
+	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q");
+	r_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r");
+	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
+	area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
+	swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
+	discharge_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("discharge");
+
+	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
+	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
+	f3_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f3");
+	s2L_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2L");
+	s2R_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("s2R");
+	normX_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normX");
+	normY_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("normY");
+	length_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("length");
+	val_bc_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("val_bc");
+	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
+	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
+
+	cgogn::geometry::compute_centroid<CMap2::Face>(*map2_, position_, centroid_);
+	cgogn::geometry::compute_area<CMap2::Face>(*map2_, position_, area_);
+
+	qtrav_->build<CMap2::Vertex>();
+	qtrav_->build<CMap2::Edge>();
+	qtrav_->build<CMap2::Face>();
+
+	map2_->copy_attribute(water_position_, position_);
+
+	NS_.set_all_values(0.);
+}
+
 void Plugin_ShallowWater::init()
 {
 	simu_running_ = false;
@@ -752,7 +783,7 @@ void Plugin_ShallowWater::start()
 			execute_time_step();
 	});
 
-	dock_tab_->simu_running_state_changed();
+	shallow_water_dialog_->simu_running_state_changed();
 }
 
 void Plugin_ShallowWater::stop()
@@ -766,7 +797,7 @@ void Plugin_ShallowWater::stop()
 	simu_running_ = false;
 	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
 
-	dock_tab_->simu_running_state_changed();
+	shallow_water_dialog_->simu_running_state_changed();
 }
 
 void Plugin_ShallowWater::step()
@@ -784,6 +815,16 @@ void Plugin_ShallowWater::step()
 bool Plugin_ShallowWater::is_simu_running()
 {
 	return simu_running_;
+}
+
+void Plugin_ShallowWater::schnapps_closing()
+{
+	shallow_water_dialog_->close();
+}
+
+void Plugin_ShallowWater::open_dialog()
+{
+	shallow_water_dialog_->show();
 }
 
 void Plugin_ShallowWater::update_draw_data()
