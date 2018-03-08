@@ -235,7 +235,7 @@ private slots:
 							CMap2Handler::VertexAttribute<VEC3>* pos = static_cast<CMap2Handler::VertexAttribute<VEC3>*>(position_.get());
 							cells_set_->foreach_cell([&] (cgogn::Dart f)
 							{
-								cgogn::geometry::append_ear_triangulation<VEC3>(*map2, CMap2::Face(f), *pos, ears);
+								cgogn::geometry::append_ear_triangulation(*map2, CMap2::Face(f), *pos, ears);
 							});
 						}
 						else // map_->dimension() == 3
@@ -244,7 +244,7 @@ private slots:
 							CMap3Handler::VertexAttribute<VEC3>* pos = static_cast<CMap3Handler::VertexAttribute<VEC3>*>(position_.get());
 							cells_set_->foreach_cell([&] (cgogn::Dart f)
 							{
-								cgogn::geometry::append_ear_triangulation<VEC3>(*map3, CMap3::Face(f), *pos, ears);
+								cgogn::geometry::append_ear_triangulation(*map3, CMap3::Face(f), *pos, ears);
 							});
 						}
 
@@ -267,7 +267,7 @@ private slots:
 						drawer_selected_volumes_->color3f(1.0, 0.0, 0.0);
 						cells_set_->foreach_cell([&] (cgogn::Dart w)
 						{
-							cgogn::rendering::add_to_drawer<VEC3>(*map3, CMap3::Volume(w), *pos, drawer_selected_volumes_.get());
+							cgogn::rendering::add_to_drawer(*map3, CMap3::Volume(w), *pos, drawer_selected_volumes_.get());
 						});
 						drawer_selected_volumes_->end();
 						drawer_selected_volumes_->end_list();

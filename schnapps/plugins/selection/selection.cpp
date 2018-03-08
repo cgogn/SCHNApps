@@ -523,14 +523,14 @@ bool Plugin_Selection::mouseMove(View* view, QMouseEvent* event)
 										if (map->dimension() == 2)
 										{
 											const CMap2Handler::VertexAttribute<VEC3>& pos = static_cast<const CMap2Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
-											cgogn::geometry::append_ear_triangulation<VEC3>(*map2, Face2(p.selecting_face_), pos, ears);
-											c = cgogn::geometry::centroid<VEC3>(*map2, Face2(p.selecting_face_), pos);
+											cgogn::geometry::append_ear_triangulation(*map2, Face2(p.selecting_face_), pos, ears);
+											c = cgogn::geometry::centroid(*map2, Face2(p.selecting_face_), pos);
 										}
 										else
 										{
 											const CMap3Handler::VertexAttribute<VEC3>& pos = static_cast<const CMap3Handler::VertexAttribute<VEC3>&>(p.get_position_attribute());
-											cgogn::geometry::append_ear_triangulation<VEC3>(*map3, Face3(p.selecting_face_), pos, ears);
-											c = cgogn::geometry::centroid<VEC3>(*map3, Face3(p.selecting_face_), pos);
+											cgogn::geometry::append_ear_triangulation(*map3, Face3(p.selecting_face_), pos, ears);
+											c = cgogn::geometry::centroid(*map3, Face3(p.selecting_face_), pos);
 										}
 
 										for (uint32 i : ears)
@@ -674,13 +674,13 @@ std::vector<cgogn::Dart> Plugin_Selection::get_picked_cells(MapHandlerGen* map, 
 			const CMap2::VertexAttribute<VEC3>* pos = static_cast<const CMap2::VertexAttribute<VEC3>*>(&position_att);
 			switch (ct) {
 				case CellType::Vertex_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Vertex2>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Vertex2>&>(res)); break;
 				case CellType::Edge_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Edge2>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Edge2>&>(res)); break;
 				case CellType::Face_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Face2>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Face2>&>(res)); break;
 				case CellType::Volume_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Volume>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh2->get_map(), *pos, A, B, reinterpret_cast<std::vector<Volume>&>(res)); break;
 				default:
 					pick_res = false; break;
 			}
@@ -691,13 +691,13 @@ std::vector<cgogn::Dart> Plugin_Selection::get_picked_cells(MapHandlerGen* map, 
 			const CMap3::VertexAttribute<VEC3>* pos = static_cast<const CMap3::VertexAttribute<VEC3>*>(&position_att);
 			switch (ct) {
 				case CellType::Vertex_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Vertex3>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Vertex3>&>(res)); break;
 				case CellType::Edge_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Edge3>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Edge3>&>(res)); break;
 				case CellType::Face_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Face3>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Face3>&>(res)); break;
 				case CellType::Volume_Cell:
-					pick_res = cgogn::geometry::picking<VEC3>(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Volume>&>(res)); break;
+					pick_res = cgogn::geometry::picking(*mh3->get_map(), *pos, A, B, reinterpret_cast<std::vector<Volume>&>(res)); break;
 				default:
 					pick_res = false; break;
 			}

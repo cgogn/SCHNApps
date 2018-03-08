@@ -106,7 +106,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 			for (auto d : darts)
 			{
 				const CMap3::Volume w(d);
-				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, w,pos3);
+				auto inserted_vertex_pos = cgogn::geometry::centroid(*map3, w,pos3);
 				res.push_back(cgogn::modeling::flip_14(*map3, w).dart);
 				cgogn::Dart v(res.back());
 				if (!v.is_nil())
@@ -127,7 +127,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 			for (auto d : darts)
 			{
 				const CMap3::Face f(d);
-				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, f,pos3);
+				auto inserted_vertex_pos = cgogn::geometry::centroid(*map3, f,pos3);
 				res.push_back(cgogn::modeling::flip_13(*map3, f).dart);
 				cgogn::Dart v(res.back());
 				if (!v.is_nil())
@@ -200,7 +200,7 @@ VolumeModelisationPlugin::VolumeModelisationPlugin()
 			for (auto d : darts)
 			{
 				const CMap3::Edge e(d);
-				auto inserted_vertex_pos = cgogn::geometry::centroid<VEC3>(*map3, e, pos3);
+				auto inserted_vertex_pos = cgogn::geometry::centroid(*map3, e, pos3);
 				const cgogn::Dart res_dart = cgogn::modeling::edge_bisection(*map3, e);
 				if (!res_dart.is_nil())
 				{

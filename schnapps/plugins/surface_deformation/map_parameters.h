@@ -116,14 +116,14 @@ struct MapParameters
 				if (!map2->is_incident_to_boundary(e))
 				{
 					edge_weight_[e] = (
-						std::tan(M_PI_2 - cgogn::geometry::angle<VEC3>(*map2, CMap2::CDart(map2->phi_1(e.dart)), position_)) +
-						std::tan(M_PI_2 - cgogn::geometry::angle<VEC3>(*map2, CMap2::CDart(map2->phi_1(map2->phi2(e.dart))), position_))
+						std::tan(M_PI_2 - cgogn::geometry::angle(*map2, CMap2::CDart(map2->phi_1(e.dart)), position_)) +
+						std::tan(M_PI_2 - cgogn::geometry::angle(*map2, CMap2::CDart(map2->phi_1(map2->phi2(e.dart))), position_))
 					) / 2.0;
 				}
 				else
 				{
 					cgogn::Dart d = map2->boundary_dart(e);
-					edge_weight_[e] = std::tan(M_PI_2 - cgogn::geometry::angle<VEC3>(*map2, CMap2::CDart(map2->phi_1(map2->phi2(e.dart))), position_));
+					edge_weight_[e] = std::tan(M_PI_2 - cgogn::geometry::angle(*map2, CMap2::CDart(map2->phi_1(map2->phi2(e.dart))), position_));
 				}
 			});
 
