@@ -53,18 +53,18 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_Cage3dDeformation* plugin_;
 
-	CMap2Handler* selected_control_map_;
 	MapHandlerGen* selected_deformed_map_;
+	CMap2Handler* selected_control_map_;
 
 	bool updating_ui_;
 
 private slots:
 
 	// slots called from UI signals
-	void selected_control_map_changed();
-	void control_position_attribute_changed(int index);
 	void selected_deformed_map_changed();
 	void deformed_position_attribute_changed(int index);
+	void selected_control_map_changed();
+	void control_position_attribute_changed(int index);
 	void toggle_control();
 
 	// slots called from SCHNApps signals
@@ -72,24 +72,25 @@ private slots:
 	void map_removed(MapHandlerGen* map);
 
 	// slots called from MapHandlerGen signals
-	void selected_control_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 	void selected_deformed_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void selected_control_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 
 public:
 
 	CMap2Handler* selected_control_map() const { return selected_control_map_; }
+	MapHandlerGen* selected_deformed_map() const { return selected_deformed_map_; }
 
 	// methods used to update the UI from the plugin
-	void set_control_position_attribute(const QString& name);
-	void set_selected_deformed_map(MapHandlerGen* deformed_map);
 	void set_deformed_position_attribute(const QString& name);
+	void set_selected_control_map(CMap2Handler* control_map);
+	void set_control_position_attribute(const QString& name);
 	void set_linked(bool state);
 
 private:
 
 	// internal UI cascading updates
-	void update_after_selected_control_map_changed();
 	void update_after_selected_deformed_map_changed();
+	void update_after_selected_control_map_changed();
 };
 
 } // namespace plugin_cage_3d_deformation
