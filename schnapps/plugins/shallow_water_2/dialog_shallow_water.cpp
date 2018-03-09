@@ -59,6 +59,7 @@ void ShallowWater_Dialog::load()
 {
 	QString dossier = QFileDialog::getExistingDirectory(nullptr);
 	plugin_->load_project(dossier);
+	plugin_->init();
 }
 
 void ShallowWater_Dialog::start_stop()

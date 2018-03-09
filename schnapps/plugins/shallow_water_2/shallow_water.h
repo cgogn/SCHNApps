@@ -54,6 +54,14 @@ public:
 	inline ~Plugin_ShallowWater() override {}
 	static QString plugin_name();
 
+	void load_project(const QString& dir);
+
+	bool is_simu_running() { return simu_running_; }
+	std::future<void>* simu_future() { return &simu_future_; }
+
+	void set_max_depth(uint32 m) { max_depth_ = m; }
+	void init();
+
 private:
 
 	bool enable() override;
@@ -71,15 +79,12 @@ private:
 	void sew_1D_2D_meshes();
 
 	void init_map_attributes();
-	void init();
 
 public slots:
 
-	void load_project(const QString& dir);
 	void start();
 	void stop();
 	void step();
-	bool is_simu_running();
 
 private slots:
 

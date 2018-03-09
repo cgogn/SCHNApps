@@ -52,7 +52,10 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
 	map2_(nullptr),
 	atq_map_(nullptr),
 	qtrav_(nullptr),
-	edge_left_side_(nullptr)
+	edge_left_side_(nullptr),
+	max_depth_(0),
+	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
+	small_(1e-35) // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
@@ -66,7 +69,7 @@ bool Plugin_ShallowWater::enable()
 {
 	shallow_water_dialog_ = new ShallowWater_Dialog(this->schnapps_, this);
 
-	shallow_water_action = schnapps_->add_menu_action("Simulation;Shallow Water", "shallow water simulation");
+	shallow_water_action = schnapps_->add_menu_action("Simulation;Shallow Water;Open dialog", "shallow water simulation");
 	connect(shallow_water_action, SIGNAL(triggered()), this, SLOT(open_dialog()));
 
 	draw_timer_ = new QTimer(this);
@@ -92,15 +95,15 @@ void Plugin_ShallowWater::disable()
 
 void Plugin_ShallowWater::clean_map()
 {
-	schnapps_->remove_map("shallow_water_2");
-	map_ = nullptr;
-	map2_ = nullptr;
-	delete atq_map_;
-	atq_map_ = nullptr;
 	delete qtrav_;
 	qtrav_ = nullptr;
 	delete edge_left_side_;
 	edge_left_side_ = nullptr;
+	delete atq_map_;
+	atq_map_ = nullptr;
+	schnapps_->remove_map("shallow_water_2");
+	map_ = nullptr;
+	map2_ = nullptr;
 }
 
 void Plugin_ShallowWater::load_input_file(const QString& filename)
@@ -639,50 +642,12 @@ void Plugin_ShallowWater::load_project(const QString& dir)
 		});
 	}
 
-	init_map_attributes();
+	// build quick traversors
+	qtrav_->build<CMap2::Vertex>();
+	qtrav_->build<CMap2::Edge>();
+	qtrav_->build<CMap2::Face>();
 
-	// create adaptive tri/quad handler
-	atq_map_ = new cgogn::AdaptiveTriQuadCMap2(*map2_);
-	atq_map_->init();
-
-	load_2D_constrained_edges();
-	if (dim_ == 12)
-		load_2D_constrained_edges();
-
-	load_2D_initial_cond_file(dir + "/Initial_Cond_2D.txt");
-	if (dim_ == 12)
-		load_1D_initial_cond_file(dir + "/Initial_Cond_1D.txt");
-
-	load_2D_boundary_cond_file(dir + "/BC_2D.lim");
-	if (dim_ == 12)
-		load_1D_boundary_cond_file(dir + "/BC_1D.lim");
-
-	if (dim_ == 12)
-		sew_1D_2D_meshes();
-
-	map2_->parallel_foreach_cell(
-		[&] (CMap2::Face f)
-		{
-			uint32 nbv = 0;
-			map2_->foreach_incident_vertex(f, [&] (CMap2::Vertex v)
-			{
-				zb_[f] += position_[v][2];
-				nbv++;
-			});
-			zb_[f] /= nbv;
-			h_[f] -= zb_[f];
-			// z is read in initial_cond file, not h
-
-			phi_[f] = phi_default_;
-		},
-		*qtrav_
-	);
-
-	init();
-}
-
-void Plugin_ShallowWater::init_map_attributes()
-{
+	// create map attributes
 	position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
 	scalar_value_h_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_h");
 	scalar_value_u_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_u");
@@ -710,34 +675,65 @@ void Plugin_ShallowWater::init_map_attributes()
 	length_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("length");
 	val_bc_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("val_bc");
 	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
+
 	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
+	NS_.set_all_values(0.);
+
+	load_2D_constrained_edges();
+	if (dim_ == 12)
+		load_1D_constrained_edges();
+
+	load_2D_initial_cond_file(dir + "/Initial_Cond_2D.txt");
+	if (dim_ == 12)
+		load_1D_initial_cond_file(dir + "/Initial_Cond_1D.txt");
+
+	load_2D_boundary_cond_file(dir + "/BC_2D.lim");
+	if (dim_ == 12)
+		load_1D_boundary_cond_file(dir + "/BC_1D.lim");
+
+	if (dim_ == 12)
+		sew_1D_2D_meshes();
+
+	// create adaptive tri/quad handler
+	atq_map_ = new cgogn::AdaptiveTriQuadCMap2(*map2_);
+	atq_map_->init();
+
+	// init zb & h
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Face f)
+		{
+			uint32 nbv = 0;
+			map2_->foreach_incident_vertex(f, [&] (CMap2::Vertex v)
+			{
+				zb_[f] += position_[v][2];
+				nbv++;
+			});
+			zb_[f] /= nbv;
+			h_[f] -= zb_[f];
+			// z is read in initial_cond file, not h
+
+			phi_[f] = phi_default_;
+		},
+		*qtrav_
+	);
+
+	map2_->copy_attribute(water_position_, position_);
 
 	cgogn::geometry::compute_centroid<CMap2::Face>(*map2_, position_, centroid_);
 	cgogn::geometry::compute_area<CMap2::Face>(*map2_, position_, area_);
 
-	qtrav_->build<CMap2::Vertex>();
-	qtrav_->build<CMap2::Edge>();
-	qtrav_->build<CMap2::Face>();
-
-	map2_->copy_attribute(water_position_, position_);
-
-	NS_.set_all_values(0.);
+	// compute edge properties
+	map2_->parallel_foreach_cell(
+		[&] (CMap2::Edge e) { compute_edge_length_and_normal(e); },
+		*qtrav_
+	);
 }
 
 void Plugin_ShallowWater::init()
 {
 	simu_running_ = false;
 	nb_iter_ = 0;
-
-	hmin_ = 1e-3; // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
-	small_ = 1e-35; // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
-
-	max_depth_ = 4;
-
-	map2_->parallel_foreach_cell(
-		[&] (CMap2::Edge e) { compute_edge_length_and_normal(e); },
-		*qtrav_
-	);
+	t_ = 0.;
 
 	min_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
 	max_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
@@ -777,13 +773,13 @@ void Plugin_ShallowWater::start()
 	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
 	draw_timer_->start(67);
 	simu_running_ = true;
+	shallow_water_dialog_->simu_running_state_changed();
+
 	simu_future_ = cgogn::launch_thread([&] () -> void
 	{
 		while (simu_running_)
 			execute_time_step();
 	});
-
-	shallow_water_dialog_->simu_running_state_changed();
 }
 
 void Plugin_ShallowWater::stop()
@@ -796,7 +792,6 @@ void Plugin_ShallowWater::stop()
 
 	simu_running_ = false;
 	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
-
 	shallow_water_dialog_->simu_running_state_changed();
 }
 
@@ -810,11 +805,6 @@ void Plugin_ShallowWater::step()
 	std::cout << "dt -> " << dt_ << std::endl;
 	update_draw_data();
 	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
-}
-
-bool Plugin_ShallowWater::is_simu_running()
-{
-	return simu_running_;
 }
 
 void Plugin_ShallowWater::schnapps_closing()
