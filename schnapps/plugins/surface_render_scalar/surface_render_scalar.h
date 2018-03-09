@@ -99,7 +99,7 @@ private slots:
 
 	void viewer_initialized();
 
-public slots:
+public:
 
 	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
 	void set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
@@ -110,6 +110,8 @@ public slots:
 	void set_expansion(View* view, MapHandlerGen* map, int32 i, bool update_dock_tab);
 	void set_show_iso_lines(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
 	void set_nb_iso_levels(View* view, MapHandlerGen* map, int32 i, bool update_dock_tab);
+
+	void update_min_max(View* view, MapHandlerGen* map, bool update_dock_tab);
 
 private:
 

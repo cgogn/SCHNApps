@@ -249,12 +249,8 @@ void Plugin_SurfaceRenderScalar::linked_map_attribute_changed(cgogn::Orbit orbit
 			if (view_param_set.count(map) > 0ul)
 			{
 				MapParameters& p = view_param_set[map];
-				if (p.scalar_vbo_ && QString::fromStdString(p.scalar_vbo_->name()) == attribute_name && p.auto_update_min_max_)
-				{
-					p.update_min_max();
-					set_scalar_min(it.first, map, p.get_scalar_min(), true);
-					set_scalar_max(it.first, map, p.get_scalar_max(), true);
-				}
+				if (p.scalar_vbo_ && p.auto_update_min_max_ && QString::fromStdString(p.scalar_vbo_->name()) == attribute_name)
+					update_min_max(it.first, map, true);
 			}
 		}
 
@@ -382,6 +378,21 @@ void Plugin_SurfaceRenderScalar::set_nb_iso_levels(View* view, MapHandlerGen* ma
 		p.set_nb_iso_levels(i);
 		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
 			dock_tab_->set_nb_iso_levels(i);
+		view->update();
+	}
+}
+
+void Plugin_SurfaceRenderScalar::update_min_max(View* view, MapHandlerGen* map, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	{
+		MapParameters& p = get_parameters(view, map);
+		p.update_min_max();
+		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		{
+			dock_tab_->set_scalar_min(p.get_scalar_min());
+			dock_tab_->set_scalar_max(p.get_scalar_max());
+		}
 		view->update();
 	}
 }
