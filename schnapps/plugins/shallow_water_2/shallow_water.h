@@ -209,6 +209,36 @@ private:
 	CMap2::EdgeAttribute<SCALAR> val_bc_;
 	CMap2::EdgeAttribute<std::string> typ_bc_;
 	CMap2::EdgeAttribute<uint32> NS_;
+
+    //chifaa
+    std::vector<SCALAR> h_1100chifaa;
+    std::vector<SCALAR> h_1354chifaa;
+    std::vector<SCALAR> tempschifaa;
+
+    SCALAR chifaa_max_diff_h;
+    SCALAR chifaa_max_diff_q;
+    SCALAR chifaa_max_diff_r;
+
+    std::vector<SCALAR> hminchifaa;
+    std::vector<SCALAR> hmaxchifaa;
+    std::vector<SCALAR> qminchifaa;
+    std::vector<SCALAR> qmaxchifaa;
+    std::vector<SCALAR> rminchifaa;
+    std::vector<SCALAR> rmaxchifaa;
+    std::vector<SCALAR> vect_max_diff_h_chifaa;
+    std::vector<SCALAR> vect_max_diff_q_chifaa;
+    std::vector<SCALAR> vect_max_diff_r_chifaa;
+    uint32 nbmailles;
+    std::vector<uint32> vect_nbmailles_chifaa;
+
+    std::vector<SCALAR> h_490chifaa;
+    std::vector<SCALAR> h_301chifaa;
+    std::vector<SCALAR> h_9chifaa;
+    std::vector<SCALAR> h_69chifaa;
+    std::vector<SCALAR> h_342chifaa;
+    std::vector<SCALAR> h_295chifaa;
+
+
 };
 
 } // namespace plugin_shallow_water_2
