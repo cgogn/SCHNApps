@@ -53,7 +53,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_Selection* plugin_;
 
-	MapHandlerGen* selected_map_;
+//	MapHandlerGen* selected_map_;
 	bool updating_ui_;
 
 private slots:
