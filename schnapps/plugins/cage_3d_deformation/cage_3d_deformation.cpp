@@ -73,7 +73,6 @@ bool Plugin_Cage3dDeformation::enable()
 	cage_3d_deformation_dialog_ = new Cage3dDeformation_Dialog(this->schnapps_, this);
 
 	setup_cage3d_deformation_action = schnapps_->add_menu_action("Deformation;Cage 3d", "setup 3d cage deformation");
-
 	connect(setup_cage3d_deformation_action, SIGNAL(triggered()), this, SLOT(open_dialog()));
 
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
@@ -92,7 +91,6 @@ void Plugin_Cage3dDeformation::disable()
 	disconnect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
 	disconnect(setup_cage3d_deformation_action, SIGNAL(triggered()), this, SLOT(open_dialog()));
-
 	schnapps_->remove_menu_action(setup_cage3d_deformation_action);
 
 	delete cage_3d_deformation_dialog_;

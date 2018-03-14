@@ -49,13 +49,13 @@ Selection_DockTab::Selection_DockTab(SCHNApps* s, Plugin_Selection* p) :
 	connect(slider_vertexScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertex_scale_factor_changed(int)));
 	connect(combo_color, SIGNAL(currentIndexChanged(int)), this, SLOT(color_changed(int)));
 
-	selected_map_ = schnapps_->get_selected_map();
-	if (selected_map_)
+	MapHandlerGen* selected_map = schnapps_->get_selected_map();
+	if (selected_map)
 	{
-		connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-		connect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+		connect(selected_map, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+		connect(selected_map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
+		connect(selected_map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		connect(selected_map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 	}
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
@@ -97,8 +97,9 @@ void Selection_DockTab::cells_set_changed(int index)
 {
 	if (!updating_ui_)
 	{
-		CellsSetGen* cs = selected_map_->get_cells_set(static_cast<CellType>(combo_cellType->currentIndex()), combo_cellsSet->currentText());
-		plugin_->set_cells_set(schnapps_->get_selected_view(), schnapps_->get_selected_map(), cs, false);
+		MapHandlerGen* selected_map = schnapps_->get_selected_map();
+		CellsSetGen* cs = selected_map->get_cells_set(static_cast<CellType>(combo_cellType->currentIndex()), combo_cellsSet->currentText());
+		plugin_->set_cells_set(schnapps_->get_selected_view(), selected_map, cs, false);
 		update_after_cells_set_changed();
 	}
 }
@@ -116,7 +117,8 @@ void Selection_DockTab::clear_clicked()
 {
 	if (!updating_ui_)
 	{
-		CellsSetGen* cs = selected_map_->get_cells_set(static_cast<CellType>(combo_cellType->currentIndex()), combo_cellsSet->currentText());
+		MapHandlerGen* selected_map = schnapps_->get_selected_map();
+		CellsSetGen* cs = selected_map->get_cells_set(static_cast<CellType>(combo_cellType->currentIndex()), combo_cellsSet->currentText());
 		cs->clear();
 	}
 }
@@ -145,18 +147,21 @@ void Selection_DockTab::selected_view_changed(View* old, View* cur)
 
 void Selection_DockTab::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
-	if (selected_map_)
+	if (old)
 	{
-		disconnect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-		disconnect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+		disconnect(old, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+		disconnect(old, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
+		disconnect(old, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(old, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 	}
-	selected_map_ = cur;
-	connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-	connect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-	connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-	connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+//	selected_map_ = cur;
+	if (cur)
+	{
+		connect(cur, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+		connect(cur, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
+		connect(cur, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		connect(cur, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
 
 	if (plugin_->check_docktab_activation())
 		refresh_ui();

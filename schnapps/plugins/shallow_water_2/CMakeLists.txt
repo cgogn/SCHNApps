@@ -11,12 +11,12 @@ find_package(cgogn_geometry REQUIRED)
 set(HEADER_FILES
 	dll.h
 	shallow_water.h
-	shallow_water_dock_tab.h
+	dialog_shallow_water.h
 )
 
 set(SOURCE_FILES
 	shallow_water.cpp
-	shallow_water_dock_tab.cpp
+	dialog_shallow_water.cpp
 )
 
 set(CMAKE_AUTOMOC ON)

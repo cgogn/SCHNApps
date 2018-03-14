@@ -270,8 +270,8 @@ void VolumeModelisationPlugin::current_map_changed(MapHandlerGen* prev, MapHandl
 	{
 		disconnect(prev, SIGNAL(cells_set_added(CellType,QString)), this, SLOT(current_cells_set_added(CellType,QString)));
 		disconnect(prev, SIGNAL(cells_set_removed(CellType,QString)), this, SLOT(current_cells_set_removed(CellType,QString)));
-		disconnect(next, SIGNAL(attribute_added(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_added(cgogn::Orbit,QString)));
-		disconnect(next, SIGNAL(attribute_removed(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_removed(cgogn::Orbit,QString)));
+		disconnect(prev, SIGNAL(attribute_added(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_added(cgogn::Orbit,QString)));
+		disconnect(prev, SIGNAL(attribute_removed(cgogn::Orbit,QString)), this, SLOT(current_map_attribute_removed(cgogn::Orbit,QString)));
 	}
 	if (next)
 	{

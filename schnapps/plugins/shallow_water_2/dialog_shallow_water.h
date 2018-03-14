@@ -21,12 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DIALOG_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DIALOG_H_
 
 #include <schnapps/plugins/shallow_water_2/dll.h>
 
-#include <ui_shallow_water.h>
+#include <ui_dialog_shallow_water.h>
 
 namespace schnapps
 {
@@ -39,16 +39,13 @@ namespace plugin_shallow_water_2
 
 class Plugin_ShallowWater;
 
-class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API ShallowWater_DockTab : public QWidget, public Ui::ShallowWater_TabWidget
+class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_API ShallowWater_Dialog: public QDialog, public Ui::ShallowWater_Dialog
 {
 	Q_OBJECT
 
-	friend class Plugin_ShallowWater;
-
 public:
 
-	ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p);
-	void simu_running_state_changed();
+	ShallowWater_Dialog(SCHNApps* s, Plugin_ShallowWater* p);
 
 private:
 
@@ -57,13 +54,19 @@ private:
 
 private slots:
 
-	void init();
+	// slots called from UI signals
+	void load();
 	void start_stop();
 	void step();
+
+public:
+
+	// methods used to update the UI from the plugin
+	void simu_running_state_changed();
 };
 
 } // namespace plugin_shallow_water_2
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_DIALOG_H_
