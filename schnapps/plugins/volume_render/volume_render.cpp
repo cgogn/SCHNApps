@@ -124,10 +124,10 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 		MapParameters& p = get_parameters(view, map);
 
 		if (map->is_selected_map() && p.apply_clipping_plane_)
-			p.frame_manip_->draw(true, true, proj, mv, view);
+			p.frame_manip_->draw(true, true, proj, mv);
 
 		if (p.render_topology_ && p.topo_drawer_rend_)
-			p.topo_drawer_rend_->draw(proj, mv, view);
+			p.topo_drawer_rend_->draw(proj, mv);
 
 		if (p.render_vertices_)
 		{
@@ -144,7 +144,7 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 			if (p.position_vbo_)
 			{
 				if (p.volume_drawer_rend_)
-					p.volume_drawer_rend_->draw_edges(proj, mv, view);
+					p.volume_drawer_rend_->draw_edges(proj, mv);
 				else
 				{
 					p.shader_simple_color_param_->bind(proj, mv);
@@ -161,7 +161,7 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 				if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
 					p.set_volume_explode_factor(0.995f);
 				if (!p.use_transparency_ && p.volume_drawer_rend_)
-					p.volume_drawer_rend_->draw_faces(proj, mv, view);
+					p.volume_drawer_rend_->draw_faces(proj, mv);
 			}
 		}
 	}

@@ -462,7 +462,7 @@ void View::draw_frame()
 {
 	glDisable(GL_DEPTH_TEST);
 	QMatrix4x4 pm, mm;
-	frame_drawer_renderer_->draw(pm, mm, this);
+	frame_drawer_renderer_->draw(pm, mm);
 	glEnable(GL_DEPTH_TEST);
 }
 
