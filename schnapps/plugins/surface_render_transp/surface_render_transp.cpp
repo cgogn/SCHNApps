@@ -63,7 +63,7 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 	{
 		auto ptr = new cgogn::rendering::SurfaceTransparencyDrawer();
 		it_trdr = (transp_drawer_set_.insert(std::make_pair(view, ptr))).first;
-		it_trdr->second->resize(view->devicePixelRatio() * view->width(), view->devicePixelRatio() * view->height(), view);
+		it_trdr->second->resize(view->devicePixelRatio() * view->width(), view->devicePixelRatio() * view->height());
 	}
 
 	auto it2f = tr2maps_flat_.find(view);
@@ -104,7 +104,7 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 					const auto& m = pm.first;
 					QMatrix4x4 mmv = mv * m->get_frame_matrix() * m->get_transformation_matrix();
 					cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend = pm.second;
-					rend->draw_faces(proj, mmv, view);
+					rend->draw_faces(proj, mmv);
 				}
 		}
 	});
@@ -114,7 +114,7 @@ void Plugin_SurfaceRenderTransp::resizeGL(View* view, int width, int height)
 {
 	auto it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr != transp_drawer_set_.end())
-		it_trdr->second->resize(view->devicePixelRatio()*width,view->devicePixelRatio()*height,view);
+		it_trdr->second->resize(view->devicePixelRatio() * width, view->devicePixelRatio() * height);
 }
 
 void Plugin_SurfaceRenderTransp::view_linked(View* view)

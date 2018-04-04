@@ -55,7 +55,7 @@ void ViewButton::draw_at(int x, int y)
 {
 	QSize szw = view_->size();
 	wall_paper_->set_local_position(float(x) / szw.width(), float(y) / szw.height(), float(ViewButton::SIZE)  / szw.width(), float(ViewButton::SIZE) / szw.height(),true);
-	wall_paper_renderer_->draw(view_);
+	wall_paper_renderer_->draw();
 }
 
 
