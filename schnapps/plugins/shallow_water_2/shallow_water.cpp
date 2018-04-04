@@ -53,7 +53,7 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
 	atq_map_(nullptr),
 	qtrav_(nullptr),
 	edge_left_side_(nullptr),
-	max_depth_(0),
+	max_depth_(4),
 	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_(1e-35) // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
 {
@@ -248,12 +248,12 @@ void Plugin_ShallowWater::load_2D_constrained_edges()
 			if (tag == std::string("NS"))
 			{
 				std::stringstream oss(str);
-				uint32 vertex_id_int = 0;
-				std::vector<uint32> vertex_id_vect;
+				int32 vertex_id_int = 0;
+				std::vector<int32> vertex_id_vect;
 				while (oss >> vertex_id_int)
 					vertex_id_vect.push_back(vertex_id_int);
 
-				uint32 ns_num = vertex_id_vect.back();
+				int32 ns_num = vertex_id_vect.back();
 				vertex_id_vect.pop_back();
 				vertex_id_vect.back() *= -1;
 
@@ -649,6 +649,7 @@ void Plugin_ShallowWater::load_project(const QString& dir)
 
 	// create map attributes
 	position_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position");
+	map_->notify_attribute_added(CMap2::Vertex::ORBIT, "position");
 	scalar_value_h_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_h");
 	scalar_value_u_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_u");
 	scalar_value_v_ = map_->add_attribute<SCALAR, CMap2::Vertex::ORBIT>("scalar_value_v");
@@ -677,7 +678,7 @@ void Plugin_ShallowWater::load_project(const QString& dir)
 	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
 
 	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
-	NS_.set_all_values(0.);
+	NS_.set_all_values(0);
 
 	load_2D_constrained_edges();
 	if (dim_ == 12)
@@ -733,7 +734,7 @@ void Plugin_ShallowWater::init()
 {
 	simu_running_ = false;
 	nb_iter_ = 0;
-	t_ = 0.;
+//	t_ = 0.;
 
 	min_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
 	max_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
@@ -750,12 +751,13 @@ void Plugin_ShallowWater::init()
 	r_max_ = 0.;
 	map2_->foreach_cell(
 		[&] (CMap2::Face f) {
-			h_min_ = std::min(h_min_, h_[f]);
-			h_max_ = std::max(h_max_, h_[f]);
-			q_min_ = std::min(q_min_, q_[f]);
-			q_max_ = std::max(q_max_, q_[f]);
-			r_min_ = std::min(r_min_, r_[f]);
-			q_max_ = std::max(r_max_, r_[f]);
+			uint32 fidx = map2_->embedding(f);
+			h_min_ = std::min(h_min_, h_[fidx]);
+			h_max_ = std::max(h_max_, h_[fidx]);
+			q_min_ = std::min(q_min_, q_[fidx]);
+			q_max_ = std::max(q_max_, q_[fidx]);
+			r_min_ = std::min(r_min_, r_[fidx]);
+			q_max_ = std::max(r_max_, r_[fidx]);
 		},
 		*qtrav_
 	);
@@ -1031,7 +1033,7 @@ void Plugin_ShallowWater::execute_time_step()
 				if (h_[fidx] > hmin_)
 				{
 					qx = qx * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (std::max(kx_*kx_,small_*small_) * pow(h_[fidx],7./3.))) * dt_);
-					qy = qy * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (std::max(kx_*kx_,small_*small_) * pow(h_[fidx],7./3.))) * dt_);
+					qy = qy * exp(-(9.81 * sqrt(qx*qx+qy*qy) / (std::max(ky_*ky_,small_*small_) * pow(h_[fidx],7./3.))) * dt_);
 				}
 				else
 				{
@@ -1292,17 +1294,18 @@ void Plugin_ShallowWater::try_subdivision()
 void Plugin_ShallowWater::try_simplification()
 {
 	std::vector<CMap2::Face>* to_simplify = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
-	CMap2::CellMarker<CMap2::Face::ORBIT> simplified(*map2_);
+	CMap2::CellMarker<CMap2::Face::ORBIT> treated(*map2_);
 
 	map2_->foreach_cell(
 		[&] (CMap2::Face f)
 		{
-			if (simplified.is_marked(f))
+			if (treated.is_marked(f))
 				return;
 
 			if (atq_map_->is_simplifiable(f))
 			{
 				std::vector<CMap2::Face>* subfaces = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
+				uint32 fidx = map2_->embedding(f);
 
 				SCALAR max_diff_h = 0.;
 				SCALAR max_diff_q = 0.;
@@ -1312,13 +1315,15 @@ void Plugin_ShallowWater::try_simplification()
 				{
 					case cgogn::AdaptiveTriQuadCMap2::TRI_CORNER: {
 						CMap2::Face cf(map2_->phi<12>(atq_map_->oldest_dart(f))); // central face
+						uint32 cfidx = map2_->embedding(cf);
 						subfaces->push_back(cf);
 						map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
 						{
+							uint32 afidx = map2_->embedding(af);
 							subfaces->push_back(af);
-							max_diff_h = std::max(max_diff_h, fabs(h_[f] - h_[af]));
-							max_diff_q = std::max(max_diff_q, fabs(q_[f] - q_[af]));
-							max_diff_r = std::max(max_diff_r, fabs(r_[f] - r_[af]));
+							max_diff_h = std::max(max_diff_h, fabs(h_[cfidx] - h_[afidx]));
+							max_diff_q = std::max(max_diff_q, fabs(q_[cfidx] - q_[afidx]));
+							max_diff_r = std::max(max_diff_r, fabs(r_[cfidx] - r_[afidx]));
 						});
 						break;
 					}
@@ -1326,10 +1331,11 @@ void Plugin_ShallowWater::try_simplification()
 						subfaces->push_back(f);
 						map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
 						{
+							uint32 afidx = map2_->embedding(af);
 							subfaces->push_back(af);
-							max_diff_h = std::max(max_diff_h, fabs(h_[f] - h_[af]));
-							max_diff_q = std::max(max_diff_q, fabs(q_[f] - q_[af]));
-							max_diff_r = std::max(max_diff_r, fabs(r_[f] - r_[af]));
+							max_diff_h = std::max(max_diff_h, fabs(h_[fidx] - h_[afidx]));
+							max_diff_q = std::max(max_diff_q, fabs(q_[fidx] - q_[afidx]));
+							max_diff_r = std::max(max_diff_r, fabs(r_[fidx] - r_[afidx]));
 						});
 						break;
 					}
@@ -1337,10 +1343,11 @@ void Plugin_ShallowWater::try_simplification()
 						cgogn::Dart cv = map2_->phi<12>(atq_map_->oldest_dart(f));
 						map2_->foreach_incident_face(CMap2::Vertex(cv), [&] (CMap2::Face iface)
 						{
+							uint32 ifidx = map2_->embedding(iface);
 							subfaces->push_back(iface);
-							max_diff_h = std::max(max_diff_h, fabs(h_[f] - h_[iface]));
-							max_diff_q = std::max(max_diff_q, fabs(q_[f] - q_[iface]));
-							max_diff_r = std::max(max_diff_r, fabs(r_[f] - r_[iface]));
+							max_diff_h = std::max(max_diff_h, fabs(h_[fidx] - h_[ifidx]));
+							max_diff_q = std::max(max_diff_q, fabs(q_[fidx] - q_[ifidx]));
+							max_diff_r = std::max(max_diff_r, fabs(r_[fidx] - r_[ifidx]));
 						});
 						break;
 					}
@@ -1351,9 +1358,10 @@ void Plugin_ShallowWater::try_simplification()
 					max_diff_r < 0.02 * (r_max_ - r_min_))
 				{
 					to_simplify->push_back(f);
-					for (CMap2::Face sf : *subfaces)
-						simplified.mark(sf);
 				}
+
+				for (CMap2::Face sf : *subfaces)
+					treated.mark(sf);
 
 				cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(subfaces);
 			}
