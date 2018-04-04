@@ -58,7 +58,6 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceRenderVector* plugin_;
 
-	MapHandlerGen* selected_map_;
 	bool updating_ui_;
 
 private slots:

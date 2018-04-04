@@ -31,7 +31,7 @@
 
 #include <cgogn/topology/types/adaptive_tri_quad_cmap2.h>
 
-#include <schnapps/plugins/shallow_water_2/shallow_water_dock_tab.h>
+#include <schnapps/plugins/shallow_water_2/dialog_shallow_water.h>
 
 namespace schnapps
 {
@@ -54,15 +54,26 @@ public:
 	inline ~Plugin_ShallowWater() override {}
 	static QString plugin_name();
 
+	void load_project(const QString& dir);
+
+	bool is_simu_running() { return simu_running_; }
+	std::future<void>* simu_future() { return &simu_future_; }
+
+	void set_max_depth(uint32 m) { max_depth_ = m; }
+    void set_iteradapt(uint32 i){iteradapt=i;}
+    void set_adaptive_mesh(bool b) { adaptive_mesh_ = b; }
+    void set_sigma_sub(SCALAR ssb){sigma_sub=ssb;}
+    void set_sigma_simp(SCALAR ssmp){sigma_simp=ssmp;}
+	void init();
+
 private:
 
 	bool enable() override;
 	void disable() override;
 
-	void load_project(const QString& dir);
+	void clean_map();
 	void load_input_file(const QString& filename);
 	void load_hydrau_param_file(const QString& filename);
-	void init_map_attributes();
 	void load_1D_constrained_edges();
 	void load_2D_constrained_edges();
 	void load_1D_initial_cond_file(const QString& filename);
@@ -73,13 +84,17 @@ private:
 
 public slots:
 
-	void init();
 	void start();
 	void stop();
 	void step();
-	bool is_simu_running();
 
 private slots:
+
+	// slots called from SCHNApps signals
+	void schnapps_closing();
+
+	// slots called from action signals
+	void open_dialog();
 
 	void update_draw_data();
 	void update_time_step();
@@ -123,7 +138,8 @@ private:
 
 	void compute_edge_length_and_normal(CMap2::Edge e);
 
-	ShallowWater_DockTab* dock_tab_;
+	ShallowWater_Dialog* shallow_water_dialog_;
+	QAction* shallow_water_action;
 
 	QString project_dir_;
 	QString mesh_1D_filename_;
@@ -150,7 +166,14 @@ private:
 	SCALAR small_;
 	uint8 solver_;
 	uint32 nb_iter_;
+
 	uint32 max_depth_;
+    uint32 iteradapt;
+    bool adaptive_mesh_;
+    //chifaa
+    SCALAR sigma_sub;
+    SCALAR sigma_simp;
+    //end chifaa
 
 	std::vector<SCALAR> min_h_per_thread_;
 	std::vector<SCALAR> max_h_per_thread_;
@@ -173,9 +196,9 @@ private:
 
 	CMap2Handler* map_;
 	CMap2* map2_;
-	std::unique_ptr<cgogn::AdaptiveTriQuadCMap2> atq_map_;
-	std::unique_ptr<CMap2::QuickTraversor> qtrav_;
-	std::unique_ptr<CMap2::DartMarker> edge_left_side_;
+	cgogn::AdaptiveTriQuadCMap2* atq_map_;
+	CMap2::QuickTraversor* qtrav_;
+	CMap2::DartMarker* edge_left_side_;
 
 	uint32 nb_faces_2d_;
 	uint32 nb_vertices_2d_;
@@ -211,14 +234,14 @@ private:
 	CMap2::EdgeAttribute<uint32> NS_;
 
     //chifaa
-    std::vector<SCALAR> h_1100chifaa;
-    std::vector<SCALAR> h_1354chifaa;
     std::vector<SCALAR> tempschifaa;
 
     SCALAR chifaa_max_diff_h;
     SCALAR chifaa_max_diff_q;
     SCALAR chifaa_max_diff_r;
 
+    //std::vector<SCALAR> h_1100chifaa; //au milieu
+    //std::vector<SCALAR> h_1354chifaa; // a cote du barrage
     std::vector<SCALAR> hminchifaa;
     std::vector<SCALAR> hmaxchifaa;
     std::vector<SCALAR> qminchifaa;
@@ -231,14 +254,19 @@ private:
     uint32 nbmailles;
     std::vector<uint32> vect_nbmailles_chifaa;
 
+    // a ajouter les vecteurs d'evolution de h, q & r  de quelques points : les 4 coins du maillage et de part et d'autre de l'ouverture
+    // coin gauche haut :
+    // coin droite haut : 301
+    // coin gauche bas  : 9
+    // coin droite bas  :  69
+    // à  l'ouverture du côté en haut : 342
+    // à l'ouverture du côté en bas   : 295
     std::vector<SCALAR> h_490chifaa;
     std::vector<SCALAR> h_301chifaa;
     std::vector<SCALAR> h_9chifaa;
     std::vector<SCALAR> h_69chifaa;
     std::vector<SCALAR> h_342chifaa;
     std::vector<SCALAR> h_295chifaa;
-
-
 };
 
 } // namespace plugin_shallow_water_2

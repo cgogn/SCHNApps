@@ -121,6 +121,7 @@ void SurfaceDeformation_DockTab::selected_view_changed(View* old, View* cur)
 
 void SurfaceDeformation_DockTab::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
 {
+	cgogn_assert(selected_map_ == old);
 	if (selected_map_)
 	{
 		disconnect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
@@ -128,8 +129,7 @@ void SurfaceDeformation_DockTab::selected_map_changed(MapHandlerGen* old, MapHan
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
 		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 	}
-
-	if (cur->dimension() == 2)
+	if (cur && cur->dimension() == 2)
 	{
 		selected_map_ = static_cast<CMap2Handler*>(cur);
 		connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));

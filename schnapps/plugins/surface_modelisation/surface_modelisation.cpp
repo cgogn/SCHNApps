@@ -108,7 +108,7 @@ void Plugin_SurfaceModelisation::decimate(
 		return;
 
 	uint32 nbv = mh->nb_cells(Vertex_Cell);
-	cgogn::modeling::decimate<VEC3>(*mh->get_map(), position, cgogn::modeling::EdgeTraversor_QEM_T, cgogn::modeling::EdgeApproximator_QEM_T, percentVerticesToRemove * nbv);
+	cgogn::modeling::decimate(*mh->get_map(), position, cgogn::modeling::EdgeTraversor_QEM_T, cgogn::modeling::EdgeApproximator_QEM_T, percentVerticesToRemove * nbv);
 
 	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
@@ -128,7 +128,7 @@ void Plugin_SurfaceModelisation::subdivide_loop(
 	if (!position.is_valid())
 		return;
 
-	cgogn::modeling::loop<VEC3>(*mh->get_map(), position);
+	cgogn::modeling::loop(*mh->get_map(), position);
 
 	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
@@ -148,7 +148,7 @@ void Plugin_SurfaceModelisation::subdivide_catmull_clark(
 	if (!position.is_valid())
 		return;
 
-	cgogn::modeling::catmull_clark<VEC3>(*mh->get_map(), position);
+	cgogn::modeling::catmull_clark(*mh->get_map(), position);
 
 	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();

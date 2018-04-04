@@ -59,7 +59,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceRender* plugin_;
 
-	MapHandlerGen* selected_map_;
+//	MapHandlerGen* selected_map_;
 	bool updating_ui_;
 
 	QColorDialog* color_dial_;

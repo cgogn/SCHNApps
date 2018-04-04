@@ -52,7 +52,7 @@ public:
 	~Plugin_Cage3dDeformation() override {}
 	static QString plugin_name();
 
-	MapParameters& get_parameters(CMap2Handler* map);
+	MapParameters& get_parameters(MapHandlerGen* map);
 
 private:
 
@@ -76,10 +76,10 @@ private slots:
 
 public slots:
 
-	void set_control_position_attribute(CMap2Handler* map, const QString& name, bool update_dialog);
-	void set_deformed_map(CMap2Handler* map, MapHandlerGen* deformed, bool update_dialog);
-	void set_deformed_position_attribute(CMap2Handler* map, const QString& name, bool update_dialog);
-	void toggle_control(CMap2Handler* map, bool update_dialog);
+	void set_deformed_position_attribute(MapHandlerGen* map, const QString& name, bool update_dialog);
+	void set_control_map(MapHandlerGen* map, CMap2Handler* control, bool update_dialog);
+	void set_control_position_attribute(MapHandlerGen* map, const QString& name, bool update_dialog);
+	void toggle_control(MapHandlerGen* map, bool update_dialog);
 
 private:
 
@@ -89,7 +89,7 @@ private:
 	QString setting_auto_load_control_position_attribute_;
 	QString setting_auto_load_deformed_position_attribute_;
 
-	std::map<CMap2Handler*, MapParameters> parameter_set_;
+	std::map<MapHandlerGen*, MapParameters> parameter_set_;
 };
 
 } // namespace plugin_cage_3d_deformation

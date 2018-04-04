@@ -21,12 +21,14 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/shallow_water_2/shallow_water_dock_tab.h>
+#include <schnapps/plugins/shallow_water_2/dialog_shallow_water.h>
 #include <schnapps/plugins/shallow_water_2/shallow_water.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 #include <schnapps/core/view.h>
+
+#include <QFileDialog>
 
 namespace schnapps
 {
@@ -34,18 +36,18 @@ namespace schnapps
 namespace plugin_shallow_water_2
 {
 
-ShallowWater_DockTab::ShallowWater_DockTab(SCHNApps* s, Plugin_ShallowWater* p) :
+ShallowWater_Dialog::ShallowWater_Dialog(SCHNApps* s, Plugin_ShallowWater* p) :
 	schnapps_(s),
 	plugin_(p)
 {
 	setupUi(this);
 
-	connect(button_init, SIGNAL(clicked()), this, SLOT(init()));
+	connect(button_load, SIGNAL(clicked()), this, SLOT(load()));
 	connect(button_start_stop, SIGNAL(clicked()), this, SLOT(start_stop()));
 	connect(button_1_step, SIGNAL(clicked()), this, SLOT(step()));
 }
 
-void ShallowWater_DockTab::simu_running_state_changed()
+void ShallowWater_Dialog::simu_running_state_changed()
 {
 	if (plugin_->is_simu_running())
 		button_start_stop->setText("Stop");
@@ -53,12 +55,14 @@ void ShallowWater_DockTab::simu_running_state_changed()
 		button_start_stop->setText("Start");
 }
 
-void ShallowWater_DockTab::init()
+void ShallowWater_Dialog::load()
 {
+	QString dossier = QFileDialog::getExistingDirectory(nullptr);
+	plugin_->load_project(dossier);
 	plugin_->init();
 }
 
-void ShallowWater_DockTab::start_stop()
+void ShallowWater_Dialog::start_stop()
 {
 	if (!plugin_->is_simu_running())
 		plugin_->start();
@@ -66,7 +70,7 @@ void ShallowWater_DockTab::start_stop()
 		plugin_->stop();
 }
 
-void ShallowWater_DockTab::step()
+void ShallowWater_Dialog::step()
 {
 	plugin_->step();
 }
