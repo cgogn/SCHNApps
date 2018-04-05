@@ -150,7 +150,7 @@ bool MapHandlerGen::get_transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec&
 
 void MapHandlerGen::draw_bb(View* view, const QMatrix4x4 &pm, const QMatrix4x4 &mm)
 {
-	bb_drawer_renderer_[view]->draw(pm, mm, view);
+	bb_drawer_renderer_[view]->draw(pm, mm);
 }
 
 void MapHandlerGen::update_bb_drawer()
