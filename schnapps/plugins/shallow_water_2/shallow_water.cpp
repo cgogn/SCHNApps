@@ -53,7 +53,7 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
 	atq_map_(nullptr),
 	qtrav_(nullptr),
 	edge_left_side_(nullptr),
-	max_depth_(4),
+	max_depth_(3),
 	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_(1e-35) // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
 {
@@ -1131,23 +1131,32 @@ void Plugin_ShallowWater::try_subdivision()
 
 			uint32 fidx = map2_->embedding(f);
 
-			SCALAR max_diff_h = 0.;
-			SCALAR max_diff_q = 0.;
-			SCALAR max_diff_r = 0.;
+			bool added = false;
 			map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
 			{
-				uint32 afidx = map2_->embedding(af);
-				max_diff_h = std::max(max_diff_h, fabs(h_[fidx] - h_[afidx]));
-				max_diff_q = std::max(max_diff_q, fabs(q_[fidx] - q_[afidx]));
-				max_diff_r = std::max(max_diff_r, fabs(r_[fidx] - r_[afidx]));
-			});
+				if (added) { return; }
 
-			if (max_diff_h > 0.05 * (h_max_ - h_min_) ||
-				max_diff_q > 0.05 * (q_max_ - q_min_) ||
-				max_diff_r > 0.05 * (r_max_ - r_min_))
-			{
-				faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
-			}
+				uint32 afidx = map2_->embedding(af);
+
+				bool toadd = false;
+
+				// determine if f has to be added
+				SCALAR diffh = fabs(h_[fidx] - h_[afidx]);
+				if (diffh > 0.05 * (h_max_ - h_min_))
+					toadd = true;
+				SCALAR diffq = fabs(q_[fidx] - q_[afidx]);
+				if (diffq > 0.05 * (q_max_ - q_min_))
+					toadd = true;
+				SCALAR diffr = fabs(r_[fidx] - r_[afidx]);
+				if (diffr > 0.05 * (r_max_ - r_min_))
+					toadd = true;
+
+				if (toadd)
+				{
+					faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
+					added = true;
+				}
+			});
 		},
 		*qtrav_
 	);
