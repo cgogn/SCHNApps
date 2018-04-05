@@ -98,16 +98,14 @@ void Plugin_Cage3dDeformation::disable()
 
 void Plugin_Cage3dDeformation::map_added(MapHandlerGen *map)
 {
-	if (map->dimension() == 2)
-		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
+	connect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
 	connect(map, SIGNAL(connectivity_changed()), this, SLOT(connectivity_changed()));
 	connect(map, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(attribute_added(cgogn::Orbit, const QString&)));
 }
 
 void Plugin_Cage3dDeformation::map_removed(MapHandlerGen *map)
 {
-	if (map->dimension() == 2)
-		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
+	disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
 	disconnect(map, SIGNAL(connectivity_changed()), this, SLOT(connectivity_changed()));
 	disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(attribute_added(cgogn::Orbit, const QString&)));
 }
@@ -137,14 +135,25 @@ void Plugin_Cage3dDeformation::attribute_added(cgogn::Orbit orbit, const QString
 
 void Plugin_Cage3dDeformation::attribute_changed(cgogn::Orbit orbit, const QString& attribute_name)
 {
-	if (orbit == CMap2::Vertex::ORBIT)
+	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+
+	if (map->cell_type(orbit) == Vertex_Cell)
 	{
-		CMap2Handler* map = static_cast<CMap2Handler*>(sender());
 		for (auto& it : parameter_set_)
 		{
 			MapParameters& p = it.second;
-			if (p.get_linked() && p.get_control_map() == map && p.get_control_position_attribute_name() == attribute_name)
-				p.update_deformed_map();
+			if (p.get_updating())
+				return;
+			if (it.first == map)
+			{
+				if (p.get_linked() && p.get_deformed_position_attribute().is_valid() && p.get_deformed_position_attribute_name() == attribute_name)
+					p.update_control_map();
+			}
+			else
+			{
+				if (p.get_linked() && p.get_control_map() == map && p.get_control_position_attribute().is_valid() && p.get_control_position_attribute_name() == attribute_name)
+					p.update_deformed_map();
+			}
 		}
 	}
 }

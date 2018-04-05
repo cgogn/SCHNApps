@@ -739,6 +739,10 @@ void Plugin_Selection::map_unlinked(MapHandlerGen *map)
 
 void Plugin_Selection::remove_linked_map(View* view, MapHandlerGen* map)
 {
+	auto& view_param_set = parameter_set_[view];
+	if (view_param_set.count(map) > 0)
+		view_param_set.erase(map);
+
 	disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
 	disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)));
 	disconnect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)));
