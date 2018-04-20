@@ -41,8 +41,7 @@
 
 #include <QFileInfo>
 
-//chifaa
-#include<time.h>
+
 
 namespace schnapps
 {
@@ -54,12 +53,18 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
 	map_(nullptr),
 	map2_(nullptr),
 	atq_map_(nullptr),
-	qtrav_(nullptr),
+    qtrav_(nullptr),
     edge_left_side_(nullptr),
-	max_depth_(0),
+    max_depth_(4),
     adaptive_mesh_(false),
+    criteria_(Criteria::H),
     sigma_sub(0.1),
     sigma_simp(0.05),
+    sigma_sub_h(7),//1
+    sigma_simp_h(5),//0.5
+    sigma_sub_vitesse(0.0001),//0.5
+    sigma_simp_vitesse(0.0001),//0.5
+
     iteradapt(5),
 	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_(1e-35) // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
@@ -125,7 +130,7 @@ void Plugin_ShallowWater::load_input_file(const QString& filename)
 	cgogn::io::getline_safe(input_file, str, ':'); // read "1D Mesh (2dm):"
 	cgogn::io::getline_safe(input_file, str, ' '); // read space after :
 	cgogn::io::getline_safe(input_file, str); // read name of the 1D mesh file
-	mesh_1D_filename_ = QString::fromStdString(str);
+    mesh_1D_filename_ = QString::fromStdString(str);
 
 	cgogn::io::getline_safe(input_file, str, ':'); // read "2D Mesh (2dm):"
 	cgogn::io::getline_safe(input_file, str, ' '); // read space after :
@@ -862,6 +867,8 @@ void Plugin_ShallowWater::stop()
 	std::cout << "t -> " << t_ << std::endl;
 	std::cout << "dt -> " << dt_ << std::endl;
 
+    moyenne_nb_mailles/=nb_iter_;
+    std::cout << "moyenne des nombres de mailles" << moyenne_nb_mailles << std::endl;
 
     // chifaa sortie fichier
 
@@ -882,6 +889,7 @@ void Plugin_ShallowWater::stop()
     ofs <<"\n max diff q  : " << chifaa_max_diff_q;
     ofs << " \n max diff r  : " << chifaa_max_diff_r;
     ofs << "\n duration :  " << duration;
+    ofs << "\n moyennes nb mailles:" << moyenne_nb_mailles;
     ofs.close();
 
 
@@ -1366,7 +1374,11 @@ void Plugin_ShallowWater::execute_time_step()
 				uint32 fidx = map2_->embedding(f);
 				if (phi_[f] > small_)
 					riemann_flux = border_condition(typ_bc_[eidx], val_bc_[eidx], normX_[eidx], normY_[eidx], q_[fidx], r_[fidx], h_[fidx]+zb_[fidx], zb_[fidx], 9.81, hmin_, small_);
-			}
+
+                h_star_[eidx]=h_[fidx]; // a verifier
+                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])u_star_[eidx];
+                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])v_star_[eidx];
+            }
 			else // Inner cell: use the lateralised Riemann solver
 			{
 				CMap2::Face f1(e.dart),
@@ -1393,13 +1405,21 @@ void Plugin_ShallowWater::execute_time_step()
 					else if (solver_ == 4)
 						riemann_flux = Solv_PorAS(9.81, hmin_, small_, zbL, zbR, phiL, phiR, hL, qL, rL, hR, qR, rR);
 				}
-			}
+
+                h_star_[eidx]=ThrdDgreeSolve(riemann_flux.F1,riemann_flux.F2,h_[f1idx],h_[f2idx]);
+                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])u_star_[eidx];
+                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])v_star_[eidx];
+            }
 
 			f1_[eidx] = riemann_flux.F1;
 			f2_[eidx] = riemann_flux.F2;
 			f3_[eidx] = riemann_flux.F3;
 			s2L_[eidx] = riemann_flux.s2L;
-			s2R_[eidx] = riemann_flux.s2R;
+            s2R_[eidx] = riemann_flux.s2R;
+            u_star_[eidx]=f1_[eidx]/h_star_[eidx];
+            v_star_[eidx]=f3_[eidx]/f1_[eidx];
+
+
 		},
 		*qtrav_
 	);
@@ -1432,7 +1452,10 @@ void Plugin_ShallowWater::execute_time_step()
 					r_[fidx] += factF * ( f3_[ieidx]*normX_[ieidx] + ( f2_[ieidx]+s2R_[ieidx])*normY_[ieidx]);
 				}
 			});
-		},
+         // chifaa
+         s_entropy_[fidx]=0.5*h_[fidx]*(q_[fidx]*q_[fidx]+r_[fidx]*r_[fidx])/(h_[fidx]*h_[fidx])+0.5*9.81*h_[fidx]*h_[fidx]+9.81*h_[fidx]*zb_[fidx];
+         // end chifaa
+        },
 		*qtrav_
 	);
 
@@ -1573,6 +1596,10 @@ void Plugin_ShallowWater::execute_time_step()
 //		std::this_thread::sleep_for(sleep_duration);
 
     // chifaa
+    moyenne_nb_mailles+=nbmailles;
+
+
+
     //if(nb_iter_%80==0)
     {
         //h_1100chifaa.push_back(h_[1100]);
@@ -1687,6 +1714,64 @@ void Plugin_ShallowWater::execute_time_step()
     //end chifaa
 }
 
+bool Plugin_ShallowWater::subd_criteria_h_q_r(CMap2::Face f)
+{
+    bool res = false;
+    uint32 fidx = map2_->embedding(f);
+    map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af) -> bool
+    {
+        uint32 afidx = map2_->embedding(af);
+
+        SCALAR diffh = fabs(h_[fidx] - h_[afidx]);
+        //if (diffh/chifaa_max_diff_h > sigma_sub)
+        if (diffh > sigma_sub_h)
+        {
+            res = true;
+            return false;
+        }
+
+        SCALAR diffq = fabs(q_[fidx] - q_[afidx]);
+        //if (diffq/chifaa_max_diff_q > sigma_sub)
+        if (diffq > sigma_sub_vitesse)
+        {
+            res = true;
+            return false;
+        }
+
+        SCALAR diffr = fabs(r_[fidx] - r_[afidx]);
+        //if (diffr/chifaa_max_diff_r > sigma_sub)
+        if (diffr > sigma_sub_vitesse)
+        {
+            res = true;
+            return false;
+        }
+
+        return true;
+    });
+    return res;
+}
+
+bool Plugin_ShallowWater::subd_criteria_h(CMap2::Face f)
+{
+    bool res = false;
+    uint32 fidx = map2_->embedding(f);
+    map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af) -> bool
+    {
+        uint32 afidx = map2_->embedding(af);
+
+        SCALAR diffh = fabs(h_[fidx] - h_[afidx]);
+        //if (diffh/chifaa_max_diff_h > sigma_sub)
+        if (diffh > sigma_sub_h)
+        {
+            res = true;
+            return false;
+        }
+
+        return true;
+    });
+    return res;
+}
+
 void Plugin_ShallowWater::try_subdivision()
 {
 	CMap2::CellMarker<CMap2::Face::ORBIT> subdivided(*map2_);
@@ -1696,7 +1781,7 @@ void Plugin_ShallowWater::try_subdivision()
 		fv = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
 
 	map2_->parallel_foreach_cell(
-		[&] (CMap2::Face f)
+        [&] (CMap2::Face f)
 		{
 
         // chifaa if option = fixed mesh : les lignes commentées, décommenter si option= adapt
@@ -1704,48 +1789,24 @@ void Plugin_ShallowWater::try_subdivision()
             if (atq_map_->face_level(f) >= max_depth_)
                 return;
 
-            uint32 fidx = map2_->embedding(f);
-
-            SCALAR max_diff_h = 0.;
-            SCALAR max_diff_q = 0.;
-            SCALAR max_diff_r = 0.;
-            map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
-            {
-                uint32 afidx = map2_->embedding(af);
-                max_diff_h = std::max(max_diff_h, fabs(h_[fidx] - h_[afidx]));
-                max_diff_q = std::max(max_diff_q, fabs(q_[fidx] - q_[afidx]));
-                max_diff_r = std::max(max_diff_r, fabs(r_[fidx] - r_[afidx]));
-            });
-
             if (adaptive_mesh_)
             {
-        // chifaa: ici commentez la condition de if
-//            if (max_diff_h > 0.05 * (h_max_ - h_min_) ||
-//                max_diff_q > 0.05 * (q_max_ - q_min_) ||
-//                max_diff_r > 0.05 * (r_max_ - r_min_))
-//            {
-//                    faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
-//            }
-              //end chifaa
-
-        // chifaa : autre critère
-                if (max_diff_h/chifaa_max_diff_h > sigma_sub||
-                    max_diff_q/chifaa_max_diff_q > sigma_sub||
-                    max_diff_r/chifaa_max_diff_r > sigma_sub)
+                bool toadd = false;
+                switch (criteria_)
                 {
-                    faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
+                    case Criteria::H_Q_R: toadd = subd_criteria_h_q_r(f); break;
+                    case Criteria::H: toadd = subd_criteria_h(f); break;
                 }
+
+                if (toadd)
+                    faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
             }
             else
             {
                 faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
             }
-
-                
-                
+                                
         //end chifaa        
-
-
 
         },
 		*qtrav_
@@ -1868,7 +1929,7 @@ void Plugin_ShallowWater::try_subdivision()
 								phi_[afidx] = old_phi;
 								zb_[afidx] = 0.;
 								SCALAR zb = 0.;
-								uint32 nbv = 0;
+                                uint32 nbv = 0;
 								map2_->foreach_incident_vertex(af, [&] (CMap2::Vertex iv)
 								{
 									zb += position_[iv][2];
@@ -1890,6 +1951,87 @@ void Plugin_ShallowWater::try_subdivision()
 		cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(fv);
 }
 
+
+
+bool Plugin_ShallowWater::simp_criteria_h_q_r(cgogn::Dart central_cell)
+{
+    SCALAR max_diff_h = 0.0;
+    SCALAR max_diff_q = 0.0;
+    SCALAR max_diff_r = 0.0;
+
+    CMap2::Face f(central_cell);
+
+    if (atq_map_->is_triangle_face(f))
+    {
+        CMap2::Face cf(central_cell);
+        uint32 cfidx = map2_->embedding(cf);
+        map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+        {
+            SCALAR diff_h = fabs(h_[cfidx] - h_[af]);
+            max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
+            SCALAR diff_q = fabs(q_[cfidx] - q_[af]);
+            max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
+            SCALAR diff_r = fabs(r_[cfidx] - r_[af]);
+            max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+        });
+    }
+    else
+    {
+        CMap2::Vertex cv(central_cell);
+        map2_->foreach_incident_edge(cv, [&] (CMap2::Edge ie)
+        {
+            CMap2::Face f1(ie.dart);
+            CMap2::Face f2(map2_->phi2(ie.dart));
+            SCALAR diff_h = fabs(h_[f1] - h_[f2]);
+            max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
+            SCALAR diff_q = fabs(q_[f1] - q_[f2]);
+            max_diff_q = diff_q > max_diff_q ? diff_q : max_diff_q;
+            SCALAR diff_r = fabs(r_[f1] - r_[f2]);
+            max_diff_r = diff_r > max_diff_r ? diff_r : max_diff_r;
+        });
+    }
+
+    if (max_diff_h < sigma_simp_h && max_diff_q < sigma_simp_vitesse && max_diff_r < sigma_simp_vitesse)
+        return true;
+
+    return false;
+}
+
+bool Plugin_ShallowWater::simp_criteria_h(cgogn::Dart central_cell)
+{
+    SCALAR max_diff_h = 0.0;
+
+    CMap2::Face f(central_cell);
+
+    if (atq_map_->is_triangle_face(f))
+    {
+        CMap2::Face cf(central_cell);
+        uint32 cfidx = map2_->embedding(cf);
+        map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+        {
+            SCALAR diff_h = fabs(h_[cfidx] - h_[af]);
+            max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
+        });
+    }
+    else
+    {
+        CMap2::Vertex cv(central_cell);
+        map2_->foreach_incident_edge(cv, [&] (CMap2::Edge ie)
+        {
+            CMap2::Face f1(ie.dart);
+            CMap2::Face f2(map2_->phi2(ie.dart));
+            SCALAR diff_h = fabs(h_[f1] - h_[f2]);
+            max_diff_h = diff_h > max_diff_h ? diff_h : max_diff_h;
+        });
+    }
+
+    if (max_diff_h < sigma_simp_h)
+        return true;
+
+    return false;
+}
+
+
 void Plugin_ShallowWater::try_simplification()
 {
 	std::vector<CMap2::Face>* to_simplify = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
@@ -1903,70 +2045,52 @@ void Plugin_ShallowWater::try_simplification()
 
 			if (atq_map_->is_simplifiable(f))
 			{
-				std::vector<CMap2::Face>* subfaces = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
-				uint32 fidx = map2_->embedding(f);
-
-				SCALAR max_diff_h = 0.;
-				SCALAR max_diff_q = 0.;
-				SCALAR max_diff_r = 0.;
+                cgogn::Dart central_cell;
 
 				switch (atq_map_->face_type(f))
 				{
 					case cgogn::AdaptiveTriQuadCMap2::TRI_CORNER: {
-						CMap2::Face cf(map2_->phi<12>(atq_map_->oldest_dart(f))); // central face
-						uint32 cfidx = map2_->embedding(cf);
-						subfaces->push_back(cf);
-						map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
-						{
-							uint32 afidx = map2_->embedding(af);
-                            subfaces->push_back(af);
-							max_diff_h = std::max(max_diff_h, fabs(h_[cfidx] - h_[afidx]));
-							max_diff_q = std::max(max_diff_q, fabs(q_[cfidx] - q_[afidx]));
-                            max_diff_r = std::max(max_diff_r, fabs(r_[cfidx] - r_[afidx]));
-						});
+                        central_cell = map2_->phi<12>(atq_map_->oldest_dart(f)); // central face
 						break;
 					}
-					case cgogn::AdaptiveTriQuadCMap2::TRI_CENTRAL: {
-						subfaces->push_back(f);
-						map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
-						{
-							uint32 afidx = map2_->embedding(af);
-							subfaces->push_back(af);
-							max_diff_h = std::max(max_diff_h, fabs(h_[fidx] - h_[afidx]));
-							max_diff_q = std::max(max_diff_q, fabs(q_[fidx] - q_[afidx]));
-							max_diff_r = std::max(max_diff_r, fabs(r_[fidx] - r_[afidx]));
-						});
+                    case cgogn::AdaptiveTriQuadCMap2::TRI_CENTRAL: {
+                        central_cell = f.dart;
 						break;
 					}
 					case cgogn::AdaptiveTriQuadCMap2::QUAD: {
-						cgogn::Dart cv = map2_->phi<12>(atq_map_->oldest_dart(f));
-						map2_->foreach_incident_face(CMap2::Vertex(cv), [&] (CMap2::Face iface)
-						{
-							uint32 ifidx = map2_->embedding(iface);
-							subfaces->push_back(iface);
-							max_diff_h = std::max(max_diff_h, fabs(h_[fidx] - h_[ifidx]));
-							max_diff_q = std::max(max_diff_q, fabs(q_[fidx] - q_[ifidx]));
-							max_diff_r = std::max(max_diff_r, fabs(r_[fidx] - r_[ifidx]));
-						});
+                        central_cell = map2_->phi<12>(atq_map_->oldest_dart(f));
 						break;
 					}
 				}
 
-                //if (max_diff_h < 0.02 * (h_max_ - h_min_) &&
-                //	max_diff_q < 0.02 * (q_max_ - q_min_) &&
-                //	max_diff_r < 0.02 * (r_max_ - r_min_))
-                if (max_diff_h/chifaa_max_diff_h < sigma_simp &&
-                    max_diff_q/chifaa_max_diff_q < sigma_simp &&
-                    max_diff_r/chifaa_max_diff_r < sigma_simp)
-
+                // determine if f has to be added
+                bool toadd = false;
+                switch (criteria_)
                 {
-					to_simplify->push_back(f);
-				}
+                    case Criteria::H_Q_R: toadd = simp_criteria_h_q_r(central_cell); break;
+                    case Criteria::H: toadd = simp_criteria_h(central_cell); break;
+                }
 
-				for (CMap2::Face sf : *subfaces)
-					treated.mark(sf);
+                if (toadd)
+                    to_simplify->push_back(f);
 
-				cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(subfaces);
+                if (atq_map_->is_triangle_face(f))
+                {
+                    CMap2::Face cf(central_cell);
+                    treated.mark(cf);
+                    map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+                    {
+                        treated.mark(af);
+                    });
+                }
+                else
+                {
+                    CMap2::Vertex cv(central_cell);
+                    map2_->foreach_incident_face(cv, [&] (CMap2::Face iface)
+                    {
+                        treated.mark(iface);
+                    });
+                }
 			}
 		},
 		*qtrav_
@@ -2668,7 +2792,29 @@ bool Plugin_ShallowWater::sew_faces_recursive(CMap2::Edge e1, CMap2::Edge e2)
 	else
 		return true;
 }
+// chifaa
+SCALAR Plugin_ShallowWater::ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCALAR hR)
+{
+    SCALAR q=2*f1*f1/9.81;
+    SCALAR Delta1=4*std::pow(f1,4)/(9.81*9.81)-32/27*pow(f2,3)/pow(9.81,3);
+    SCALAR x1=pow(-q/2-sqrt(Delta1)/2,1/3)+pow(-q/2+sqrt(Delta1)/2,1/3);
+    SCALAR Delta2=9.81*9.81*x1*x1-4*9.81*(-2*f1+9.81*x1*x1);
+    SCALAR x2=-x1/2-sqrt(Delta2)/2/9.81;
+    SCALAR x3=-x1/2+sqrt(Delta2)/2/9.81;
 
+    SCALAR h1=hL<hR? hL:hR;
+    SCALAR h2=hL>hR? hL:hR;
+    if (x1>h1 && x1<h2)
+        return x1;
+    else if (x2>h1 && x2<h2)
+        return x2;
+    else if (x3>h1 && x3<h2)
+        return x3;
+}
+
+
+
+// end chifaa
 } // namespace plugin_shallow_water_2
 
 } // namespace schnapps
