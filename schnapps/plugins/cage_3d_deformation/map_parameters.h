@@ -47,7 +47,8 @@ struct MapParameters
 	MapParameters() :
 		deformed_map_(nullptr),
 		control_map_(nullptr),
-		linked_(false)
+		linked_(false),
+		updating_(false)
 	{}
 
 	~MapParameters()
@@ -64,6 +65,7 @@ struct MapParameters
 	QString get_control_position_attribute_name() const { return QString::fromStdString(control_position_.name()); }
 
 	bool get_linked() const { return linked_; }
+	bool get_updating() const { return updating_; }
 
 	bool toggle_control()
 	{
@@ -77,6 +79,11 @@ struct MapParameters
 			CMap2* cm2 = control_map_->get_map();
 			uint32 nbcv = cm2->nb_cells<CMap2::Vertex>();
 			uint32 nbdv = deformed_map_->nb_cells(CellType::Vertex_Cell);
+
+			if (deformed_map_->dimension() == 2)
+				deformed_position_saved_ = static_cast<CMap2Handler*>(deformed_map_)->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__deformed_position_saved");
+			else // deformed_map_->dimension() == 3
+				deformed_position_saved_ = static_cast<CMap3Handler*>(deformed_map_)->add_attribute<VEC3, CMap3::Vertex::ORBIT>("__deformed_position_saved");
 
 			coords_.setZero();
 			coords_.resize(nbdv, nbcv);
@@ -142,6 +149,8 @@ struct MapParameters
 					++cvidx;
 				}
 
+				deformed_position_saved_[d] = dv_pos;
+
 				++dvidx;
 			});
 
@@ -158,6 +167,8 @@ struct MapParameters
 	{
 		if (linked_)
 		{
+			updating_ = true;
+
 			CMap2* cm2 = control_map_->get_map();
 
 			uint32 cvidx = 0;
@@ -179,10 +190,55 @@ struct MapParameters
 				def[0] = def_pos_(dvidx, 0);
 				def[1] = def_pos_(dvidx, 1);
 				def[2] = def_pos_(dvidx, 2);
+				deformed_position_saved_[d] = def;
 				++dvidx;
 			});
 
 			deformed_map_->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(deformed_position_.name()));
+
+			updating_ = false;
+		}
+	}
+
+	void update_control_map()
+	{
+		if (linked_)
+		{
+			updating_ = true;
+
+			CMap2* cm2 = control_map_->get_map();
+			uint32 nbcv = cm2->nb_cells<CMap2::Vertex>();
+			uint32 nbdv = deformed_map_->nb_cells(CellType::Vertex_Cell);
+
+			Eigen::VectorXd rhs(nbdv);
+
+			for (uint32 dim = 0; dim < 3; ++dim)
+			{
+				uint32 dvidx = 0;
+				deformed_map_->foreach_cell(CellType::Vertex_Cell, [&] (cgogn::Dart d)
+				{
+					rhs[dvidx] = 2.0 * (deformed_position_[d] - deformed_position_saved_[d])[dim];
+					++dvidx;
+				});
+
+				Eigen::VectorXd L = (coords_ * coords_.transpose()).ldlt().solve(rhs);
+
+				Eigen::VectorXd displ = 0.5 * (coords_.transpose() * L);
+
+				uint32 cvidx = 0;
+				cm2->foreach_cell([&] (CMap2::Vertex cv)
+				{
+					VEC3& cvp = control_position_[cv];
+					cvp[dim] += displ[cvidx];
+					++cvidx;
+				});
+			}
+
+			update_deformed_map();
+
+			control_map_->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(control_position_.name()));
+
+			updating_ = false;
 		}
 	}
 
@@ -217,7 +273,7 @@ private:
 
 	MapHandlerGen* deformed_map_;
 	MapHandlerGen::Attribute_T<VEC3> deformed_position_;
-	MapHandlerGen::Attribute_T<std::vector<double>> coord_;
+	MapHandlerGen::Attribute_T<VEC3> deformed_position_saved_;
 
 	CMap2Handler* control_map_;
 	CMap2Handler::VertexAttribute<VEC3> control_position_;
@@ -227,6 +283,7 @@ private:
 	Eigen::MatrixXd def_pos_;
 
 	bool linked_;
+	bool updating_;
 };
 
 } // namespace plugin_cage_3d_deformation
