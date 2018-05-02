@@ -40,7 +40,8 @@
 #include <cgogn/core/utils/thread.h>
 
 #include <QFileInfo>
-
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 
 namespace schnapps
@@ -55,15 +56,19 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
 	atq_map_(nullptr),
     qtrav_(nullptr),
     edge_left_side_(nullptr),
-    max_depth_(4),
-    adaptive_mesh_(false),
-    criteria_(Criteria::H),
+    max_depth_(2),
+    adaptive_mesh_(true),
+    criteria_(Criteria::entropy),
     sigma_sub(0.1),
     sigma_simp(0.05),
-    sigma_sub_h(7),//1
-    sigma_simp_h(5),//0.5
-    sigma_sub_vitesse(0.0001),//0.5
-    sigma_simp_vitesse(0.0001),//0.5
+    sigma_sub_h(5),//1
+    sigma_simp_h(1),//0.5
+    sigma_sub_vitesse(0.5),//0.5
+    sigma_simp_vitesse(0.2),//0.5
+
+    seuil_sub_h_old(0.01),
+    seuil_simp_h_old(0.003),
+
 
     iteradapt(5),
 	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
@@ -671,8 +676,11 @@ void Plugin_ShallowWater::load_project(const QString& dir)
 	phi_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("phi");
 	zb_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("zb");
 	h_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h");
+    h_old_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("h_old");
 	q_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q");
+    q_old_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("q_old");
 	r_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r");
+    r_old_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("r_old");
 	centroid_ = map_->add_attribute<VEC3, CMap2::Face::ORBIT>("centroid");
 	area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
 	swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
@@ -691,6 +699,19 @@ void Plugin_ShallowWater::load_project(const QString& dir)
 
 	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
 	NS_.set_all_values(0);
+
+    //chifaa
+    h_star_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("h_star");
+    u_star_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("u_star");
+    v_star_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("v_star");
+    psi_entropy_x_=map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("psi_entropy_x");
+    psi_entropy_y_=map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("psi_entropy_y");
+    s_entropy_=map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("s_entropy");
+    Snk_=map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("Snk");
+
+
+    // end chifaa
+    //h_star_.set_all_values(0);
 
 	load_2D_constrained_edges();
 	if (dim_ == 12)
@@ -780,11 +801,13 @@ void Plugin_ShallowWater::init()
     chifaa_max_diff_h=0.;
     chifaa_max_diff_q=0;
     chifaa_max_diff_r=0;
+    area_global_=0;
     
     map2_->foreach_cell(
 		[&] (CMap2::Face f) {
 
         uint32 fidx = map2_->embedding(f);
+        area_global_+=area_[fidx];
         map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
         {
             uint32 afidx = map2_->embedding(af);
@@ -799,8 +822,8 @@ void Plugin_ShallowWater::init()
 	);
     // end chifaa
     
-	for (uint32 i = 0; i < max_depth_; ++i)
-		try_subdivision();
+    //for (uint32 i = 0; i < max_depth_; ++i)
+    //	try_subdivision();
 
     tempschifaa.clear();
     hminchifaa.clear();
@@ -1376,8 +1399,12 @@ void Plugin_ShallowWater::execute_time_step()
 					riemann_flux = border_condition(typ_bc_[eidx], val_bc_[eidx], normX_[eidx], normY_[eidx], q_[fidx], r_[fidx], h_[fidx]+zb_[fidx], zb_[fidx], 9.81, hmin_, small_);
 
                 h_star_[eidx]=h_[fidx]; // a verifier
-                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])u_star_[eidx];
-                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])v_star_[eidx];
+                u_star_[eidx]=q_[fidx]/h_[fidx];
+                v_star_[eidx]=r_[fidx]/h_[fidx];
+//                u_star_[eidx]=riemann_flux.F1/h_star_[eidx];
+//                v_star_[eidx]=riemann_flux.F3/riemann_flux.F1;
+                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])*u_star_[eidx];
+                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])*v_star_[eidx];
             }
 			else // Inner cell: use the lateralised Riemann solver
 			{
@@ -1407,17 +1434,47 @@ void Plugin_ShallowWater::execute_time_step()
 				}
 
                 h_star_[eidx]=ThrdDgreeSolve(riemann_flux.F1,riemann_flux.F2,h_[f1idx],h_[f2idx]);
-                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])u_star_[eidx];
-                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])v_star_[eidx];
+
+                //if(h_star_[eidx]>h1 && h_star_[eidx]<h2)
+                //    std::cout<<"h star ok"<<std::endl;
+                u_star_[eidx]=riemann_flux.F1/h_star_[eidx];
+                if (riemann_flux.F1 > small_)
+                    v_star_[eidx]=riemann_flux.F3/riemann_flux.F1;
+                else
+                    v_star_[eidx]=0.0;
+
+//                std::cout<<u_star_[eidx]<<std::endl;
+//                std::cout<<q_[f1idx]/h_[f1idx]<<std::endl;
+//                std::cout<<q_[f2idx]/h_[f2idx]<<std::endl;
+//                std::cout<<v_star_[eidx]<<std::endl;
+//                std::cout<<r_[f1idx]/h_[f1idx]<<std::endl;
+//                std::cout<<r_[f2idx]/h_[f2idx]<<std::endl;
+
+                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])*u_star_[eidx];
+                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])*v_star_[eidx];
+//                std::cout<<"psi entropy x"<<std::endl;
+//                std::cout<<psi_entropy_x_[eidx]<<std::endl;
+//                std::cout<<"psi entropy y"<<std::endl;
+//                std::cout<<psi_entropy_y_[eidx]<<std::endl;
             }
+
+
+//            if (std::isnan(h_star_[eidx]))
+//                std::cout << "nan hstar (" << nb_iter_ << ") / ";
+//            if (std::isnan(u_star_[eidx]))
+//                std::cout << "nan ustar (" << nb_iter_ << ") / ";
+//            if (std::isnan(v_star_[eidx]))
+//            {
+//                std::cout << "nan vstar (" << nb_iter_ << "," << riemann_flux.F3 << "," << riemann_flux.F1 << ")";
+//            }
 
 			f1_[eidx] = riemann_flux.F1;
 			f2_[eidx] = riemann_flux.F2;
 			f3_[eidx] = riemann_flux.F3;
 			s2L_[eidx] = riemann_flux.s2L;
             s2R_[eidx] = riemann_flux.s2R;
-            u_star_[eidx]=f1_[eidx]/h_star_[eidx];
-            v_star_[eidx]=f3_[eidx]/f1_[eidx];
+
+
 
 
 		},
@@ -1427,11 +1484,22 @@ void Plugin_ShallowWater::execute_time_step()
 	update_time_step();
 
 	simu_data_access_.lock();
-
+    entropy_global_=0.;
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
 			uint32 fidx = map2_->embedding(f);
+            if (nb_iter_==0)
+            {
+                h_old_[fidx]=0;
+                q_old_[fidx]=0;
+                r_old_[fidx]=0;
+            }
+
+            h_old_[fidx]=h_[fidx]; // et à la premiere iteration??????? a verifier ce qui se passe
+            q_old_[fidx]=q_[fidx];
+            r_old_[fidx]=r_[fidx];
+            double somme_psi=0.;
 			map2_->foreach_incident_edge(f, [&] (CMap2::Edge ie)
 			{
 				uint32 ieidx = map2_->embedding(ie);
@@ -1450,14 +1518,38 @@ void Plugin_ShallowWater::execute_time_step()
 					h_[fidx] += factF * f1_[ieidx];
                     q_[fidx] += factF * (( f2_[ieidx] + s2R_[ieidx])*normX_[ieidx] - f3_[ieidx]*normY_[ieidx]);
 					r_[fidx] += factF * ( f3_[ieidx]*normX_[ieidx] + ( f2_[ieidx]+s2R_[ieidx])*normY_[ieidx]);
-				}
-			});
+                }
+
+                somme_psi+=(psi_entropy_x_[ieidx]*normX_[ieidx]+psi_entropy_y_[ieidx]*normY_[ieidx])*length_[ieidx];
+            });
          // chifaa
+
+//         std::cout<<"somme psi: "<<somme_psi<<std::endl;
+
+         SCALAR s_entropy_old=s_entropy_[fidx];
          s_entropy_[fidx]=0.5*h_[fidx]*(q_[fidx]*q_[fidx]+r_[fidx]*r_[fidx])/(h_[fidx]*h_[fidx])+0.5*9.81*h_[fidx]*h_[fidx]+9.81*h_[fidx]*zb_[fidx];
+         //std::cout<<"s_entropy"<<std::endl;
+         //std::cout<<s_entropy_[fidx]<<std::endl;
+         Snk_[fidx]=area_[fidx]*(s_entropy_[fidx]-s_entropy_old)/dt_+somme_psi;
+         //std::cout<<"Snk"<<std::endl;
+         //std::cout<<Snk_[fidx]<<std::endl;
+         entropy_global_+=Snk_[fidx];
+
+
          // end chifaa
         },
 		*qtrav_
 	);
+
+    entropy_global_/=area_global_;
+
+    //std::cout<<"area global"<<std::endl;
+    //std::cout<<area_global_<<std::endl;
+//    std::cout<<"entropy global"<<std::endl;
+//    std::cout<<entropy_global_<<std::endl;
+    //std::cout<<""<<std::endl;
+
+
 
 	for(uint32 i = 0; i < cgogn::thread_pool()->nb_workers(); ++i)
 	{
@@ -1570,7 +1662,7 @@ void Plugin_ShallowWater::execute_time_step()
     // chifaa if option = fixed mesh, commentez cette partie
     if (adaptive_mesh_)
     {
-        if (nb_iter_ % iteradapt == 0)
+        if (nb_iter_ % iteradapt == 0 )
         {
             map_->lock_topo_access();
             try_simplification();
@@ -1772,6 +1864,41 @@ bool Plugin_ShallowWater::subd_criteria_h(CMap2::Face f)
     return res;
 }
 
+bool Plugin_ShallowWater::subd_criteria_entropy(CMap2::Face f)
+{
+    bool res = false;
+    uint32 fidx = map2_->embedding(f);
+//    std::cout<<"proportion"<<std::endl;
+//    std::cout<<Snk_[fidx]/entropy_global_<<std::endl;
+    if (Snk_[fidx]>0.3*entropy_global_)
+        res=true;
+    return res;
+}
+
+bool Plugin_ShallowWater::subd_criteria_h_q_r_old(CMap2::Face f)
+{   bool res = false;
+    uint32 fidx = map2_->embedding(f);
+
+    //std::cout<<abs(q_[fidx]-q_old_[fidx])<<std::endl;
+    //std::cout<<abs(r_[fidx]-r_old_[fidx])<<std::endl;
+    if(abs(h_[fidx]-h_old_[fidx])>seuil_sub_h_old || abs(q_[fidx]-q_old_[fidx])>seuil_sub_q_old
+            || abs(r_[fidx]-r_old_[fidx])>seuil_simp_r_old )
+        res=true;
+    return res;
+
+}
+
+bool Plugin_ShallowWater::subd_criteria_h_old(CMap2::Face f)
+{   bool res = false;
+    uint32 fidx = map2_->embedding(f);
+    //std::cout<<abs(h_[fidx]-h_old_[fidx])<<std::endl;
+    if(abs(h_[fidx]-h_old_[fidx])>seuil_sub_h_old)
+        res=true;
+    return res;
+
+}
+
+
 void Plugin_ShallowWater::try_subdivision()
 {
 	CMap2::CellMarker<CMap2::Face::ORBIT> subdivided(*map2_);
@@ -1796,6 +1923,9 @@ void Plugin_ShallowWater::try_subdivision()
                 {
                     case Criteria::H_Q_R: toadd = subd_criteria_h_q_r(f); break;
                     case Criteria::H: toadd = subd_criteria_h(f); break;
+                    case Criteria::entropy: toadd=subd_criteria_entropy(f);
+                    case Criteria::H_old: toadd = subd_criteria_h_old(f); break;
+                    case Criteria::H_Q_R_old: toadd = subd_criteria_h_q_r_old(f); break;
                 }
 
                 if (toadd)
@@ -2032,6 +2162,38 @@ bool Plugin_ShallowWater::simp_criteria_h(cgogn::Dart central_cell)
 }
 
 
+
+bool Plugin_ShallowWater::simp_criteria_entropy(cgogn::Dart central_cell)
+{
+    bool res = false;
+    CMap2::Face f(central_cell);
+    uint32 fidx = map2_->embedding(f);
+    if (Snk_[fidx]<0.05*entropy_global_)
+        res=true;
+    return res;
+}
+
+bool Plugin_ShallowWater::simp_criteria_h_q_r_old(cgogn::Dart central_cell)
+{   bool res = false;
+    CMap2::Face f(central_cell);
+    uint32 fidx = map2_->embedding(f);
+    if(abs(h_[fidx]-h_old_[fidx])<seuil_simp_h_old || abs(q_[fidx]-q_old_[fidx])<seuil_simp_q_old || abs(r_[fidx]-r_old_[fidx])<seuil_simp_r_old )
+        res=true;
+    return res;
+
+}
+
+bool Plugin_ShallowWater::simp_criteria_h_old(cgogn::Dart central_cell)
+{   bool res = false;
+    CMap2::Face f(central_cell);
+    uint32 fidx = map2_->embedding(f);
+    if(abs(h_[fidx]-h_old_[fidx])<seuil_simp_h_old )
+        res=true;
+    return res;
+
+}
+
+
 void Plugin_ShallowWater::try_simplification()
 {
 	std::vector<CMap2::Face>* to_simplify = cgogn::dart_buffers()->cell_buffer<CMap2::Face>();
@@ -2069,6 +2231,9 @@ void Plugin_ShallowWater::try_simplification()
                 {
                     case Criteria::H_Q_R: toadd = simp_criteria_h_q_r(central_cell); break;
                     case Criteria::H: toadd = simp_criteria_h(central_cell); break;
+                    case Criteria::entropy: toadd = simp_criteria_entropy(central_cell); break;
+                    case Criteria::H_old: toadd = simp_criteria_h_old(central_cell); break;
+                    case Criteria::H_Q_R_old: toadd = simp_criteria_h_q_r_old(central_cell); break;
                 }
 
                 if (toadd)
@@ -2793,24 +2958,124 @@ bool Plugin_ShallowWater::sew_faces_recursive(CMap2::Edge e1, CMap2::Edge e2)
 		return true;
 }
 // chifaa
+
+//bool Plugin_ShallowWater::verification_thrdDgreeSolve(SCALAR f1,SCALAR f2,SCALAR hL,SCALAR hR)
+//{
+//    SCALAR x=ThrdDgreeSolve(f1,f2,hL,hR);
+//    if (9.81*std::pow(x,3)-2*f2*x+2*f1*f1==0)
+//        return true;
+//    else
+//        return false;
+//}
+
+
+SCALAR Plugin_ShallowWater::sign_y(SCALAR y)
+{
+    if (y>0)
+            return 1;
+    else if (y<0)
+            return -1;
+    else
+        return 0;
+
+}
+
+
 SCALAR Plugin_ShallowWater::ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCALAR hR)
 {
+    SCALAR p=-2*f2/9.81;
     SCALAR q=2*f1*f1/9.81;
-    SCALAR Delta1=4*std::pow(f1,4)/(9.81*9.81)-32/27*pow(f2,3)/pow(9.81,3);
-    SCALAR x1=pow(-q/2-sqrt(Delta1)/2,1/3)+pow(-q/2+sqrt(Delta1)/2,1/3);
-    SCALAR Delta2=9.81*9.81*x1*x1-4*9.81*(-2*f1+9.81*x1*x1);
-    SCALAR x2=-x1/2-sqrt(Delta2)/2/9.81;
-    SCALAR x3=-x1/2+sqrt(Delta2)/2/9.81;
-
-    SCALAR h1=hL<hR? hL:hR;
-    SCALAR h2=hL>hR? hL:hR;
-    if (x1>h1 && x1<h2)
+    SCALAR Delta=q*q/4+p*p*p/27;
+    if (Delta>0)
+        {SCALAR y1=-q/2-std::sqrt(Delta);
+        SCALAR y2=-q/2+std::sqrt(Delta);
+        SCALAR x1=sign_y(y1)*cbrt(abs(y1))+sign_y(y2)*cbrt(abs(y2));
+        //std::cout<<"cas delta positif===================================="<<std::endl;
+        //std::cout<<x1*x1*x1+p*x1+q<<std::endl;
+        if(abs(x1*x1*x1+p*x1+q)>1e-5)
+            std::cout<<"WRONG"<<std::endl;
         return x1;
-    else if (x2>h1 && x2<h2)
-        return x2;
-    else if (x3>h1 && x3<h2)
-        return x3;
+        }
+
+    else if (Delta==0)
+    {
+        SCALAR y1=-q/2;
+        SCALAR x1=2*sign_y(y1)*std::pow(y1,1/3)-1./3.;
+        SCALAR x2=-2*sign_y(y1)*std::pow(y1,1/3)-1./3.;
+        std::cout<<"cas delta nulle===================================="<<std::endl;
+        std::cout<<9.81*std::pow(x1,3)-2*f2*x1+2*f1*f1<<std::endl;
+        std::cout<<9.81*std::pow(x2,3)-2*f2*x2+2*f1*f1<<std::endl;
+    }
+
+    else if (Delta<0)
+    {
+        SCALAR r=std::sqrt(q*q/4-Delta);
+        SCALAR alpha=atan(std::sqrt(-Delta)/(-q)*2.);
+        if(q>0)
+            alpha=M_PI-alpha;
+        SCALAR A1=(6.0 * M_PI - alpha) / 3.0;
+        SCALAR A2=alpha / 3.0;
+        SCALAR A3=(2.0 * M_PI + alpha) / 3.0;
+        SCALAR A4=(4.0 * M_PI - alpha) / 3.0;
+        SCALAR A5=(4.0 * M_PI + alpha) / 3.0;
+        SCALAR A6=(2.0 * M_PI - alpha) / 3.0;
+        SCALAR x1=cbrt(r)*(std::cos(A1)+ std::cos(A2));
+        SCALAR x2=cbrt(r)* (std::cos(A3)+ std::cos(A4));
+        SCALAR x3=cbrt(r)* (std::cos(A5)+ std::cos(A6));
+        //std::cout<<"cas delta negatif===================================="<<std::endl;
+
+//        std::cout<<x1*x1*x1+p*x1+q<<std::endl;
+//        std::cout<<x2*x2*x2+p*x2+q<<std::endl;
+//        std::cout<<x3*x3*x3+p*x3+q<<std::endl;
+        if(abs(x1*x1*x1+p*x1+q)>1e-5 || abs(x2*x2*x2+p*x2+q)>1e-5 || abs(x3*x3*x3+p*x3+q)>1e-5)
+            std::cout<<"WRONG"<<std::endl;
+        SCALAR h1=std::min(hL,hR);
+        SCALAR h2=std::max(hL,hR);
+
+
+            if (x1>=h1 && x1<=h2)
+                return x1;
+            else if (x2>=h1 && x2<=h2)
+                return x2;
+            else if (x3>=h1 && x3<=h2)
+               return x3;
+            else
+                 {
+                     SCALAR d_x1_I=h1-x1>0?h1-x1:x1-h2;
+                     SCALAR d_x2_I=h1-x2>0?h1-x2:x2-h2;
+                     SCALAR d_x3_I=h1-x3>0?h1-x3:x3-h2;
+                     SCALAR min_d=std::min(std::min(d_x1_I,d_x2_I),d_x3_I);
+
+                     if (min_d==d_x1_I)
+                     {//std::cout<<h1<<std::endl;
+                      //std::cout<<x1<<std::endl;
+                      //std::cout<<h2<<std::endl;
+                         return x1;
+                     }
+                     else if(min_d==d_x2_I)
+                     {  // std::cout<<h1<<std::endl;
+                       //  std::cout<<x2<<std::endl;
+                       //  std::cout<<h2<<std::endl;
+                         return x2;
+                     }
+                         else
+                     {   //std::cout<<h1<<std::endl;
+                         //std::cout<<x3<<std::endl;
+                         //std::cout<<h2<<std::endl;
+                         return x3;
+                     }
+                }
+
+
+      }
 }
+
+
+
+
+
+
+
 
 
 

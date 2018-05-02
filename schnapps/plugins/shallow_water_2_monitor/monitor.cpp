@@ -189,28 +189,87 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 // chifaa test de seuil
 
 
-    std::vector<SCALAR> seuils_sigma_sub_h = { 0.5, 1, 2, 2.5 };
+//    std::vector<SCALAR> seuils_sigma_sub_h = { 0.5, 1, 2, 2.5 };
 
-    for (SCALAR s : seuils_sigma_sub_h)
-    {
-        f_.push_back([=] () {
-            MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+//    for (SCALAR s : seuils_sigma_sub_h)
+//    {
+//        f_.push_back([=] () {
+//            MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
 
-            shallow_water_->set_max_depth(4);
-            shallow_water_->set_adaptive_mesh(true);
-            shallow_water_->set_sigma_sub_h(s);
-            shallow_water_->set_sigma_sub_vitesse(s);
-            shallow_water_->set_sigma_simp_h(s/2.0);
-            shallow_water_->set_sigma_simp_vitesse(s/2.0);
+//            shallow_water_->set_max_depth(4);
+//            shallow_water_->set_adaptive_mesh(true);
+//            shallow_water_->set_sigma_sub_h(s);
+//            shallow_water_->set_sigma_sub_vitesse(s);
+//            shallow_water_->set_sigma_simp_h(s/2.0);
+//            shallow_water_->set_sigma_simp_vitesse(s/2.0);
 
-            shallow_water_->set_criteria(plugin_shallow_water_2::H);
-            shallow_water_->init();
+//            shallow_water_->set_criteria(plugin_shallow_water_2::H);
+//            shallow_water_->init();
 
-            render_scalar_->update_min_max(v_, mesh, true);
+//            render_scalar_->update_min_max(v_, mesh, true);
 
-            shallow_water_->start();
-        });
-    }
+//            shallow_water_->start();
+//        });
+//    }
+
+
+//        std::vector<SCALAR> seuils_sigma_sub_h = {1.};//{ 0.5, 1, 2, 2.5 };
+
+//        for (SCALAR s : seuils_sigma_sub_h)
+//        {
+//            f_.push_back([=] () {
+//                MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+
+//                shallow_water_->set_max_depth(4);
+//                shallow_water_->set_adaptive_mesh(true);
+//                shallow_water_->set_sigma_sub_h(s);
+//                shallow_water_->set_sigma_sub_vitesse(3.);//3
+//                shallow_water_->set_sigma_simp_h(s/2.);
+//                shallow_water_->set_sigma_simp_vitesse(1.5);
+
+//                shallow_water_->set_criteria(plugin_shallow_water_2::H_Q_R);
+//                shallow_water_->init();
+
+//                render_scalar_->update_min_max(v_, mesh, true);
+
+//                shallow_water_->start();
+//            });
+//        }
+
+
+//    std::vector<SCALAR> seuils_qr_old = {0.7};//{0.8,0.7};
+//    for (SCALAR s : seuils_qr_old)
+//    {
+//    f_.push_back([=] () {
+//                MapHandlerGen* mesh = load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+//                shallow_water_->set_max_depth(4);
+//                shallow_water_->set_adaptive_mesh(true);
+//                shallow_water_->set_criteria(plugin_shallow_water_2::H_Q_R_old);
+//                shallow_water_->set_seuil_sub_h_q_r_old(0.01,s,s);
+//                shallow_water_->set_seuil_simp_h_q_r_old(0.003,0.3,0.3);
+
+//                shallow_water_->init();
+
+//                render_scalar_->update_min_max(v_, mesh, true);
+
+//                shallow_water_->start();
+//            });
+//    }
+
+
+    f_.push_back([=] () {
+                MapHandlerGen* mesh = load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+                shallow_water_->set_max_depth(4);
+                shallow_water_->set_adaptive_mesh(true);
+                shallow_water_->set_criteria(plugin_shallow_water_2::entropy);
+
+                shallow_water_->init();
+
+                render_scalar_->update_min_max(v_, mesh, true);
+
+                shallow_water_->start();
+            });
+
 
 //    for(std::vector<SCALAR>::iterator it=seuils_sigma_sub_h.begin();it!=seuils_sigma_sub_h.end();it++)
 //    {   std::cout << "it chifaa seuils " << *it << std::endl;
@@ -253,7 +312,15 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 //            shallow_water_->set_adaptive_mesh(true);
 //            shallow_water_->set_sigma_sub_h(1);
 //            //shallow_water_->set_subd_criteria(H_Q_R);
-//            shallow_water_->init();
+//            shallow_water_->init();//bool Plugin_ShallowWater::simp_criteria_entropy(cgogn::Dart central_cell)
+        //{
+        //    bool res = false;
+        //    CMap2::Face f(central_cell);
+        //    uint32 fidx = map2_->embedding(f);
+        //    if (Snk_[fidx]<0.01*entropy_global_)
+        //        res=true;
+        //    return res;
+        //}
 
 //            render_scalar_->update_min_max(v_, mesh, true);
 
@@ -329,7 +396,7 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 //        });
 
 
-	return true;
+    return true;
 }
 
 void Plugin_Shallow_Water_2_Monitor::disable()

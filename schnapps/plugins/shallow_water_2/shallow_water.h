@@ -41,7 +41,10 @@ namespace plugin_shallow_water_2
 
 enum Criteria {
     H_Q_R,
-    H
+    H,
+    entropy,
+    H_old,
+    H_Q_R_old
 };
 
 /**
@@ -74,6 +77,13 @@ public:
     void set_sigma_simp_h(SCALAR ssmp){sigma_simp_h=ssmp;}
     void set_sigma_sub_vitesse(SCALAR ssb){sigma_sub_vitesse=ssb;}
     void set_sigma_simp_vitesse(SCALAR ssmp){sigma_simp_vitesse=ssmp;}
+    void set_seuil_sub_h_old(SCALAR ssh){seuil_sub_h_old=ssh;}
+    void set_seuil_simp_h_old(SCALAR ssh){seuil_simp_h_old=ssh;}
+
+    void set_seuil_sub_h_q_r_old(SCALAR ssh,SCALAR ssq,SCALAR ssr){seuil_sub_h_old=ssh;seuil_sub_q_old=ssq;seuil_sub_r_old=ssr;}
+    void set_seuil_simp_h_q_r_old(SCALAR ssh,SCALAR ssq,SCALAR ssr){seuil_simp_h_old=ssh;seuil_simp_q_old=ssq;seuil_simp_r_old=ssr;}
+
+
 
 
 
@@ -144,10 +154,23 @@ private:
     // end chifaa
     bool subd_criteria_h_q_r(CMap2::Face f);
     bool subd_criteria_h(CMap2::Face f);
+
     //bool simp_criteria_h_q_r(uint32 fidx, uint32 afidx);
     bool simp_criteria_h_q_r(cgogn::Dart central_cell);
     bool simp_criteria_h(cgogn::Dart central_cell);
 
+    bool subd_criteria_entropy(CMap2::Face f);
+    bool simp_criteria_entropy(cgogn::Dart central_cell);
+
+    bool subd_criteria_h_q_r_old(CMap2::Face f);
+    bool subd_criteria_h_old(CMap2::Face f);
+
+    bool simp_criteria_h_q_r_old(cgogn::Dart central_cell);
+    bool simp_criteria_h_old(cgogn::Dart central_cell);
+
+
+    //    bool verification_thrdDgreeSolve(SCALAR f1,SCALAR f2,SCALAR hL,SCALAR hR);
+    SCALAR sign_y(SCALAR y);
 	void try_subdivision();
 	void try_simplification();
 	void get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr);
@@ -200,6 +223,13 @@ private:
     SCALAR sigma_simp_h;
     SCALAR sigma_sub_vitesse;
     SCALAR sigma_simp_vitesse;
+
+    SCALAR seuil_sub_h_old;
+    SCALAR seuil_simp_h_old;
+    SCALAR seuil_sub_q_old;
+    SCALAR seuil_simp_q_old;
+    SCALAR seuil_sub_r_old;
+    SCALAR seuil_simp_r_old;
     SCALAR moyenne_nb_mailles;
     //end chifaa
 
@@ -241,10 +271,16 @@ private:
 	CMap2::FaceAttribute<SCALAR> phi_; // porosité
 	CMap2::FaceAttribute<SCALAR> zb_; // cote du fond
 	CMap2::FaceAttribute<SCALAR> h_; // hauteur d'eau
+    CMap2::FaceAttribute<SCALAR> h_old_; // hauteur d'eau
 	CMap2::FaceAttribute<SCALAR> q_; // flux de quantité de mouvement dans la direction X
-	CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
+    CMap2::FaceAttribute<SCALAR> q_old_; // flux de quantité de mouvement dans la direction X
+    CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
+    CMap2::FaceAttribute<SCALAR> r_old_; // flux de quantité de mouvement dans la direction Y
     //chifaa
     CMap2::FaceAttribute<SCALAR> s_entropy_;
+    CMap2::FaceAttribute<SCALAR> Snk_;
+    SCALAR entropy_global_;
+    SCALAR area_global_;
     //end chifaa
 	CMap2::FaceAttribute<VEC3> centroid_; // cell centroid
 	CMap2::FaceAttribute<SCALAR> area_; // cell area
