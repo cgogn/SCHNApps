@@ -37,7 +37,7 @@ namespace schnapps
 namespace plugin_volume_render
 {
 
-inline Plugin_VolumeRender::Plugin_VolumeRender()
+Plugin_VolumeRender::Plugin_VolumeRender()
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
