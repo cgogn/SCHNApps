@@ -32,6 +32,8 @@
 #include <cgogn/modeling/algos/loop.h>
 #include <cgogn/modeling/algos/catmull_clark.h>
 
+#include <cgogn/geometry/algos/filtering.h>
+
 namespace schnapps
 {
 
@@ -52,12 +54,15 @@ bool Plugin_SurfaceModelisation::enable()
 {
 	decimation_dialog_ = new Decimation_Dialog(schnapps_, this);
 	subdivision_dialog_ = new Subdivision_Dialog(schnapps_, this);
+	filtering_dialog_ = new Filtering_Dialog(schnapps_, this);
 
 	decimation_action_ = schnapps_->add_menu_action("Surface;Modelisation;Decimation", "decimate mesh");
 	subdivision_action_ = schnapps_->add_menu_action("Surface;Modelisation;Subdivision", "subdivide mesh");
+	filtering_action_ = schnapps_->add_menu_action("Surface;Modelisation;Filtering", "filter mesh");
 
 	connect(decimation_action_, SIGNAL(triggered()), this, SLOT(open_decimation_dialog()));
 	connect(subdivision_action_, SIGNAL(triggered()), this, SLOT(open_subdivision_dialog()));
+	connect(filtering_action_, SIGNAL(triggered()), this, SLOT(open_filtering_dialog()));
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
@@ -70,18 +75,22 @@ void Plugin_SurfaceModelisation::disable()
 
 	disconnect(decimation_action_, SIGNAL(triggered()), this, SLOT(open_decimation_dialog()));
 	disconnect(subdivision_action_, SIGNAL(triggered()), this, SLOT(open_subdivision_dialog()));
+	disconnect(filtering_action_, SIGNAL(triggered()), this, SLOT(open_filtering_dialog()));
 
 	schnapps_->remove_menu_action(decimation_action_);
 	schnapps_->remove_menu_action(subdivision_action_);
+	schnapps_->remove_menu_action(filtering_action_);
 
 	delete decimation_dialog_;
 	delete subdivision_dialog_;
+	delete filtering_dialog_;
 }
 
 void Plugin_SurfaceModelisation::schnapps_closing()
 {
 	decimation_dialog_->close();
 	subdivision_dialog_->close();
+	filtering_dialog_->close();
 }
 
 void Plugin_SurfaceModelisation::open_decimation_dialog()
@@ -92,6 +101,11 @@ void Plugin_SurfaceModelisation::open_decimation_dialog()
 void Plugin_SurfaceModelisation::open_subdivision_dialog()
 {
 	subdivision_dialog_->show();
+}
+
+void Plugin_SurfaceModelisation::open_filtering_dialog()
+{
+	filtering_dialog_->show();
 }
 
 void Plugin_SurfaceModelisation::decimate(
@@ -152,6 +166,57 @@ void Plugin_SurfaceModelisation::subdivide_catmull_clark(
 
 	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
+	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
+	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+}
+
+void Plugin_SurfaceModelisation::filter_average(
+	const QString& map_name,
+	const QString& position_attribute_name)
+{
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	if (!mh)
+		return;
+
+	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	if (!position.is_valid())
+		return;
+
+	CMap2* map2 = mh->get_map();
+	CMap2::VertexAttribute<VEC3> position2 = map2->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_average");
+	cgogn::geometry::filter_average(*map2, position, position2);
+	map2->swap_attributes(position, position2);
+	map2->remove_attribute(position2);
+
+	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
+	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+}
+
+void Plugin_SurfaceModelisation::filter_bilateral(
+	const QString& map_name,
+	const QString& position_attribute_name,
+	const QString& normal_attribute_name)
+{
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	if (!mh)
+		return;
+
+	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	if (!position.is_valid())
+		return;
+
+	CMap2::VertexAttribute<VEC3> normal = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
+	if (!normal.is_valid())
+		return;
+
+	CMap2* map2 = mh->get_map();
+	CMap2::VertexAttribute<VEC3> position2 = map2->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_average");
+	cgogn::geometry::filter_bilateral(*map2, position, position2, normal);
+	map2->swap_attributes(position, position2);
+	map2->remove_attribute(position2);
+
+	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
 	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
 }
