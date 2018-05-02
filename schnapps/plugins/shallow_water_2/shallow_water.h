@@ -39,6 +39,11 @@ namespace schnapps
 namespace plugin_shallow_water_2
 {
 
+enum Criteria {
+    H_Q_R,
+    H
+};
+
 /**
 * @brief Shallow water simulation
 */
@@ -60,6 +65,18 @@ public:
 	std::future<void>* simu_future() { return &simu_future_; }
 
 	void set_max_depth(uint32 m) { max_depth_ = m; }
+    void set_iteradapt(uint32 i){iteradapt=i;}
+    void set_adaptive_mesh(bool b) { adaptive_mesh_ = b; }
+    void set_criteria(Criteria c) { criteria_ = c; }
+    void set_sigma_sub(SCALAR ssb){sigma_sub=ssb;}
+    void set_sigma_simp(SCALAR ssmp){sigma_simp=ssmp;}
+    void set_sigma_sub_h(SCALAR ssb){sigma_sub_h=ssb;}
+    void set_sigma_simp_h(SCALAR ssmp){sigma_simp_h=ssmp;}
+    void set_sigma_sub_vitesse(SCALAR ssb){sigma_sub_vitesse=ssb;}
+    void set_sigma_simp_vitesse(SCALAR ssmp){sigma_simp_vitesse=ssmp;}
+
+
+
 	void init();
 
 private:
@@ -77,8 +94,6 @@ private:
 	void load_1D_boundary_cond_file(const QString& filename);
 	void load_2D_boundary_cond_file(const QString& filename);
 	void sew_1D_2D_meshes();
-
-	void init_map_attributes();
 
 public slots:
 
@@ -124,6 +139,14 @@ private:
 			SCALAR NormX, SCALAR NormY,
 			SCALAR q, SCALAR r, SCALAR z, SCALAR zb,
 			SCALAR g, SCALAR hmin, SCALAR smalll);
+    // begin chifaa
+    SCALAR ThrdDgreeSolve(SCALAR f1,SCALAR f2,SCALAR hL,SCALAR hR);
+    // end chifaa
+    bool subd_criteria_h_q_r(CMap2::Face f);
+    bool subd_criteria_h(CMap2::Face f);
+    //bool simp_criteria_h_q_r(uint32 fidx, uint32 afidx);
+    bool simp_criteria_h_q_r(cgogn::Dart central_cell);
+    bool simp_criteria_h(cgogn::Dart central_cell);
 
 	void try_subdivision();
 	void try_simplification();
@@ -164,7 +187,21 @@ private:
 	SCALAR small_;
 	uint8 solver_;
 	uint32 nb_iter_;
+
 	uint32 max_depth_;
+    uint32 iteradapt;
+    bool adaptive_mesh_;
+    Criteria criteria_;
+
+    //chifaa
+    SCALAR sigma_sub;
+    SCALAR sigma_simp;
+    SCALAR sigma_sub_h;
+    SCALAR sigma_simp_h;
+    SCALAR sigma_sub_vitesse;
+    SCALAR sigma_simp_vitesse;
+    SCALAR moyenne_nb_mailles;
+    //end chifaa
 
 	std::vector<SCALAR> min_h_per_thread_;
 	std::vector<SCALAR> max_h_per_thread_;
@@ -206,6 +243,9 @@ private:
 	CMap2::FaceAttribute<SCALAR> h_; // hauteur d'eau
 	CMap2::FaceAttribute<SCALAR> q_; // flux de quantité de mouvement dans la direction X
 	CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
+    //chifaa
+    CMap2::FaceAttribute<SCALAR> s_entropy_;
+    //end chifaa
 	CMap2::FaceAttribute<VEC3> centroid_; // cell centroid
 	CMap2::FaceAttribute<SCALAR> area_; // cell area
 	CMap2::FaceAttribute<SCALAR> swept_;
@@ -223,6 +263,49 @@ private:
 	CMap2::EdgeAttribute<SCALAR> val_bc_;
 	CMap2::EdgeAttribute<std::string> typ_bc_;
 	CMap2::EdgeAttribute<uint32> NS_;
+    //chifaa
+    CMap2::EdgeAttribute<SCALAR> psi_entropy_x_;
+    CMap2::EdgeAttribute<SCALAR> psi_entropy_y_;
+    CMap2::EdgeAttribute<SCALAR> h_star_;
+    CMap2::EdgeAttribute<SCALAR> u_star_;
+    CMap2::EdgeAttribute<SCALAR> v_star_;
+    // end chifaa
+
+
+    //chifaa
+    std::vector<SCALAR> tempschifaa;
+
+    SCALAR chifaa_max_diff_h;
+    SCALAR chifaa_max_diff_q;
+    SCALAR chifaa_max_diff_r;
+
+    //std::vector<SCALAR> h_1100chifaa; //au milieu
+    //std::vector<SCALAR> h_1354chifaa; // a cote du barrage
+    std::vector<SCALAR> hminchifaa;
+    std::vector<SCALAR> hmaxchifaa;
+    std::vector<SCALAR> qminchifaa;
+    std::vector<SCALAR> qmaxchifaa;
+    std::vector<SCALAR> rminchifaa;
+    std::vector<SCALAR> rmaxchifaa;
+    std::vector<SCALAR> vect_max_diff_h_chifaa;
+    std::vector<SCALAR> vect_max_diff_q_chifaa;
+    std::vector<SCALAR> vect_max_diff_r_chifaa;
+    uint32 nbmailles;
+    std::vector<uint32> vect_nbmailles_chifaa;
+
+    // a ajouter les vecteurs d'evolution de h, q & r  de quelques points : les 4 coins du maillage et de part et d'autre de l'ouverture
+    // coin gauche haut :
+    // coin droite haut : 301
+    // coin gauche bas  : 9
+    // coin droite bas  :  69
+    // à  l'ouverture du côté en haut : 342
+    // à l'ouverture du côté en bas   : 295
+    std::vector<SCALAR> h_490chifaa;
+    std::vector<SCALAR> h_301chifaa;
+    std::vector<SCALAR> h_9chifaa;
+    std::vector<SCALAR> h_69chifaa;
+    std::vector<SCALAR> h_342chifaa;
+    std::vector<SCALAR> h_295chifaa;
 };
 
 } // namespace plugin_shallow_water_2
