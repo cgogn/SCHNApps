@@ -39,10 +39,8 @@
 
 #include <cgogn/core/utils/thread.h>
 
-#include <QFileInfo>
-#define _USE_MATH_DEFINES
-#include <math.h>
-
+#include <QDir>
+#include <QFile>
 
 namespace schnapps
 {
@@ -56,21 +54,24 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
 	atq_map_(nullptr),
     qtrav_(nullptr),
     edge_left_side_(nullptr),
-    max_depth_(2),
+	max_depth_(4),
+	iteradapt_(1),
     adaptive_mesh_(true),
     criteria_(Criteria::entropy),
-    sigma_sub(0.1),
+
+	sigma_sub(0.1),
     sigma_simp(0.05),
     sigma_sub_h(5),//1
     sigma_simp_h(1),//0.5
     sigma_sub_vitesse(0.5),//0.5
     sigma_simp_vitesse(0.2),//0.5
+	seuil_sub_h_old(0.007),
+	seuil_simp_h_old(0.0015),
+	seuil_sub_q_old(0.7),
+	seuil_simp_q_old(0.15),
+	seuil_sub_r_old(0.7),
+	seuil_simp_r_old(0.15),
 
-    seuil_sub_h_old(0.01),
-    seuil_simp_h_old(0.003),
-
-
-    iteradapt(5),
 	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_(1e-35) // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
 {
@@ -685,6 +686,8 @@ void Plugin_ShallowWater::load_project(const QString& dir)
 	area_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("area");
 	swept_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("swept");
 	discharge_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("discharge");
+	s_entropy_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("s_entropy");
+	Snk_ = map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("Snk");
 
 	f1_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f1");
 	f2_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("f2");
@@ -696,22 +699,11 @@ void Plugin_ShallowWater::load_project(const QString& dir)
 	length_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("length");
 	val_bc_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("val_bc");
 	typ_bc_ = map_->add_attribute<std::string, CMap2::Edge::ORBIT>("typ_bc_");
+	psi_entropy_x_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("psi_entropy_x");
+	psi_entropy_y_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("psi_entropy_y");
 
 	NS_ = map_->add_attribute<uint32, CMap2::Edge::ORBIT>("NS");
 	NS_.set_all_values(0);
-
-    //chifaa
-    h_star_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("h_star");
-    u_star_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("u_star");
-    v_star_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("v_star");
-    psi_entropy_x_=map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("psi_entropy_x");
-    psi_entropy_y_=map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("psi_entropy_y");
-    s_entropy_=map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("s_entropy");
-    Snk_=map_->add_attribute<SCALAR, CMap2::Face::ORBIT>("Snk");
-
-
-    // end chifaa
-    //h_star_.set_all_values(0);
 
 	load_2D_constrained_edges();
 	if (dim_ == 12)
@@ -770,78 +762,34 @@ void Plugin_ShallowWater::init()
     nb_iter_ = 0;
 //	t_ = 0.;
 
-	min_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
-	max_h_per_thread_.resize(cgogn::thread_pool()->nb_workers());
-	min_q_per_thread_.resize(cgogn::thread_pool()->nb_workers());
-	max_q_per_thread_.resize(cgogn::thread_pool()->nb_workers());
-	min_r_per_thread_.resize(cgogn::thread_pool()->nb_workers());
-	max_r_per_thread_.resize(cgogn::thread_pool()->nb_workers());
-
-	h_min_ = std::numeric_limits<SCALAR>::max();
-	h_max_ = 0.;
-	q_min_ = std::numeric_limits<SCALAR>::max();
-	q_max_ = 0.;
-	r_min_ = std::numeric_limits<SCALAR>::max();
-	r_max_ = 0.;
-	map2_->foreach_cell(
-		[&] (CMap2::Face f) {
-			uint32 fidx = map2_->embedding(f);
-			h_min_ = std::min(h_min_, h_[fidx]);
-			h_max_ = std::max(h_max_, h_[fidx]);
-			q_min_ = std::min(q_min_, q_[fidx]);
-			q_max_ = std::max(q_max_, q_[fidx]);
-			r_min_ = std::min(r_min_, r_[fidx]);
-			q_max_ = std::max(r_max_, r_[fidx]);
-		},
-		*qtrav_
-	);
-    
-    
-    // chifaa calcul de max diff 
-    chifaa_max_diff_h=0.;
-    chifaa_max_diff_q=0;
-    chifaa_max_diff_r=0;
     area_global_=0;
     
     map2_->foreach_cell(
-		[&] (CMap2::Face f) {
-
-        uint32 fidx = map2_->embedding(f);
-        area_global_+=area_[fidx];
-        map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
-        {
-            uint32 afidx = map2_->embedding(af);
-            chifaa_max_diff_h = std::max(chifaa_max_diff_h, fabs(h_[fidx] - h_[afidx]));
-            chifaa_max_diff_q = std::max(chifaa_max_diff_q, fabs(q_[fidx] - q_[afidx]));
-            chifaa_max_diff_r = std::max(chifaa_max_diff_r, fabs(r_[fidx] - r_[afidx]));
-        });
-
-
+		[&] (CMap2::Face f)
+		{
+			uint32 fidx = map2_->embedding(f);
+			area_global_ += area_[fidx];
+			h_old_[fidx] = h_[fidx];
+			q_old_[fidx] = q_[fidx];
+			r_old_[fidx] = r_[fidx];
 		},
 		*qtrav_
 	);
-    // end chifaa
-    
-    //for (uint32 i = 0; i < max_depth_; ++i)
-    //	try_subdivision();
 
-    tempschifaa.clear();
-    hminchifaa.clear();
-    hmaxchifaa.clear();
-    qminchifaa.clear();
-    qmaxchifaa.clear();
-    rminchifaa.clear();
-    rmaxchifaa.clear();
-    vect_max_diff_h_chifaa.clear();
-    vect_max_diff_q_chifaa.clear();
-    vect_max_diff_r_chifaa.clear();
-    vect_nbmailles_chifaa.clear();
-    h_490chifaa.clear();
-    h_301chifaa.clear();
-    h_9chifaa.clear();
-    h_69chifaa.clear();
-    h_342chifaa.clear();
-    h_295chifaa.clear();
+	tempschifaa.clear();
+	vect_nbmailles_chifaa.clear();
+
+	logged_values_.clear();
+	map2_->foreach_cell(
+		[&] (CMap2::Vertex v)
+		{
+			logged_values_[map2_->embedding(v)] = {{}, {}, {}};
+		},
+		*qtrav_
+	);
+    
+	for (uint32 i = 0; i < max_depth_; ++i)
+		try_subdivision();
 
     update_draw_data();
 }
@@ -863,391 +811,99 @@ void Plugin_ShallowWater::start()
 }
 
 void Plugin_ShallowWater::stop()
-
 {
-    //chifaa add time
-//    auto temps=std::chrono::system_clock::now();
-//    std::time_t temps_t = std::chrono::system_clock::to_time_t(temps);
-
-//    std::cout<<"temps du stop : "<<std::endl;
-//    std::cout<< std::ctime(&temps_t)<<std::endl;
-
-
-//    time_t t_ch = time(0);   // get time now
-//    struct tm * now = localtime( & t_ch );
-//    char buffer [55];
-//    strftime (buffer,55,"%Y-%m-%d.",now);
-
-
-    QString d = QDateTime::currentDateTime().toString("MM-dd_hh-mm-ss-zzz");
-
-
-    // end chifaa
-
     std::chrono::high_resolution_clock::time_point t = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t - start_time_).count();
 	std::cout << "elapsed time -> " << duration << std::endl;
 	std::cout << "t -> " << t_ << std::endl;
 	std::cout << "dt -> " << dt_ << std::endl;
 
-    moyenne_nb_mailles/=nb_iter_;
-    std::cout << "moyenne des nombres de mailles" << moyenne_nb_mailles << std::endl;
+	moyenne_nb_mailles /= nb_iter_;
+	std::cout << "moyenne du nombre de mailles -> " << moyenne_nb_mailles << std::endl;
 
     // chifaa sortie fichier
 
     if (t_ == t_max_)
-    {
+	{
+		QDir outdir(project_dir_);
+		outdir.cdUp();
+		if (!outdir.exists("Output"))
+			outdir.mkdir("Output");
+		outdir.cd("Output");
 
-    if (adaptive_mesh_)
-    {
+		QString dir;
+		if (adaptive_mesh_)
+		{
+			dir += "adapt_" + QString::number(max_depth_);
+			switch (criteria_)
+			{
+				case Criteria::H_Q_R: dir += "_HQR_"; break;
+				case Criteria::H: dir += "_H_"; break;
+				case Criteria::entropy: dir += "_entropy_"; break;
+				case Criteria::H_old: dir += "_Hold_"; break;
+				case Criteria::H_Q_R_old: dir += "_HQRold_"; break;
+			}
+		}
+		else
+		{
+			dir += "fixed_" + QString::number(max_depth_);
+		}
+		dir += QDateTime::currentDateTime().toString("_MM-dd_hh-mm-ss-zzz");
 
-    QString filename = "/home/dahik/OUT/outchifaaAMR/sortie_generales____" + d + ".txt";
-    std::ofstream ofs (filename.toStdString(), std::ofstream::out);
-    ofs<<" \n nb mailles : ";
-    ofs<< nbmailles;
+		outdir.mkdir(dir);
+		outdir.cd(dir);
 
-    ofs<< "\n";
-
-    ofs <<" max diff h  : " << chifaa_max_diff_h;
-    ofs <<"\n max diff q  : " << chifaa_max_diff_q;
-    ofs << " \n max diff r  : " << chifaa_max_diff_r;
-    ofs << "\n duration :  " << duration;
-    ofs << "\n moyennes nb mailles:" << moyenne_nb_mailles;
-    ofs.close();
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/sortie_temps___" + d + ".txt";
-    //std::ofstream ofs2 ("/home/dahik/OUT/outchifaaAMR/sortie_temps.txt", std::ofstream::out);
-    std::ofstream ofs2 (filename.toStdString(), std::ofstream::out);
-    ofs2 << *tempschifaa.begin();
-    for (std::vector<SCALAR>::iterator it = tempschifaa.begin()+1 ; it != tempschifaa.end(); ++it)
-        ofs2 <<','<< *it;
-    ofs2.close();
-
-
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/h_min___" + d + ".txt";
-    std::ofstream ofs3 (filename.toStdString(), std::ofstream::out);
-    ofs3 << *hminchifaa.begin();
-    for (std::vector<SCALAR>::iterator it = hminchifaa.begin()+1 ; it != hminchifaa.end(); ++it)
-        ofs3 <<','<< *it;
-    ofs3.close();
-
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/h_max___" + d + ".txt";
-    std::ofstream ofs4 (filename.toStdString(), std::ofstream::out);
-    ofs4 << *hmaxchifaa.begin();
-    for (std::vector<SCALAR>::iterator it = hmaxchifaa.begin()+1 ; it != hmaxchifaa.end(); ++it)
-        ofs4 <<','<< *it;
-    ofs4.close();
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/q_min___" + d + ".txt";
-    std::ofstream ofs5 (filename.toStdString(), std::ofstream::out);
-    ofs5 << *qminchifaa.begin();
-    for (std::vector<SCALAR>::iterator it = qminchifaa.begin() +1; it != qminchifaa.end(); ++it)
-        ofs5 <<','<< *it;
-    ofs5.close();
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/q_max___" + d + ".txt";
-    std::ofstream ofs6 (filename.toStdString(), std::ofstream::out);
-    ofs6 << *qmaxchifaa.begin();
-    for (std::vector<SCALAR>::iterator it = qmaxchifaa.begin()+1 ; it != qmaxchifaa.end(); ++it)
-        ofs6 <<','<< *it;
-    ofs6.close();
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/r_min___" + d + ".txt";
-    std::ofstream ofs7 (filename.toStdString(), std::ofstream::out);
-    ofs7 << *rminchifaa.begin();
-    for (std::vector<SCALAR>::iterator it = rminchifaa.begin()+1 ; it != rminchifaa.end(); ++it)
-        ofs7 <<','<< *it;
-    ofs7.close();
-
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/r_max___" + d + ".txt";
-    std::ofstream ofs8 (filename.toStdString(), std::ofstream::out);
-    ofs8 << *rmaxchifaa.begin();
-    for (std::vector<SCALAR>::iterator it = rmaxchifaa.begin()+1 ; it != rmaxchifaa.end(); ++it)
-        ofs8 <<','<< *it;
-    ofs8.close();
-
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/maxdiff_h___" + d + ".txt";
-    std::ofstream ofs9 (filename.toStdString(), std::ofstream::out);
-    ofs9 << *vect_max_diff_h_chifaa.begin();
-    for (std::vector<SCALAR>::iterator it = vect_max_diff_h_chifaa.begin()+1 ; it != vect_max_diff_h_chifaa.end(); ++it)
-        ofs9 <<','<< *it;
-    ofs9.close();
-
-    filename = "/home/dahik/OUT/outchifaaAMR/maxdiff_q___" + d + ".txt";
-    std::ofstream ofs10 (filename.toStdString(), std::ofstream::out);
-    ofs10 << *vect_max_diff_q_chifaa.begin();
-    for (std::vector<SCALAR>::iterator it = vect_max_diff_q_chifaa.begin()+1 ; it != vect_max_diff_q_chifaa.end(); ++it)
-        ofs10 <<','<< *it;
-    ofs10.close();
-
-
-    filename = "/home/dahik/OUT/outchifaaAMR/maxdiff_r___" + d + ".txt";
-    std::ofstream ofs11 (filename.toStdString(), std::ofstream::out);
-    ofs11 << *vect_max_diff_r_chifaa.begin();
-    for (std::vector<SCALAR>::iterator it = vect_max_diff_r_chifaa.begin() +1; it != vect_max_diff_r_chifaa.end(); ++it)
-        ofs11 <<','<< *it;
-    ofs11.close();
-
-    filename = "/home/dahik/OUT/outchifaaAMR/nbmailles___" + d + ".txt";
-    std::ofstream ofs12 (filename.toStdString(), std::ofstream::out);
-    ofs12 << *vect_nbmailles_chifaa.begin();
-    for (std::vector<uint32>::iterator it =vect_nbmailles_chifaa.begin() +1; it != vect_nbmailles_chifaa.end(); ++it)
-        ofs12 <<','<< *it;
-    ofs12.close();
-    //-----------------------------------selected------------------------------------------
-
-    //  for (SCALAR s : h_490chifaa)
-    //      ofs13 <<','<< s;
-
-    }
-    else
-    {
-
-        QString filename = "/home/dahik/OUT/outchifaa/sortie_generales____" + d + ".txt";
-        std::ofstream ofs (filename.toStdString(), std::ofstream::out);
-        ofs<<" \n nb mailles : ";
-        ofs<< nbmailles;
-
-        ofs<< "\n";
-
-        ofs <<" max diff h  : " << chifaa_max_diff_h;
-        ofs <<"\n max diff q  : " << chifaa_max_diff_q;
-        ofs << " \n max diff r  : " << chifaa_max_diff_r;
-        ofs << "\n duration :  " << duration;
+		QString filename = outdir.absolutePath() + "/general.txt";
+		std::ofstream ofs = std::ofstream(filename.toStdString(), std::ofstream::out);
+		ofs << "nb mailles : " << nbmailles;
+		ofs << "\n duration : " << duration;
+		ofs << "\n moyenne nb mailles : " << moyenne_nb_mailles;
         ofs.close();
 
+		filename = outdir.absolutePath() + "/temps.txt";
+		ofs = std::ofstream(filename.toStdString(), std::ofstream::out);
+		ofs << *tempschifaa.begin();
+		for (std::vector<SCALAR>::const_iterator it = tempschifaa.begin()+1 ; it != tempschifaa.end(); ++it)
+			ofs << "," << *it;
+		ofs.close();
 
-        filename = "/home/dahik/OUT/outchifaa/sortie_temps___" + d + ".txt";
-        //std::ofstream ofs2 ("/home/dahik/OUT/outchifaaAMR/sortie_temps.txt", std::ofstream::out);
-        std::ofstream ofs2 (filename.toStdString(), std::ofstream::out);
-        ofs2 << *tempschifaa.begin();
-        for (std::vector<SCALAR>::iterator it = tempschifaa.begin()+1 ; it != tempschifaa.end(); ++it)
-            ofs2 <<','<< *it;
-        ofs2.close();
+		filename = outdir.absolutePath() + "/nbmailles.txt";
+		ofs = std::ofstream(filename.toStdString(), std::ofstream::out);
+		ofs << *vect_nbmailles_chifaa.begin();
+		for (std::vector<uint32>::const_iterator it = vect_nbmailles_chifaa.begin()+1; it != vect_nbmailles_chifaa.end(); ++it)
+			ofs << "," << *it;
+		ofs.close();
 
+		for (const auto& vdata : logged_values_)
+		{
+			const auto& vh = std::get<0>(vdata.second);
+			const auto& vq = std::get<1>(vdata.second);
+			const auto& vr = std::get<2>(vdata.second);
 
+			filename = outdir.absolutePath() + "/v" + QString::number(vdata.first) + "_h.txt";
+			ofs = std::ofstream(filename.toStdString(), std::ofstream::out);
+			ofs << *vh.begin();
+			for (std::vector<SCALAR>::const_iterator it = vh.begin()+1 ; it != vh.end(); ++it)
+				ofs <<','<< *it;
+			ofs.close();
 
+			filename = outdir.absolutePath() + "/v" + QString::number(vdata.first) + "_q.txt";
+			ofs = std::ofstream(filename.toStdString(), std::ofstream::out);
+			ofs << *vq.begin();
+			for (std::vector<SCALAR>::const_iterator it = vq.begin()+1 ; it != vq.end(); ++it)
+				ofs <<','<< *it;
+			ofs.close();
 
-        filename = "/home/dahik/OUT/outchifaa/h_min___" + d + ".txt";
-        std::ofstream ofs3 (filename.toStdString(), std::ofstream::out);
-        ofs3 << *hminchifaa.begin();
-        for (std::vector<SCALAR>::iterator it = hminchifaa.begin()+1 ; it != hminchifaa.end(); ++it)
-            ofs3 <<','<< *it;
-        ofs3.close();
-
-
-
-        filename = "/home/dahik/OUT/outchifaa/h_max___" + d + ".txt";
-        std::ofstream ofs4 (filename.toStdString(), std::ofstream::out);
-        ofs4 << *hmaxchifaa.begin();
-        for (std::vector<SCALAR>::iterator it = hmaxchifaa.begin()+1 ; it != hmaxchifaa.end(); ++it)
-            ofs4 <<','<< *it;
-        ofs4.close();
-
-
-        filename = "/home/dahik/OUT/outchifaa/q_min___" + d + ".txt";
-        std::ofstream ofs5 (filename.toStdString(), std::ofstream::out);
-        ofs5 << *qminchifaa.begin();
-        for (std::vector<SCALAR>::iterator it = qminchifaa.begin() +1; it != qminchifaa.end(); ++it)
-            ofs5 <<','<< *it;
-        ofs5.close();
-
-
-        filename = "/home/dahik/OUT/outchifaa/q_max___" + d + ".txt";
-        std::ofstream ofs6 (filename.toStdString(), std::ofstream::out);
-        ofs6 << *qmaxchifaa.begin();
-        for (std::vector<SCALAR>::iterator it = qmaxchifaa.begin()+1 ; it != qmaxchifaa.end(); ++it)
-            ofs6 <<','<< *it;
-        ofs6.close();
-
-
-        filename = "/home/dahik/OUT/outchifaa/r_min___" + d + ".txt";
-        std::ofstream ofs7 (filename.toStdString(), std::ofstream::out);
-        ofs7 << *rminchifaa.begin();
-        for (std::vector<SCALAR>::iterator it = rminchifaa.begin()+1 ; it != rminchifaa.end(); ++it)
-            ofs7 <<','<< *it;
-        ofs7.close();
-
-
-
-        filename = "/home/dahik/OUT/outchifaa/r_max___" + d + ".txt";
-        std::ofstream ofs8 (filename.toStdString(), std::ofstream::out);
-        ofs8 << *rmaxchifaa.begin();
-        for (std::vector<SCALAR>::iterator it = rmaxchifaa.begin()+1 ; it != rmaxchifaa.end(); ++it)
-            ofs8 <<','<< *it;
-        ofs8.close();
-
-
-
-        filename = "/home/dahik/OUT/outchifaa/maxdiff_h___" + d + ".txt";
-        std::ofstream ofs9 (filename.toStdString(), std::ofstream::out);
-        ofs9 << *vect_max_diff_h_chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = vect_max_diff_h_chifaa.begin()+1 ; it != vect_max_diff_h_chifaa.end(); ++it)
-            ofs9 <<','<< *it;
-        ofs9.close();
-
-        filename = "/home/dahik/OUT/outchifaa/maxdiff_q___" + d + ".txt";
-        std::ofstream ofs10 (filename.toStdString(), std::ofstream::out);
-        ofs10 << *vect_max_diff_q_chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = vect_max_diff_q_chifaa.begin()+1 ; it != vect_max_diff_q_chifaa.end(); ++it)
-            ofs10 <<','<< *it;
-        ofs10.close();
-
-
-        filename = "/home/dahik/OUT/outchifaa/maxdiff_r___" + d + ".txt";
-        std::ofstream ofs11 (filename.toStdString(), std::ofstream::out);
-        ofs11 << *vect_max_diff_r_chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = vect_max_diff_r_chifaa.begin() +1; it != vect_max_diff_r_chifaa.end(); ++it)
-            ofs11 <<','<< *it;
-        ofs11.close();
-
-        filename = "/home/dahik/OUT/outchifaa/nbmailles___" + d + ".txt";
-        std::ofstream ofs12 (filename.toStdString(), std::ofstream::out);
-        ofs12 << *vect_nbmailles_chifaa.begin();
-        for (std::vector<uint32>::iterator it =vect_nbmailles_chifaa.begin() +1; it != vect_nbmailles_chifaa.end(); ++it)
-            ofs12 <<','<< *it;
-        ofs12.close();
-        //-----------------------------------selected------------------------------------------
-
-        //  for (SCALAR s : h_490chifaa)
-        //      ofs13 <<','<< s;
-
-    }
-
-    if (adaptive_mesh_)
-            {
-        QString filename = "/home/dahik/OUT/selectedchifaaAMR/h_490___" + d + ".txt";
-        std::ofstream ofs13 (filename.toStdString(), std::ofstream::out);
-        ofs13 << *h_490chifaa.begin();
-
-        for (std::vector<SCALAR>::iterator it = h_490chifaa.begin()+1 ; it != h_490chifaa.end(); ++it)
-            ofs13 <<','<< *it;
-        ofs13.close();
-
-        filename = "/home/dahik/OUT/selectedchifaaAMR/h_301___" + d + ".txt";
-        std::ofstream ofs14 (filename.toStdString(), std::ofstream::out);
-        ofs14 << *h_301chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_301chifaa.begin()+1 ; it != h_301chifaa.end(); ++it)
-            ofs14 <<','<< *it;
-        ofs14.close();
-
-        filename = "/home/dahik/OUT/selectedchifaaAMR/h_9___" + d + ".txt";
-        std::ofstream ofs15 (filename.toStdString(), std::ofstream::out);
-        ofs15 << *h_9chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_9chifaa.begin()+1 ; it != h_9chifaa.end(); ++it)
-            ofs15 <<','<< *it;
-        ofs15.close();
-
-        filename = "/home/dahik/OUT/selectedchifaaAMR/h_69___" + d + ".txt";
-        std::ofstream ofs16 (filename.toStdString(), std::ofstream::out);
-        ofs16 << *h_69chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_69chifaa.begin()+1 ; it != h_69chifaa.end(); ++it)
-            ofs16 <<','<< *it;
-        ofs16.close();
-
-
-        filename = "/home/dahik/OUT/selectedchifaaAMR/h_342___" + d + ".txt";
-        std::ofstream ofs17 (filename.toStdString(), std::ofstream::out);
-        ofs17 << *h_342chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_342chifaa.begin() +1; it != h_342chifaa.end(); ++it)
-            ofs17 <<','<< *it;
-        ofs17.close();
-
-        filename = "/home/dahik/OUT/selectedchifaaAMR/h_295___" + d + ".txt";
-        std::ofstream ofs18 (filename.toStdString(), std::ofstream::out);
-        ofs18 << *h_295chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_295chifaa.begin() +1; it != h_295chifaa.end(); ++it)
-            ofs18 <<','<< *it;
-        ofs18.close();
-
-
-        filename = "/home/dahik/OUT/selectedchifaaAMR/sortie_temps___" + d + ".txt";
-        std::ofstream ofs19 (filename.toStdString(), std::ofstream::out);
-        ofs19 << *tempschifaa.begin();
-        for (std::vector<SCALAR>::iterator it = tempschifaa.begin()+1 ; it != tempschifaa.end(); ++it)
-            ofs19 <<','<< *it;
-        ofs19.close();
-            }
-
-
-    else
-            {
-        QString filename = "/home/dahik/OUT/selectedchifaa/h_490___" + d + ".txt";
-        std::ofstream ofs13 (filename.toStdString(), std::ofstream::out);
-        ofs13 << *h_490chifaa.begin();
-
-        for (std::vector<SCALAR>::iterator it = h_490chifaa.begin()+1 ; it != h_490chifaa.end(); ++it)
-            ofs13 <<','<< *it;
-        ofs13.close();
-
-        filename = "/home/dahik/OUT/selectedchifaa/h_301___" + d + ".txt";
-        std::ofstream ofs14 (filename.toStdString(), std::ofstream::out);
-        ofs14 << *h_301chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_301chifaa.begin()+1 ; it != h_301chifaa.end(); ++it)
-            ofs14 <<','<< *it;
-        ofs14.close();
-
-        filename = "/home/dahik/OUT/selectedchifaa/h_9___" + d + ".txt";
-        std::ofstream ofs15 (filename.toStdString(), std::ofstream::out);
-        ofs15 << *h_9chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_9chifaa.begin()+1 ; it != h_9chifaa.end(); ++it)
-            ofs15 <<','<< *it;
-        ofs15.close();
-
-        filename = "/home/dahik/OUT/selectedchifaa/h_69___" + d + ".txt";
-        std::ofstream ofs16 (filename.toStdString(), std::ofstream::out);
-        ofs16 << *h_69chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_69chifaa.begin()+1 ; it != h_69chifaa.end(); ++it)
-            ofs16 <<','<< *it;
-        ofs16.close();
-
-
-        filename = "/home/dahik/OUT/selectedchifaa/h_342___" + d + ".txt";
-        std::ofstream ofs17 (filename.toStdString(), std::ofstream::out);
-        ofs17 << *h_342chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_342chifaa.begin() +1; it != h_342chifaa.end(); ++it)
-            ofs17 <<','<< *it;
-        ofs17.close();
-
-        filename = "/home/dahik/OUT/selectedchifaa/h_295___" + d + ".txt";
-        std::ofstream ofs18 (filename.toStdString(), std::ofstream::out);
-        ofs18 << *h_295chifaa.begin();
-        for (std::vector<SCALAR>::iterator it = h_295chifaa.begin() +1; it != h_295chifaa.end(); ++it)
-            ofs18 <<','<< *it;
-        ofs18.close();
-
-
-        filename = "/home/dahik/OUT/selectedchifaa/sortie_temps___" + d + ".txt";
-        std::ofstream ofs19 (filename.toStdString(), std::ofstream::out);
-        ofs19 << *tempschifaa.begin();
-        for (std::vector<SCALAR>::iterator it = tempschifaa.begin()+1 ; it != tempschifaa.end(); ++it)
-            ofs19 <<','<< *it;
-        ofs19.close();
-            }
-
-    } // fin si t==tmax
+			filename = outdir.absolutePath()+ "/v" + QString::number(vdata.first) + "_r.txt";
+			ofs = std::ofstream(filename.toStdString(), std::ofstream::out);
+			ofs << *vr.begin();
+			for (std::vector<SCALAR>::const_iterator it = vr.begin()+1 ; it != vr.end(); ++it)
+				ofs <<','<< *it;
+			ofs.close();
+		}
+	}
 
     // end
-
-
-    //std::cout<<" \n temps chifaa \n "<<std::endl;
-    //for (std::vector<SCALAR>::iterator it = tempschifaa.begin() ; it != tempschifaa.end(); ++it)
-    //    std::cout << ',' << *it;
-    //std::cout << "fin" << std::endl;
-
-
 
 	simu_running_ = false;
 	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
@@ -1398,13 +1054,15 @@ void Plugin_ShallowWater::execute_time_step()
 				if (phi_[f] > small_)
 					riemann_flux = border_condition(typ_bc_[eidx], val_bc_[eidx], normX_[eidx], normY_[eidx], q_[fidx], r_[fidx], h_[fidx]+zb_[fidx], zb_[fidx], 9.81, hmin_, small_);
 
-                h_star_[eidx]=h_[fidx]; // a verifier
-                u_star_[eidx]=q_[fidx]/h_[fidx];
-                v_star_[eidx]=r_[fidx]/h_[fidx];
-//                u_star_[eidx]=riemann_flux.F1/h_star_[eidx];
-//                v_star_[eidx]=riemann_flux.F3/riemann_flux.F1;
-                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])*u_star_[eidx];
-                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*zb_[fidx]+0.5*9.81*h_star_[eidx]*h_star_[eidx])*v_star_[eidx];
+				if (criteria_ == Criteria::entropy)
+				{
+					SCALAR h_star = h_[fidx]; // a verifier
+					SCALAR u_star = q_[fidx] / h_[fidx];
+					SCALAR v_star = r_[fidx] / h_[fidx];
+
+					psi_entropy_x_[eidx] = (0.5 * h_star * (u_star*u_star + v_star*v_star) + 0.5 * 9.81 * h_star*h_star + 9.81 * h_star * zb_[fidx] + 0.5 * 9.81 * h_star*h_star) * u_star;
+					psi_entropy_y_[eidx] = (0.5 * h_star * (u_star*u_star + v_star*v_star) + 0.5 * 9.81 * h_star*h_star + 9.81 * h_star * zb_[fidx] + 0.5 * 9.81 * h_star*h_star) * v_star;
+				}
             }
 			else // Inner cell: use the lateralised Riemann solver
 			{
@@ -1433,50 +1091,26 @@ void Plugin_ShallowWater::execute_time_step()
 						riemann_flux = Solv_PorAS(9.81, hmin_, small_, zbL, zbR, phiL, phiR, hL, qL, rL, hR, qR, rR);
 				}
 
-                h_star_[eidx]=ThrdDgreeSolve(riemann_flux.F1,riemann_flux.F2,h_[f1idx],h_[f2idx]);
+				if (criteria_ == Criteria::entropy)
+				{
+					SCALAR h_star = ThrdDgreeSolve(riemann_flux.F1, riemann_flux.F2, h_[f1idx], h_[f2idx]);
+					SCALAR u_star = riemann_flux.F1 / h_star;
+					SCALAR v_star;
+					if (riemann_flux.F1 > small_)
+						v_star = riemann_flux.F3 / riemann_flux.F1;
+					else
+						v_star = 0.0;
 
-                //if(h_star_[eidx]>h1 && h_star_[eidx]<h2)
-                //    std::cout<<"h star ok"<<std::endl;
-                u_star_[eidx]=riemann_flux.F1/h_star_[eidx];
-                if (riemann_flux.F1 > small_)
-                    v_star_[eidx]=riemann_flux.F3/riemann_flux.F1;
-                else
-                    v_star_[eidx]=0.0;
-
-//                std::cout<<u_star_[eidx]<<std::endl;
-//                std::cout<<q_[f1idx]/h_[f1idx]<<std::endl;
-//                std::cout<<q_[f2idx]/h_[f2idx]<<std::endl;
-//                std::cout<<v_star_[eidx]<<std::endl;
-//                std::cout<<r_[f1idx]/h_[f1idx]<<std::endl;
-//                std::cout<<r_[f2idx]/h_[f2idx]<<std::endl;
-
-                psi_entropy_x_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])*u_star_[eidx];
-                psi_entropy_y_[eidx]=(0.5*h_star_[eidx]*(u_star_[eidx]*u_star_[eidx]+v_star_[eidx]*v_star_[eidx])+0.5*9.81*h_star_[eidx]*h_star_[eidx]+9.81*h_star_[eidx]*(zb_[f1idx]+zb_[f2idx])*0.5+0.5*9.81*h_star_[eidx]*h_star_[eidx])*v_star_[eidx];
-//                std::cout<<"psi entropy x"<<std::endl;
-//                std::cout<<psi_entropy_x_[eidx]<<std::endl;
-//                std::cout<<"psi entropy y"<<std::endl;
-//                std::cout<<psi_entropy_y_[eidx]<<std::endl;
+					psi_entropy_x_[eidx] = (0.5 * h_star * (u_star*u_star + v_star*v_star) + 0.5 * 9.81 * h_star*h_star + 9.81 * h_star * (zb_[f1idx] + zb_[f2idx]) * 0.5 + 0.5 * 9.81 * h_star*h_star) * u_star;
+					psi_entropy_y_[eidx] = (0.5 * h_star * (u_star*u_star + v_star*v_star) + 0.5 * 9.81 * h_star*h_star + 9.81 * h_star * (zb_[f1idx] + zb_[f2idx]) * 0.5 + 0.5 * 9.81 * h_star*h_star) * v_star;
+				}
             }
-
-
-//            if (std::isnan(h_star_[eidx]))
-//                std::cout << "nan hstar (" << nb_iter_ << ") / ";
-//            if (std::isnan(u_star_[eidx]))
-//                std::cout << "nan ustar (" << nb_iter_ << ") / ";
-//            if (std::isnan(v_star_[eidx]))
-//            {
-//                std::cout << "nan vstar (" << nb_iter_ << "," << riemann_flux.F3 << "," << riemann_flux.F1 << ")";
-//            }
 
 			f1_[eidx] = riemann_flux.F1;
 			f2_[eidx] = riemann_flux.F2;
 			f3_[eidx] = riemann_flux.F3;
 			s2L_[eidx] = riemann_flux.s2L;
             s2R_[eidx] = riemann_flux.s2R;
-
-
-
-
 		},
 		*qtrav_
 	);
@@ -1484,22 +1118,18 @@ void Plugin_ShallowWater::execute_time_step()
 	update_time_step();
 
 	simu_data_access_.lock();
-    entropy_global_=0.;
+
+	entropy_global_= 0.;
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
 			uint32 fidx = map2_->embedding(f);
-            if (nb_iter_==0)
-            {
-                h_old_[fidx]=0;
-                q_old_[fidx]=0;
-                r_old_[fidx]=0;
-            }
 
-            h_old_[fidx]=h_[fidx]; // et à la premiere iteration??????? a verifier ce qui se passe
-            q_old_[fidx]=q_[fidx];
-            r_old_[fidx]=r_[fidx];
-            double somme_psi=0.;
+			h_old_[fidx] = h_[fidx];
+			q_old_[fidx] = q_[fidx];
+			r_old_[fidx] = r_[fidx];
+
+			SCALAR somme_psi = 0.;
 			map2_->foreach_incident_edge(f, [&] (CMap2::Edge ie)
 			{
 				uint32 ieidx = map2_->embedding(ie);
@@ -1520,46 +1150,20 @@ void Plugin_ShallowWater::execute_time_step()
 					r_[fidx] += factF * ( f3_[ieidx]*normX_[ieidx] + ( f2_[ieidx]+s2R_[ieidx])*normY_[ieidx]);
                 }
 
-                somme_psi+=(psi_entropy_x_[ieidx]*normX_[ieidx]+psi_entropy_y_[ieidx]*normY_[ieidx])*length_[ieidx];
-            });
-         // chifaa
+				somme_psi += (psi_entropy_x_[ieidx]*normX_[ieidx] + psi_entropy_y_[ieidx]*normY_[ieidx]) * length_[ieidx];
+			});
 
-//         std::cout<<"somme psi: "<<somme_psi<<std::endl;
+			if (criteria_ == Criteria::entropy)
+			{
+				SCALAR s_entropy_old = s_entropy_[fidx];
+				s_entropy_[fidx] = 0.5 * h_[fidx] * (q_[fidx]*q_[fidx] + r_[fidx]*r_[fidx]) / (h_[fidx]*h_[fidx]) + 0.5 * 9.81 * h_[fidx]*h_[fidx] + 9.81 * h_[fidx] * zb_[fidx];
+				Snk_[fidx] = area_[fidx] * (s_entropy_[fidx] - s_entropy_old) / dt_ + somme_psi;
 
-         SCALAR s_entropy_old=s_entropy_[fidx];
-         s_entropy_[fidx]=0.5*h_[fidx]*(q_[fidx]*q_[fidx]+r_[fidx]*r_[fidx])/(h_[fidx]*h_[fidx])+0.5*9.81*h_[fidx]*h_[fidx]+9.81*h_[fidx]*zb_[fidx];
-         //std::cout<<"s_entropy"<<std::endl;
-         //std::cout<<s_entropy_[fidx]<<std::endl;
-         Snk_[fidx]=area_[fidx]*(s_entropy_[fidx]-s_entropy_old)/dt_+somme_psi;
-         //std::cout<<"Snk"<<std::endl;
-         //std::cout<<Snk_[fidx]<<std::endl;
-         entropy_global_+=Snk_[fidx];
-
-
-         // end chifaa
+				entropy_global_ += area_[fidx] * Snk_[fidx];
+			}
         },
 		*qtrav_
 	);
-
-    entropy_global_/=area_global_;
-
-    //std::cout<<"area global"<<std::endl;
-    //std::cout<<area_global_<<std::endl;
-//    std::cout<<"entropy global"<<std::endl;
-//    std::cout<<entropy_global_<<std::endl;
-    //std::cout<<""<<std::endl;
-
-
-
-	for(uint32 i = 0; i < cgogn::thread_pool()->nb_workers(); ++i)
-	{
-		min_h_per_thread_[i] = std::numeric_limits<SCALAR>::max();
-		max_h_per_thread_[i] = 0.;
-		min_q_per_thread_[i] = std::numeric_limits<SCALAR>::max();
-		max_q_per_thread_[i] = 0.;
-		min_r_per_thread_[i] = std::numeric_limits<SCALAR>::max();
-		max_r_per_thread_[i] = 0.;
-	}
 
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
@@ -1609,68 +1213,22 @@ void Plugin_ShallowWater::execute_time_step()
 				q_[fidx] = 0.;
 				r_[fidx] = 0.;
 			}
-
-			// min and max of each variables for subdivision and simplification
-			uint32 idx = cgogn::current_thread_index();
-			min_h_per_thread_[idx] = std::min(min_h_per_thread_[idx], h_[fidx]);
-			max_h_per_thread_[idx] = std::max(max_h_per_thread_[idx], h_[fidx]);
-			min_q_per_thread_[idx] = std::min(min_q_per_thread_[idx], q_[fidx]);
-			max_q_per_thread_[idx] = std::max(max_q_per_thread_[idx], q_[fidx]);
-			min_r_per_thread_[idx] = std::min(min_r_per_thread_[idx], r_[fidx]);
-			max_r_per_thread_[idx] = std::max(max_r_per_thread_[idx], r_[fidx]);
-
 		},
 		*qtrav_
 	);
 
-	h_min_ = *(std::min_element(min_h_per_thread_.begin(), min_h_per_thread_.end()));
-	h_max_ = *(std::max_element(max_h_per_thread_.begin(), max_h_per_thread_.end()));
-	q_min_ = *(std::min_element(min_q_per_thread_.begin(), min_q_per_thread_.end()));
-	q_max_ = *(std::max_element(max_q_per_thread_.begin(), max_q_per_thread_.end()));
-	r_min_ = *(std::min_element(min_r_per_thread_.begin(), min_r_per_thread_.end()));
-    r_max_ = *(std::max_element(max_r_per_thread_.begin(), max_r_per_thread_.end()));
-
-    // chifaa calcul de max diff
-    // commenter ou decommenter si on veut comparer au pire des ecarts ou non
-
-    chifaa_max_diff_h=0.;
-    chifaa_max_diff_q=0;
-    chifaa_max_diff_r=0;
-
-    //map2_->nb_cells<CMap2::Face>();
-
-    map2_->foreach_cell(
-        [&] (CMap2::Face f) {
-
-        uint32 fidx = map2_->embedding(f);
-        map2_->foreach_adjacent_face_through_edge(f, [&] (CMap2::Face af)
-        {
-            uint32 afidx = map2_->embedding(af);
-            chifaa_max_diff_h = std::max(chifaa_max_diff_h, fabs(h_[fidx] - h_[afidx]));
-            chifaa_max_diff_q = std::max(chifaa_max_diff_q, fabs(q_[fidx] - q_[afidx]));
-            chifaa_max_diff_r = std::max(chifaa_max_diff_r, fabs(r_[fidx] - r_[afidx]));
-        });
-
-
-        },
-        *qtrav_
-    );
-    // end chifaa
-
     simu_data_access_.unlock();
 
-    // chifaa if option = fixed mesh, commentez cette partie
     if (adaptive_mesh_)
     {
-        if (nb_iter_ % iteradapt == 0 )
+		if (nb_iter_ % iteradapt_ == 0 )
         {
             map_->lock_topo_access();
             try_simplification();
             try_subdivision();
             map_->unlock_topo_access();
         }
-    }
-    // end chifaa
+	}
 
 	t_ += dt_;
 	nb_iter_++;
@@ -1688,121 +1246,33 @@ void Plugin_ShallowWater::execute_time_step()
 //		std::this_thread::sleep_for(sleep_duration);
 
     // chifaa
-    moyenne_nb_mailles+=nbmailles;
+	tempschifaa.push_back(t_);
 
+	nbmailles = map2_->nb_cells<CMap2::Face>();
+	moyenne_nb_mailles += nbmailles;
+	vect_nbmailles_chifaa.push_back(nbmailles);
 
-
-    //if(nb_iter_%80==0)
-    {
-        //h_1100chifaa.push_back(h_[1100]);
-
-        //h_1354chifaa.push_back(h_[1354]);
-
-        tempschifaa.push_back(t_);
-
-        hminchifaa.push_back(h_min_);
-        hmaxchifaa.push_back(h_max_);
-        qminchifaa.push_back(q_min_);
-        qmaxchifaa.push_back(q_max_);
-        rminchifaa.push_back(r_min_);
-        rmaxchifaa.push_back(r_max_);
-        vect_max_diff_h_chifaa.push_back(chifaa_max_diff_h);
-        vect_max_diff_q_chifaa.push_back(chifaa_max_diff_q);
-        vect_max_diff_r_chifaa.push_back(chifaa_max_diff_r);
-        nbmailles=map2_->nb_cells<CMap2::Face>();
-        vect_nbmailles_chifaa.push_back(nbmailles);
-
-//        std::vector<uint32> vindices{490, 301, 9, 69, 342, 295};
-//        std::vector<std::vector<SCALAR>*> vvalues{&h_490chifaa, &h_301chifaa, };
-
-
-
-
-
-
-
-        //---------------490
-        uint32 nbf = 0;
-        SCALAR h_490 = 0.0;
-        CMap2::Vertex v490 = qtrav_->cell_from_index<CMap2::Vertex>(490);
-        map2_->foreach_incident_face(v490, [&] (CMap2::Face f)
-        {
-            h_490 += h_[f];
-            ++nbf;
-        });
-        h_490 /= nbf;
-
-
-        //---------------301
-        nbf = 0;
-        SCALAR h_301 = 0.0;
-        CMap2::Vertex v301 = qtrav_->cell_from_index<CMap2::Vertex>(301);
-        map2_->foreach_incident_face(v301, [&] (CMap2::Face f)
-        {
-            h_301 += h_[f];
-            ++nbf;
-        });
-        h_301 /= nbf;
-
-
-
-        //---------------9
-        nbf = 0;
-        SCALAR h_9 = 0.0;
-        CMap2::Vertex v9 = qtrav_->cell_from_index<CMap2::Vertex>(9);
-        map2_->foreach_incident_face(v9, [&] (CMap2::Face f)
-        {
-            h_9 += h_[f];
-            ++nbf;
-        });
-        h_9 /= nbf;
-
-        //---------------69
-        nbf = 0;
-        SCALAR h_69 = 0.0;
-        CMap2::Vertex v69 = qtrav_->cell_from_index<CMap2::Vertex>(69);
-        map2_->foreach_incident_face(v69, [&] (CMap2::Face f)
-        {
-            h_69 += h_[f];
-            ++nbf;
-        });
-        h_69 /= nbf;
-
-        //---------------342
-        nbf = 0;
-        SCALAR h_342 = 0.0;
-        CMap2::Vertex v342 = qtrav_->cell_from_index<CMap2::Vertex>(342);
-        map2_->foreach_incident_face(v342, [&] (CMap2::Face f)
-        {
-            h_342 += h_[f];
-            ++nbf;
-        });
-        h_342 /= nbf;
-
-        //---------------295
-        nbf = 0;
-        SCALAR h_295 = 0.0;
-        CMap2::Vertex v295 = qtrav_->cell_from_index<CMap2::Vertex>(295);
-        map2_->foreach_incident_face(v295, [&] (CMap2::Face f)
-        {
-            h_295 += h_[f];
-            ++nbf;
-        });
-        h_295 /= nbf;
-
-
-
-
-        h_490chifaa.push_back(h_490);
-        h_301chifaa.push_back(h_301);
-        h_9chifaa.push_back(h_9);
-        h_69chifaa.push_back(h_69);
-        h_342chifaa.push_back(h_342);
-        h_295chifaa.push_back(h_295);
-
-
-
-    }
+	for (auto& vdata : logged_values_)
+	{
+		uint32 nbf = 0;
+		SCALAR h = 0.;
+		SCALAR q = 0.;
+		SCALAR r = 0.;
+		CMap2::Vertex v = qtrav_->cell_from_index<CMap2::Vertex>(vdata.first);
+		map2_->foreach_incident_face(v, [&] (CMap2::Face f)
+		{
+			h += h_[f];
+			q += q_[f];
+			r += r_[f];
+			++nbf;
+		});
+		h /= nbf;
+		q /= nbf;
+		r /= nbf;
+		std::get<0>(vdata.second).push_back(h);
+		std::get<1>(vdata.second).push_back(q);
+		std::get<2>(vdata.second).push_back(r);
+	}
     //end chifaa
 }
 
@@ -1866,38 +1336,29 @@ bool Plugin_ShallowWater::subd_criteria_h(CMap2::Face f)
 
 bool Plugin_ShallowWater::subd_criteria_entropy(CMap2::Face f)
 {
-    bool res = false;
-    uint32 fidx = map2_->embedding(f);
-//    std::cout<<"proportion"<<std::endl;
-//    std::cout<<Snk_[fidx]/entropy_global_<<std::endl;
-    if (Snk_[fidx]>0.3*entropy_global_)
-        res=true;
-    return res;
+	uint32 fidx = map2_->embedding(f);
+	if (abs(Snk_[fidx]) > 0.05 * abs(entropy_global_))
+		return true;
+	return false;
 }
 
 bool Plugin_ShallowWater::subd_criteria_h_q_r_old(CMap2::Face f)
-{   bool res = false;
+{
     uint32 fidx = map2_->embedding(f);
-
-    //std::cout<<abs(q_[fidx]-q_old_[fidx])<<std::endl;
-    //std::cout<<abs(r_[fidx]-r_old_[fidx])<<std::endl;
-    if(abs(h_[fidx]-h_old_[fidx])>seuil_sub_h_old || abs(q_[fidx]-q_old_[fidx])>seuil_sub_q_old
-            || abs(r_[fidx]-r_old_[fidx])>seuil_simp_r_old )
-        res=true;
-    return res;
-
+	if (abs(h_[fidx] - h_old_[fidx]) > seuil_sub_h_old ||
+		abs(q_[fidx] - q_old_[fidx]) > seuil_sub_q_old ||
+		abs(r_[fidx] - r_old_[fidx]) > seuil_sub_r_old)
+		return true;
+	return false;
 }
 
 bool Plugin_ShallowWater::subd_criteria_h_old(CMap2::Face f)
-{   bool res = false;
-    uint32 fidx = map2_->embedding(f);
-    //std::cout<<abs(h_[fidx]-h_old_[fidx])<<std::endl;
-    if(abs(h_[fidx]-h_old_[fidx])>seuil_sub_h_old)
-        res=true;
-    return res;
-
+{
+	uint32 fidx = map2_->embedding(f);
+	if (abs(h_[fidx] - h_old_[fidx]) > seuil_sub_h_old)
+		return true;
+	return false;
 }
-
 
 void Plugin_ShallowWater::try_subdivision()
 {
@@ -1910,9 +1371,6 @@ void Plugin_ShallowWater::try_subdivision()
 	map2_->parallel_foreach_cell(
         [&] (CMap2::Face f)
 		{
-
-        // chifaa if option = fixed mesh : les lignes commentées, décommenter si option= adapt
-
             if (atq_map_->face_level(f) >= max_depth_)
                 return;
 
@@ -1923,7 +1381,7 @@ void Plugin_ShallowWater::try_subdivision()
                 {
                     case Criteria::H_Q_R: toadd = subd_criteria_h_q_r(f); break;
                     case Criteria::H: toadd = subd_criteria_h(f); break;
-                    case Criteria::entropy: toadd=subd_criteria_entropy(f);
+					case Criteria::entropy: toadd = subd_criteria_entropy(f); break;
                     case Criteria::H_old: toadd = subd_criteria_h_old(f); break;
                     case Criteria::H_Q_R_old: toadd = subd_criteria_h_q_r_old(f); break;
                 }
@@ -1934,10 +1392,7 @@ void Plugin_ShallowWater::try_subdivision()
             else
             {
                 faces_to_subdivide_per_thread[cgogn::current_thread_index()]->push_back(f);
-            }
-                                
-        //end chifaa        
-
+			}
         },
 		*qtrav_
 	);
@@ -2081,8 +1536,6 @@ void Plugin_ShallowWater::try_subdivision()
 		cgogn::dart_buffers()->release_cell_buffer<CMap2::Face>(fv);
 }
 
-
-
 bool Plugin_ShallowWater::simp_criteria_h_q_r(cgogn::Dart central_cell)
 {
     SCALAR max_diff_h = 0.0;
@@ -2132,7 +1585,6 @@ bool Plugin_ShallowWater::simp_criteria_h(cgogn::Dart central_cell)
     SCALAR max_diff_h = 0.0;
 
     CMap2::Face f(central_cell);
-
     if (atq_map_->is_triangle_face(f))
     {
         CMap2::Face cf(central_cell);
@@ -2161,38 +1613,98 @@ bool Plugin_ShallowWater::simp_criteria_h(cgogn::Dart central_cell)
     return false;
 }
 
-
-
 bool Plugin_ShallowWater::simp_criteria_entropy(cgogn::Dart central_cell)
 {
-    bool res = false;
+	bool res = true;
     CMap2::Face f(central_cell);
-    uint32 fidx = map2_->embedding(f);
-    if (Snk_[fidx]<0.05*entropy_global_)
-        res=true;
+	if (atq_map_->is_triangle_face(f))
+	{
+		CMap2::Face cf(central_cell);
+		if (abs(Snk_[cf]) > 0.05 * abs(entropy_global_))
+			res = false;
+		map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+		{
+			if (abs(Snk_[af]) > 0.05 * abs(entropy_global_))
+				res = false;
+		});
+	}
+	else
+	{
+		CMap2::Vertex cv(central_cell);
+		map2_->foreach_incident_face(cv, [&] (CMap2::Face iface)
+		{
+			if (abs(Snk_[iface]) > 0.05 * abs(entropy_global_))
+				res = false;
+		});
+	}
     return res;
 }
 
 bool Plugin_ShallowWater::simp_criteria_h_q_r_old(cgogn::Dart central_cell)
-{   bool res = false;
-    CMap2::Face f(central_cell);
-    uint32 fidx = map2_->embedding(f);
-    if(abs(h_[fidx]-h_old_[fidx])<seuil_simp_h_old || abs(q_[fidx]-q_old_[fidx])<seuil_simp_q_old || abs(r_[fidx]-r_old_[fidx])<seuil_simp_r_old )
-        res=true;
-    return res;
-
+{
+	bool res = true;
+	CMap2::Face f(central_cell);
+	if (atq_map_->is_triangle_face(f))
+	{
+		CMap2::Face cf(central_cell);
+		uint32 cfidx = map2_->embedding(cf);
+		if (abs(h_[cfidx] - h_old_[cfidx]) > seuil_simp_h_old ||
+			abs(q_[cfidx] - q_old_[cfidx]) > seuil_simp_q_old ||
+			abs(r_[cfidx] - r_old_[cfidx]) > seuil_simp_r_old)
+			res = false;
+		map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+		{
+			uint32 afidx = map2_->embedding(af);
+			if (abs(h_[afidx] - h_old_[afidx]) > seuil_simp_h_old ||
+				abs(q_[afidx] - q_old_[afidx]) > seuil_simp_q_old ||
+				abs(r_[afidx] - r_old_[afidx]) > seuil_simp_r_old)
+				res = false;
+		});
+	}
+	else
+	{
+		CMap2::Vertex cv(central_cell);
+		map2_->foreach_incident_face(cv, [&] (CMap2::Face iface)
+		{
+			uint32 ifidx = map2_->embedding(iface);
+			if (abs(h_[ifidx] - h_old_[ifidx]) > seuil_simp_h_old ||
+				abs(q_[ifidx] - q_old_[ifidx]) > seuil_simp_q_old ||
+				abs(r_[ifidx] - r_old_[ifidx]) > seuil_simp_r_old)
+				res = false;
+		});
+	}
+	return res;
 }
 
 bool Plugin_ShallowWater::simp_criteria_h_old(cgogn::Dart central_cell)
-{   bool res = false;
-    CMap2::Face f(central_cell);
-    uint32 fidx = map2_->embedding(f);
-    if(abs(h_[fidx]-h_old_[fidx])<seuil_simp_h_old )
-        res=true;
-    return res;
-
+{
+	bool res = true;
+	CMap2::Face f(central_cell);
+	if (atq_map_->is_triangle_face(f))
+	{
+		CMap2::Face cf(central_cell);
+		uint32 cfidx = map2_->embedding(cf);
+		if (abs(h_[cfidx] - h_old_[cfidx]) > seuil_simp_h_old)
+			res = false;
+		map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+		{
+			uint32 afidx = map2_->embedding(af);
+			if (abs(h_[afidx] - h_old_[afidx]) > seuil_simp_h_old)
+				res = false;
+		});
+	}
+	else
+	{
+		CMap2::Vertex cv(central_cell);
+		map2_->foreach_incident_face(cv, [&] (CMap2::Face iface)
+		{
+			uint32 ifidx = map2_->embedding(iface);
+			if (abs(h_[ifidx] - h_old_[ifidx]) > seuil_simp_h_old)
+				res = false;
+		});
+	}
+	return res;
 }
-
 
 void Plugin_ShallowWater::try_simplification()
 {
@@ -2220,7 +1732,7 @@ void Plugin_ShallowWater::try_simplification()
 						break;
 					}
 					case cgogn::AdaptiveTriQuadCMap2::QUAD: {
-                        central_cell = map2_->phi<12>(atq_map_->oldest_dart(f));
+						central_cell = map2_->phi<12>(atq_map_->oldest_dart(f)); // central vertex
 						break;
 					}
 				}
@@ -2980,14 +2492,14 @@ SCALAR Plugin_ShallowWater::sign_y(SCALAR y)
 
 }
 
-
 SCALAR Plugin_ShallowWater::ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCALAR hR)
 {
     SCALAR p=-2*f2/9.81;
     SCALAR q=2*f1*f1/9.81;
     SCALAR Delta=q*q/4+p*p*p/27;
     if (Delta>0)
-        {SCALAR y1=-q/2-std::sqrt(Delta);
+	{
+		SCALAR y1=-q/2-std::sqrt(Delta);
         SCALAR y2=-q/2+std::sqrt(Delta);
         SCALAR x1=sign_y(y1)*cbrt(abs(y1))+sign_y(y2)*cbrt(abs(y2));
         //std::cout<<"cas delta positif===================================="<<std::endl;
@@ -2995,7 +2507,7 @@ SCALAR Plugin_ShallowWater::ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCAL
         if(abs(x1*x1*x1+p*x1+q)>1e-5)
             std::cout<<"WRONG"<<std::endl;
         return x1;
-        }
+	}
 
     else if (Delta==0)
     {
@@ -3032,54 +2544,43 @@ SCALAR Plugin_ShallowWater::ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCAL
         SCALAR h1=std::min(hL,hR);
         SCALAR h2=std::max(hL,hR);
 
+		if (x1>=h1 && x1<=h2)
+			return x1;
+		else if (x2>=h1 && x2<=h2)
+			return x2;
+		else if (x3>=h1 && x3<=h2)
+		   return x3;
+		else
+		{
+			 SCALAR d_x1_I=h1-x1>0?h1-x1:x1-h2;
+			 SCALAR d_x2_I=h1-x2>0?h1-x2:x2-h2;
+			 SCALAR d_x3_I=h1-x3>0?h1-x3:x3-h2;
+			 SCALAR min_d=std::min(std::min(d_x1_I,d_x2_I),d_x3_I);
 
-            if (x1>=h1 && x1<=h2)
-                return x1;
-            else if (x2>=h1 && x2<=h2)
-                return x2;
-            else if (x3>=h1 && x3<=h2)
-               return x3;
-            else
-                 {
-                     SCALAR d_x1_I=h1-x1>0?h1-x1:x1-h2;
-                     SCALAR d_x2_I=h1-x2>0?h1-x2:x2-h2;
-                     SCALAR d_x3_I=h1-x3>0?h1-x3:x3-h2;
-                     SCALAR min_d=std::min(std::min(d_x1_I,d_x2_I),d_x3_I);
-
-                     if (min_d==d_x1_I)
-                     {//std::cout<<h1<<std::endl;
-                      //std::cout<<x1<<std::endl;
-                      //std::cout<<h2<<std::endl;
-                         return x1;
-                     }
-                     else if(min_d==d_x2_I)
-                     {  // std::cout<<h1<<std::endl;
-                       //  std::cout<<x2<<std::endl;
-                       //  std::cout<<h2<<std::endl;
-                         return x2;
-                     }
-                         else
-                     {   //std::cout<<h1<<std::endl;
-                         //std::cout<<x3<<std::endl;
-                         //std::cout<<h2<<std::endl;
-                         return x3;
-                     }
-                }
-
-
-      }
+			 if (min_d==d_x1_I)
+			 {//std::cout<<h1<<std::endl;
+			  //std::cout<<x1<<std::endl;
+			  //std::cout<<h2<<std::endl;
+				 return x1;
+			 }
+			 else if(min_d==d_x2_I)
+			 {  // std::cout<<h1<<std::endl;
+			   //  std::cout<<x2<<std::endl;
+			   //  std::cout<<h2<<std::endl;
+				 return x2;
+			 }
+				 else
+			 {   //std::cout<<h1<<std::endl;
+				 //std::cout<<x3<<std::endl;
+				 //std::cout<<h2<<std::endl;
+				 return x3;
+			 }
+		}
+	}
 }
 
-
-
-
-
-
-
-
-
-
 // end chifaa
+
 } // namespace plugin_shallow_water_2
 
 } // namespace schnapps

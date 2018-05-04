@@ -68,24 +68,34 @@ public:
 	std::future<void>* simu_future() { return &simu_future_; }
 
 	void set_max_depth(uint32 m) { max_depth_ = m; }
-    void set_iteradapt(uint32 i){iteradapt=i;}
+	void set_iteradapt(uint32 i){ iteradapt_ = i; }
     void set_adaptive_mesh(bool b) { adaptive_mesh_ = b; }
     void set_criteria(Criteria c) { criteria_ = c; }
-    void set_sigma_sub(SCALAR ssb){sigma_sub=ssb;}
-    void set_sigma_simp(SCALAR ssmp){sigma_simp=ssmp;}
-    void set_sigma_sub_h(SCALAR ssb){sigma_sub_h=ssb;}
-    void set_sigma_simp_h(SCALAR ssmp){sigma_simp_h=ssmp;}
-    void set_sigma_sub_vitesse(SCALAR ssb){sigma_sub_vitesse=ssb;}
-    void set_sigma_simp_vitesse(SCALAR ssmp){sigma_simp_vitesse=ssmp;}
-    void set_seuil_sub_h_old(SCALAR ssh){seuil_sub_h_old=ssh;}
-    void set_seuil_simp_h_old(SCALAR ssh){seuil_simp_h_old=ssh;}
 
-    void set_seuil_sub_h_q_r_old(SCALAR ssh,SCALAR ssq,SCALAR ssr){seuil_sub_h_old=ssh;seuil_sub_q_old=ssq;seuil_sub_r_old=ssr;}
-    void set_seuil_simp_h_q_r_old(SCALAR ssh,SCALAR ssq,SCALAR ssr){seuil_simp_h_old=ssh;seuil_simp_q_old=ssq;seuil_simp_r_old=ssr;}
+	void set_sigma_sub(SCALAR ssb) { sigma_sub = ssb; }
+	void set_sigma_simp(SCALAR ssmp) { sigma_simp = ssmp; }
 
+	void set_sigma_sub_h(SCALAR ssb) { sigma_sub_h = ssb; }
+	void set_sigma_simp_h(SCALAR ssmp) { sigma_simp_h = ssmp; }
 
+	void set_sigma_sub_vitesse(SCALAR ssb) { sigma_sub_vitesse = ssb; }
+	void set_sigma_simp_vitesse(SCALAR ssmp) { sigma_simp_vitesse = ssmp; }
 
+	void set_seuil_sub_h_old(SCALAR ssh) { seuil_sub_h_old = ssh; }
+	void set_seuil_simp_h_old(SCALAR ssh) { seuil_simp_h_old = ssh; }
 
+	void set_seuil_sub_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
+	{
+		seuil_sub_h_old = ssh;
+		seuil_sub_q_old = ssq;
+		seuil_sub_r_old = ssr;
+	}
+	void set_seuil_simp_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
+	{
+		seuil_simp_h_old = ssh;
+		seuil_simp_q_old = ssq;
+		seuil_simp_r_old = ssr;
+	}
 
 	void init();
 
@@ -149,13 +159,10 @@ private:
 			SCALAR NormX, SCALAR NormY,
 			SCALAR q, SCALAR r, SCALAR z, SCALAR zb,
 			SCALAR g, SCALAR hmin, SCALAR smalll);
-    // begin chifaa
-    SCALAR ThrdDgreeSolve(SCALAR f1,SCALAR f2,SCALAR hL,SCALAR hR);
-    // end chifaa
+
     bool subd_criteria_h_q_r(CMap2::Face f);
     bool subd_criteria_h(CMap2::Face f);
 
-    //bool simp_criteria_h_q_r(uint32 fidx, uint32 afidx);
     bool simp_criteria_h_q_r(cgogn::Dart central_cell);
     bool simp_criteria_h(cgogn::Dart central_cell);
 
@@ -168,11 +175,13 @@ private:
     bool simp_criteria_h_q_r_old(cgogn::Dart central_cell);
     bool simp_criteria_h_old(cgogn::Dart central_cell);
 
-
     //    bool verification_thrdDgreeSolve(SCALAR f1,SCALAR f2,SCALAR hL,SCALAR hR);
+	SCALAR ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCALAR hR);
     SCALAR sign_y(SCALAR y);
+
 	void try_subdivision();
 	void try_simplification();
+
 	void get_LR_faces(CMap2::Edge e, CMap2::Face& fl, CMap2::Face& fr);
 
 	bool almost_equal(VEC3 v1, VEC3 v2);
@@ -212,7 +221,7 @@ private:
 	uint32 nb_iter_;
 
 	uint32 max_depth_;
-    uint32 iteradapt;
+	uint32 iteradapt_;
     bool adaptive_mesh_;
     Criteria criteria_;
 
@@ -230,21 +239,10 @@ private:
     SCALAR seuil_simp_q_old;
     SCALAR seuil_sub_r_old;
     SCALAR seuil_simp_r_old;
+
+	uint32 nbmailles;
     SCALAR moyenne_nb_mailles;
     //end chifaa
-
-	std::vector<SCALAR> min_h_per_thread_;
-	std::vector<SCALAR> max_h_per_thread_;
-	std::vector<SCALAR> min_q_per_thread_;
-	std::vector<SCALAR> max_q_per_thread_;
-	std::vector<SCALAR> min_r_per_thread_;
-	std::vector<SCALAR> max_r_per_thread_;
-	SCALAR h_min_;
-	SCALAR h_max_;
-	SCALAR q_min_;
-	SCALAR q_max_;
-	SCALAR r_min_;
-	SCALAR r_max_;
 
 	QTimer* draw_timer_;
 	std::chrono::high_resolution_clock::time_point start_time_;
@@ -281,7 +279,7 @@ private:
     CMap2::FaceAttribute<SCALAR> Snk_;
     SCALAR entropy_global_;
     SCALAR area_global_;
-    //end chifaa
+	//end chifaa
 	CMap2::FaceAttribute<VEC3> centroid_; // cell centroid
 	CMap2::FaceAttribute<SCALAR> area_; // cell area
 	CMap2::FaceAttribute<SCALAR> swept_;
@@ -301,47 +299,17 @@ private:
 	CMap2::EdgeAttribute<uint32> NS_;
     //chifaa
     CMap2::EdgeAttribute<SCALAR> psi_entropy_x_;
-    CMap2::EdgeAttribute<SCALAR> psi_entropy_y_;
-    CMap2::EdgeAttribute<SCALAR> h_star_;
-    CMap2::EdgeAttribute<SCALAR> u_star_;
-    CMap2::EdgeAttribute<SCALAR> v_star_;
+	CMap2::EdgeAttribute<SCALAR> psi_entropy_y_;
     // end chifaa
 
-
     //chifaa
-    std::vector<SCALAR> tempschifaa;
-
-    SCALAR chifaa_max_diff_h;
-    SCALAR chifaa_max_diff_q;
-    SCALAR chifaa_max_diff_r;
-
-    //std::vector<SCALAR> h_1100chifaa; //au milieu
-    //std::vector<SCALAR> h_1354chifaa; // a cote du barrage
-    std::vector<SCALAR> hminchifaa;
-    std::vector<SCALAR> hmaxchifaa;
-    std::vector<SCALAR> qminchifaa;
-    std::vector<SCALAR> qmaxchifaa;
-    std::vector<SCALAR> rminchifaa;
-    std::vector<SCALAR> rmaxchifaa;
-    std::vector<SCALAR> vect_max_diff_h_chifaa;
-    std::vector<SCALAR> vect_max_diff_q_chifaa;
-    std::vector<SCALAR> vect_max_diff_r_chifaa;
-    uint32 nbmailles;
+	std::vector<SCALAR> tempschifaa;
     std::vector<uint32> vect_nbmailles_chifaa;
 
-    // a ajouter les vecteurs d'evolution de h, q & r  de quelques points : les 4 coins du maillage et de part et d'autre de l'ouverture
-    // coin gauche haut :
-    // coin droite haut : 301
-    // coin gauche bas  : 9
-    // coin droite bas  :  69
-    // à  l'ouverture du côté en haut : 342
-    // à l'ouverture du côté en bas   : 295
-    std::vector<SCALAR> h_490chifaa;
-    std::vector<SCALAR> h_301chifaa;
-    std::vector<SCALAR> h_9chifaa;
-    std::vector<SCALAR> h_69chifaa;
-    std::vector<SCALAR> h_342chifaa;
-    std::vector<SCALAR> h_295chifaa;
+	std::map<
+		uint32, // vertex id
+		std::tuple<std::vector<SCALAR>, std::vector<SCALAR>, std::vector<SCALAR>> // h, q, r values
+	> logged_values_;
 };
 
 } // namespace plugin_shallow_water_2
