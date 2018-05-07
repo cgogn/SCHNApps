@@ -62,6 +62,8 @@ private slots:
 
 	void filter_average();
 	void filter_bilateral();
+	void filter_taubin();
+	void filter_laplacian();
 	void selected_map_changed();
 	void map_added(MapHandlerGen* map);
 	void map_removed(MapHandlerGen* map);

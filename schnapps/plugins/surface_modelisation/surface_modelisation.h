@@ -106,6 +106,16 @@ public slots:
 		const QString& normal_attribute_name
 	);
 
+	void filter_taubin(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
+	void filter_laplacian(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
 private:
 
 	Decimation_Dialog* decimation_dialog_;
