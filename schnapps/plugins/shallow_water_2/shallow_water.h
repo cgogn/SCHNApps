@@ -72,9 +72,6 @@ public:
     void set_adaptive_mesh(bool b) { adaptive_mesh_ = b; }
     void set_criteria(Criteria c) { criteria_ = c; }
 
-	void set_sigma_sub(SCALAR ssb) { sigma_sub = ssb; }
-	void set_sigma_simp(SCALAR ssmp) { sigma_simp = ssmp; }
-
 	void set_sigma_sub_h(SCALAR ssb) { sigma_sub_h = ssb; }
 	void set_sigma_simp_h(SCALAR ssmp) { sigma_simp_h = ssmp; }
 
@@ -225,15 +222,13 @@ private:
     bool adaptive_mesh_;
     Criteria criteria_;
 
-    //chifaa
-    SCALAR sigma_sub;
-    SCALAR sigma_simp;
+	//chifaa
     SCALAR sigma_sub_h;
     SCALAR sigma_simp_h;
     SCALAR sigma_sub_vitesse;
     SCALAR sigma_simp_vitesse;
 
-    SCALAR seuil_sub_h_old;
+	SCALAR seuil_sub_h_old;
     SCALAR seuil_simp_h_old;
     SCALAR seuil_sub_q_old;
     SCALAR seuil_simp_q_old;
@@ -241,7 +236,7 @@ private:
     SCALAR seuil_simp_r_old;
 
 	uint32 nbmailles;
-    SCALAR moyenne_nb_mailles;
+	uint64 somme_nb_mailles;
     //end chifaa
 
 	QTimer* draw_timer_;

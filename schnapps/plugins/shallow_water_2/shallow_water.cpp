@@ -54,15 +54,13 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
 	atq_map_(nullptr),
     qtrav_(nullptr),
     edge_left_side_(nullptr),
-	max_depth_(4),
+	max_depth_(2),
 	iteradapt_(1),
-    adaptive_mesh_(true),
-    criteria_(Criteria::entropy),
+	adaptive_mesh_(true),
+	criteria_(Criteria::H_old),
 
-	sigma_sub(0.1),
-    sigma_simp(0.05),
-    sigma_sub_h(5),//1
-    sigma_simp_h(1),//0.5
+	sigma_sub_h(0.5),//1
+	sigma_simp_h(0.25),//0.5
     sigma_sub_vitesse(0.5),//0.5
     sigma_simp_vitesse(0.2),//0.5
 	seuil_sub_h_old(0.007),
@@ -760,9 +758,9 @@ void Plugin_ShallowWater::init()
     simu_running_ = false;
 
     nb_iter_ = 0;
-//	t_ = 0.;
+	t_ = 0.;
 
-    area_global_=0;
+	area_global_ = 0.;
     
     map2_->foreach_cell(
 		[&] (CMap2::Face f)
@@ -775,6 +773,8 @@ void Plugin_ShallowWater::init()
 		},
 		*qtrav_
 	);
+
+	somme_nb_mailles = 0;
 
 	tempschifaa.clear();
 	vect_nbmailles_chifaa.clear();
@@ -815,10 +815,11 @@ void Plugin_ShallowWater::stop()
     std::chrono::high_resolution_clock::time_point t = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(t - start_time_).count();
 	std::cout << "elapsed time -> " << duration << std::endl;
+	std::cout << "nb iterations -> " << nb_iter_ << std::endl;
 	std::cout << "t -> " << t_ << std::endl;
 	std::cout << "dt -> " << dt_ << std::endl;
 
-	moyenne_nb_mailles /= nb_iter_;
+	SCALAR moyenne_nb_mailles = somme_nb_mailles / nb_iter_;
 	std::cout << "moyenne du nombre de mailles -> " << moyenne_nb_mailles << std::endl;
 
     // chifaa sortie fichier
@@ -1233,9 +1234,6 @@ void Plugin_ShallowWater::execute_time_step()
 	t_ += dt_;
 	nb_iter_++;
 
-	if (t_ == t_max_)
-		stop();
-
 //	auto end = std::chrono::high_resolution_clock::now();
 
 //	std::chrono::nanoseconds sleep_duration =
@@ -1249,7 +1247,7 @@ void Plugin_ShallowWater::execute_time_step()
 	tempschifaa.push_back(t_);
 
 	nbmailles = map2_->nb_cells<CMap2::Face>();
-	moyenne_nb_mailles += nbmailles;
+	somme_nb_mailles += nbmailles;
 	vect_nbmailles_chifaa.push_back(nbmailles);
 
 	for (auto& vdata : logged_values_)
@@ -1274,6 +1272,9 @@ void Plugin_ShallowWater::execute_time_step()
 		std::get<2>(vdata.second).push_back(r);
 	}
     //end chifaa
+
+	if (t_ == t_max_)
+		stop();
 }
 
 bool Plugin_ShallowWater::subd_criteria_h_q_r(CMap2::Face f)
