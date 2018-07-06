@@ -42,9 +42,12 @@ namespace plugin_shallow_water_2
 enum Criteria {
     H_Q_R,
     H,
+    Q_R,
     entropy,
     H_old,
-    H_Q_R_old
+    H_Q_R_old,
+    H_angle_norm_V, // angle- temporelle
+    angle_V // angle spatiale
 };
 
 /**
@@ -81,6 +84,7 @@ public:
 	void set_seuil_sub_h_old(SCALAR ssh) { seuil_sub_h_old = ssh; }
 	void set_seuil_simp_h_old(SCALAR ssh) { seuil_simp_h_old = ssh; }
 
+
 	void set_seuil_sub_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
 	{
 		seuil_sub_h_old = ssh;
@@ -94,7 +98,31 @@ public:
 		seuil_simp_r_old = ssr;
 	}
 
-	void init();
+    void set_seuil_sub_angle_norm(SCALAR ssh, SCALAR ssa, SCALAR ssn)
+    {
+        seuil_sub_h_old = ssh;
+        seuil_sub_angle = ssa;
+        seuil_sub_norm = ssn;
+    }
+
+    void set_seuil_simp_angle_norm(SCALAR ssh, SCALAR ssa, SCALAR ssn)
+    {
+        seuil_simp_h_old = ssh;
+        seuil_simp_angle = ssa;
+        seuil_simp_norm = ssn;
+    }
+
+    void set_seuil_sub_angle(SCALAR ssa)
+    {
+        seuil_sub_angle = ssa;
+    }
+
+    void set_seuil_simp_angle(SCALAR ssa)
+    {
+        seuil_simp_angle = ssa;
+    }
+
+    void init();
 
 private:
 
@@ -172,6 +200,15 @@ private:
     bool simp_criteria_h_q_r_old(cgogn::Dart central_cell);
     bool simp_criteria_h_old(cgogn::Dart central_cell);
 
+    bool subd_criteria_h_angle_norm_V(CMap2::Face f);
+    bool simp_criteria_h_angle_norm_V(cgogn::Dart central_cell);
+
+    bool subd_criteria_angle_V(CMap2::Face f);
+    bool simp_criteria_angle_V(cgogn::Dart central_cell);
+
+    bool subd_criteria_q_r(CMap2::Face f);
+    bool simp_criteria_q_r(cgogn::Dart central_cell);
+
     //    bool verification_thrdDgreeSolve(SCALAR f1,SCALAR f2,SCALAR hL,SCALAR hR);
 	SCALAR ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCALAR hR);
     SCALAR sign_y(SCALAR y);
@@ -223,6 +260,8 @@ private:
     Criteria criteria_;
 
 	//chifaa
+    bool sup10; // un booleen pour recuper des données au premier temps t superieur a 10
+
     SCALAR sigma_sub_h;
     SCALAR sigma_simp_h;
     SCALAR sigma_sub_vitesse;
@@ -234,6 +273,12 @@ private:
     SCALAR seuil_simp_q_old;
     SCALAR seuil_sub_r_old;
     SCALAR seuil_simp_r_old;
+
+    SCALAR seuil_sub_angle;
+    SCALAR seuil_sub_norm;
+
+    SCALAR seuil_simp_angle;
+    SCALAR seuil_simp_norm;
 
 	uint32 nbmailles;
 	uint64 somme_nb_mailles;
@@ -273,6 +318,7 @@ private:
     CMap2::FaceAttribute<SCALAR> s_entropy_;
     CMap2::FaceAttribute<SCALAR> Snk_;
     SCALAR entropy_global_;
+    SCALAR max_entropy_;
     SCALAR area_global_;
 	//end chifaa
 	CMap2::FaceAttribute<VEC3> centroid_; // cell centroid
@@ -303,8 +349,21 @@ private:
 
 	std::map<
 		uint32, // vertex id
-		std::tuple<std::vector<SCALAR>, std::vector<SCALAR>, std::vector<SCALAR>> // h, q, r values
+        std::tuple<std::vector<SCALAR>, std::vector<SCALAR>, std::vector<SCALAR>, std::vector<SCALAR>> // h, q, r, entropy values
 	> logged_values_;
+
+    std::map<
+        uint32, // vertex id
+        std::tuple<SCALAR, SCALAR, SCALAR, SCALAR> // h, q, r, entropy values,x,y
+    > logged_values_all_;
+//    std::vector<SCALAR> entropy_490chifaa;
+//    std::vector<SCALAR> entropy_301chifaa;
+//    std::vector<SCALAR> entropy_9chifaa;
+//    std::vector<SCALAR> entropy_69chifaa;
+//    std::vector<SCALAR> entropy_342chifaa;
+//    std::vector<SCALAR> entropy_295chifaa;
+    std::vector<SCALAR> max_entropy_tempschifaa;
+    std::vector<SCALAR> global_entropy_tempschifaa;
 };
 
 } // namespace plugin_shallow_water_2
