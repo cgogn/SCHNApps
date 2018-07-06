@@ -45,6 +45,7 @@ enum Criteria {
     Q_R,
     entropy,
     H_old,
+    Q_R_old,
     H_Q_R_old,
     H_angle_norm_V, // angle- temporelle
     angle_V // angle spatiale
@@ -88,13 +89,28 @@ public:
 	void set_seuil_simp_h_old(SCALAR ssh) { seuil_simp_h_old = ssh; }
 
 
+    void set_seuil_sub_q_r_old( SCALAR ssq, SCALAR ssr)
+    {
+
+        seuil_sub_q_old = ssq;
+        seuil_sub_r_old = ssr;
+    }
+
+
 	void set_seuil_sub_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
 	{
 		seuil_sub_h_old = ssh;
 		seuil_sub_q_old = ssq;
 		seuil_sub_r_old = ssr;
 	}
-	void set_seuil_simp_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
+
+    void set_seuil_simp_q_r_old(SCALAR ssq, SCALAR ssr)
+    {
+        seuil_simp_q_old = ssq;
+        seuil_simp_r_old = ssr;
+    }
+
+    void set_seuil_simp_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
 	{
 		seuil_simp_h_old = ssh;
 		seuil_simp_q_old = ssq;
@@ -197,9 +213,11 @@ private:
     bool subd_criteria_entropy(CMap2::Face f);
     bool simp_criteria_entropy(cgogn::Dart central_cell);
 
+    bool subd_criteria_q_r_old(CMap2::Face f);
     bool subd_criteria_h_q_r_old(CMap2::Face f);
     bool subd_criteria_h_old(CMap2::Face f);
 
+    bool simp_criteria_q_r_old(cgogn::Dart central_cell);
     bool simp_criteria_h_q_r_old(cgogn::Dart central_cell);
     bool simp_criteria_h_old(cgogn::Dart central_cell);
 

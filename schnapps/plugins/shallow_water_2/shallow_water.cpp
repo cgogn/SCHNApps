@@ -869,6 +869,7 @@ void Plugin_ShallowWater::stop()
                 case Criteria::Q_R: dir += "_QR_";break;
                 case Criteria::entropy: dir += "_entropy_"; break;
 				case Criteria::H_old: dir += "_Hold_"; break;
+                case Criteria::Q_R_old: dir+="_QRold_";break;
 				case Criteria::H_Q_R_old: dir += "_HQRold_"; break;
                 case Criteria::H_angle_norm_V: dir += "_HAngleNorm_"; break;
                 case Criteria::angle_V: dir += "_Spat_Angle_"; break;
@@ -906,7 +907,12 @@ void Plugin_ShallowWater::stop()
                 ofs<<"\n seuil de simp h"<<seuil_simp_h_old;
                 break;
                 }
-
+            case Criteria::Q_R_old:
+               {
+                ofs<<"\n seuil de simplif q r : "<<seuil_simp_q_old;
+                ofs<<"\n seuil de subdiv q r : "<<seuil_sub_q_old;
+                break;
+                }
 
             case Criteria::H_Q_R_old:
                {ofs<<"\n seuil de simplif h : "<<seuil_simp_h_old;
@@ -1640,6 +1646,20 @@ bool Plugin_ShallowWater::subd_criteria_entropy(CMap2::Face f)
        return false;
 }
 
+bool Plugin_ShallowWater::subd_criteria_q_r_old(CMap2::Face f)
+{
+    uint32 fidx = map2_->embedding(f);
+    if (abs(q_[fidx] - q_old_[fidx]) > seuil_sub_q_old ||
+        abs(r_[fidx] - r_old_[fidx]) > seuil_sub_r_old)
+    {
+        //std::cout<<"q-qold"<<q_[fidx] - q_old_[fidx] <<std::endl;
+        return true;
+    }
+    return false;
+}
+
+
+
 bool Plugin_ShallowWater::subd_criteria_h_q_r_old(CMap2::Face f)
 {
     uint32 fidx = map2_->embedding(f);
@@ -1731,6 +1751,7 @@ void Plugin_ShallowWater::try_subdivision()
                     case Criteria::Q_R: toadd = subd_criteria_q_r(f);break;
                     case Criteria::entropy: toadd = subd_criteria_entropy(f); break;
                     case Criteria::H_old: toadd = subd_criteria_h_old(f); break;
+                    case Criteria::Q_R_old: toadd = subd_criteria_q_r_old(f); break;
                     case Criteria::H_Q_R_old: toadd = subd_criteria_h_q_r_old(f); break;
                     case Criteria::H_angle_norm_V: toadd = subd_criteria_h_angle_norm_V(f); break;
                     case Criteria::angle_V : toadd=subd_criteria_angle_V(f); break;
@@ -2048,6 +2069,52 @@ bool Plugin_ShallowWater::simp_criteria_entropy(cgogn::Dart central_cell)
     return res;
 }
 
+
+
+bool Plugin_ShallowWater::simp_criteria_q_r_old(cgogn::Dart central_cell)
+{
+    bool res = true;// attention, on dit l'inverse
+    CMap2::Face f(central_cell);
+    if (atq_map_->is_triangle_face(f))
+    {
+        CMap2::Face cf(central_cell);
+        uint32 cfidx = map2_->embedding(cf);
+        if (abs(q_[cfidx] - q_old_[cfidx]) > seuil_simp_q_old ||
+            abs(r_[cfidx] - r_old_[cfidx]) > seuil_simp_r_old)
+        {
+            //std::cout<<Snk_[cfidx]<<std::endl;
+            res = false;
+        }
+        map2_->foreach_adjacent_face_through_edge(cf, [&] (CMap2::Face af)
+        {
+            uint32 afidx = map2_->embedding(af);
+            if (abs(q_[afidx] - q_old_[afidx]) > seuil_simp_q_old ||
+                abs(r_[afidx] - r_old_[afidx]) > seuil_simp_r_old)
+            {
+                //std::cout<<Snk_[afidx]<<std::endl;
+                res = false;
+            }
+        });
+    }
+    else
+    {
+        CMap2::Vertex cv(central_cell);
+        map2_->foreach_incident_face(cv, [&] (CMap2::Face iface)
+        {
+            uint32 ifidx = map2_->embedding(iface);
+            if (abs(q_[ifidx] - q_old_[ifidx]) > seuil_simp_q_old ||
+                abs(r_[ifidx] - r_old_[ifidx]) > seuil_simp_r_old)
+            {
+                //std::cout<<Snk_[ifidx]<<std::endl;
+                res = false;
+            }
+        });
+    }
+    return res;
+}
+
+
+
 bool Plugin_ShallowWater::simp_criteria_h_q_r_old(cgogn::Dart central_cell)
 {
     bool res = true;// attention, on dit l'inverse
@@ -2273,6 +2340,7 @@ void Plugin_ShallowWater::try_simplification()
                     case Criteria::Q_R: toadd = simp_criteria_q_r(central_cell); break;
                     case Criteria::entropy: toadd = simp_criteria_entropy(central_cell); break;
                     case Criteria::H_old: toadd = simp_criteria_h_old(central_cell); break;
+                    case Criteria::Q_R_old: toadd = simp_criteria_q_r_old(central_cell); break;
                     case Criteria::H_Q_R_old: toadd = simp_criteria_h_q_r_old(central_cell); break;
                     case Criteria::H_angle_norm_V: toadd = simp_criteria_h_angle_norm_V(central_cell); break;
                     case Criteria::angle_V: toadd= simp_criteria_angle_V(central_cell);break;
