@@ -31,13 +31,15 @@
 
 #include <cgogn/topology/types/adaptive_tri_quad_cmap2.h>
 
-#include <schnapps/plugins/shallow_water_2/dialog_shallow_water.h>
+#include <QAction>
 
 namespace schnapps
 {
 
 namespace plugin_shallow_water_2
 {
+
+class ShallowWater_Dialog;
 
 enum Criteria {
     H_Q_R,

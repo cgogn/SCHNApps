@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/shallow_water_2/shallow_water.h>
+#include <schnapps/plugins/shallow_water_2/dialog_shallow_water.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
