@@ -75,6 +75,9 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
     seuil_sub_norm(2.),
     seuil_simp_norm(1.),
 
+	export_frames_(false),
+	export_frames_step_(1.0),
+
 	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_(1e-35) // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
 {
@@ -95,6 +98,8 @@ bool Plugin_ShallowWater::enable()
 
 	draw_timer_ = new QTimer(this);
 	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
+
+	connect(this, SIGNAL(save_frame()), this, SLOT(export_frame()));
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
@@ -764,6 +769,8 @@ void Plugin_ShallowWater::init()
 
 	nb_iter_ = 0;
 	t_ = 0.;
+	next_frame_t_ = 0.;
+	frame_num_ = 0;
 	sup10 = true;
 
 	area_global_ = 0.;
@@ -1180,6 +1187,13 @@ void Plugin_ShallowWater::update_draw_data()
 	map_->unlock_topo_access();
 }
 
+void Plugin_ShallowWater::export_frame()
+{
+	QString frame_filename = export_frames_dir_ + "frame_" + QString::number(frame_num_) + ".jpg";
+	schnapps_->get_selected_view()->saveSnapshot(frame_filename, true);
+	++frame_num_;
+}
+
 void Plugin_ShallowWater::update_time_step()
 {
 	discharge_.set_all_values(0.);
@@ -1318,8 +1332,9 @@ void Plugin_ShallowWater::execute_time_step()
 
 	simu_data_access_.lock();
 
-	entropy_global_= 0.;
-    max_entropy_=0.;
+	entropy_global_ = 0.;
+	max_entropy_ = 0.;
+
 	map2_->parallel_foreach_cell(
 		[&] (CMap2::Face f)
 		{
@@ -1535,8 +1550,13 @@ void Plugin_ShallowWater::execute_time_step()
 		sup10 = false;
     }
 
+	//end chifaa
 
-    //end chifaa
+	if (t_ > next_frame_t_)
+	{
+		emit(save_frame());
+		next_frame_t_ += export_frames_step_;
+	}
 
 	if (t_ == t_max_)
 		stop();

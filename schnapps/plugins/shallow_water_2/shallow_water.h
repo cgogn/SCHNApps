@@ -72,6 +72,10 @@ public:
 	bool is_simu_running() { return simu_running_; }
 	std::future<void>* simu_future() { return &simu_future_; }
 
+	void set_export_frames(bool b) { export_frames_ = b; }
+	void set_export_frames_step(SCALAR s) { export_frames_step_ = s; }
+	void set_export_frames_dir(const QString& dir) { export_frames_dir_ = dir;  }
+
 	void set_max_depth(uint32 m) { max_depth_ = m; }
 	void set_iteradapt(uint32 i){ iteradapt_ = i; }
     void set_adaptive_mesh(bool b) { adaptive_mesh_ = b; }
@@ -148,6 +152,10 @@ public slots:
 	void stop();
 	void step();
 
+signals:
+
+	void save_frame();
+
 private slots:
 
 	// slots called from SCHNApps signals
@@ -157,6 +165,7 @@ private slots:
 	void open_dialog();
 
 	void update_draw_data();
+	void export_frame();
 	void update_time_step();
 	void execute_time_step();
 
@@ -291,6 +300,12 @@ private:
 	std::future<void> simu_future_;
 	std::atomic_bool simu_running_;
 	std::mutex simu_data_access_;
+
+	bool export_frames_;
+	QString export_frames_dir_;
+	SCALAR export_frames_step_;
+	SCALAR next_frame_t_;
+	uint32 frame_num_;
 
 	CMap2Handler* map_;
 	CMap2* map2_;
