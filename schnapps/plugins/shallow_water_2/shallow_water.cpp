@@ -1552,7 +1552,7 @@ void Plugin_ShallowWater::execute_time_step()
 
 	//end chifaa
 
-	if (t_ > next_frame_t_)
+	if (export_frames_ && t_ > next_frame_t_)
 	{
 		emit(save_frame());
 		next_frame_t_ += export_frames_step_;

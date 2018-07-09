@@ -90,7 +90,6 @@ public:
 	void set_seuil_sub_h_old(SCALAR ssh) { seuil_sub_h_old = ssh; }
 	void set_seuil_simp_h_old(SCALAR ssh) { seuil_simp_h_old = ssh; }
 
-
 	void set_seuil_sub_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
 	{
 		seuil_sub_h_old = ssh;
