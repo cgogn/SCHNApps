@@ -53,8 +53,7 @@ enum Criteria {
     // les criteres de variation temporelle de l'angle de la vitesse seul et sur h et l'angle de la vitesse
     angleV_tempo,
     H_angleV_tempo,
-
-    };
+};
 
 
 
