@@ -42,17 +42,18 @@ namespace plugin_shallow_water_2
 class ShallowWater_Dialog;
 
 enum Criteria {
-    // les criteres de variation spatialle de h seul, qr seul et hqr
+    // les criteres de variation spatiale de h seul, qr seul et hqr
     H_spatial,
     Q_R_spatial,
     H_Q_R_spatial,
+
     // les criteres de variation temporelle de h seul, qr seul et hqr
     H_tempo,
     Q_R_tempo,
     H_Q_R_tempo,
-    // les criteres de variation temporelle de l'angle de la vitesse seul et sur h et l'angle de la vitesse
+    // les criteres de variation spatiale et temporelle de l'angle de la vitesse
     angleV_tempo,
-    H_angleV_tempo,
+    angleV_spatial
 };
 
 
@@ -199,13 +200,12 @@ private:
     bool subd_criteria_q_r_tempo(CMap2::Face f);
     bool subd_criteria_h_q_r_tempo(CMap2::Face f);
     bool subd_criteria_angleV_tempo(CMap2::Face f);
-    bool subd_criteria_h_angleV_tempo(CMap2::Face f);
 
     bool simp_criteria_h_tempo(cgogn::Dart central_cell);
     bool simp_criteria_q_r_tempo(cgogn::Dart central_cell);
     bool simp_criteria_h_q_r_tempo(cgogn::Dart central_cell);
     bool simp_criteria_angleV_tempo(cgogn::Dart central_cell);
-    bool simp_criteria_h_angleV_tempo(cgogn::Dart central_cell);
+
 
 
 

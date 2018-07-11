@@ -52,7 +52,8 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 
     v_ = schnapps_->get_selected_view();
 
-    v_->get_current_camera()->from_string("-7.11056 -27.1433 125.902 0.263332 -0.165049 -0.0993567 0.945274");
+//    v_->get_current_camera()->from_string("-7.11056 -27.1433 125.902 0.263332 -0.165049 -0.0993567 0.945274");
+    v_->get_current_camera()->from_string("-18.9002 -57.5899 96.6947 0.390173 -0.186984 -0.154336 0.888247");
 
     v_->link_plugin(render_);
     v_->link_plugin(render_scalar_);

@@ -865,7 +865,7 @@ void Plugin_ShallowWater::stop()
                 case Criteria::H_Q_R_tempo: dir += "_H_Q_R_tempo_"; break;
 
                 case Criteria::angleV_tempo: dir += "_AngleV_tempo"; break;
-                case Criteria::H_angleV_tempo: dir += "_H_AngleV_tempo"; break;
+                case Criteria::angleV_spatial: dir += "_AngleV_spatial"; break;
 
 
 
@@ -941,10 +941,9 @@ void Plugin_ShallowWater::stop()
                 ofs<<"\n seuil de subd angle V: "<<seuil_sub_angleV;
                 ofs<<"\n seuil de simp angle V: "<<seuil_simp_angleV;
                 }
-            case Criteria::H_angleV_tempo:
+            case Criteria::angleV_spatial:
                 {
-                ofs<<"\n seuil de subd h"<<seuil_sub_h;
-                ofs<<"\n seuil de simp h"<<seuil_simp_h;
+
                 ofs<<"\n seuil de subd angle V: "<<seuil_sub_angleV;
                 ofs<<"\n seuil de simp angle V: "<<seuil_simp_angleV;
 
@@ -1131,7 +1130,7 @@ void Plugin_ShallowWater::update_draw_data()
 
 void Plugin_ShallowWater::export_frame()
 {
-    QString frame_filename = export_frames_dir_ + "frame_" + QString::number(frame_num_) + ".jpg";
+    QString frame_filename = export_frames_dir_ + "frame_" + QString::number(frame_num_) + ".bmp";
     schnapps_->get_selected_view()->saveSnapshot(frame_filename, true);
     ++frame_num_;
 }
@@ -1588,7 +1587,7 @@ bool Plugin_ShallowWater::subd_criteria_angleV_spatial(CMap2::Face f)
     });
     return res;
 }
-bool Plugin_ShallowWater::subd_criteria_h_angleV_tempo(CMap2::Face f)
+bool Plugin_ShallowWater::subd_criteria_angleV_tempo(CMap2::Face f)
 {
     uint32 fidx = map2_->embedding(f);
 
@@ -1634,11 +1633,12 @@ void Plugin_ShallowWater::try_subdivision()
                     case Criteria::H_spatial: toadd = subd_criteria_h_spatial(f); break;
                     case Criteria::Q_R_spatial: toadd = subd_criteria_q_r_spatial(f);break;
                     case Criteria::H_Q_R_spatial: toadd = subd_criteria_h_q_r_spatial(f); break;
+                    case Criteria::angleV_spatial: toadd=subd_criteria_angleV_spatial(f);
                     case Criteria::H_tempo: toadd = subd_criteria_h_tempo(f); break;
                     case Criteria::Q_R_tempo: toadd = subd_criteria_q_r_tempo(f); break;
                     case Criteria::H_Q_R_tempo: toadd = subd_criteria_h_q_r_tempo(f); break;
                     case Criteria::angleV_tempo : toadd=subd_criteria_angleV_tempo(f); break;
-                    case Criteria::H_angleV_tempo: toadd = subd_criteria_h_angleV_tempo(f); break;
+
                 }
 
                 if (toadd)
@@ -2058,7 +2058,7 @@ bool Plugin_ShallowWater::simp_criteria_angleV_spatial(cgogn::Dart central_cell)
 
     return false;
 }
-bool Plugin_ShallowWater::simp_criteria_h_angleV_tempo(cgogn::Dart central_cell)
+bool Plugin_ShallowWater::simp_criteria_angleV_tempo(cgogn::Dart central_cell)
 {
 
     bool res = true;// attention, on dit l'inverse
@@ -2167,13 +2167,12 @@ void Plugin_ShallowWater::try_simplification()
                     case Criteria::H_spatial: toadd = simp_criteria_h_spatial(central_cell); break;
                     case Criteria::Q_R_spatial: toadd = simp_criteria_q_r_spatial(central_cell); break;
                     case Criteria::H_Q_R_spatial: toadd = simp_criteria_h_q_r_spatial(central_cell); break;
+                    case Criteria::angleV_spatial: toadd=simp_criteria_angleV_spatial(central_cell); break;
                     case Criteria::H_tempo: toadd = simp_criteria_h_tempo(central_cell); break;
                     case Criteria::Q_R_tempo: toadd = simp_criteria_q_r_tempo(central_cell); break;
                     case Criteria::H_Q_R_tempo: toadd = simp_criteria_h_q_r_tempo(central_cell); break;
                     case Criteria::angleV_tempo: toadd= simp_criteria_angleV_tempo(central_cell);break;
-                    case Criteria::H_angleV_tempo: toadd = simp_criteria_h_angleV_tempo(central_cell); break;
-
-                }
+               }
 
                 if (toadd)
                     to_simplify->push_back(f);
