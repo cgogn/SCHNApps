@@ -68,6 +68,9 @@ Plugin_ShallowWater::Plugin_ShallowWater() :
     seuil_sub_angleV(1),
     seuil_simp_angleV(0.2),
 
+    export_frames_(false),
+    export_frames_step_(1.0),
+
 	hmin_(1e-3), // Valeur minimale du niveau d'eau pour laquelle une maille est considérée comme non vide
 	small_(1e-35) // Valeur minimale en deça de laquelle les valeurs sont considérées comme nulles
 {
@@ -88,6 +91,8 @@ bool Plugin_ShallowWater::enable()
 
 	draw_timer_ = new QTimer(this);
 	connect(draw_timer_, SIGNAL(timeout()), this, SLOT(update_draw_data()));
+
+    connect(this, SIGNAL(save_frame()), this, SLOT(export_frame()));
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
@@ -753,9 +758,10 @@ void Plugin_ShallowWater::init()
     simu_running_ = false;
 
 	nb_iter_ = 0;
-	t_ = 0.;
+    t_ = 0.;
+    next_frame_t_ = 0.;
+    frame_num_ = 0;
 	sup10 = true;
-
 
 	map2_->foreach_cell(
 		[&] (CMap2::Face f)
@@ -1123,6 +1129,13 @@ void Plugin_ShallowWater::update_draw_data()
 	map_->unlock_topo_access();
 }
 
+void Plugin_ShallowWater::export_frame()
+{
+    QString frame_filename = export_frames_dir_ + "frame_" + QString::number(frame_num_) + ".jpg";
+    schnapps_->get_selected_view()->saveSnapshot(frame_filename, true);
+    ++frame_num_;
+}
+
 void Plugin_ShallowWater::update_time_step()
 {
 	discharge_.set_all_values(0.);
@@ -1364,9 +1377,6 @@ void Plugin_ShallowWater::execute_time_step()
 	somme_nb_mailles += nbmailles;
 	vect_nbmailles_chifaa.push_back(nbmailles);
 
-
-
-
 	for (auto& vdata : logged_values_)
 	{
 		uint32 nbf = 0;
@@ -1428,8 +1438,13 @@ void Plugin_ShallowWater::execute_time_step()
 		sup10 = false;
     }
 
-
     //end chifaa
+
+    if (export_frames_ && t_ > next_frame_t_)
+    {
+        emit(save_frame());
+        next_frame_t_ += export_frames_step_;
+    }
 
 	if (t_ == t_max_)
 		stop();
@@ -1616,18 +1631,14 @@ void Plugin_ShallowWater::try_subdivision()
                 bool toadd = false;
                 switch (criteria_)
                 {
-                case Criteria::H_spatial: toadd = subd_criteria_h_spatial(f); break;
-                case Criteria::Q_R_spatial: toadd = subd_criteria_q_r_spatial(f);break;
-                case Criteria::H_Q_R_spatial: toadd = subd_criteria_h_q_r_spatial(f); break;
-                case Criteria::H_tempo: toadd = subd_criteria_h_tempo(f); break;
-                case Criteria::Q_R_tempo: toadd = subd_criteria_q_r_tempo(f); break;
-                case Criteria::H_Q_R_tempo: toadd = subd_criteria_h_q_r_tempo(f); break;
-                case Criteria::angleV_tempo : toadd=subd_criteria_angleV_tempo(f); break;
-                case Criteria::H_angleV_tempo: toadd = subd_criteria_h_angleV_tempo(f); break;
-
-
-
-
+                    case Criteria::H_spatial: toadd = subd_criteria_h_spatial(f); break;
+                    case Criteria::Q_R_spatial: toadd = subd_criteria_q_r_spatial(f);break;
+                    case Criteria::H_Q_R_spatial: toadd = subd_criteria_h_q_r_spatial(f); break;
+                    case Criteria::H_tempo: toadd = subd_criteria_h_tempo(f); break;
+                    case Criteria::Q_R_tempo: toadd = subd_criteria_q_r_tempo(f); break;
+                    case Criteria::H_Q_R_tempo: toadd = subd_criteria_h_q_r_tempo(f); break;
+                    case Criteria::angleV_tempo : toadd=subd_criteria_angleV_tempo(f); break;
+                    case Criteria::H_angleV_tempo: toadd = subd_criteria_h_angleV_tempo(f); break;
                 }
 
                 if (toadd)

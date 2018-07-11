@@ -25,9 +25,11 @@
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
+#include <schnapps/core/camera.h>
 
 namespace schnapps
 {
+
 
 namespace plugin_shallow_water_2_monitor
 {
@@ -49,6 +51,8 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
     render_scalar_ = static_cast<plugin_surface_render_scalar::Plugin_SurfaceRenderScalar*>(schnapps_->enable_plugin(plugin_surface_render_scalar::Plugin_SurfaceRenderScalar::plugin_name()));
 
     v_ = schnapps_->get_selected_view();
+
+    v_->get_current_camera()->from_string("-7.11056 -27.1433 125.902 0.263332 -0.165049 -0.0993567 0.945274");
 
     v_->link_plugin(render_);
     v_->link_plugin(render_scalar_);
@@ -143,28 +147,29 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ////                     CRITERE  SPATIAL SUR H
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        std::vector<SCALAR> seuils_seuil_sub_h = { 0.5};//, 1, 2, 2.5 };//{0.4,0.3,0.2,0.1,0.09,0.08,0.07,0.06};
-        SCALAR smph=0.05;//0.1;
-        for (SCALAR s : seuils_seuil_sub_h)
-        {
-            f_.push_back([=] () {
-                MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
 
-                shallow_water_->set_max_depth(4);
-                shallow_water_->set_adaptive_mesh(true);
-                shallow_water_->set_seuil_sub_h(s);
-                shallow_water_->set_seuil_sub_V(s);
-                shallow_water_->set_seuil_simp_h(smph);
-                shallow_water_->set_seuil_simp_V(smph);
+//        std::vector<SCALAR> seuils_seuil_sub_h = { 0.5};//, 1, 2, 2.5 };//{0.4,0.3,0.2,0.1,0.09,0.08,0.07,0.06};
+//        SCALAR smph=0.05;//0.1;
+//        for (SCALAR s : seuils_seuil_sub_h)
+//        {
+//            f_.push_back([=] () {
+//                MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
 
-                shallow_water_->set_criteria(plugin_shallow_water_2::H_spatial);
-                shallow_water_->init();
+//                shallow_water_->set_max_depth(4);
+//                shallow_water_->set_adaptive_mesh(true);
+//                shallow_water_->set_seuil_sub_h(s);
+//                shallow_water_->set_seuil_sub_V(s);
+//                shallow_water_->set_seuil_simp_h(smph);
+//                shallow_water_->set_seuil_simp_V(smph);
 
-                render_scalar_->update_min_max(v_, mesh, true);
+//                shallow_water_->set_criteria(plugin_shallow_water_2::H_spatial);
+//                shallow_water_->init();
 
-                shallow_water_->start();
-            });
-        }
+//                render_scalar_->update_min_max(v_, mesh, true);
+
+//                shallow_water_->start();
+//            });
+//        }
 
 
 
@@ -172,50 +177,50 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ////                     CRITERE SPATIAL SUR LA VITESSE
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                std::vector<SCALAR> seuils_seuil_sub_v = {4.};//,3.,2.,1.,0.9,0.8};
-                for (SCALAR s : seuils_seuil_sub_v)
-                {
-                    f_.push_back([=] () {
-                        MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+//                std::vector<SCALAR> seuils_seuil_sub_v = {4.};//,3.,2.,1.,0.9,0.8};
+//                for (SCALAR s : seuils_seuil_sub_v)
+//                {
+//                    f_.push_back([=] () {
+//                        MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
 
-                        shallow_water_->set_max_depth(5);
-                        shallow_water_->set_adaptive_mesh(true);
-                        shallow_water_->set_seuil_sub_V(s);//3
-                        shallow_water_->set_seuil_simp_V(0.6);//1.2
-                        shallow_water_->set_criteria(plugin_shallow_water_2::Q_R_tempo);
-                        shallow_water_->init();
+//                        shallow_water_->set_max_depth(5);
+//                        shallow_water_->set_adaptive_mesh(true);
+//                        shallow_water_->set_seuil_sub_V(s);//3
+//                        shallow_water_->set_seuil_simp_V(0.6);//1.2
+//                        shallow_water_->set_criteria(plugin_shallow_water_2::Q_R_tempo);
+//                        shallow_water_->init();
 
-                        render_scalar_->update_min_max(v_, mesh, true);
+//                        render_scalar_->update_min_max(v_, mesh, true);
 
-                        shallow_water_->start();
-                    });
-                }
+//                        shallow_water_->start();
+//                    });
+//                }
 
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ////                     CRITERE SPATIAL MIXTE
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            std::vector<SCALAR> seuils_sub_h = {1.};//{ 0.5, 1, 2, 2.5 };
-            for (SCALAR s : seuils_sub_h)
-            {
-                f_.push_back([=] () {
-                    MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+//            std::vector<SCALAR> seuils_sub_h = {1.};//{ 0.5, 1, 2, 2.5 };
+//            for (SCALAR s : seuils_sub_h)
+//            {
+//                f_.push_back([=] () {
+//                    MapHandlerGen* mesh = this->load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
 
-                    shallow_water_->set_max_depth(4);
-                    shallow_water_->set_adaptive_mesh(true);
-                    shallow_water_->set_seuil_sub_h(s);
-                    shallow_water_->set_seuil_sub_V(3.);//3
-                    shallow_water_->set_seuil_simp_h(s/2.);
-                    shallow_water_->set_seuil_simp_V(1.5);
+//                    shallow_water_->set_max_depth(4);
+//                    shallow_water_->set_adaptive_mesh(true);
+//                    shallow_water_->set_seuil_sub_h(s);
+//                    shallow_water_->set_seuil_sub_V(3.);//3
+//                    shallow_water_->set_seuil_simp_h(s/2.);
+//                    shallow_water_->set_seuil_simp_V(1.5);
 
-                    shallow_water_->set_criteria(plugin_shallow_water_2::H_Q_R_spatial);
-                    shallow_water_->init();
+//                    shallow_water_->set_criteria(plugin_shallow_water_2::H_Q_R_spatial);
+//                    shallow_water_->init();
 
-                    render_scalar_->update_min_max(v_, mesh, true);
+//                    render_scalar_->update_min_max(v_, mesh, true);
 
-                    shallow_water_->start();
-                });
-            }
+//                    shallow_water_->start();
+//                });
+//            }
 
 
 
@@ -225,21 +230,21 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    f_.push_back([=] () {
-        MapHandlerGen* mesh = load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
-        shallow_water_->set_max_depth(3);
-        shallow_water_->set_adaptive_mesh(true);
-        shallow_water_->set_criteria(plugin_shallow_water_2::H_tempo);
-        shallow_water_->set_iteradapt(1);
-        shallow_water_->set_seuil_sub_h(10);
-        shallow_water_->set_seuil_simp_h(5);
+//    f_.push_back([=] () {
+//        MapHandlerGen* mesh = load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+//        shallow_water_->set_max_depth(3);
+//        shallow_water_->set_adaptive_mesh(true);
+//        shallow_water_->set_criteria(plugin_shallow_water_2::H_tempo);
+//        shallow_water_->set_iteradapt(1);
+//        shallow_water_->set_seuil_sub_h(10);
+//        shallow_water_->set_seuil_simp_h(5);
 
-        shallow_water_->init();
+//        shallow_water_->init();
 
-        render_scalar_->update_min_max(v_, mesh, true);
+//        render_scalar_->update_min_max(v_, mesh, true);
 
-        shallow_water_->start();
-    });
+//        shallow_water_->start();
+//    });
 
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -247,21 +252,21 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-    f_.push_back([=] () {
-        MapHandlerGen* mesh = load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
-        shallow_water_->set_max_depth(3);
-        shallow_water_->set_adaptive_mesh(true);
-        shallow_water_->set_criteria(plugin_shallow_water_2::Q_R_tempo);
-        shallow_water_->set_iteradapt(1);
-        shallow_water_->set_seuil_sub_V(10);
-        shallow_water_->set_seuil_simp_V(5);
+//    f_.push_back([=] () {
+//        MapHandlerGen* mesh = load("/home/dahik/Data/905_Dambreak_Complexe_grossier/Input");
+//        shallow_water_->set_max_depth(3);
+//        shallow_water_->set_adaptive_mesh(true);
+//        shallow_water_->set_criteria(plugin_shallow_water_2::Q_R_tempo);
+//        shallow_water_->set_iteradapt(1);
+//        shallow_water_->set_seuil_sub_V(10);
+//        shallow_water_->set_seuil_simp_V(5);
 
-        shallow_water_->init();
+//        shallow_water_->init();
 
-        render_scalar_->update_min_max(v_, mesh, true);
+//        render_scalar_->update_min_max(v_, mesh, true);
 
-        shallow_water_->start();
-    });
+//        shallow_water_->start();
+//    });
 
 
 ////~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -277,6 +282,10 @@ bool Plugin_Shallow_Water_2_Monitor::enable()
         shallow_water_->set_iteradapt(1);
         shallow_water_->set_seuil_sub_h_V(10, 10);
         shallow_water_->set_seuil_simp_h_V(5,5);
+
+        shallow_water_->set_export_frames(true);
+        shallow_water_->set_export_frames_step(0.5);
+        shallow_water_->set_export_frames_dir("/home/dahik/Data/905_Dambreak_Complexe_grossier/Output/frames/");
 
         shallow_water_->init();
 
