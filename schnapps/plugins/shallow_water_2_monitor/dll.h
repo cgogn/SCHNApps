@@ -21,55 +21,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
-#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_DLL_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_DLL_H_
 
-#include <schnapps/plugins/surface_modelisation/dll.h>
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_API
+#if defined SCHNAPPS_PLUGIN_SHALLOW_WATER_INIT_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_API
+#endif
 
-#include <ui_dialog_subdivision.h>
-
-#include <schnapps/core/map_handler.h>
-
-namespace schnapps
-{
-
-class SCHNApps;
-
-namespace plugin_surface_modelisation
-{
-
-class Plugin_SurfaceModelisation;
-
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Subdivision_Dialog : public QDialog, public Ui::Subdivision_Dialog
-{
-	Q_OBJECT
-
-public:
-
-	Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_SurfaceModelisation* plugin_;
-
-	CMap2Handler* selected_map_;
-
-	QString setting_auto_load_position_attribute_;
-
-private slots:
-
-	void subdivide_loop();
-	void subdivide_catmull_clark();
-	void subdivide_lsm();
-	void selected_map_changed();
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
-	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
-};
-
-} // namespace plugin_surface_modelisation
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_DLL_H_

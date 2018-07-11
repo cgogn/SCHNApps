@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/surface_modelisation/dialog_subdivision.h>
+#include <schnapps/plugins/surface_modelisation/dialog_remeshing.h>
 #include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
 #include <schnapps/core/schnapps.h>
@@ -33,7 +33,7 @@ namespace schnapps
 namespace plugin_surface_modelisation
 {
 
-Subdivision_Dialog::Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
+Remeshing_Dialog::Remeshing_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
 	schnapps_(s),
 	plugin_(p),
 	selected_map_(nullptr)
@@ -50,47 +50,23 @@ Subdivision_Dialog::Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* 
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
-	connect(button_loop, SIGNAL(clicked()), this, SLOT(subdivide_loop()));
-	connect(button_catmull_clark, SIGNAL(clicked()), this, SLOT(subdivide_catmull_clark()));
-	connect(button_lsm, SIGNAL(clicked()), this, SLOT(subdivide_lsm()));
+	connect(button_remesh, SIGNAL(clicked()), this, SLOT(remesh()));
 
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 }
 
-void Subdivision_Dialog::subdivide_loop()
+void Remeshing_Dialog::remesh()
 {
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
 		QString position_name = combo_positionAttribute->currentText();
-		plugin_->subdivide_loop(map_name, position_name);
+		plugin_->remesh(map_name, position_name);
 	}
 }
 
-void Subdivision_Dialog::subdivide_catmull_clark()
-{
-	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
-	if (!currentItems.empty())
-	{
-		const QString& map_name = currentItems[0]->text();
-		QString position_name = combo_positionAttribute->currentText();
-		plugin_->subdivide_catmull_clark(map_name, position_name);
-	}
-}
-
-void Subdivision_Dialog::subdivide_lsm()
-{
-	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
-	if (!currentItems.empty())
-	{
-		const QString& map_name = currentItems[0]->text();
-		QString position_name = combo_positionAttribute->currentText();
-		plugin_->subdivide_lsm(map_name, position_name);
-	}
-}
-
-void Subdivision_Dialog::selected_map_changed()
+void Remeshing_Dialog::selected_map_changed()
 {
 	if (selected_map_)
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
@@ -134,7 +110,7 @@ void Subdivision_Dialog::selected_map_changed()
 		selected_map_ = nullptr;
 }
 
-void Subdivision_Dialog::map_added(MapHandlerGen* map)
+void Remeshing_Dialog::map_added(MapHandlerGen* map)
 {
 	if (map->dimension() == 2)
 	{
@@ -143,7 +119,7 @@ void Subdivision_Dialog::map_added(MapHandlerGen* map)
 	}
 }
 
-void Subdivision_Dialog::map_removed(MapHandlerGen* map)
+void Remeshing_Dialog::map_removed(MapHandlerGen* map)
 {
 	QList<QListWidgetItem*> items = list_maps->findItems(map->get_name(), Qt::MatchExactly);
 	if (!items.empty())
@@ -156,7 +132,7 @@ void Subdivision_Dialog::map_removed(MapHandlerGen* map)
 	}
 }
 
-void Subdivision_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
+void Remeshing_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	if (orbit == CMap2::Vertex::ORBIT)
 	{

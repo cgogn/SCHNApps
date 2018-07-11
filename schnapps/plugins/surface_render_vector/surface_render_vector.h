@@ -31,7 +31,6 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
-#include <schnapps/plugins/surface_render_vector/surface_render_vector_dock_tab.h>
 #include <schnapps/plugins/surface_render_vector/map_parameters.h>
 
 #include <cgogn/rendering/shaders/shader_vector_per_vertex.h>
@@ -43,6 +42,8 @@ namespace schnapps
 
 namespace plugin_surface_render_vector
 {
+
+class SurfaceRenderVector_DockTab;
 
 /**
 * @brief Plugin that renders vectors on surface vertices

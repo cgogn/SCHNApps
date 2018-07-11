@@ -515,6 +515,10 @@ void View::keyPressEvent(QKeyEvent* event)
 			break;
 		}
 
+		case Qt::Key_C: {
+			std::cout << get_current_camera()->to_string().toStdString() << std::endl;
+		}
+
 		default:
 		{
 			bool forward_event = true;

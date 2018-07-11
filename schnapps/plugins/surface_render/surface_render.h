@@ -31,7 +31,6 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
-#include <schnapps/plugins/surface_render/surface_render_dock_tab.h>
 #include <schnapps/plugins/surface_render/map_parameters.h>
 
 #include <QAction>
@@ -42,6 +41,8 @@ namespace schnapps
 
 namespace plugin_surface_render
 {
+
+class SurfaceRender_DockTab;
 
 /**
 * @brief Plugin for surface rendering

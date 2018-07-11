@@ -21,28 +21,28 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_
-#define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_
+#ifndef SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_H_
+#define SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_H_
 
-#include <schnapps/plugins/cage_3d_deformation/dll.h>
-#include <schnapps/plugins/cage_3d_deformation/map_parameters.h>
-
+#include "dll.h"
 #include <schnapps/core/plugin_processing.h>
 
-#include <QAction>
+#include <schnapps/core/view.h>
+
+#include <schnapps/plugins/shallow_water_2/shallow_water.h>
+#include <schnapps/plugins/surface_render/surface_render.h>
+#include <schnapps/plugins/surface_render_scalar/surface_render_scalar.h>
 
 namespace schnapps
 {
 
-namespace plugin_cage_3d_deformation
+namespace plugin_shallow_water_2_monitor
 {
 
-class Cage3dDeformation_Dialog;
-
 /**
-* @brief Cage 3d deformation
+* @brief Shallow water 2 monitor plugin
 */
-class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Plugin_Cage3dDeformation : public PluginProcessing
+class SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_API Plugin_Shallow_Water_2_Monitor : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -50,52 +50,41 @@ class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Plugin_Cage3dDeformation : public 
 
 public:
 
-	Plugin_Cage3dDeformation();
-	~Plugin_Cage3dDeformation() override {}
+	Plugin_Shallow_Water_2_Monitor();
+	~Plugin_Shallow_Water_2_Monitor() override {}
 	static QString plugin_name();
 
-	MapParameters& get_parameters(MapHandlerGen* map);
+public slots:
+
+	void run_script();
+	void check_simu_state();
 
 private:
 
 	bool enable() override;
 	void disable() override;
 
-private slots:
+	MapHandlerGen* load(const QString& dir);
 
-	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
-	void schnapps_closing();
+	View* v_;
+	plugin_shallow_water_2::Plugin_ShallowWater* shallow_water_;
+	plugin_surface_render::Plugin_SurfaceRender* render_;
+	plugin_surface_render_scalar::Plugin_SurfaceRenderScalar* render_scalar_;
 
-	// slots called from MapHandler signals
-	void attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
-	void attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
-	void connectivity_changed();
+	std::vector<std::function<void()>> f_;
+	uint32 current_f_;
 
-	// slots called from action signals
-	void open_dialog();
+    //chifaa
 
-public slots:
+    //end chifaa
 
-	void set_deformed_position_attribute(MapHandlerGen* map, const QString& name, bool update_dialog);
-	void set_control_map(MapHandlerGen* map, CMap2Handler* control, bool update_dialog);
-	void set_control_position_attribute(MapHandlerGen* map, const QString& name, bool update_dialog);
-	void toggle_control(MapHandlerGen* map, bool update_dialog);
+	QTimer* check_simu_timer_;
 
-private:
-
-	Cage3dDeformation_Dialog* cage_3d_deformation_dialog_;
-	QAction* setup_cage3d_deformation_action;
-
-	QString setting_auto_load_control_position_attribute_;
-	QString setting_auto_load_deformed_position_attribute_;
-
-	std::map<MapHandlerGen*, MapParameters> parameter_set_;
+	QAction* shallow_water_action;
 };
 
-} // namespace plugin_cage_3d_deformation
+} // namespace plugin_shallow_water_2_monitor
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_
+#endif // SCHNAPPS_PLUGIN_SHALLOW_WATER_2_MONITOR_H_

@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/surface_render_vector/surface_render_vector.h>
+#include <schnapps/plugins/surface_render_vector/surface_render_vector_dock_tab.h>
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>

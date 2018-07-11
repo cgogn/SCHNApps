@@ -21,12 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
-#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_
 
 #include <schnapps/plugins/surface_modelisation/dll.h>
 
-#include <ui_dialog_subdivision.h>
+#include <ui_dialog_remeshing.h>
 
 #include <schnapps/core/map_handler.h>
 
@@ -40,13 +40,13 @@ namespace plugin_surface_modelisation
 
 class Plugin_SurfaceModelisation;
 
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Subdivision_Dialog : public QDialog, public Ui::Subdivision_Dialog
+class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Remeshing_Dialog : public QDialog, public Ui::Remeshing_Dialog
 {
 	Q_OBJECT
 
 public:
 
-	Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
+	Remeshing_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
 
 private:
 
@@ -59,9 +59,7 @@ private:
 
 private slots:
 
-	void subdivide_loop();
-	void subdivide_catmull_clark();
-	void subdivide_lsm();
+	void remesh();
 	void selected_map_changed();
 	void map_added(MapHandlerGen* map);
 	void map_removed(MapHandlerGen* map);
@@ -72,4 +70,4 @@ private slots:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <exportmacro>SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API</exportmacro>
- <class>Subdivision_Dialog</class>
- <widget class="QDialog" name="Subdivision_Dialog">
+ <class>Remeshing_Dialog</class>
+ <widget class="QDialog" name="Remeshing_Dialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>307</width>
+    <width>274</width>
     <height>246</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Subdivision</string>
+   <string>Remeshing</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
@@ -42,23 +42,9 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="button_loop">
+      <widget class="QPushButton" name="button_remesh">
        <property name="text">
-        <string>Loop</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="button_catmull_clark">
-       <property name="text">
-        <string>Catmull-Clark</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="button_lsm">
-       <property name="text">
-        <string>LSM</string>
+        <string>Remesh</string>
        </property>
       </widget>
      </item>

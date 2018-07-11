@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/surface_modelisation/dialog_subdivision.h>
+#include <schnapps/plugins/surface_modelisation/dialog_filtering.h>
 #include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
 #include <schnapps/core/schnapps.h>
@@ -33,7 +33,7 @@ namespace schnapps
 namespace plugin_surface_modelisation
 {
 
-Subdivision_Dialog::Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
+Filtering_Dialog::Filtering_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
 	schnapps_(s),
 	plugin_(p),
 	selected_map_(nullptr)
@@ -45,52 +45,70 @@ Subdivision_Dialog::Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* 
 	else
 		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
 
+	if (plugin_->get_setting("Auto load normal attribute").isValid())
+		setting_auto_load_normal_attribute_ = plugin_->get_setting("Auto load normal attribute").toString();
+	else
+		setting_auto_load_normal_attribute_ = plugin_->add_setting("Auto load normal attribute", "normal").toString();
+
 	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
 	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
-	connect(button_loop, SIGNAL(clicked()), this, SLOT(subdivide_loop()));
-	connect(button_catmull_clark, SIGNAL(clicked()), this, SLOT(subdivide_catmull_clark()));
-	connect(button_lsm, SIGNAL(clicked()), this, SLOT(subdivide_lsm()));
+	connect(button_average, SIGNAL(clicked()), this, SLOT(filter_average()));
+	connect(button_bilateral, SIGNAL(clicked()), this, SLOT(filter_bilateral()));
+	connect(button_laplacian, SIGNAL(clicked()), this, SLOT(filter_laplacian()));
+	connect(button_taubin, SIGNAL(clicked()), this, SLOT(filter_taubin()));
 
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 }
 
-void Subdivision_Dialog::subdivide_loop()
+void Filtering_Dialog::filter_average()
 {
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
 		QString position_name = combo_positionAttribute->currentText();
-		plugin_->subdivide_loop(map_name, position_name);
+		plugin_->filter_average(map_name, position_name);
 	}
 }
 
-void Subdivision_Dialog::subdivide_catmull_clark()
+void Filtering_Dialog::filter_bilateral()
 {
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
 		QString position_name = combo_positionAttribute->currentText();
-		plugin_->subdivide_catmull_clark(map_name, position_name);
+		QString normal_name = combo_normalAttribute->currentText();
+		plugin_->filter_bilateral(map_name, position_name, normal_name);
 	}
 }
 
-void Subdivision_Dialog::subdivide_lsm()
+void Filtering_Dialog::filter_taubin()
 {
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
 		QString position_name = combo_positionAttribute->currentText();
-		plugin_->subdivide_lsm(map_name, position_name);
+		plugin_->filter_taubin(map_name, position_name);
 	}
 }
 
-void Subdivision_Dialog::selected_map_changed()
+void Filtering_Dialog::filter_laplacian()
+{
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		QString position_name = combo_positionAttribute->currentText();
+		plugin_->filter_laplacian(map_name, position_name);
+	}
+}
+
+void Filtering_Dialog::selected_map_changed()
 {
 	if (selected_map_)
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
@@ -99,6 +117,7 @@ void Subdivision_Dialog::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		combo_positionAttribute->clear();
+		combo_normalAttribute->clear();
 
 		const QString& map_name = currentItems[0]->text();
 		MapHandlerGen* mhg = schnapps_->get_map(map_name);
@@ -124,6 +143,9 @@ void Subdivision_Dialog::selected_map_changed()
 						combo_positionAttribute->addItem(name);
 						if (name == setting_auto_load_position_attribute_)
 							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
+						combo_normalAttribute->addItem(name);
+						if (name == setting_auto_load_normal_attribute_)
+							combo_normalAttribute->setCurrentIndex(combo_normalAttribute->count() - 1);
 					}
 				}
 			}
@@ -134,7 +156,7 @@ void Subdivision_Dialog::selected_map_changed()
 		selected_map_ = nullptr;
 }
 
-void Subdivision_Dialog::map_added(MapHandlerGen* map)
+void Filtering_Dialog::map_added(MapHandlerGen* map)
 {
 	if (map->dimension() == 2)
 	{
@@ -143,7 +165,7 @@ void Subdivision_Dialog::map_added(MapHandlerGen* map)
 	}
 }
 
-void Subdivision_Dialog::map_removed(MapHandlerGen* map)
+void Filtering_Dialog::map_removed(MapHandlerGen* map)
 {
 	QList<QListWidgetItem*> items = list_maps->findItems(map->get_name(), Qt::MatchExactly);
 	if (!items.empty())
@@ -156,7 +178,7 @@ void Subdivision_Dialog::map_removed(MapHandlerGen* map)
 	}
 }
 
-void Subdivision_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
+void Filtering_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
@@ -169,6 +191,7 @@ void Subdivision_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const 
 		if (attribute_type_name == vec3_type_name)
 		{
 			combo_positionAttribute->addItem(attribute_name);
+			combo_normalAttribute->addItem(attribute_name);
 		}
 	}
 }

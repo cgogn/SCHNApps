@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/surface_render_scalar/surface_render_scalar.h>
+#include <schnapps/plugins/surface_render_scalar/surface_render_scalar_dock_tab.h>
 
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
