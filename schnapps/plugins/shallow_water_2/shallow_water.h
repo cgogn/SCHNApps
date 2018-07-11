@@ -31,7 +31,7 @@
 
 #include <cgogn/topology/types/adaptive_tri_quad_cmap2.h>
 
-#include <schnapps/plugins/shallow_water_2/dialog_shallow_water.h>
+#include <QAction>
 
 namespace schnapps
 {
@@ -39,17 +39,24 @@ namespace schnapps
 namespace plugin_shallow_water_2
 {
 
+class ShallowWater_Dialog;
+
 enum Criteria {
-    H_Q_R,
-    H,
-    Q_R,
-    entropy,
-    H_old,
-    Q_R_old,
-    H_Q_R_old,
-    H_angle_norm_V, // angle- temporelle
-    angle_V // angle spatiale
-};
+    // les criteres de variation spatialle de h seul, qr seul et hqr
+    H_spatial,
+    Q_R_spatial,
+    H_Q_R_spatial,
+    // les criteres de variation temporelle de h seul, qr seul et hqr
+    H_tempo,
+    Q_R_tempo,
+    H_Q_R_tempo,
+    // les criteres de variation temporelle de l'angle de la vitesse seul et sur h et l'angle de la vitesse
+    angleV_tempo,
+    H_angleV_tempo,
+
+    };
+
+
 
 /**
 * @brief Shallow water simulation
@@ -76,69 +83,33 @@ public:
     void set_adaptive_mesh(bool b) { adaptive_mesh_ = b; }
     void set_criteria(Criteria c) { criteria_ = c; }
 
-	void set_sigma_sub(SCALAR ssb) { sigma_sub = ssb; }
-	void set_sigma_simp(SCALAR ssmp) { sigma_simp = ssmp; }
+    void set_seuil_sub_h(SCALAR ssb) { seuil_sub_h = ssb; }
+    void set_seuil_simp_h(SCALAR ssmp) { seuil_simp_h = ssmp; }
 
-	void set_sigma_sub_h(SCALAR ssb) { sigma_sub_h = ssb; }
-	void set_sigma_simp_h(SCALAR ssmp) { sigma_simp_h = ssmp; }
+    void set_seuil_sub_V( SCALAR ssV){seuil_sub_V = ssV;}
+    void set_seuil_simp_V( SCALAR ssV){seuil_simp_V = ssV;}
 
-	void set_sigma_sub_vitesse(SCALAR ssb) { sigma_sub_vitesse = ssb; }
-	void set_sigma_simp_vitesse(SCALAR ssmp) { sigma_simp_vitesse = ssmp; }
-
-	void set_seuil_sub_h_old(SCALAR ssh) { seuil_sub_h_old = ssh; }
-	void set_seuil_simp_h_old(SCALAR ssh) { seuil_simp_h_old = ssh; }
-
-
-    void set_seuil_sub_q_r_old( SCALAR ssq, SCALAR ssr)
-    {
-
-        seuil_sub_q_old = ssq;
-        seuil_sub_r_old = ssr;
-    }
-
-
-	void set_seuil_sub_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
+    void set_seuil_sub_h_V(SCALAR ssh, SCALAR ssV)
 	{
-		seuil_sub_h_old = ssh;
-		seuil_sub_q_old = ssq;
-		seuil_sub_r_old = ssr;
+        seuil_sub_h = ssh;
+        seuil_sub_V = ssV;
+
 	}
-
-    void set_seuil_simp_q_r_old(SCALAR ssq, SCALAR ssr)
+    void set_seuil_simp_h_V(SCALAR ssh, SCALAR ssV)
     {
-        seuil_simp_q_old = ssq;
-        seuil_simp_r_old = ssr;
+        seuil_simp_h = ssh;
+        seuil_simp_V = ssV;
+
     }
 
-    void set_seuil_simp_h_q_r_old(SCALAR ssh, SCALAR ssq, SCALAR ssr)
-	{
-		seuil_simp_h_old = ssh;
-		seuil_simp_q_old = ssq;
-		seuil_simp_r_old = ssr;
-	}
-
-
-    void set_seuil_sub_angle_norm(SCALAR ssh, SCALAR ssa, SCALAR ssn)
+    void set_seuil_sub_angleV(SCALAR ssa)
     {
-        seuil_sub_h_old = ssh;
-        seuil_sub_angle = ssa;
-        seuil_sub_norm = ssn;
-    }
-    void set_seuil_simp_angle_norm(SCALAR ssh, SCALAR ssa, SCALAR ssn)
-    {
-        seuil_simp_h_old = ssh;
-        seuil_simp_angle = ssa;
-        seuil_simp_norm = ssn;
+        seuil_sub_angleV = ssa;
     }
 
-    void set_seuil_sub_angle(SCALAR ssa)
+    void set_seuil_simp_angleV(SCALAR ssa)
     {
-        seuil_sub_angle = ssa;
-    }
-
-    void set_seuil_simp_angle(SCALAR ssa)
-    {
-        seuil_simp_angle = ssa;
+        seuil_simp_angleV = ssa;
     }
 
     void init();
@@ -204,36 +175,34 @@ private:
 			SCALAR q, SCALAR r, SCALAR z, SCALAR zb,
 			SCALAR g, SCALAR hmin, SCALAR smalll);
 
-    bool subd_criteria_h_q_r(CMap2::Face f);
-    bool subd_criteria_h(CMap2::Face f);
 
-    bool simp_criteria_h_q_r(cgogn::Dart central_cell);
-    bool simp_criteria_h(cgogn::Dart central_cell);
+    //criteres de variations spatiales
+    bool subd_criteria_h_spatial(CMap2::Face f);
+    bool subd_criteria_q_r_spatial(CMap2::Face f);
+    bool subd_criteria_h_q_r_spatial(CMap2::Face f);
+    bool subd_criteria_angleV_spatial(CMap2::Face f);
 
-    bool subd_criteria_entropy(CMap2::Face f);
-    bool simp_criteria_entropy(cgogn::Dart central_cell);
+    bool simp_criteria_h_spatial(cgogn::Dart central_cell);
+    bool simp_criteria_q_r_spatial(cgogn::Dart central_cell);
+    bool simp_criteria_h_q_r_spatial(cgogn::Dart central_cell);
+    bool simp_criteria_angleV_spatial(cgogn::Dart central_cell);
 
-    bool subd_criteria_q_r_old(CMap2::Face f);
-    bool subd_criteria_h_q_r_old(CMap2::Face f);
-    bool subd_criteria_h_old(CMap2::Face f);
+    //criteres de variations temporlles
+    bool subd_criteria_h_tempo(CMap2::Face f);
+    bool subd_criteria_q_r_tempo(CMap2::Face f);
+    bool subd_criteria_h_q_r_tempo(CMap2::Face f);
+    bool subd_criteria_angleV_tempo(CMap2::Face f);
+    bool subd_criteria_h_angleV_tempo(CMap2::Face f);
 
-    bool simp_criteria_q_r_old(cgogn::Dart central_cell);
-    bool simp_criteria_h_q_r_old(cgogn::Dart central_cell);
-    bool simp_criteria_h_old(cgogn::Dart central_cell);
-
-    bool subd_criteria_h_angle_norm_V(CMap2::Face f);
-    bool simp_criteria_h_angle_norm_V(cgogn::Dart central_cell);
-
-    bool subd_criteria_angle_V(CMap2::Face f);
-    bool simp_criteria_angle_V(cgogn::Dart central_cell);
+    bool simp_criteria_h_tempo(cgogn::Dart central_cell);
+    bool simp_criteria_q_r_tempo(cgogn::Dart central_cell);
+    bool simp_criteria_h_q_r_tempo(cgogn::Dart central_cell);
+    bool simp_criteria_angleV_tempo(cgogn::Dart central_cell);
+    bool simp_criteria_h_angleV_tempo(cgogn::Dart central_cell);
 
 
-    bool subd_criteria_q_r(CMap2::Face f);
-    bool simp_criteria_q_r(cgogn::Dart central_cell);
 
-    //    bool verification_thrdDgreeSolve(SCALAR f1,SCALAR f2,SCALAR hL,SCALAR hR);
-	SCALAR ThrdDgreeSolve(SCALAR f1, SCALAR f2, SCALAR hL, SCALAR hR);
-    SCALAR sign_y(SCALAR y);
+
 
 	void try_subdivision();
 	void try_simplification();
@@ -281,36 +250,19 @@ private:
     bool adaptive_mesh_;
     Criteria criteria_;
 
+	//chifaa
     bool sup10; // un booleen pour recuper des données au premier temps t superieur a 10
 
-    //chifaa
-    SCALAR sigma_sub;
-    SCALAR sigma_simp;
-    SCALAR sigma_sub_h;
-    SCALAR sigma_simp_h;
-    SCALAR sigma_sub_vitesse;
-    SCALAR sigma_simp_vitesse;
-
-    SCALAR seuil_sub_h_old;
-    SCALAR seuil_simp_h_old;
-    SCALAR seuil_sub_q_old;
-    SCALAR seuil_simp_q_old;
-    SCALAR seuil_sub_r_old;
-    SCALAR seuil_simp_r_old;
-
-    SCALAR seuil_sub_angle;
-    SCALAR seuil_sub_norm;
-
-    SCALAR seuil_simp_angle;
-    SCALAR seuil_simp_norm;
-
-    //SCALAR seuil_sub_angle;
-    //SCALAR seuil_simp_angle;
-
+    SCALAR seuil_sub_h;
+    SCALAR seuil_simp_h;
+    SCALAR seuil_sub_V;
+    SCALAR seuil_simp_V;
+    SCALAR seuil_sub_angleV;
+    SCALAR seuil_simp_angleV;
 
 
 	uint32 nbmailles;
-    SCALAR moyenne_nb_mailles;
+	uint64 somme_nb_mailles;
     //end chifaa
 
 	QTimer* draw_timer_;
@@ -343,13 +295,8 @@ private:
     CMap2::FaceAttribute<SCALAR> q_old_; // flux de quantité de mouvement dans la direction X
     CMap2::FaceAttribute<SCALAR> r_; // flux de quantité de mouvement dans la direction Y
     CMap2::FaceAttribute<SCALAR> r_old_; // flux de quantité de mouvement dans la direction Y
-    //chifaa
-    CMap2::FaceAttribute<SCALAR> s_entropy_;
-    CMap2::FaceAttribute<SCALAR> Snk_;
-    SCALAR entropy_global_;
-    SCALAR max_entropy_;
-    SCALAR area_global_;
-	//end chifaa
+
+
 	CMap2::FaceAttribute<VEC3> centroid_; // cell centroid
 	CMap2::FaceAttribute<SCALAR> area_; // cell area
 	CMap2::FaceAttribute<SCALAR> swept_;
@@ -367,10 +314,7 @@ private:
 	CMap2::EdgeAttribute<SCALAR> val_bc_;
 	CMap2::EdgeAttribute<std::string> typ_bc_;
 	CMap2::EdgeAttribute<uint32> NS_;
-    //chifaa
-    CMap2::EdgeAttribute<SCALAR> psi_entropy_x_;
-	CMap2::EdgeAttribute<SCALAR> psi_entropy_y_;
-    // end chifaa
+
 
     //chifaa
 	std::vector<SCALAR> tempschifaa;
@@ -378,21 +322,13 @@ private:
 
 	std::map<
 		uint32, // vertex id
-        std::tuple<std::vector<SCALAR>, std::vector<SCALAR>, std::vector<SCALAR>, std::vector<SCALAR>> // h, q, r, entropy values
+        std::tuple<std::vector<SCALAR>, std::vector<SCALAR>, std::vector<SCALAR>> // h, q, r
 	> logged_values_;
 
     std::map<
         uint32, // vertex id
-        std::tuple<SCALAR, SCALAR, SCALAR, SCALAR> // h, q, r, entropy values,x,y
+        std::tuple<SCALAR, SCALAR, SCALAR> // h, q, r
     > logged_values_all_;
-//    std::vector<SCALAR> entropy_490chifaa;
-//    std::vector<SCALAR> entropy_301chifaa;
-//    std::vector<SCALAR> entropy_9chifaa;
-//    std::vector<SCALAR> entropy_69chifaa;
-//    std::vector<SCALAR> entropy_342chifaa;
-//    std::vector<SCALAR> entropy_295chifaa;
-    std::vector<SCALAR> max_entropy_tempschifaa;
-    std::vector<SCALAR> global_entropy_tempschifaa;
 
 };
 

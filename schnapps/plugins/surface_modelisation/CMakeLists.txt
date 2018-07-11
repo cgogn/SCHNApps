@@ -9,6 +9,7 @@ set(HEADER_FILES
 	surface_modelisation.h
 	dialog_decimation.h
 	dialog_subdivision.h
+	dialog_remeshing.h
 	dialog_filtering.h
 )
 
@@ -16,6 +17,7 @@ set(SOURCE_FILES
 	surface_modelisation.cpp
 	dialog_decimation.cpp
 	dialog_subdivision.cpp
+	dialog_remeshing.cpp
 	dialog_filtering.cpp
 )
 

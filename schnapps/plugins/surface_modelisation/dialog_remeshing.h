@@ -21,12 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_FILTERING_H_
-#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_FILTERING_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_
+#define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_
 
 #include <schnapps/plugins/surface_modelisation/dll.h>
 
-#include <ui_dialog_filtering.h>
+#include <ui_dialog_remeshing.h>
 
 #include <schnapps/core/map_handler.h>
 
@@ -40,13 +40,13 @@ namespace plugin_surface_modelisation
 
 class Plugin_SurfaceModelisation;
 
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Filtering_Dialog : public QDialog, public Ui::Filtering_Dialog
+class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Remeshing_Dialog : public QDialog, public Ui::Remeshing_Dialog
 {
 	Q_OBJECT
 
 public:
 
-	Filtering_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
+	Remeshing_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
 
 private:
 
@@ -56,14 +56,10 @@ private:
 	CMap2Handler* selected_map_;
 
 	QString setting_auto_load_position_attribute_;
-	QString setting_auto_load_normal_attribute_;
 
 private slots:
 
-	void filter_average();
-	void filter_bilateral();
-	void filter_taubin();
-	void filter_laplacian();
+	void remesh();
 	void selected_map_changed();
 	void map_added(MapHandlerGen* map);
 	void map_removed(MapHandlerGen* map);
@@ -74,4 +70,4 @@ private slots:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_FILTERING_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_

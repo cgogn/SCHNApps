@@ -31,7 +31,6 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/map_handler.h>
 
-#include <schnapps/plugins/surface_render_scalar/surface_render_scalar_dock_tab.h>
 #include <schnapps/plugins/surface_render_scalar/map_parameters.h>
 
 namespace schnapps
@@ -39,6 +38,8 @@ namespace schnapps
 
 namespace plugin_surface_render_scalar
 {
+
+class SurfaceRenderScalar_DockTab;
 
 /**
 * @brief Plugin that renders color-coded scalar values on surface vertices

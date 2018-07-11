@@ -29,6 +29,8 @@
 
 #include <schnapps/core/plugin_processing.h>
 
+#include <QAction>
+
 namespace schnapps
 {
 

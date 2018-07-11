@@ -27,6 +27,7 @@
 #include <schnapps/plugins/surface_modelisation/dll.h>
 #include <schnapps/plugins/surface_modelisation/dialog_decimation.h>
 #include <schnapps/plugins/surface_modelisation/dialog_subdivision.h>
+#include <schnapps/plugins/surface_modelisation/dialog_remeshing.h>
 #include <schnapps/plugins/surface_modelisation/dialog_filtering.h>
 
 #include <schnapps/core/plugin_processing.h>
@@ -69,6 +70,7 @@ private slots:
 	// slots called from action signals
 	void open_decimation_dialog();
 	void open_subdivision_dialog();
+	void open_remeshing_dialog();
 	void open_filtering_dialog();
 
 public slots:
@@ -95,6 +97,16 @@ public slots:
 		const QString& position_attribute_name
 	);
 
+	void subdivide_lsm(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
+	void remesh(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
 	void filter_average(
 		const QString& map_name,
 		const QString& position_attribute_name
@@ -106,14 +118,26 @@ public slots:
 		const QString& normal_attribute_name
 	);
 
+	void filter_taubin(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
+	void filter_laplacian(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
 private:
 
 	Decimation_Dialog* decimation_dialog_;
 	Subdivision_Dialog* subdivision_dialog_;
+	Remeshing_Dialog* remeshing_dialog_;
 	Filtering_Dialog* filtering_dialog_;
 
 	QAction* decimation_action_;
 	QAction* subdivision_action_;
+	QAction* remeshing_action_;
 	QAction* filtering_action_;
 };
 

@@ -57,6 +57,8 @@ Filtering_Dialog::Filtering_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
 
 	connect(button_average, SIGNAL(clicked()), this, SLOT(filter_average()));
 	connect(button_bilateral, SIGNAL(clicked()), this, SLOT(filter_bilateral()));
+	connect(button_laplacian, SIGNAL(clicked()), this, SLOT(filter_laplacian()));
+	connect(button_taubin, SIGNAL(clicked()), this, SLOT(filter_taubin()));
 
 	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
 }
@@ -81,6 +83,28 @@ void Filtering_Dialog::filter_bilateral()
 		QString position_name = combo_positionAttribute->currentText();
 		QString normal_name = combo_normalAttribute->currentText();
 		plugin_->filter_bilateral(map_name, position_name, normal_name);
+	}
+}
+
+void Filtering_Dialog::filter_taubin()
+{
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		QString position_name = combo_positionAttribute->currentText();
+		plugin_->filter_taubin(map_name, position_name);
+	}
+}
+
+void Filtering_Dialog::filter_laplacian()
+{
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		QString position_name = combo_positionAttribute->currentText();
+		plugin_->filter_laplacian(map_name, position_name);
 	}
 }
 
