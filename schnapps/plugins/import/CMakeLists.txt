@@ -2,45 +2,41 @@ project(plugin_import
 	LANGUAGES CXX
 )
 
+find_package(schnapps_core REQUIRED)
 find_package(cgogn_io REQUIRED)
-find_package(tinyxml2 REQUIRED)
-find_package(Meshb REQUIRED)
-find_package(ply REQUIRED)
 
-set(HEADER_FILES
-	dll.h
-	import.h
+add_library(${PROJECT_NAME} SHARED "")
+
+add_library(schnapps::import ALIAS plugin_import)
+
+target_sources(${PROJECT_NAME}
+	PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/dll.h"
+		"${CMAKE_CURRENT_LIST_DIR}/import.h"
+		"${CMAKE_CURRENT_LIST_DIR}/import.cpp"
 )
 
-set(SOURCE_FILES
-	import.cpp
-)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+										DEBUG_POSTFIX "_d"
+										EXPORT_NAME import)
 
-set(CMAKE_AUTOMOC ON)
-
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMPORT_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	${tinyxml2_INCLUDE_DIRS}
-	${Meshb_INCLUDE_DIRS}
-	${ply_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(${PROJECT_NAME}
-	schnapps_core
-	${cgogn_core_LIBRARIES}
-	${cgogn_io_LIBRARIES}
-	${Qt5Widgets_LIBRARIES}
-	${tinyxml2_LIBRARIES}
-	${Meshb_LIBRARIES}
-	${ply_LIBRARIES}
+	schnapps::core
+	cgogn::io
 )
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/import
+	FILES_MATCHING PATTERN "*.h"
+)
+
+schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

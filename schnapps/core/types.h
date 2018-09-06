@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_TYPES_H_
 #define SCHNAPPS_CORE_TYPES_H_
 
-#include "dll.h"
+#include <schnapps/core/dll.h>
+
 #include <cgogn/core/utils/numerics.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 #include <unsupported/Eigen/AlignedVector3>

@@ -1,28 +1,106 @@
 language: cpp
 
-dist: trusty
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+    - os: osx
+      osx_image: xcode10
 
-sudo: required
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - sourceline: "ppa:beineri/opt-qt58-trusty"
+      - sourceline: "ppa:corentinjabot/cmake-backport" #cmake 3.7.2
+      # for cmake 3.12 use ppa:dluxen/cmake-backports
+    packages:
+      - gcc-5
+      - g++-5
+      - libglu1-mesa-dev
+      - qt58base
+      - cmake
+  homebrew:
+    packages:
+      - qt5 
 
-os: linux
-
-install:
-  - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
-  - cd CGoGN_2
-  - bash .travis_install.sh
-  - mkdir build
-  - cd build
-  - cmake .. -DQt5_DIR=/opt/5.6.3/gcc_64/lib/cmake/Qt5 -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 
-  - make -j2
-  - sudo make install
-  - cd ../..
+script:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+      source /opt/qt58/bin/qt58-env.sh ;
+    fi
     
 branches:
   only:
   - develop
 
+install:
+  - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
+  - cd CGoGN_2
+  - mkdir build
+  - cd build
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+      cmake .. -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 ; 
+    fi 
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then  
+      cmake .. -DCMAKE_PREFIX_PATH=$(brew --prefix qt) ; 
+    fi
+  - make -j2
+  - sudo make install
+  - cd ../..
+
 script:
   - mkdir build
   - cd build
-  - cmake .. -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 -DUSE_PLUGIN_image=OFF -DUSE_PLUGIN_meshgen=OFF
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+      cmake .. 
+        -DCMAKE_CXX_COMPILER=g++-5 
+        -DCMAKE_C_COMPILER=gcc-5 
+        -DUSE_PLUGIN_attribute_editor:BOOL=ON
+        -DUSE_PLUGIN_cage_3d_deformation:BOOL=OFF
+        -DUSE_PLUGIN_empty_plugin:BOOL=ON
+        -DUSE_PLUGIN_export:BOOL=ON
+        -DUSE_PLUGIN_extract_surface:BOOL=OFF
+        -DUSE_PLUGIN_image:BOOL=OFF
+        -DUSE_PLUGIN_import:BOOL=ON
+        -DUSE_PLUGIN_merge:BOOL=OFF
+        -DUSE_PLUGIN_meshgen:BOOL=OFF
+        -DUSE_PLUGIN_selection:BOOL=ON
+        -DUSE_PLUGIN_shallow_water:BOOL=OFF
+        -DUSE_PLUGIN_shallow_water_2:BOOL=OFF
+        -DUSE_PLUGIN_surface_deformation:BOOL=ON
+        -DUSE_PLUGIN_surface_differential_properties:BOOL=ON
+        -DUSE_PLUGIN_surface_modelisation:BOOL=OFF
+        -DUSE_PLUGIN_surface_render:BOOL=ON
+        -DUSE_PLUGIN_surface_render_scalar:BOOL=ON
+        -DUSE_PLUGIN_surface_render_transp:BOOL=ON
+        -DUSE_PLUGIN_surface_render_vector:BOOL=ON
+        -DUSE_PLUGIN_volume_modelisation:BOOL=OFF
+        -DUSE_PLUGIN_volume_render:BOOL=OFF ;
+    fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
+      cmake ..
+        -DCMAKE_PREFIX_PATH=$(brew --prefix qt)
+        -DUSE_PLUGIN_attribute_editor:BOOL=ON
+        -DUSE_PLUGIN_cage_3d_deformation:BOOL=OFF
+        -DUSE_PLUGIN_empty_plugin:BOOL=ON
+        -DUSE_PLUGIN_export:BOOL=ON
+        -DUSE_PLUGIN_extract_surface:BOOL=OFF
+        -DUSE_PLUGIN_image:BOOL=OFF
+        -DUSE_PLUGIN_import:BOOL=ON
+        -DUSE_PLUGIN_merge:BOOL=OFF
+        -DUSE_PLUGIN_meshgen:BOOL=OFF
+        -DUSE_PLUGIN_selection:BOOL=ON
+        -DUSE_PLUGIN_shallow_water:BOOL=OFF
+        -DUSE_PLUGIN_shallow_water_2:BOOL=OFF
+        -DUSE_PLUGIN_surface_deformation:BOOL=ON
+        -DUSE_PLUGIN_surface_differential_properties:BOOL=ON
+        -DUSE_PLUGIN_surface_modelisation:BOOL=OFF
+        -DUSE_PLUGIN_surface_render:BOOL=ON
+        -DUSE_PLUGIN_surface_render_scalar:BOOL=ON
+        -DUSE_PLUGIN_surface_render_transp:BOOL=ON
+        -DUSE_PLUGIN_surface_render_vector:BOOL=ON
+        -DUSE_PLUGIN_volume_modelisation:BOOL=OFF
+        -DUSE_PLUGIN_volume_render:BOOL=OFF ;
+    fi
   - make -j2

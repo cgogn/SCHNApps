@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(schnapps_core REQUIRED)
+##find_dependency(cgogn_io REQUIRED)
+
+if(NOT TARGET schnapps::export)
+	include("${CMAKE_CURRENT_LIST_DIR}/plugin_exportTargets.cmake")
+endif()

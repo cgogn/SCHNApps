@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(schnapps_core REQUIRED)
+
+if(NOT TARGET schnapps::cage_3d_deformation)
+	include("${CMAKE_CURRENT_LIST_DIR}/plugin_cage_3d_deformationTargets.cmake")
+endif()

@@ -7,7 +7,7 @@ version: 1.0.{build}
 
 branches:
   only:
-    - develop
+    - cmake
 
 skip_commits:
   message: /\[skip ci\]|\[ci skip\]|\[skip appveyor\]|\[ci appveyor\]/
@@ -21,25 +21,43 @@ clone_folder: c:\projects\myproject
 # fetch repository as zip archive
 shallow_clone: true 
 
+image:
+  #- Visual Studio 2015
+  - Visual Studio 2017
+
+configuration:
+  - Release
+  #- Debug
+
 environment:
-    GENERATOR: "Visual Studio 14 Win64"
-    CONFIG: Debug
+  matrix:
+    - arch: Win64
 
 build:
   parallel: true
   verbosity: minimal
+
+init:
+  - echo %arch%
+  - echo %APPVEYOR_BUILD_WORKER_IMAGE%
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" (set GENERATOR="Visual Studio 15 2017 %arch%" && set QT_DIR="C:\Qt\5.10.1\msvc2017_64\lib\cmake\Qt5")
+  #- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (set GENERATOR="Visual Studio 14 2015 %arch%" && set QT_DIR="C:\Qt\5.10.1\msvc2015_64\lib\cmake\Qt5")
+  #- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2013" (set GENERATOR="Visual Studio 12 2013 %arch%" && set QT_DIR="C:\Qt\5.8\msvc2013_64\lib\cmake\Qt5")
+  - echo %GENERATOR%
+  - echo %QT_DIR%
+
 
 build_script:
   - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
   - cd CGoGN_2
   - md build
   - cd build
-  - cmake -Wno-dev -Wno-deprecated "-G%GENERATOR%" .. -DCMAKE_SUPPRESS_REGENERATION=1 -DQt5_DIR="C:\Qt\5.8\msvc2015_64\lib\cmake\Qt5"
-  - cmake --build . --config "%CONFIG%" -- /verbosity:minimal
-  - cmake --build . --config "%CONFIG%" --target INSTALL -- /verbosity:minimal
+  - cmake -Wno-dev -Wno-deprecated -G %GENERATOR% .. -DCMAKE_SUPPRESS_REGENERATION=1 -DQt5_DIR=%QT_DIR%
+  - cmake --build . --config "%CONFIGURATION%" -- /verbosity:minimal
+  - cmake --build . --config "%CONFIGURATION%" --target INSTALL -- /verbosity:minimal
   - cd ../..
   - md build
   - cd build
-  - cmake -Wno-dev -Wno-deprecated "-G%GENERATOR%" ../ -DCMAKE_SUPPRESS_REGENERATION=1 -DCMAKE_PREFIX_PATH="C:\Program Files\CGoGN" -DUSE_PLUGIN_image=OFF -DUSE_PLUGIN_meshgen=OFF
-  - cmake --build . --config "%CONFIG%" -- /verbosity:minimal
-  
+  - cmake -Wno-dev -Wno-deprecated -G %GENERATOR% ../ -DCMAKE_SUPPRESS_REGENERATION=1 -DCMAKE_PREFIX_PATH="C:\Program Files\CGoGN" -DQt5_DIR=%QT_DIR% -DUSE_PLUGIN_image=OFF -DUSE_PLUGIN_meshgen=OFF
+  - cmake --build . --config "%CONFIGURATION%" -- /verbosity:minimal
+  - cmake --build . --config "%CONFIGURATION%" --target INSTALL -- /verbosity:minimal
