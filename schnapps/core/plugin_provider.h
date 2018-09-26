@@ -21,23 +21,46 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/core/cells_set.h>
-#include <schnapps/core/schnapps.h>
+#ifndef SCHNAPPS_CORE_PLUGIN_PROVIDER_H_
+#define SCHNAPPS_CORE_PLUGIN_PROVIDER_H_
+
+#include <schnapps/core/dll.h>
+#include <schnapps/core/types.h>
+#include <schnapps/core/plugin.h>
 
 namespace schnapps
 {
 
-uint32 CellsSetGen::cells_set_count_ = 0;
+class Object;
 
-CellsSetGen::CellsSetGen(const QString& name) :
-	name_(name),
-	mutually_exclusive_(false),
-	selection_changed_(false)
+class SCHNAPPS_CORE_API PluginProvider : public Plugin
 {
-	++cells_set_count_;
-}
+	Q_OBJECT
 
-CellsSetGen::~CellsSetGen()
-{}
+public:
+
+	PluginProvider()
+	{}
+
+	~PluginProvider() override;
+
+//	const std::map<QString, Object*>& objects() const { return objects_; }
+
+	Object* object(const QString& name) const;
+
+	template <typename FUNC>
+	void foreach_object(const FUNC& f) const
+	{
+		static_assert(cgogn::is_func_parameter_same<FUNC, Object*>::value, "Wrong function parameter type");
+		for (const auto& object_it : objects_)
+			f(object_it.second);
+	}
+
+protected:
+
+	std::map<QString, Object*> objects_;
+};
 
 } // namespace schnapps
+
+#endif // SCHNAPPS_CORE_PLUGIN_PROVIDER_H_

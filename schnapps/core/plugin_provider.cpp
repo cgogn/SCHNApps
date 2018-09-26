@@ -21,73 +21,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_
-
-#include "dll.h"
-#include <ui_surface_render_transp.h>
-
-#include <QColorDialog>
+#include <schnapps/core/plugin_provider.h>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
+PluginProvider::~PluginProvider()
+{}
 
-namespace plugin_surface_render_transp
+Object* PluginProvider::object(const QString& name) const
 {
+	if (objects_.count(name) > 0ul)
+		return objects_.at(name);
+	else
+		return nullptr;
+}
 
-class Plugin_SurfaceRenderTransp;
-
-struct MapParameters;
-
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API SurfaceRenderTransp_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
-{
-	Q_OBJECT
-
-	friend class Plugin_SurfaceRenderTransp;
-
-public:
-
-	SurfaceRenderTransp_DockTab(SCHNApps* s, Plugin_SurfaceRenderTransp* p);
-
-private:
-
-	SCHNApps* schnapps_;
-	Plugin_SurfaceRenderTransp* plugin_;
-
-	QColorDialog* color_dial_;
-	int current_color_dial_;
-
-	QColor front_color_;
-	QColor back_color_;
-
-	bool updating_ui_;
-
-private slots:
-
-	void position_vbo_changed(int index);
-	void normal_vbo_changed(int index);
-	void face_style_changed(QAbstractButton* b);
-
-	void front_color_clicked();
-	void back_color_clicked();
-	void both_color_clicked();
-	void opaque_value_changed(int v);
-	void color_selected();
-
-private:
-
-	void add_position_vbo(QString name);
-	void remove_position_vbo(QString name);
-	void add_normal_vbo(QString name);
-	void remove_normal_vbo(QString name);
-
-	void update_map_parameters(MapHandlerGen* map, const MapParameters& p);
-};
-
-} // namespace plugin_surface_render_transp
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_DOCK_TAB_H_

@@ -9,7 +9,6 @@ find_package(cgogn_rendering REQUIRED)
 set(HEADER_FILES
 	dll.h
 	surface_render_transp.h
-	surface_render_transp_extern.h
 )
 
 set(SOURCE_FILES
@@ -34,6 +33,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
+	plugin_cmap2_provider
 	${cgogn_core_LIBRARIES}
 	${cgogn_rendering_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}

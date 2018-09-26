@@ -21,10 +21,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_CELLS_SET_H_
-#define SCHNAPPS_CORE_CELLS_SET_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP2_PROVIDER_CMAP2_CELLS_SET_H_
+#define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_CMAP2_CELLS_SET_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/plugins/cmap2_provider/dll.h>
+
 #include <schnapps/core/types.h>
 
 #include <cgogn/core/basic/cell.h>
@@ -34,10 +35,12 @@
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
+namespace plugin_cmap2_provider
+{
 
-class SCHNAPPS_CORE_API CellsSetGen : public QObject
+class CMap2Handler;
+
+class SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API CMap2CellsSetGen : public QObject
 {
 	Q_OBJECT
 
@@ -46,20 +49,13 @@ public:
 	// counter for cells set unique naming
 	static uint32 cells_set_count_;
 
-	/**
-	 * @brief CellsSet constructor
-	 * @param name
-	 * @param s
-	 */
-	CellsSetGen(const QString& name);
+	CMap2CellsSetGen(const CMap2Handler& mh, const QString& name);
+	~CMap2CellsSetGen();
 
-	~CellsSetGen();
+	inline const QString& name() { return name_; }
 
-	inline const QString& get_name() { return name_; }
-
-	virtual const MapHandlerGen* get_map() const = 0;
-	virtual CellType get_cell_type() const = 0;
-	virtual std::size_t get_nb_cells() const = 0;
+	virtual const CMap2Handler& map_handler() const { return mh_; }
+	virtual std::size_t nb_cells() const = 0;
 
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
 	virtual void set_mutually_exclusive(bool b) = 0;
@@ -90,42 +86,33 @@ protected:
 		selection_changed_ = false;
 	}
 
+	CMap2Handler& mh_;
 	QString name_;
 	bool mutually_exclusive_;
 	bool selection_changed_;
 };
 
-template <typename MAP_TYPE>
-class MapHandler;
 
-template <typename MAP, typename CELL>
-class CellsSet : public CellsSetGen
+template <typename CELL>
+class CMap2CellsSet : public CMap2CellsSetGen
 {
 public:
 
-	using Inherit = CellsSetGen;
-	using Self = CellsSet<MAP, CELL>;
+	using Inherit = CMap2CellsSetGen;
+	using Self = CMap2CellsSet<CELL>;
 
 	using Inherit::select;
 	using Inherit::unselect;
 
-	CellsSet(MapHandler<MAP>& m, const QString& name) :
-		Inherit(name),
-		map_(m),
-		marker_(*map_.get_map())
+	CMap2CellsSet(CMap2Handler& mh, const QString& name) :
+		Inherit(mh, name),
+		marker_(*mh.map())
 	{}
 
-	~CellsSet() override
+	~CMap2CellsSet() override
 	{}
 
-	inline const MapHandlerGen* get_map() const override
-	{
-		return &map_;
-	}
-
-	inline CellType get_cell_type() const override;
-
-	inline std::size_t get_nb_cells() const override
+	inline std::size_t nb_cells() const override
 	{
 		return cells_.size();
 	}
@@ -135,7 +122,7 @@ public:
 		if (!marker_.is_marked(c))
 		{
 			marker_.mark(c);
-			cells_.insert(std::make_pair(map_.get_map()->embedding(c), c));
+			cells_.insert(std::make_pair(mh_.map()->embedding(c), c));
 			if (this->mutually_exclusive_ && !mutually_exclusive_sets_.empty())
 			{
 				for (Self* cs : mutually_exclusive_sets_)
@@ -164,7 +151,7 @@ public:
 	{
 		if(marker_.is_marked(c))
 		{
-			uint32 emb = map_.get_map()->embedding(c);
+			uint32 emb = mh_.map()->embedding(c);
 			auto it = cells_.find(emb);
 			if (it != cells_.end())
 			{
@@ -221,23 +208,29 @@ public:
 		this->mutually_exclusive_ = b;
 
 		std::vector<Self*> mex;
-		map_.foreach_cells_set(map_.cell_type(CELL::ORBIT), [&] (CellsSetGen* csg)
+		mh_.foreach_cells_set<CELL>([&] (Self* cs)
 		{
-			Self* cs = dynamic_cast<Self*>(csg);
-			if (cs && cs->is_mutually_exclusive())
+			if (cs->is_mutually_exclusive())
 				mex.push_back(cs);
 		});
-		map_.foreach_cells_set(map_.cell_type(CELL::ORBIT), [&] (CellsSetGen* csg)
+		mh_.foreach_cells_set<CELL>([&] (Self* cs)
 		{
-			Self* cs = dynamic_cast<Self*>(csg);
-			if (cs)
-				cs->set_mutually_exclusive_sets(mex);
+			cs->set_mutually_exclusive_sets(mex);
 		});
 
-		map_.notify_cells_set_mutually_exclusive_change(map_.cell_type(CELL::ORBIT), this->name_);
+		mh_.notify_cells_set_mutually_exclusive_change<CELL>(this->name_);
 	}
 
-	inline void rebuild() override;
+	inline void rebuild() override
+	{
+		cells_.clear();
+		mh_.map()->foreach_cell([&] (CELL c)
+		{
+			if (marker_.is_marked(c))
+				cells_.insert(std::make_pair(mh_.map()->embedding(c), c));
+		});
+		emit(selected_cells_changed());
+	}
 
 	template <typename FUNC>
 	inline void foreach_cell(const FUNC& f)
@@ -280,37 +273,25 @@ public:
 
 protected:
 
-	MapHandler<MAP>& map_;
-	typename MAP::template CellMarker<CELL::ORBIT> marker_;
+	typename CMap2::template CellMarker<CELL::ORBIT> marker_;
 	std::map<uint32, CELL> cells_;
 	std::vector<Self*> mutually_exclusive_sets_;
 };
 
+} // namespace plugin_cmap2_provider
+
 } // namespace schnapps
 
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
 
-template <typename MAP, typename CELL>
-inline CellType CellsSet<MAP, CELL>::get_cell_type() const
+namespace plugin_cmap2_provider
 {
-	return map_.cell_type(CELL::ORBIT);
-}
 
-template <typename MAP, typename CELL>
-inline void CellsSet<MAP, CELL>::rebuild()
-{
-	cells_.clear();
-	map_.get_map()->foreach_cell([&] (CELL c)
-	{
-		if (marker_.is_marked(c))
-			cells_.insert(std::make_pair(map_.get_map()->embedding(c), c));
-	});
-	emit(selected_cells_changed());
-}
+
+} // namespace plugin_cmap2_provider
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_CORE_CELLS_SET_H_
+#endif // SCHNAPPS_PLUGIN_CMAP2_PROVIDER_CMAP2_CELLS_SET_H_

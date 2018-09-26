@@ -36,6 +36,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 if (USE_TRANSPARENCY)
 	target_link_libraries(${PROJECT_NAME}
 		schnapps_core
+		plugin_cmap2_provider
 		plugin_surface_render_transp
 		${cgogn_core_LIBRARIES}
 		${cgogn_rendering_LIBRARIES}
@@ -44,6 +45,7 @@ if (USE_TRANSPARENCY)
 else()
 	target_link_libraries(${PROJECT_NAME}
 		schnapps_core
+		plugin_cmap2_provider
 		${cgogn_core_LIBRARIES}
 		${cgogn_rendering_LIBRARIES}
 		${Qt5Widgets_LIBRARIES}

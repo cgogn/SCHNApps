@@ -4,7 +4,6 @@ project(schnapps_core
 
 find_package(cgogn_rendering REQUIRED)
 
-
 set(HEADER_FILES
 	dll.h
 	schnapps_window.h
@@ -17,13 +16,12 @@ set(HEADER_FILES
 	plugin.h
 	plugin_processing.h
 	plugin_interaction.h
-	map_handler.h
+	plugin_provider.h
+	object.h
 	control_dock_camera_tab.h
 	control_dock_plugin_tab.h
-	control_dock_map_tab.h
 	types.h
 	color_combo_box.h
-	cells_set.h
 	settings.h
 	settings_widget.h
 	status_bar_output.h
@@ -36,15 +34,14 @@ set(SOURCE_FILES
 	view.cpp
 	view_dialog_list.cpp
 	view_button_area.cpp
-	plugin_interaction.cpp
 	plugin.cpp
 	plugin_processing.cpp
-	map_handler.cpp
+	plugin_interaction.cpp
+	plugin_provider.cpp
+	object.cpp
 	control_dock_camera_tab.cpp
 	control_dock_plugin_tab.cpp
-	control_dock_map_tab.cpp
 	color_combo_box.cpp
-	cells_set.cpp
 	types.cpp
 	settings.cpp
 	settings_widget.cpp

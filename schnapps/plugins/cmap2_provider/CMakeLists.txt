@@ -1,47 +1,43 @@
-project(plugin_import
+project(plugin_cmap2_provider
 	LANGUAGES CXX
 )
 
-find_package(cgogn_io REQUIRED)
-find_package(tinyxml2 REQUIRED)
-find_package(Meshb REQUIRED)
-find_package(ply REQUIRED)
-
 set(HEADER_FILES
 	dll.h
-	import.h
+	cmap2_provider.h
+	cmap2_handler.h
+#	cmap2_cells_set.h
+	cmap2_provider_dock_tab.h
 )
 
 set(SOURCE_FILES
-	import.cpp
+	cmap2_provider.cpp
+	cmap2_handler.cpp
+#	cmap2_cells_set.cpp
+	cmap2_provider_dock_tab.cpp
 )
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
 
 add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMPORT_DLL_EXPORT")
+target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_CMAP2_PROVIDER_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	${tinyxml2_INCLUDE_DIRS}
-	${Meshb_INCLUDE_DIRS}
-	${ply_INCLUDE_DIRS}
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
+	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
 	${CMAKE_CURRENT_SOURCE_DIR}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	plugin_cmap2_provider
 	${cgogn_core_LIBRARIES}
-	${cgogn_io_LIBRARIES}
+	${cgogn_topology_LIBRARIES}
+	${Qt5Core_LIBRARIES}
 	${Qt5Widgets_LIBRARIES}
-	${tinyxml2_LIBRARIES}
-	${Meshb_LIBRARIES}
-	${ply_LIBRARIES}
 )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

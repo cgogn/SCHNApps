@@ -73,7 +73,7 @@ QVariant Settings::add_setting(const QString& module_name, const QString& settin
 	return map_[module_name][setting_name];
 }
 
-const QVariant Settings::get_setting(const QString& module_name, const QString& setting_name) const
+const QVariant Settings::setting(const QString& module_name, const QString& setting_name) const
 {
 	auto module_it = map_.constFind(module_name);
 	if (module_it != map_.constEnd())
@@ -82,10 +82,10 @@ const QVariant Settings::get_setting(const QString& module_name, const QString& 
 		if (setting_it != module_it.value().constEnd())
 			return setting_it.value();
 		else
-			cgogn_log_debug("Settings::get_setting") << "Unable to find setting \"" << setting_name.toStdString() << "\" in module \"" << module_name.toStdString() << "\".";
+			cgogn_log_debug("Settings::setting") << "Unable to find setting \"" << setting_name.toStdString() << "\" in module \"" << module_name.toStdString() << "\".";
 	}
 	else
-		cgogn_log_debug("Settings::get_setting") << "Unable to find module \"" << module_name.toStdString() << "\".";
+		cgogn_log_debug("Settings::setting") << "Unable to find module \"" << module_name.toStdString() << "\".";
 	return QVariant();
 }
 

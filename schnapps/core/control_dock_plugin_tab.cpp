@@ -67,7 +67,7 @@ void ControlDock_PluginTab::add_plugin_directory_clicked()
 		QString dir = QFileDialog::getExistingDirectory(
 			this,
 			tr("Select a directory"),
-			schnapps_->get_app_path(),
+			schnapps_->app_path(),
 			QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks
 		);
 
@@ -93,7 +93,7 @@ void ControlDock_PluginTab::disable_selected_plugins_clicked()
 		QList<QListWidgetItem*> items = list_pluginsEnabled->selectedItems();
 		for (QListWidgetItem* item : items)
 		{
-			Plugin* plug = schnapps_->get_plugin(item->text());
+			Plugin* plug = schnapps_->plugin(item->text());
 			if (plug && !plug->auto_activate())
 				schnapps_->disable_plugin(item->text());
 		}
@@ -114,7 +114,7 @@ void ControlDock_PluginTab::plugin_available_added(QString name)
 void ControlDock_PluginTab::plugin_enabled(Plugin *plugin)
 {
 	updating_ui_ = true;
-	const QString& plugin_name = plugin->get_name();
+	const QString& plugin_name = plugin->name();
 	QList<QListWidgetItem*> av = list_pluginsAvailable->findItems(plugin_name, Qt::MatchExactly);
 	if (!av.empty())
 		delete av[0];
@@ -125,7 +125,7 @@ void ControlDock_PluginTab::plugin_enabled(Plugin *plugin)
 void ControlDock_PluginTab::plugin_disabled(Plugin *plugin)
 {
 	updating_ui_ = true;
-	const QString& plugin_name = plugin->get_name();
+	const QString& plugin_name = plugin->name();
 	QList<QListWidgetItem*> av = list_pluginsEnabled->findItems(plugin_name, Qt::MatchExactly);
 	if (!av.empty())
 		delete av[0];

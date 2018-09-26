@@ -29,7 +29,6 @@
 #include <schnapps/core/plugin_interaction.h>
 #include <schnapps/core/types.h>
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/rendering/transparency_shaders/shader_transparent_flat.h>
 #include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>
@@ -42,13 +41,19 @@
 namespace schnapps
 {
 
+namespace plugin_cmap2_provider { class CMap2Handler; }
+//namespace plugin_cmap3_provider { class CMap3Handler; }
+
 namespace plugin_surface_render_transp
 {
+
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+//using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 /**
 * @brief Plugin for surface rendering
 */
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API Plugin_SurfaceRenderTransp: public PluginInteraction
+class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API Plugin_SurfaceRenderTransp : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -62,13 +67,13 @@ public:
 
 	inline bool auto_activate() override { return true; }
 
-	void add_tr_flat(View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
-	void add_tr_phong(View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
-	void add_tr_vol(View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
+	void add_tr_flat(View* view, CMap2Handler* mh, cgogn::rendering::ShaderFlatTransp::Param* param);
+	void add_tr_phong(View* view, CMap2Handler* mh, cgogn::rendering::ShaderPhongTransp::Param* param);
+//	void add_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
 
-	void remove_tr_flat(View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
-	void remove_tr_phong(View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
-	void remove_tr_vol(View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
+	void remove_tr_flat(View* view, CMap2Handler* mh, cgogn::rendering::ShaderFlatTransp::Param* param);
+	void remove_tr_phong(View* view, CMap2Handler* mh, cgogn::rendering::ShaderPhongTransp::Param* param);
+//	void remove_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
 
 private:
 
@@ -76,7 +81,7 @@ private:
 	void disable() override;
 
 	void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
-	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
+	void draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
 	inline bool keyPress(View*, QKeyEvent*) override { return true; }
 	inline bool keyRelease(View*, QKeyEvent*) override { return true; }
@@ -97,10 +102,9 @@ private slots:
 private:
 
 	std::map<View*, cgogn::rendering::SurfaceTransparencyDrawer*> transp_drawer_set_;
-	std::map<View*,std::vector<std::pair<MapHandlerGen*, cgogn::rendering::ShaderFlatTransp::Param*>>> tr2maps_flat_;
-	std::map<View*,std::vector<std::pair<MapHandlerGen*, cgogn::rendering::ShaderPhongTransp::Param*>>> tr2maps_phong_;
-	std::map<View*,std::vector<std::pair<MapHandlerGen*, cgogn::rendering::VolumeTransparencyDrawer::Renderer*>>> tr3maps_;
-
+	std::map<View*,std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderFlatTransp::Param*>>> tr2maps_flat_;
+	std::map<View*,std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderPhongTransp::Param*>>> tr2maps_phong_;
+//	std::map<View*,std::vector<std::pair<CMap3Handler*, cgogn::rendering::VolumeTransparencyDrawer::Renderer*>>> tr3maps_;
 };
 
 } // namespace plugin_surface_render_transp_transp

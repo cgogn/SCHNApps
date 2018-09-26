@@ -21,34 +21,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_EXT_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP2_PROVIDER_DLL_H_
+#define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_DLL_H_
 
-#include <schnapps/plugins/surface_render_transp/dll.h>
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API
+#if defined SCHNAPPS_PLUGIN_CMAP2_PROVIDER_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API __declspec(dllexport)
+#else
+#define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API __declspec(dllimport)
+#endif
+#endif
+#else
+#define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API
+#endif
 
-#include <cgogn/rendering/transparency_shaders/shader_transparent_flat.h>
-#include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>
-#include <cgogn/rendering/transparency_volume_drawer.h>
-
-namespace schnapps
-{
-
-class Plugin;
-class View;
-class MapHandlerGen;
-
-namespace plugin_surface_render_transp
-{
-
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_flat(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderFlatTransp::Param* param);
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_phong(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::ShaderPhongTransp::Param* param);
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_vol(Plugin* plug, View* view, MapHandlerGen* map, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
-
-} // namespace plugin_surface_render_transp_transp
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_
+#endif // SCHNAPPS_PLUGIN_CMAP2_PROVIDER_DLL_H_

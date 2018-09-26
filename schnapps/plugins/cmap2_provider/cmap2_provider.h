@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
 *                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -21,29 +21,62 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
-#define SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP2_PROVIDER_H_
+#define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_H_
 
-#include <schnapps/core/dll.h>
-#include <schnapps/core/plugin.h>
+#include <schnapps/plugins/cmap2_provider/dll.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
+
+#include <schnapps/core/types.h>
+#include <schnapps/core/plugin_provider.h>
 
 namespace schnapps
 {
 
-class Object;
+namespace plugin_cmap2_provider
+{
 
-class SCHNAPPS_CORE_API PluginProcessing : public Plugin
+class CMap2Provider_DockTab;
+
+/**
+* @brief CGoGN CMap2 provider
+*/
+class SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API Plugin_CMap2Provider : public PluginProvider
 {
 	Q_OBJECT
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
 
 public:
 
-	PluginProcessing()
-	{}
+	Plugin_CMap2Provider();
+	inline ~Plugin_CMap2Provider() override {}
+	static QString plugin_name();
 
-	~PluginProcessing() override;
+private:
+
+	bool enable() override;
+	void disable() override;
+
+public:
+
+	CMap2Handler* add_map(const QString& name);
+	void remove_map(const QString& name);
+	CMap2Handler* duplicate_map(const QString& name);
+	CMap2Handler* map(const QString& name) const;
+
+private slots:
+
+	// slots called from SCHNApps signals
+	void schnapps_closing();
+
+private:
+
+	CMap2Provider_DockTab* dock_tab_;
 };
+
+} // namespace plugin_cmap2_provider
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_CORE_PLUGIN_PROCESSING_H_
+#endif // SCHNAPPS_PLUGIN_CMAP2_PROVIDER_H_
