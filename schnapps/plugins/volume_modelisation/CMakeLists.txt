@@ -5,25 +5,26 @@ project(plugin_volume_modelisation
 find_package(cgogn_geometry REQUIRED)
 find_package(cgogn_modeling REQUIRED)
 
-set(HEADER_FILES
-	dll.h
-	volume_modelisation.h
-	volume_modelisation_docktab.h
-	volume_operation.h
+add_library(${PROJECT_NAME} SHARED "")
+
+add_library(schnapps::volume_modelisation ALIAS plugin_volume_modelisation)
+
+target_sources(${PROJECT_NAME}
+	PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/dll.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_modelisation.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_modelisation.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_modelisation_docktab.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_modelisation_docktab.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_operation.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_operation.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_modelisation.ui"
 )
 
-set(SOURCE_FILES
-	volume_modelisation.cpp
-	volume_modelisation_docktab.cpp
-	volume_operation.cpp
-)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+										DEBUG_POSTFIX "_d"
+										EXPORT_NAME volume_modelisation)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_VOLUME_MODELISATION_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -35,11 +36,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	${cgogn_core_LIBRARIES}
-	${cgogn_geometry_LIBRARIES}
-	${cgogn_modeling_LIBRARIES}
-	${Qt5Core_LIBRARIES}
-	${Qt5Widgets_LIBRARIES}
+	cgogn_core
+	cgogn_geometry
+	cgogn_modeling
+	Qt5::Core
+	Qt5::Widgets
 )
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

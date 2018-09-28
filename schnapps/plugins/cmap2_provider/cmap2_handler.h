@@ -64,9 +64,9 @@ public:
 
 	inline CMap2* map() const { return map_; }
 
-	void view_linked(View* view) {}
+	void view_linked(View*) {}
 
-	void view_unlinked(View* view) {}
+	void view_unlinked(View*) {}
 
 	/**********************************************************
 	 * MANAGE DRAWING                                         *

@@ -126,7 +126,7 @@ void CMap2Provider_DockTab::remove_current_map_clicked()
 		plugin_->remove_map(selected_map_->name());
 }
 
-void CMap2Provider_DockTab::bb_vertex_attribute_changed(int index)
+void CMap2Provider_DockTab::bb_vertex_attribute_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 		selected_map_->set_bb_vertex_attribute(combo_bbVertexAttribute->currentText());
@@ -198,6 +198,7 @@ void CMap2Provider_DockTab::selected_map_attribute_added(cgogn::Orbit orbit, con
 			list_volumeAttributes->addItem(name);
 			break;
 		}
+		default: break;
 	}
 	updating_ui_ = false;
 }
@@ -244,6 +245,7 @@ void CMap2Provider_DockTab::selected_map_attribute_removed(cgogn::Orbit orbit, c
 			if (!items.empty()) delete items[0];
 			break;
 		}
+		default: break;
 	}
 	updating_ui_ = false;
 }

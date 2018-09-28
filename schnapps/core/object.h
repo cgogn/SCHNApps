@@ -86,10 +86,10 @@ public:
 	 * BOUNDING BOX                                           *
 	 *********************************************************/
 
-	inline const cgogn::geometry::AABB<VEC3>& bb() { return bb_; }
+	inline const cgogn::geometry::AABB<VEC3>& bb() const { return bb_; }
 	inline float bb_diagonal_size() const { return bb_diagonal_size_; }
-	inline const bool show_bb() { return show_bb_; }
-	bool transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max);
+	inline bool show_bb() const { return show_bb_; }
+	bool transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const;
 
 	void update_bb_drawer();
 

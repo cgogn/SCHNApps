@@ -30,8 +30,8 @@ namespace schnapps
 Object::Object(const QString& name, PluginProvider* p) :
 	name_(name),
 	provider_(p),
-	show_bb_(true),
-	bb_diagonal_size_(.0f)
+	bb_diagonal_size_(.0f),
+	show_bb_(true)
 {
 	connect(&frame_, SIGNAL(manipulated()), this, SLOT(frame_changed()));
 	transformation_matrix_.setToIdentity();
@@ -86,7 +86,7 @@ void Object::frame_changed()
 	emit(bb_changed());
 }
 
-bool Object::transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max)
+bool Object::transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
 {
 	if (!bb_.is_initialized())
 		return false;

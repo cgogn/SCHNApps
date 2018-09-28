@@ -70,20 +70,20 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
 		color_vbo_(nullptr),
+		render_vertices_(false),
+		render_edges_(false),
+		render_faces_(true),
+		render_backfaces_(true),
+		face_style_(FLAT),
+		render_boundary_(false),
 		vertex_color_(190, 85, 168),
 		edge_color_(0, 0, 0),
 		front_color_(85, 168, 190, 127),
 		back_color_(85, 168, 190, 127),
-		render_backfaces_(true),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
-		transparency_factor_(127),
-		render_vertices_(false),
-		render_edges_(false),
-		render_faces_(true),
-		render_boundary_(false),
 		use_transparency_(false),
-		face_style_(FLAT)
+		transparency_factor_(127)
 	{
 		initialize_gl();
 	}

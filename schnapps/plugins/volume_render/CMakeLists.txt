@@ -4,25 +4,24 @@ project(plugin_volume_render
 
 find_package(cgogn_rendering REQUIRED)
 
+add_library(${PROJECT_NAME} SHARED "")
 
-set(HEADER_FILES
-	dll.h
-	map_parameters.h
-	volume_render.h
-	volume_render_dock_tab.h
+add_library(schnapps::volume_render ALIAS plugin_volume_render)
+
+target_sources(${PROJECT_NAME}
+	PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/dll.h"
+		"${CMAKE_CURRENT_LIST_DIR}/map_parameters.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render_dock_tab.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render_dock_tab.cpp"
 )
 
-set(SOURCE_FILES
-	volume_render.cpp
-	volume_render_dock_tab.cpp
-)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+										DEBUG_POSTFIX "_d"
+										EXPORT_NAME volume_render)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_VOLUME_RENDER_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -33,21 +32,14 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-if (USE_TRANSPARENCY)
-	target_link_libraries(${PROJECT_NAME}
-		schnapps_core
-		plugin_surface_render_transp
-		${cgogn_core_LIBRARIES}
-		${cgogn_rendering_LIBRARIES}
-		${Qt5Widgets_LIBRARIES}
-		${QOGLViewer_LIBRARIES})
-else()
-	target_link_libraries(${PROJECT_NAME}
-		schnapps_core
-		${cgogn_core_LIBRARIES}
-		${cgogn_rendering_LIBRARIES}
-		${Qt5Widgets_LIBRARIES}
-		${QOGLViewer_LIBRARIES})
-endif()
+
+target_link_libraries(${PROJECT_NAME}
+	schnapps_core
+	cgogn_core
+	cgogn_rendering
+	Qt5::Widgets
+	QOGLViewer
+)
+
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(schnapps_core REQUIRED)
+
+if(NOT TARGET schnapps::surface_render_vector)
+	include("${CMAKE_CURRENT_LIST_DIR}/plugin_surface_render_vectorTargets.cmake")
+endif()
