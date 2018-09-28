@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(schnapps_core REQUIRED)
+
+if(NOT TARGET schnapps::import)
+	include("${CMAKE_CURRENT_LIST_DIR}/schnapps_importTargets.cmake")
+endif()
+

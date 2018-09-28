@@ -2,7 +2,7 @@ project(plugin_extract_surface
 	LANGUAGES CXX
 )
 
-find_package(cgogn_io REQUIRED)
+#find_package(cgogn_io REQUIRED)
 
 set(HEADER_FILES
 	dll.h

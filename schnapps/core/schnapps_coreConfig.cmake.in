@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(cgogn_core REQUIRED)
+find_dependency(cgogn_rendering REQUIRED)
+
+if(NOT TARGET schnapps::core)
+	include("${CMAKE_CURRENT_LIST_DIR}/schnapps_coreTargets.cmake")
+endif()
