@@ -24,8 +24,9 @@
 #include <schnapps/plugins/surface_differential_properties/dialog_compute_normal.h>
 #include <schnapps/plugins/surface_differential_properties/surface_differential_properties.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
@@ -36,17 +37,18 @@ namespace plugin_sdp
 ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p) :
 	schnapps_(s),
 	plugin_(p),
-	selected_map_(nullptr)
+	selected_map_(nullptr),
+	updating_ui_(false)
 {
 	setupUi(this);
 
-	if (plugin_->get_setting("Auto load position attribute").isValid())
-		setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute").toString();
+	if (plugin_->setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = plugin_->setting("Auto load position attribute").toString();
 	else
 		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
 
-	if (plugin_->get_setting("Default normal attribute name").isValid())
-		setting_default_normal_attribute_name_ = plugin_->get_setting("Default normal attribute name").toString();
+	if (plugin_->setting("Default normal attribute name").isValid())
+		setting_default_normal_attribute_name_ = plugin_->setting("Default normal attribute name").toString();
 	else
 		setting_default_normal_attribute_name_ = plugin_->add_setting("Default normal attribute name", "normal").toString();
 
@@ -57,10 +59,23 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferenti
 	connect(this, SIGNAL(accepted()), this, SLOT(compute_normal()));
 	connect(button_apply, SIGNAL(clicked()), this, SLOT(compute_normal()));
 
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
 
-	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+	schnapps_->foreach_object([this] (Object* o)
+	{
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		if (mh)
+			map_added(mh);
+	});
+
+	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+}
+
+ComputeNormal_Dialog::~ComputeNormal_Dialog()
+{
+	disconnect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	disconnect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
 }
 
 /*****************************************************************************/
@@ -70,76 +85,38 @@ ComputeNormal_Dialog::ComputeNormal_Dialog(SCHNApps* s, Plugin_SurfaceDifferenti
 void ComputeNormal_Dialog::selected_map_changed()
 {
 	if (selected_map_)
+	{
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
+
+	selected_map_ = nullptr;
 
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
 	{
-		combo_positionAttribute->clear();
-
 		const QString& map_name = currentItems[0]->text();
-		MapHandlerGen* mhg = schnapps_->get_map(map_name);
-		selected_map_ = dynamic_cast<CMap2Handler*>(mhg);
-
-		if (selected_map_)
-		{
-			const CMap2* map2 = selected_map_->get_map();
-			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
-			{
-				QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
-
-				const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
-				const std::vector<std::string>& names = container.names();
-				const std::vector<std::string>& type_names = container.type_names();
-
-				for (std::size_t i = 0u; i < names.size(); ++i)
-				{
-					QString name = QString::fromStdString(names[i]);
-					QString type = QString::fromStdString(type_names[i]);
-					if (type == vec3_type_name)
-						combo_positionAttribute->addItem(name);
-				}
-
-				if (plugin_->has_compute_normal_last_parameters(selected_map_))
-				{
-					const Plugin_SurfaceDifferentialProperties::ComputeNormalParameters& p = plugin_->get_compute_normal_last_parameters(selected_map_);
-
-					int idx = combo_positionAttribute->findText(p.position_name_);
-					if (idx == -1)
-						idx = combo_positionAttribute->findText(setting_auto_load_position_attribute_);
-					if (idx != -1)
-						combo_positionAttribute->setCurrentIndex(idx);
-
-					normal_attribute_name->setText(p.normal_name_);
-					check_create_vbo_normal->setChecked(p.create_vbo_normal_);
-				}
-				else
-				{
-					int idx = combo_positionAttribute->findText(setting_auto_load_position_attribute_);
-					if (idx != -1)
-						combo_positionAttribute->setCurrentIndex(idx);
-
-					normal_attribute_name->setText(setting_default_normal_attribute_name_);
-					check_create_vbo_normal->setChecked(false);
-				}
-			}
-			connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-		}
+		selected_map_ = plugin_cmap2_provider_->map(map_name);
 	}
-	else
-		selected_map_ = nullptr;
+
+	if (selected_map_)
+	{
+		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
+
+	refresh_ui();
 }
 
 void ComputeNormal_Dialog::compute_normal()
 {
-	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
-	if (!currentItems.empty())
+	if (selected_map_)
 	{
-		const QString& map_name = currentItems[0]->text();
+		const QString& map_name = selected_map_->name();
 		QString position_name = combo_positionAttribute->currentText();
 		QString normal_name = normal_attribute_name->text();
 		bool create_vbo_normal = check_create_vbo_normal->isChecked();
-		bool auto_update = currentItems[0]->checkState() == Qt::Checked;
+		bool auto_update = check_auto_update->isChecked();
 
 		plugin_->compute_normal(map_name, position_name, normal_name, create_vbo_normal, auto_update);
 	}
@@ -149,30 +126,47 @@ void ComputeNormal_Dialog::compute_normal()
 // slots called from SCHNApps signals
 /*****************************************************************************/
 
-void ComputeNormal_Dialog::map_added(MapHandlerGen* map)
+void ComputeNormal_Dialog::object_added(Object* o)
 {
-	if (map->dimension() == 2)
-	{
-		QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
-		item->setCheckState(Qt::Unchecked);
-	}
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_added(mh);
 }
 
-void ComputeNormal_Dialog::map_removed(MapHandlerGen* map)
+void ComputeNormal_Dialog::map_added(CMap2Handler *mh)
 {
-	QList<QListWidgetItem*> items = list_maps->findItems(map->get_name(), Qt::MatchExactly);
-	if (!items.empty())
-		delete items[0];
+	updating_ui_ = true;
+	list_maps->addItem(mh->name());
+	updating_ui_ = false;
+}
 
-	if (selected_map_ == map)
+void ComputeNormal_Dialog::object_removed(Object* o)
+{
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_removed(mh);
+}
+
+void ComputeNormal_Dialog::map_removed(CMap2Handler *mh)
+{
+	if (selected_map_ == mh)
 	{
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 		selected_map_ = nullptr;
+	}
+
+	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
+	if (!items.empty())
+	{
+		updating_ui_ = true;
+		delete items[0];
+		updating_ui_ = false;
 	}
 }
 
 /*****************************************************************************/
-// slots called from MapHandlerGen signals
+// slots called from CMap2Handler signals
 /*****************************************************************************/
 
 void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
@@ -181,13 +175,96 @@ void ComputeNormal_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, cons
 	{
 		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-		const CMap2* map2 = selected_map_->get_map();
-		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2* map = selected_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
 		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
 
 		if (attribute_type_name == vec3_type_name)
+		{
+			updating_ui_ = true;
 			combo_positionAttribute->addItem(attribute_name);
+			updating_ui_ = false;
+		}
 	}
+}
+
+void ComputeNormal_Dialog::selected_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
+		const CMap2* map = selected_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
+		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
+
+		if (attribute_type_name == vec3_type_name)
+		{
+			int index = combo_positionAttribute->findText(attribute_name, Qt::MatchExactly);
+			if (index > 0)
+			{
+				updating_ui_ = true;
+				combo_positionAttribute->removeItem(index);
+				updating_ui_ = false;
+			}
+		}
+	}
+}
+
+void ComputeNormal_Dialog::refresh_ui()
+{
+	updating_ui_ = true;
+
+	combo_positionAttribute->clear();
+
+	if (selected_map_)
+	{
+		const CMap2* map = selected_map_->map();
+
+		if (map->is_embedded<CMap2::Vertex>())
+		{
+			QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
+			const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
+			const std::vector<std::string>& names = container.names();
+			const std::vector<std::string>& type_names = container.type_names();
+
+			for (std::size_t i = 0u; i < names.size(); ++i)
+			{
+				QString name = QString::fromStdString(names[i]);
+				QString type = QString::fromStdString(type_names[i]);
+				if (type == vec3_type_name)
+					combo_positionAttribute->addItem(name);
+			}
+
+			if (plugin_->has_compute_normal_last_parameters(selected_map_))
+			{
+				const Plugin_SurfaceDifferentialProperties::ComputeNormalParameters& p = plugin_->get_compute_normal_last_parameters(selected_map_);
+
+				int idx = combo_positionAttribute->findText(p.position_name_);
+				if (idx == -1)
+					idx = combo_positionAttribute->findText(setting_auto_load_position_attribute_);
+				if (idx != -1)
+					combo_positionAttribute->setCurrentIndex(idx);
+
+				normal_attribute_name->setText(p.normal_name_);
+				check_create_vbo_normal->setChecked(p.create_vbo_normal_);
+				check_auto_update->setChecked(p.auto_update_);
+			}
+			else
+			{
+				int idx = combo_positionAttribute->findText(setting_auto_load_position_attribute_);
+				if (idx != -1)
+					combo_positionAttribute->setCurrentIndex(idx);
+
+				normal_attribute_name->setText(setting_default_normal_attribute_name_);
+				check_create_vbo_normal->setChecked(false);
+				check_auto_update->setChecked(false);
+			}
+		}
+	}
+
+	updating_ui_ = false;
 }
 
 } // namespace plugin_sdp

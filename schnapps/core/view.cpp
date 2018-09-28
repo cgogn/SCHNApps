@@ -214,7 +214,7 @@ void View::link_plugin(const QString& name, bool update_dialog_list)
 {
 	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
-		link_plugin(p);
+		link_plugin(p, update_dialog_list);
 }
 
 void View::unlink_plugin(PluginInteraction* plugin, bool update_dialog_list)
@@ -242,7 +242,7 @@ void View::unlink_plugin(const QString& name, bool update_dialog_list)
 {
 	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
-		unlink_plugin(p);
+		unlink_plugin(p, update_dialog_list);
 }
 
 bool View::is_linked_to_plugin(const QString& name) const
@@ -341,7 +341,7 @@ void View::init()
 {
 	this->makeCurrent();
 
-	qoglviewer::Camera* c = this->camera();
+//	qoglviewer::Camera* c = this->camera();
 	this->setCamera(current_camera_);
 //	delete c;
 
@@ -431,8 +431,8 @@ void View::draw()
 	{
 		QMatrix4x4 o_mm = mm * o->frame_matrix() * o->transformation_matrix();
 
-//		if (o->get_show_bb())
-//			o->draw_bb(this, pm, o_mm);
+//		if (o->show_bb())
+			o->draw_bb(this, pm, o_mm);
 
 		for (PluginInteraction* plugin : plugins_)
 			plugin->draw_object(this, o, pm, o_mm);

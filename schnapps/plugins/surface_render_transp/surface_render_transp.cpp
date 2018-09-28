@@ -57,7 +57,7 @@ bool Plugin_SurfaceRenderTransp::enable()
 void Plugin_SurfaceRenderTransp::disable()
 {}
 
-void Plugin_SurfaceRenderTransp::draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv)
+void Plugin_SurfaceRenderTransp::draw_object(View*, Object*, const QMatrix4x4&, const QMatrix4x4&)
 {}
 
 void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)

@@ -26,7 +26,7 @@
 
 #include <schnapps/plugins/cmap2_provider/dll.h>
 
-#include <cgogn/core/utils/numerics.h>
+#include <schnapps/core/types.h>
 
 #include <ui_cmap2_provider.h>
 

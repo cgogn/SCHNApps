@@ -93,7 +93,7 @@ void ControlDock_CameraTab::selected_camera_changed()
 	}
 }
 
-void ControlDock_CameraTab::camera_projection_changed(QAbstractButton* b)
+void ControlDock_CameraTab::camera_projection_changed(QAbstractButton*)
 {
 	if (!updating_ui_ && selected_camera_)
 	{

@@ -33,7 +33,6 @@
 namespace schnapps
 {
 
-
 namespace plugin_cmap2_provider
 {
 class Plugin_CMap2Provider;

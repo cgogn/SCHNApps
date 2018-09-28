@@ -328,7 +328,11 @@ void SurfaceRender_DockTab::object_removed(Object* o)
 void SurfaceRender_DockTab::map_removed(CMap2Handler *mh)
 {
 	if (selected_map_ == mh)
+	{
+		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 		selected_map_ = nullptr;
+	}
 
 	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
 	if (!items.empty())
@@ -346,7 +350,7 @@ void SurfaceRender_DockTab::selected_view_changed(View* old, View* cur)
 }
 
 /*****************************************************************************/
-// slots called from MapHandlerGen signals
+// slots called from CMap2Handler signals
 /*****************************************************************************/
 
 void SurfaceRender_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)

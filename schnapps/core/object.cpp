@@ -31,7 +31,8 @@ Object::Object(const QString& name, PluginProvider* p) :
 	name_(name),
 	provider_(p),
 	bb_diagonal_size_(.0f),
-	show_bb_(true)
+	show_bb_(true),
+	bb_color_(Qt::green)
 {
 	connect(&frame_, SIGNAL(manipulated()), this, SLOT(frame_changed()));
 	transformation_matrix_.setToIdentity();
@@ -39,36 +40,6 @@ Object::Object(const QString& name, PluginProvider* p) :
 
 Object::~Object()
 {}
-
-void Object::link_view(View* view)
-{
-	if (view && !is_linked_to_view(view))
-	{
-		views_.push_back(view);
-		view_linked(view);
-		connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
-	}
-}
-
-void Object::unlink_view(View* view)
-{
-	if (is_linked_to_view(view))
-	{
-		disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
-		views_.remove(view);
-		view_unlinked(view);
-	}
-}
-
-void Object::viewer_initialized()
-{
-	View* view = dynamic_cast<View*>(sender());
-	if (view)
-	{
-		view->makeCurrent();
-		bb_drawer_renderer_[view] = bb_drawer_.generate_renderer();
-	}
-}
 
 QMatrix4x4 Object::frame_matrix() const
 {
@@ -179,6 +150,44 @@ void Object::update_bb_drawer()
 			bb_drawer_.vertex3f(bbmax[0], bbmin[1], bbmax[2]);
 		bb_drawer_.end();
 		bb_drawer_.end_list();
+	}
+}
+
+void Object::draw_bb(View* view, const QMatrix4x4 &pm, const QMatrix4x4 &mm)
+{
+	bb_drawer_renderer_[view]->draw(pm, mm);
+}
+
+void Object::link_view(View* view)
+{
+	if (view && !is_linked_to_view(view))
+	{
+		views_.push_back(view);
+		view_linked(view);
+		view->makeCurrent();
+		bb_drawer_renderer_[view] = bb_drawer_.generate_renderer();
+		connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
+	}
+}
+
+void Object::unlink_view(View* view)
+{
+	if (is_linked_to_view(view))
+	{
+		disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
+		bb_drawer_renderer_.erase(view);
+		views_.remove(view);
+		view_unlinked(view);
+	}
+}
+
+void Object::viewer_initialized()
+{
+	View* view = dynamic_cast<View*>(sender());
+	if (view)
+	{
+		view->makeCurrent();
+		bb_drawer_renderer_[view] = bb_drawer_.generate_renderer();
 	}
 }
 

@@ -25,6 +25,7 @@
 #define SCHNAPPS_CORE_SETTINGS_H_
 
 #include <schnapps/core/dll.h>
+
 #include <QVariantMap>
 #include <QStringList>
 #include <memory>

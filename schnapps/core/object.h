@@ -92,6 +92,7 @@ public:
 	bool transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const;
 
 	void update_bb_drawer();
+	void draw_bb(View* view, const QMatrix4x4& pm, const QMatrix4x4& mm);
 
 private:
 

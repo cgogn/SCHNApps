@@ -61,10 +61,10 @@ bool Plugin_Import::enable()
 	else
 		setting_bbox_name_ = add_setting("Bounding box attribute", "position").toString();
 
-	if (setting("Compute VBO").isValid())
-		setting_vbo_names_ = setting("Compute VBO").toStringList();
+	if (setting("Create VBO").isValid())
+		setting_vbo_names_ = setting("Create VBO").toStringList();
 	else
-		setting_vbo_names_ = add_setting("Compute VBO", QStringList({"position", "normal", "color"})).toStringList();
+		setting_vbo_names_ = add_setting("Create VBO", QStringList({"position", "normal", "color"})).toStringList();
 
 	if (setting("Default path").isValid())
 		setting_default_path_ = setting("Default path").toString();

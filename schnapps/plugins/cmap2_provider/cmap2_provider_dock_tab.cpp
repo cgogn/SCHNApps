@@ -32,7 +32,9 @@ namespace plugin_cmap2_provider
 
 CMap2Provider_DockTab::CMap2Provider_DockTab(SCHNApps* s, Plugin_CMap2Provider* p) :
 	schnapps_(s),
-	plugin_(p)
+	plugin_(p),
+	selected_map_(nullptr),
+	updating_ui_(false)
 {
 	setupUi(this);
 

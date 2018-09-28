@@ -26,19 +26,29 @@
 
 #include <schnapps/plugins/surface_differential_properties/dll.h>
 
+#include <schnapps/core/types.h>
+
 #include <ui_dialog_compute_curvature.h>
 
-#include <schnapps/core/map_handler.h>
+namespace cgogn { enum Orbit: numerics::uint32; }
 
 namespace schnapps
 {
 
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
+
 class SCHNApps;
+class Object;
 
 namespace plugin_sdp
 {
 
 class Plugin_SurfaceDifferentialProperties;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 class SCHNAPPS_PLUGIN_SDP_API ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
 {
@@ -47,13 +57,18 @@ class SCHNAPPS_PLUGIN_SDP_API ComputeCurvature_Dialog : public QDialog, public U
 public:
 
 	ComputeCurvature_Dialog(SCHNApps* s, Plugin_SurfaceDifferentialProperties* p);
+	~ComputeCurvature_Dialog() override;
 
 private:
 
 	SCHNApps* schnapps_;
 	Plugin_SurfaceDifferentialProperties* plugin_;
 
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+
 	CMap2Handler* selected_map_;
+
+	bool updating_ui_;
 
 	QString setting_auto_load_position_attribute_;
 	QString setting_auto_load_normal_attribute_;
@@ -67,11 +82,24 @@ private:
 
 private slots:
 
-	void compute_curvature();
+	// slots called from UI signals
 	void selected_map_changed();
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
+	void compute_curvature();
+
+	// slots called from SCHNApps signals
+	void object_added(Object* o);
+	void object_removed(Object* o);
+
+	// slots called from MapHandlerGen signals
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name);
+
+private:
+
+	void refresh_ui();
+
+	void map_added(CMap2Handler* mh);
+	void map_removed(CMap2Handler* mh);
 };
 
 } // namespace plugin_sdp

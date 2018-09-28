@@ -65,7 +65,6 @@ public:
 	inline CMap2* map() const { return map_; }
 
 	void view_linked(View*) {}
-
 	void view_unlinked(View*) {}
 
 	/**********************************************************
@@ -170,7 +169,7 @@ public:
 
 private:
 
-	inline void compute_bb()
+	void compute_bb()
 	{
 		this->bb_.reset();
 
@@ -210,6 +209,14 @@ public:
 			return res;
 		}
 		return false;
+	}
+
+	bool remove_attribute(cgogn::Orbit orbit, const QString& att_name)
+	{
+		const bool res = map()->remove_attribute(orbit, att_name.toStdString());
+		if (res)
+			emit(attribute_removed(orbit, att_name));
+		return res;
 	}
 
 	void notify_attribute_added(cgogn::Orbit, const QString&);
