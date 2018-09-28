@@ -129,21 +129,11 @@ public slots:
 	 * MANAGE LINKED PLUGINS
 	 *********************************************************/
 
-	void link_plugin(PluginInteraction* plugin);
+	void link_plugin(PluginInteraction* plugin, bool update_dialog_list = true);
+	void link_plugin(const QString& name, bool update_dialog_list = true);
 
-	/**
-	* @brief link a plugin with the view
-	* @param name the name of plugin
-	*/
-	void link_plugin(const QString& name);
-
-	void unlink_plugin(PluginInteraction* plugin);
-
-	/**
-	* @brief unlink a plugin of the view
-	* @param name the name of plugin
-	*/
-	void unlink_plugin(const QString& name);
+	void unlink_plugin(PluginInteraction* plugin, bool update_dialog_list = true);
+	void unlink_plugin(const QString& name, bool update_dialog_list = true);
 
 	inline const std::list<PluginInteraction*>& linked_plugins() const { return plugins_; }
 
@@ -162,11 +152,11 @@ public slots:
 	 * MANAGE LINKED OBJECTS
 	 *********************************************************/
 
-	void link_object(Object* o);
-	void link_object(const QString& name);
+	void link_object(Object* o, bool update_dialog_list = true);
+	void link_object(const QString& name, bool update_dialog_list = true);
 
-	void unlink_object(Object* o);
-	void unlink_object(const QString& name);
+	void unlink_object(Object* o, bool update_dialog_list = true);
+	void unlink_object(const QString& name, bool update_dialog_list = true);
 
 	inline const std::list<Object*>& linked_objects() const { return objects_; }
 

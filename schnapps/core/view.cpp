@@ -189,7 +189,7 @@ bool View::uses_camera(const QString& name) const
  * MANAGE LINKED PLUGINS
  *********************************************************/
 
-void View::link_plugin(PluginInteraction* plugin)
+void View::link_plugin(PluginInteraction* plugin, bool update_dialog_list)
 {
 	if (plugin && !is_linked_to_plugin(plugin))
 	{
@@ -198,23 +198,26 @@ void View::link_plugin(PluginInteraction* plugin)
 
 		emit(plugin_linked(plugin));
 
-		updating_ui_ = true;
-		if (!plugin->auto_activate())
-			dialog_plugins_->check(plugin->name(), Qt::Checked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			if (!plugin->auto_activate())
+				dialog_plugins_->check(plugin->name(), Qt::Checked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::link_plugin(const QString& name)
+void View::link_plugin(const QString& name, bool update_dialog_list)
 {
 	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
 		link_plugin(p);
 }
 
-void View::unlink_plugin(PluginInteraction* plugin)
+void View::unlink_plugin(PluginInteraction* plugin, bool update_dialog_list)
 {
 	if (is_linked_to_plugin(plugin))
 	{
@@ -223,16 +226,19 @@ void View::unlink_plugin(PluginInteraction* plugin)
 
 		emit(plugin_unlinked(plugin));
 
-		updating_ui_ = true;
-		if (!plugin->auto_activate())
-			dialog_plugins_->check(plugin->name(), Qt::Unchecked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			if (!plugin->auto_activate())
+				dialog_plugins_->check(plugin->name(), Qt::Unchecked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::unlink_plugin(const QString& name)
+void View::unlink_plugin(const QString& name, bool update_dialog_list)
 {
 	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
@@ -249,7 +255,7 @@ bool View::is_linked_to_plugin(const QString& name) const
  * MANAGE LINKED MAPS
  *********************************************************/
 
-void View::link_object(Object* o)
+void View::link_object(Object* o, bool update_dialog_list)
 {
 	if (o && !is_linked_to_object(o))
 	{
@@ -265,29 +271,30 @@ void View::link_object(Object* o)
 
 		update_bb();
 
-		updating_ui_ = true;
-		dialog_objects_->check(o->name(), Qt::Checked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			dialog_objects_->check(o->provider()->name() + "/" + o->name(), Qt::Checked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::link_object(const QString& name)
+void View::link_object(const QString& name, bool update_dialog_list)
 {
-	std::cout << "link_object: " << name.toStdString() << std::endl;
 	QStringList names = name.split('/');
-	std::cout << names.at(0).toStdString() << " , " << names.at(1).toStdString() << std::endl;
 	PluginProvider* provider = dynamic_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
 	if (provider)
 	{
 		Object* o = provider->object(names.at(1));
 		if (o)
-			link_object(o);
+			link_object(o, update_dialog_list);
 	}
 }
 
-void View::unlink_object(Object* o)
+void View::unlink_object(Object* o, bool update_dialog_list)
 {
 	if (is_linked_to_object(o))
 	{
@@ -303,15 +310,18 @@ void View::unlink_object(Object* o)
 
 		update_bb();
 
-		updating_ui_ = true;
-		dialog_objects_->check(o->name(), Qt::Unchecked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			dialog_objects_->check(o->provider()->name() + "/" + o->name(), Qt::Unchecked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::unlink_object(const QString& name)
+void View::unlink_object(const QString& name, bool update_dialog_list)
 {
 	QStringList names = name.split('/');
 	PluginProvider* provider = dynamic_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
@@ -319,7 +329,7 @@ void View::unlink_object(const QString& name)
 	{
 		Object* o = provider->object(names.at(1));
 		if (o)
-			unlink_object(o);
+			unlink_object(o, update_dialog_list);
 	}
 }
 
@@ -633,13 +643,7 @@ void View::object_added(Object* o)
 	{
 		dialog_objects_->add_item(o->provider()->name() + "/" + o->name());
 		if (schnapps_->get_core_setting("Add object to selected view").toBool() && is_selected_view())
-		{
 			link_object(o);
-
-			updating_ui_ = true;
-			dialog_objects_->check(o->name(), Qt::Checked);
-			updating_ui_ = false;
-		}
 	}
 }
 
@@ -654,9 +658,9 @@ void View::object_check_state_changed(QListWidgetItem* item)
 	if (!updating_ui_)
 	{
 		if (item->checkState() == Qt::Checked)
-			link_object(item->text());
+			link_object(item->text(), false);
 		else
-			unlink_object(item->text());
+			unlink_object(item->text(), false);
 	}
 }
 
@@ -677,9 +681,9 @@ void View::plugin_check_state_changed(QListWidgetItem* item)
 	if (!updating_ui_)
 	{
 		if (item->checkState() == Qt::Checked)
-			link_plugin(item->text());
+			link_plugin(item->text(), false);
 		else
-			unlink_plugin(item->text());
+			unlink_plugin(item->text(), false);
 	}
 }
 
