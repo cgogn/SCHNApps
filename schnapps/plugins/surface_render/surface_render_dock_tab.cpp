@@ -26,10 +26,6 @@
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
 
-//#ifdef USE_TRANSPARENCY
-//#include <schnapps/plugins/surface_render_transp/surface_render_transp.h>
-//#endif
-
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 
@@ -42,9 +38,11 @@ namespace plugin_surface_render
 SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p) :
 	schnapps_(s),
 	plugin_(p),
+	plugin_cmap2_provider_(nullptr),
 	selected_map_(nullptr),
-	current_color_dial_(0),
-	updating_ui_(false)
+	updating_ui_(false),
+	color_dial_(nullptr),
+	current_color_dial_(0)
 {
 	setupUi(this);
 
@@ -127,24 +125,21 @@ void SurfaceRender_DockTab::selected_map_changed()
 		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 	}
-
-	if (plugin_->check_docktab_activation())
-		refresh_ui();
 }
 
-void SurfaceRender_DockTab::position_vbo_changed(int index)
+void SurfaceRender_DockTab::position_vbo_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 		plugin_->set_position_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_positionVBO->currentText()), false);
 }
 
-void SurfaceRender_DockTab::normal_vbo_changed(int index)
+void SurfaceRender_DockTab::normal_vbo_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 		plugin_->set_normal_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_normalVBO->currentText()), false);
 }
 
-void SurfaceRender_DockTab::color_vbo_changed(int index)
+void SurfaceRender_DockTab::color_vbo_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 		plugin_->set_color_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_colorVBO->currentText()), false);
@@ -180,7 +175,7 @@ void SurfaceRender_DockTab::render_backfaces_changed(bool b)
 		plugin_->set_render_backfaces(schnapps_->selected_view(), selected_map_, b, false);
 }
 
-void SurfaceRender_DockTab::face_style_changed(QAbstractButton* b)
+void SurfaceRender_DockTab::face_style_changed(QAbstractButton*)
 {
 	if (!updating_ui_ && selected_map_)
 	{
@@ -343,7 +338,7 @@ void SurfaceRender_DockTab::map_removed(CMap2Handler *mh)
 	}
 }
 
-void SurfaceRender_DockTab::selected_view_changed(View* old, View* cur)
+void SurfaceRender_DockTab::selected_view_changed(View*, View*)
 {
 	if (plugin_->check_docktab_activation())
 		refresh_ui();

@@ -116,7 +116,7 @@ private slots:
 
 	void enable_on_selected_view(Plugin* p);
 
-public slots:
+public:
 
 	void set_position_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
 	void set_normal_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);

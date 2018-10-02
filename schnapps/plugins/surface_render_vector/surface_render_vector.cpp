@@ -24,6 +24,8 @@
 #include <schnapps/plugins/surface_render_vector/surface_render_vector.h>
 #include <schnapps/plugins/surface_render_vector/surface_render_vector_dock_tab.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
@@ -43,31 +45,29 @@ QString Plugin_SurfaceRenderVector::plugin_name()
 	return SCHNAPPS_PLUGIN_NAME;
 }
 
-MapParameters& Plugin_SurfaceRenderVector::get_parameters(View* view, MapHandlerGen* map)
+MapParameters& Plugin_SurfaceRenderVector::parameters(View* view, CMap2Handler* mh)
 {
 	cgogn_message_assert(view, "Try to access parameters for null view");
-	cgogn_message_assert(map, "Try to access parameters for null map");
-	cgogn_message_assert(map->dimension() == 2, "Try to access parameters for map with dimension other than 2");
+	cgogn_message_assert(mh, "Try to access parameters for null map");
 
 	view->makeCurrent();
 
 	auto& view_param_set = parameter_set_[view];
-	if (view_param_set.count(map) == 0)
+	if (view_param_set.count(mh) == 0)
 	{
-		MapParameters& p = view_param_set[map];
-		p.map_ = static_cast<CMap2Handler*>(map);
+		MapParameters& p = view_param_set[mh];
+		p.mh_ = static_cast<CMap2Handler*>(mh);
 		return p;
 	}
 	else
-		return view_param_set[map];
+		return view_param_set[mh];
 }
 
 bool Plugin_SurfaceRenderVector::check_docktab_activation()
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
+	View* view = schnapps_->selected_view();
 
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (view && view->is_linked_to_plugin(this))
 	{
 		schnapps_->enable_plugin_tab_widgets(this);
 		return true;
@@ -81,8 +81,8 @@ bool Plugin_SurfaceRenderVector::check_docktab_activation()
 
 bool Plugin_SurfaceRenderVector::enable()
 {
-	if (get_setting("Auto load position attribute").isValid())
-		setting_auto_load_position_attribute_ = get_setting("Auto load position attribute").toString();
+	if (setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = setting("Auto load position attribute").toString();
 	else
 		setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position").toString();
 
@@ -98,19 +98,20 @@ void Plugin_SurfaceRenderVector::disable()
 	delete dock_tab_;
 }
 
-void Plugin_SurfaceRenderVector::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
+void Plugin_SurfaceRenderVector::draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	if (map->dimension() == 2)
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
 	{
 		view->makeCurrent();
-		const MapParameters& p = get_parameters(view, map);
+		const MapParameters& p = parameters(view, mh);
 
 		if (p.position_vbo_)
 		{
-			for (auto& param : p.get_shader_params())
+			for (auto& param : p.shader_params())
 			{
 				param->bind(proj, mv);
-				map->draw(cgogn::rendering::POINTS);
+				mh->draw(cgogn::rendering::POINTS);
 				param->release();
 			}
 		}
@@ -122,11 +123,16 @@ void Plugin_SurfaceRenderVector::view_linked(View* view)
 	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
-	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(view, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { add_linked_map(view, map); }
+	for (Object* o : view->linked_objects())
+	{
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		if (mh)
+			add_linked_map(view, mh);
+	}
 }
 
 void Plugin_SurfaceRenderVector::view_unlinked(View* view)
@@ -134,72 +140,69 @@ void Plugin_SurfaceRenderVector::view_unlinked(View* view)
 	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
-	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	disconnect(view, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { remove_linked_map(view, map); }
-}
-
-void Plugin_SurfaceRenderVector::map_linked(MapHandlerGen *map)
-{
-	View* view = static_cast<View*>(sender());
-	add_linked_map(view, map);
-}
-
-void Plugin_SurfaceRenderVector::add_linked_map(View* view, MapHandlerGen *map)
-{
-	if (map->dimension() == 2)
+	for (Object* o : view->linked_objects())
 	{
-		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), true);
-
-		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
-
-		if (check_docktab_activation())
-			dock_tab_->refresh_ui();
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		if (mh)
+			remove_linked_map(view, mh);
 	}
 }
 
-void Plugin_SurfaceRenderVector::map_unlinked(MapHandlerGen *map)
+void Plugin_SurfaceRenderVector::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	remove_linked_map(view, map);
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		add_linked_map(view, mh);
 }
 
-void Plugin_SurfaceRenderVector::remove_linked_map(View* view, MapHandlerGen *map)
+void Plugin_SurfaceRenderVector::add_linked_map(View* view, CMap2Handler* mh)
 {
-	if (map->dimension() == 2)
-	{
-		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
-		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
-		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
+	set_position_vbo(view, mh, mh->vbo(setting_auto_load_position_attribute_), true);
 
-		if (check_docktab_activation())
-			dock_tab_->refresh_ui();
-	}
+	connect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
+}
+
+void Plugin_SurfaceRenderVector::object_unlinked(Object* o)
+{
+	View* view = static_cast<View*>(sender());
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		remove_linked_map(view, mh);
+}
+
+void Plugin_SurfaceRenderVector::remove_linked_map(View*, CMap2Handler* mh)
+{
+	disconnect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
+	disconnect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
+	disconnect(mh, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
 }
 
 void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
 		{
-			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-			if (view_param_set.count(map) > 0ul)
+			std::map<CMap2Handler*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(mh) > 0ul)
 			{
-				MapParameters& p = view_param_set[map];
+				MapParameters& p = view_param_set[mh];
 				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
-					set_position_vbo(it.first, map, vbo, true);
+					set_position_vbo(it.first, mh, vbo, true);
 			}
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
@@ -208,42 +211,42 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
-			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-			if (view_param_set.count(map) > 0ul)
+			std::map<CMap2Handler*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(mh) > 0ul)
 			{
-				MapParameters& p = view_param_set[map];
+				MapParameters& p = view_param_set[mh];
 				if (p.position_vbo_ == vbo)
-					set_position_vbo(it.first, map, nullptr, true);
-				if (p.get_vector_vbo_index(vbo) != UINT32_MAX)
-					remove_vector_vbo(it.first, map, vbo, true);
+					set_position_vbo(it.first, mh, nullptr, true);
+				if (p.vector_vbo_index(vbo) != UINT32_MAX)
+					remove_vector_vbo(it.first, mh, vbo, true);
 			}
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
 
 void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 {
-	MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
 
 	for (auto& it : parameter_set_)
 	{
-		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-		if (view_param_set.count(map) > 0)
+		std::map<CMap2Handler*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(mh) > 0)
 		{
-			MapParameters& p = view_param_set[map];
+			MapParameters& p = view_param_set[mh];
 			for (uint32 i = 0, size = p.vector_scale_factor_list_.size(); i < size; ++i)
-				set_vector_scale_factor(it.first, map, p.get_vector_vbo(i), p.vector_scale_factor_list_[i], true);
+				set_vector_scale_factor(it.first, mh, p.vector_vbo(i), p.vector_scale_factor_list_[i], true);
 		}
 	}
 
-	for (View* view : map->get_linked_views())
+	for (View* view : mh->linked_views())
 		view->update();
 }
 
@@ -262,68 +265,68 @@ void Plugin_SurfaceRenderVector::viewer_initialized()
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_SurfaceRenderVector::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+void Plugin_SurfaceRenderVector::set_position_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_position_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_position_vbo(vbo);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderVector::add_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+void Plugin_SurfaceRenderVector::add_vector_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.add_vector_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->add_vector_vbo(vbo);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderVector::remove_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+void Plugin_SurfaceRenderVector::remove_vector_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.remove_vector_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->remove_vector_vbo(vbo);
 		view->update();
 	}
 }
 
-void Plugin_SurfaceRenderVector::set_vector_scale_factor(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, float32 sf, bool update_dock_tab)
+void Plugin_SurfaceRenderVector::set_vector_scale_factor(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, float32 sf, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
-		const uint32 index = p.get_vector_vbo_index(vbo);
+		MapParameters& p = parameters(view, mh);
+		const uint32 index = p.vector_vbo_index(vbo);
 		if (index != UINT32_MAX)
 		{
 			p.set_vector_scale_factor(index, sf);
-			if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 				dock_tab_->set_vector_size(vbo, sf);
 			view->update();
 		}
 	}
 }
 
-void Plugin_SurfaceRenderVector::set_vector_color(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, const QColor& color, bool update_dock_tab)
+void Plugin_SurfaceRenderVector::set_vector_color(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, const QColor& color, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
-		const uint32 index = p.get_vector_vbo_index(vbo);
+		MapParameters& p = parameters(view, mh);
+		const uint32 index = p.vector_vbo_index(vbo);
 		if (index != UINT32_MAX)
 		{
 			p.set_vector_color(index, color);
-			if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+			if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 				dock_tab_->set_vector_color(vbo, color);
 			view->update();
 		}

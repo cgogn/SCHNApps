@@ -127,11 +127,11 @@ void Plugin_SurfaceRender::disable()
 
 void Plugin_SurfaceRender::draw_object(View* view, Object *o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap2Handler* map = dynamic_cast<CMap2Handler*>(o);
-	if (map)
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
 	{
 		view->makeCurrent();
-		MapParameters& p = parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 
 		if (p.render_faces_ && !p.use_transparency_)
 		{
@@ -149,14 +149,14 @@ void Plugin_SurfaceRender::draw_object(View* view, Object *o, const QMatrix4x4& 
 					{
 						case MapParameters::FaceShadingStyle::FLAT:
 							p.shader_flat_color_param_->bind(proj, mv);
-							map->draw(cgogn::rendering::TRIANGLES);
+							mh->draw(cgogn::rendering::TRIANGLES);
 							p.shader_flat_color_param_->release();
 							break;
 						case MapParameters::FaceShadingStyle::PHONG:
 							if (p.normal_vbo_)
 							{
 								p.shader_phong_color_param_->bind(proj, mv);
-								map->draw(cgogn::rendering::TRIANGLES);
+								mh->draw(cgogn::rendering::TRIANGLES);
 								p.shader_phong_color_param_->release();
 							}
 							break;
@@ -168,14 +168,14 @@ void Plugin_SurfaceRender::draw_object(View* view, Object *o, const QMatrix4x4& 
 					{
 						case MapParameters::FaceShadingStyle::FLAT:
 							p.shader_flat_param_->bind(proj, mv);
-							map->draw(cgogn::rendering::TRIANGLES);
+							mh->draw(cgogn::rendering::TRIANGLES);
 							p.shader_flat_param_->release();
 							break;
 						case MapParameters::FaceShadingStyle::PHONG:
 							if (p.normal_vbo_)
 							{
 								p.shader_phong_param_->bind(proj, mv);
-								map->draw(cgogn::rendering::TRIANGLES);
+								mh->draw(cgogn::rendering::TRIANGLES);
 								p.shader_phong_param_->release();
 							}
 							break;
@@ -190,7 +190,7 @@ void Plugin_SurfaceRender::draw_object(View* view, Object *o, const QMatrix4x4& 
 			if (p.position_vbo_)
 			{
 				p.shader_simple_color_param_->bind(proj, mv);
-				map->draw(cgogn::rendering::LINES);
+				mh->draw(cgogn::rendering::LINES);
 				p.shader_simple_color_param_->release();
 			}
 		}
@@ -200,7 +200,7 @@ void Plugin_SurfaceRender::draw_object(View* view, Object *o, const QMatrix4x4& 
 			if (p.position_vbo_)
 			{
 				p.shader_point_sprite_param_->bind(proj, mv);
-				map->draw(cgogn::rendering::POINTS);
+				mh->draw(cgogn::rendering::POINTS);
 				p.shader_point_sprite_param_->release();
 			}
 		}
@@ -210,7 +210,7 @@ void Plugin_SurfaceRender::draw_object(View* view, Object *o, const QMatrix4x4& 
 			if (p.position_vbo_)
 			{
 				p.shader_simple_color_param_boundary_->bind(proj, mv);
-				map->draw(cgogn::rendering::BOUNDARY);
+				mh->draw(cgogn::rendering::BOUNDARY);
 				p.shader_simple_color_param_boundary_->release();
 			}
 		}
@@ -278,9 +278,6 @@ void Plugin_SurfaceRender::add_linked_map(View* view, CMap2Handler* mh)
 	connect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 	connect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 	connect(mh, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
-
-	if (check_docktab_activation())
-		dock_tab_->refresh_ui();
 }
 
 void Plugin_SurfaceRender::object_unlinked(Object* o)
@@ -302,9 +299,6 @@ void Plugin_SurfaceRender::remove_linked_map(View* view, CMap2Handler* mh)
 	if (p.use_transparency_)
 		remove_transparency(view, mh);
 #endif
-
-	if (check_docktab_activation())
-		dock_tab_->refresh_ui();
 }
 
 void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
