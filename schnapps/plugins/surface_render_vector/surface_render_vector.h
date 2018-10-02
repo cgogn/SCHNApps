@@ -32,10 +32,6 @@
 
 #include <schnapps/plugins/surface_render_vector/map_parameters.h>
 
-//#include <cgogn/rendering/shaders/shader_vector_per_vertex.h>
-
-#include <QAction>
-
 namespace schnapps
 {
 
