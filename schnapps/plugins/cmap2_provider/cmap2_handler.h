@@ -25,13 +25,12 @@
 #define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_CMAP2_HANDLER_H_
 
 #include <schnapps/plugins/cmap2_provider/dll.h>
-//#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/object.h>
 
 #include <cgogn/geometry/algos/bounding_box.h>
-
+#include <cgogn/core/cmap/cmap2.h>
 #include <cgogn/rendering/map_render.h>
 
 #include <QString>
@@ -44,6 +43,9 @@ class PluginProvider;
 
 namespace plugin_cmap2_provider
 {
+
+class CMap2CellsSetGen;
+template <typename CELL> class CMap2CellsSet;
 
 class SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API CMap2Handler : public Object
 {
@@ -91,43 +93,46 @@ public:
 			f(vbo_it.second.get());
 	}
 
-//	/**********************************************************
-//	 * MANAGE CELLS SETS                                      *
-//	 *********************************************************/
+	/**********************************************************
+	 * MANAGE CELLS SETS                                      *
+	 *********************************************************/
 
-//	template <typename CellType>
-//	CMap2CellsSet<CellType>* add_cells_set(QString name = "")
-//	{
+	CMap2CellsSetGen* add_cells_set(cgogn::Orbit orbit, QString name);
+	void remove_cells_set(cgogn::Orbit orbit, const QString& name);
 
-//	}
+	CMap2CellsSetGen* cells_set(cgogn::Orbit orbit, const QString& name)
+	{
+		if (cells_sets_[orbit].count(name) > 0ul)
+				return cells_sets_[orbit].at(name);
+			else
+				return nullptr;
+	}
 
-//	template <typename CellType>
-//	void remove_cells_set(const QString& name)
-//	{
+	template <typename CellType>
+	CMap2CellsSet<CellType>* cells_set(const QString& name)
+	{
+		static const cgogn::Orbit ORBIT = CellType::ORBIT;
+		if (cells_sets_[ORBIT].count(name) > 0ul)
+				return static_cast<CMap2CellsSet<CellType>*>(cells_sets_[ORBIT].at(name));
+			else
+				return nullptr;
+	}
 
-//	}
+	template <typename CellType, typename FUNC>
+	void foreach_cells_set(const FUNC& f) const
+	{
+		static_assert(cgogn::is_func_parameter_same<FUNC, CMap2CellsSet<CellType>*>::value, "Wrong function parameter type");
+		static const cgogn::Orbit ORBIT = CellType::ORBIT;
+		for (const auto& cells_set_it : cells_sets_[ORBIT])
+			f(static_cast<CMap2CellsSet<CellType>*>(cells_set_it.second));
+	}
 
-//	template <typename CellType>
-//	CMap2CellsSet<CellType> cells_set(const QString& name)
-//	{
-
-//	}
-
-//	template <typename CellType, typename FUNC>
-//	CMap2CellsSet<CellType> foreach_cells_set(const FUNC& f)
-//	{
-//		static_assert(cgogn::is_func_parameter_same<FUNC, CMap2CellsSet<CellType>*>::value, "Wrong function parameter type");
-//		static const cgogn::Orbit ORBIT = CellType::ORBIT;
-//		for (const auto& cells_set_it : cells_sets_[ORBIT])
-//			f(cells_set_it.second);
-//	}
-
-//	template <typename CellType>
-//	void notify_cells_set_mutually_exclusive_change(const QString& name)
-//	{
-//		static const cgogn::Orbit ORBIT = CellType::ORBIT;
-//		emit(cells_set_mutually_exclusive_changed(ORBIT, name));
-//	}
+	template <typename CellType>
+	void notify_cells_set_mutually_exclusive_change(const QString& name) const
+	{
+		static const cgogn::Orbit ORBIT = CellType::ORBIT;
+		emit(cells_set_mutually_exclusive_changed(ORBIT, name));
+	}
 
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
@@ -228,56 +233,6 @@ public:
 	void lock_topo_access() { topo_access_.lock(); }
 	void unlock_topo_access() { topo_access_.unlock(); }
 
-//	/*********************************************************
-//	 * MANAGE CELLS SETS
-//	 *********************************************************/
-
-//	CellsSetGen* add_cells_set(CellType ct, QString name = "") override
-//	{
-//		if (name.isEmpty())
-//			name = QString::fromStdString(cell_type_name(ct)) + QString("_set_") + QString::number(CellsSetGen::cells_set_count_);
-
-//		if (this->cells_sets_[ct].count(name) > 0ul)
-//			return nullptr;
-
-//		switch (ct)
-//		{
-//			case Dart_Cell:
-//				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, CDart>>(*this, name)));
-//				break;
-//			case Vertex_Cell:
-//				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Vertex>>(*this, name)));
-//				break;
-//			case Edge_Cell:
-//				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Edge>>(*this, name)));
-//				break;
-//			case Face_Cell:
-//				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Face>>(*this, name)));
-//				break;
-//			case Volume_Cell:
-//				this->cells_sets_[ct].insert(std::make_pair(name, cgogn::make_unique<CellsSet<MAP_TYPE, Volume>>(*this, name)));
-//				break;
-//			default:
-//				break;
-//		}
-
-//		CellsSetGen* cells_set = this->cells_sets_[ct].at(name).get();
-//		emit(cells_set_added(ct, name));
-//		connect(this, SIGNAL(connectivity_changed()), cells_set, SLOT(rebuild()));
-//		return cells_set;
-//	}
-
-//	void remove_cells_set(CellType ct, const QString& name) override
-//	{
-//		const auto cells_set_it = cells_sets_[ct].find(name);
-//		if (cells_set_it == cells_sets_[ct].end())
-//			return;
-//		disconnect(this, SIGNAL(connectivity_changed()), cells_set_it->second.get(), SLOT(rebuild()));
-//		auto tmp = std::move(cells_set_it->second); // the object shall not be destroyed before the signal 'cells_set_removed' is processed.
-//		cells_sets_[ct].erase(cells_set_it);
-//		emit(cells_set_removed(ct, name));
-//	}
-
 signals:
 
 	void bb_vertex_attribute_changed(const QString&);
@@ -289,10 +244,10 @@ signals:
 	void attribute_removed(cgogn::Orbit, const QString&);
 	void attribute_changed(cgogn::Orbit, const QString&);
 
-//	void cells_set_added(cgogn::Orbit, const QString&);
-//	void cells_set_removed(cgogn::Orbit, const QString&);
-//	void cells_set_selected_cells_changed(cgogn::Orbit, const QString&);
-//	void cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&);
+	void cells_set_added(cgogn::Orbit, const QString&);
+	void cells_set_removed(cgogn::Orbit, const QString&);
+	void cells_set_selected_cells_changed(cgogn::Orbit, const QString&);
+	void cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&) const;
 
 	void connectivity_changed();
 
@@ -309,10 +264,31 @@ protected:
 	std::map<QString, std::unique_ptr<cgogn::rendering::VBO>> vbos_;
 
 	// CellsSets of the map
-//	std::array<std::map<QString, CMap2CellsSetGen*>, cgogn::NB_ORBITS> cells_sets_;
+	std::array<std::map<QString, CMap2CellsSetGen*>, cgogn::NB_ORBITS> cells_sets_;
 
 	CMap2::VertexAttribute<VEC3> bb_vertex_attribute_;
 };
+
+} // namespace plugin_cmap2_provider
+
+} // namespace schnapps
+
+#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
+
+namespace schnapps
+{
+
+namespace plugin_cmap2_provider
+{
+
+//template <typename CellType, typename FUNC>
+//void CMap2Handler::foreach_cells_set(const FUNC& f)
+//{
+//	static_assert(cgogn::is_func_parameter_same<FUNC, CMap2CellsSet<CellType>*>::value, "Wrong function parameter type");
+//	static const cgogn::Orbit ORBIT = CellType::ORBIT;
+//	for (const auto& cells_set_it : cells_sets_[ORBIT])
+//		f(cells_set_it.second);
+//}
 
 } // namespace plugin_cmap2_provider
 

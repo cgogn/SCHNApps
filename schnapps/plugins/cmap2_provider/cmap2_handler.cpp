@@ -285,6 +285,57 @@ void CMap2Handler::delete_vbo(const QString &name)
 	}
 }
 
+/**********************************************************
+ * MANAGE CELLS SETS                                      *
+ *********************************************************/
+
+CMap2CellsSetGen* CMap2Handler::add_cells_set(cgogn::Orbit orbit, QString name)
+{
+	if (this->cells_sets_[orbit].count(name) > 0ul)
+		return nullptr;
+
+	CMap2CellsSetGen* cells_set = nullptr;
+
+	switch (orbit)
+	{
+		case CMap2::CDart::ORBIT:
+			cells_set = new CMap2CellsSet<CMap2::CDart>(*this, name);
+			break;
+		case CMap2::Vertex::ORBIT:
+			cells_set = new CMap2CellsSet<CMap2::Vertex>(*this, name);
+			break;
+		case CMap2::Edge::ORBIT:
+			cells_set = new CMap2CellsSet<CMap2::Edge>(*this, name);
+			break;
+		case CMap2::Face::ORBIT:
+			cells_set = new CMap2CellsSet<CMap2::Face>(*this, name);
+			break;
+		case CMap2::Volume::ORBIT:
+			cells_set = new CMap2CellsSet<CMap2::Volume>(*this, name);
+			break;
+		default:
+			break;
+	}
+
+	cells_sets_[orbit].insert(std::make_pair(name, cells_set));
+	emit(cells_set_added(orbit, name));
+	connect(this, SIGNAL(connectivity_changed()), cells_set, SLOT(rebuild()));
+	return cells_set;
+}
+
+void CMap2Handler::remove_cells_set(cgogn::Orbit orbit, const QString& name)
+{
+	const auto cells_set_it = cells_sets_[orbit].find(name);
+	if (cells_set_it == cells_sets_[orbit].end())
+		return;
+
+	disconnect(this, SIGNAL(connectivity_changed()), cells_set_it->second, SLOT(rebuild()));
+
+	emit(cells_set_removed(orbit, name));
+	delete cells_set_it->second;
+	cells_sets_[orbit].erase(cells_set_it);
+}
+
 /*********************************************************
  * MANAGE ATTRIBUTES & CONNECTIVITY
  *********************************************************/

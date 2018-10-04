@@ -66,6 +66,9 @@ private:
 
 	bool updating_ui_;
 
+	cgogn::Orbit current_orbit();
+	QString orbit_name(cgogn::Orbit orbit);
+
 private slots:
 
 	// slots called from UI signals
@@ -77,9 +80,9 @@ private slots:
 	void bb_vertex_attribute_changed(int index);
 	void vertex_attribute_check_state_changed(QListWidgetItem* item);
 
-//	void cells_set_check_state_changed(QListWidgetItem* item);
-//	void add_cells_set();
-//	void remove_cells_set();
+	void cells_set_check_state_changed(QListWidgetItem* item);
+	void add_cells_set();
+	void remove_cells_set();
 
 	// slots called from SCHNApps signals
 
@@ -90,9 +93,9 @@ private slots:
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void selected_map_connectivity_changed();
-//	void selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name);
-//	void selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
-//	void selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit orbit, const QString& name);
 
 public:
 

@@ -28,6 +28,7 @@
 
 #include <cgogn/core/utils/numerics.h>
 #include <cgogn/geometry/types/geometry_traits.h>
+
 #include <unsupported/Eigen/AlignedVector3>
 
 namespace cgogn
@@ -53,21 +54,6 @@ using namespace cgogn::numerics;
 using MapBaseData = cgogn::MapBaseData;
 using CMap2 = cgogn::CMap2_T<cgogn::CMap2Type>;
 using CMap3 = cgogn::CMap3_T<cgogn::CMap3Type>;
-
-//enum CellType : uint16
-//{
-//	Dart_Cell = 0,
-//	Vertex_Cell,
-//	Edge_Cell,
-//	Face_Cell,
-//	Volume_Cell,
-//	Unknown
-//};
-
-//static const std::size_t NB_CELL_TYPES = CellType::Volume_Cell + 1;
-
-//SCHNAPPS_CORE_API std::string cell_type_name(CellType ct);
-//SCHNAPPS_CORE_API CellType cell_type(const std::string& name);
 
 using VEC4F = Eigen::Vector4f;
 using VEC4D = Eigen::Vector4d;
@@ -117,12 +103,6 @@ using MAT44 = MAT4F;
 #endif
 
 using SCALAR = cgogn::geometry::vector_traits<VEC3>::Scalar;
-
-//template <typename MAP_TYPE>
-//class MapHandler;
-
-//using CMap2Handler = MapHandler<CMap2>;
-//using CMap3Handler = MapHandler<CMap3>;
 
 } // namespace schnapps
 

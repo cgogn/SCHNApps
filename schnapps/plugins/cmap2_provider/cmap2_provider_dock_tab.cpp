@@ -46,30 +46,57 @@ CMap2Provider_DockTab::CMap2Provider_DockTab(SCHNApps* s, Plugin_CMap2Provider* 
 	connect(combo_bbVertexAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(bb_vertex_attribute_changed(int)));
 	connect(list_vertexAttributes, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(vertex_attribute_check_state_changed(QListWidgetItem*)));
 
-//	connect(list_dartSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
-//	connect(button_dartAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_dartRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(list_dartCellsSets, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_dartAddCellsSet, SIGNAL(clicked()), this, SLOT(add_cells_set()));
+	connect(button_dartRemoveCellsSet, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
-//	connect(list_vertexSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
-//	connect(button_vertexAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_vertexRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(list_vertexCellsSets, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_vertexAddCellsSet, SIGNAL(clicked()), this, SLOT(add_cells_set()));
+	connect(button_vertexRemoveCellsSet, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
-//	connect(list_edgeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
-//	connect(button_edgeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_edgeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(list_edgeCellsSets, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_edgeAddCellsSet, SIGNAL(clicked()), this, SLOT(add_cells_set()));
+	connect(button_edgeRemoveCellsSet, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
-//	connect(list_faceSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
-//	connect(button_faceAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_faceRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(list_faceCellsSets, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_faceAddCellsSet, SIGNAL(clicked()), this, SLOT(add_cells_set()));
+	connect(button_faceRemoveCellsSet, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 
-//	connect(list_volumeSelectors, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
-//	connect(button_volumeAddSelector, SIGNAL(clicked()), this, SLOT(add_cells_set()));
-//	connect(button_volumeRemoveSelector, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+	connect(list_volumeCellsSets, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
+	connect(button_volumeAddCellsSet, SIGNAL(clicked()), this, SLOT(add_cells_set()));
+	connect(button_volumeRemoveCellsSet, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
 }
 
 CMap2Provider_DockTab::~CMap2Provider_DockTab()
 {
 
+}
+
+cgogn::Orbit CMap2Provider_DockTab::current_orbit()
+{
+	int current = tabWidget_mapInfo->currentIndex();
+	switch (current)
+	{
+		case 0: return CMap2::CDart::ORBIT;
+		case 1: return CMap2::Vertex::ORBIT;
+		case 2: return CMap2::Edge::ORBIT;
+		case 3: return CMap2::Face::ORBIT;
+		case 4: return CMap2::Volume::ORBIT;
+		default: return CMap2::CDart::ORBIT;
+	}
+}
+
+QString CMap2Provider_DockTab::orbit_name(cgogn::Orbit orbit)
+{
+	switch (orbit)
+	{
+		case CMap2::CDart::ORBIT: return QString("Dart");
+		case CMap2::Vertex::ORBIT: return QString("Vertex");
+		case CMap2::Edge::ORBIT: return QString("Edge");
+		case CMap2::Face::ORBIT: return QString("Face");
+		case CMap2::Volume::ORBIT: return QString("Volume");
+		default: return QString("Dart");
+	}
 }
 
 /*****************************************************************************/
@@ -86,9 +113,9 @@ void CMap2Provider_DockTab::selected_map_changed()
 		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 		disconnect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-//		disconnect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-//		disconnect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-//		disconnect(selected_map_, SIGNAL(cells_set_mutually_exclusive_changed(CellType, const QString&)), this, SLOT(selected_map_cells_set_mutually_exclusive_changed(CellType, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&)));
 	}
 
 	selected_map_ = nullptr;
@@ -108,9 +135,9 @@ void CMap2Provider_DockTab::selected_map_changed()
 		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 		connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 		connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-//		connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-//		connect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-//		connect(selected_map_, SIGNAL(cells_set_mutually_exclusive_changed(CellType, const QString&)), this, SLOT(selected_map_cells_set_mutually_exclusive_changed(CellType, const QString&)));
+		connect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+		connect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
+		connect(selected_map_, SIGNAL(cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&)));
 	}
 
 	refresh_ui();
@@ -152,6 +179,50 @@ void CMap2Provider_DockTab::vertex_attribute_check_state_changed(QListWidgetItem
 			selected_map_->delete_vbo(item->text());
 	}
 }
+
+void CMap2Provider_DockTab::cells_set_check_state_changed(QListWidgetItem* item)
+{
+	if (!updating_ui_ && selected_map_)
+	{
+		cgogn::Orbit orbit = current_orbit();
+		CMap2CellsSetGen* cs = selected_map_->cells_set(orbit, item->text());
+		cs->set_mutually_exclusive(item->checkState() == Qt::Checked);
+	}
+}
+
+void CMap2Provider_DockTab::add_cells_set()
+{
+	if (!updating_ui_ && selected_map_)
+	{
+		cgogn::Orbit orbit = current_orbit();
+		QString set_name = orbit_name(orbit) + QString("_set_") + QString::number(CMap2CellsSetGen::cells_set_count_);
+		selected_map_->add_cells_set(orbit, set_name);
+	}
+}
+
+void CMap2Provider_DockTab::remove_cells_set()
+{
+	if (!updating_ui_ && selected_map_)
+	{
+		cgogn::Orbit orbit = current_orbit();
+		QListWidget* list_cells_set = nullptr;
+		switch (orbit)
+		{
+			case CMap2::CDart::ORBIT: list_cells_set = list_dartCellsSets; break;
+			case CMap2::Vertex::ORBIT: list_cells_set = list_vertexCellsSets; break;
+			case CMap2::Edge::ORBIT: list_cells_set = list_edgeCellsSets; break;
+			case CMap2::Face::ORBIT: list_cells_set = list_faceCellsSets; break;
+			case CMap2::Volume::ORBIT: list_cells_set = list_volumeCellsSets; break;
+			default: break;
+		}
+		if (!list_cells_set)
+			return;
+
+		for (const QListWidgetItem* item : list_cells_set->selectedItems())
+			selected_map_->remove_cells_set(orbit, item->text());
+	}
+}
+
 
 /*****************************************************************************/
 // slots called from SCHNApps signals
@@ -306,6 +377,122 @@ void CMap2Provider_DockTab::selected_map_connectivity_changed()
 	updating_ui_ = false;
 }
 
+void CMap2Provider_DockTab::selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name)
+{
+	updating_ui_ = true;
+
+	QListWidgetItem* item = nullptr;
+	CMap2CellsSetGen* cs = nullptr;
+	switch (orbit)
+	{
+		case CMap2::CDart::ORBIT:
+			cs = selected_map_->cells_set<CMap2::CDart>(name);
+			if (cs)
+				item = new QListWidgetItem(name, list_dartCellsSets);
+			break;
+		case CMap2::Vertex::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Vertex>(name);
+			if (cs)
+				item = new QListWidgetItem(name, list_vertexCellsSets);
+			break;
+		case CMap2::Edge::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Edge>(name);
+			if (cs)
+				item = new QListWidgetItem(name, list_edgeCellsSets);
+			break;
+		case CMap2::Face::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Face>(name);
+			if (cs)
+				item = new QListWidgetItem(name, list_faceCellsSets);
+			break;
+		case CMap2::Volume::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Volume>(name);
+			if (cs)
+				item = new QListWidgetItem(name, list_volumeCellsSets);
+			break;
+		default:
+			break;
+	}
+	if (item)
+	{
+		item->setFlags(item->flags() | Qt::ItemIsEditable);
+		if (cs->is_mutually_exclusive())
+			item->setCheckState(Qt::Checked);
+		else
+			item->setCheckState(Qt::Unchecked);
+	}
+
+	updating_ui_ = false;
+}
+
+void CMap2Provider_DockTab::selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name)
+{
+	updating_ui_ = true;
+
+	QList<QListWidgetItem*> items;
+	switch (orbit)
+	{
+		case CMap2::CDart::ORBIT:
+			items = list_dartCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Vertex::ORBIT:
+			items = list_vertexCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Edge::ORBIT:
+			items = list_edgeCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Face::ORBIT:
+			items = list_faceCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Volume::ORBIT:
+			items = list_volumeCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		default:
+			break;
+	}
+	if (!items.empty())
+		delete items[0];
+
+	updating_ui_ = false;
+}
+
+void CMap2Provider_DockTab::selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit orbit, const QString& name)
+{
+	updating_ui_ = true;
+
+	CMap2CellsSetGen* cs = nullptr;
+	QList<QListWidgetItem*> items;
+	switch (orbit)
+	{
+		case CMap2::CDart::ORBIT:
+			cs = selected_map_->cells_set<CMap2::CDart>(name);
+			items = list_dartCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Vertex::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Vertex>(name);
+			items = list_vertexCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Edge::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Edge>(name);
+			items = list_edgeCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Face::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Face>(name);
+			items = list_faceCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		case CMap2::Volume::ORBIT:
+			cs = selected_map_->cells_set<CMap2::Volume>(name);
+			items = list_volumeCellsSets->findItems(name, Qt::MatchExactly);
+			break;
+		default:
+			break;
+	}
+	if (cs && !items.empty())
+		items[0]->setCheckState(cs->is_mutually_exclusive() ? Qt::Checked : Qt::Unchecked);
+
+	updating_ui_ = false;
+}
+
 /*****************************************************************************/
 // methods used to update the UI from the plugin
 /*****************************************************************************/
@@ -319,18 +506,26 @@ void CMap2Provider_DockTab::add_map(CMap2Handler* mh)
 
 void CMap2Provider_DockTab::remove_map(CMap2Handler* mh)
 {
+	if (selected_map_ == mh)
+	{
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
+		disconnect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
+		disconnect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
+		disconnect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_mutually_exclusive_changed(CellType, const QString&)), this, SLOT(selected_map_cells_set_mutually_exclusive_changed(CellType, const QString&)));
+		selected_map_ = nullptr;
+	}
+
 	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
 	if (!items.empty())
 	{
 		updating_ui_ = true;
 		delete items[0];
 		updating_ui_ = false;
-	}
-
-	if (selected_map_ == mh)
-	{
-		selected_map_ = nullptr;
-		refresh_ui();
 	}
 }
 
@@ -348,11 +543,11 @@ void CMap2Provider_DockTab::refresh_ui()
 	list_faceAttributes->clear();
 	list_volumeAttributes->clear();
 
-	list_dartSelectors->clear();
-	list_vertexSelectors->clear();
-	list_edgeSelectors->clear();
-	list_faceSelectors->clear();
-	list_volumeSelectors->clear();
+	list_dartCellsSets->clear();
+	list_vertexCellsSets->clear();
+	list_edgeCellsSets->clear();
+	list_faceCellsSets->clear();
+	list_volumeCellsSets->clear();
 
 	label_dartNbCells->setText(QString::number(0));
 	label_vertexNbCells->setText(QString::number(0));
@@ -380,15 +575,15 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-//		selected_map_->foreach_cells_set(Dart_Cell, [&] (CellsSetGen* cells_set)
-//		{
-//			QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_dartSelectors);
-//			item->setFlags(item->flags() | Qt::ItemIsEditable);
-//			if (cells_set->is_mutually_exclusive())
-//				item->setCheckState(Qt::Checked);
-//			else
-//				item->setCheckState(Qt::Unchecked);
-//		});
+		selected_map_->foreach_cells_set<CMap2::CDart>([&] (CMap2CellsSet<CMap2::CDart>* cells_set)
+		{
+			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_dartCellsSets);
+			item->setFlags(item->flags() | Qt::ItemIsEditable);
+			if (cells_set->is_mutually_exclusive())
+				item->setCheckState(Qt::Checked);
+			else
+				item->setCheckState(Qt::Unchecked);
+		});
 
 		const uint32 nb_v = map->nb_cells<CMap2::Vertex>();
 		label_vertexNbCells->setText(QString::number(nb_v));
@@ -418,15 +613,15 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-//		selected_map_->foreach_cells_set(Vertex_Cell, [&] (CellsSetGen* cells_set)
-//		{
-//			QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_vertexSelectors);
-//			item->setFlags(item->flags() | Qt::ItemIsEditable);
-//			if (cells_set->is_mutually_exclusive())
-//				item->setCheckState(Qt::Checked);
-//			else
-//				item->setCheckState(Qt::Unchecked);
-//		});
+		selected_map_->foreach_cells_set<CMap2::Vertex>([&] (CMap2CellsSet<CMap2::Vertex>* cells_set)
+		{
+			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_vertexCellsSets);
+			item->setFlags(item->flags() | Qt::ItemIsEditable);
+			if (cells_set->is_mutually_exclusive())
+				item->setCheckState(Qt::Checked);
+			else
+				item->setCheckState(Qt::Unchecked);
+		});
 
 		const uint32 nb_e = map->nb_cells<CMap2::Edge>();
 		label_edgeNbCells->setText(QString::number(nb_e));
@@ -444,15 +639,15 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-//		selected_map_->foreach_cells_set(Edge_Cell, [&] (CellsSetGen* cells_set)
-//		{
-//			QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_edgeSelectors);
-//			item->setFlags(item->flags() | Qt::ItemIsEditable);
-//			if (cells_set->is_mutually_exclusive())
-//				item->setCheckState(Qt::Checked);
-//			else
-//				item->setCheckState(Qt::Unchecked);
-//		});
+		selected_map_->foreach_cells_set<CMap2::Edge>([&] (CMap2CellsSet<CMap2::Edge>* cells_set)
+		{
+			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_edgeCellsSets);
+			item->setFlags(item->flags() | Qt::ItemIsEditable);
+			if (cells_set->is_mutually_exclusive())
+				item->setCheckState(Qt::Checked);
+			else
+				item->setCheckState(Qt::Unchecked);
+		});
 
 		const uint32 nb_f = map->nb_cells<CMap2::Face>();
 		label_faceNbCells->setText(QString::number(nb_f));
@@ -470,15 +665,15 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-//		selected_map_->foreach_cells_set(Face_Cell, [&] (CellsSetGen* cells_set)
-//		{
-//			QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_faceSelectors);
-//			item->setFlags(item->flags() | Qt::ItemIsEditable);
-//			if (cells_set->is_mutually_exclusive())
-//				item->setCheckState(Qt::Checked);
-//			else
-//				item->setCheckState(Qt::Unchecked);
-//		});
+		selected_map_->foreach_cells_set<CMap2::Face>([&] (CMap2CellsSet<CMap2::Face>* cells_set)
+		{
+			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_faceCellsSets);
+			item->setFlags(item->flags() | Qt::ItemIsEditable);
+			if (cells_set->is_mutually_exclusive())
+				item->setCheckState(Qt::Checked);
+			else
+				item->setCheckState(Qt::Unchecked);
+		});
 
 		const uint32 nb_vol = map->nb_cells<CMap2::Volume>();
 		label_volumeNbCells->setText(QString::number(nb_vol));
@@ -496,15 +691,15 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-//		selected_map_->foreach_cells_set(Volume_Cell, [&] (CellsSetGen* cells_set)
-//		{
-//			QListWidgetItem* item = new QListWidgetItem(cells_set->get_name(), list_volumeSelectors);
-//			item->setFlags(item->flags() | Qt::ItemIsEditable);
-//			if (cells_set->is_mutually_exclusive())
-//				item->setCheckState(Qt::Checked);
-//			else
-//				item->setCheckState(Qt::Unchecked);
-//		});
+		selected_map_->foreach_cells_set<CMap2::Volume>([&] (CMap2CellsSet<CMap2::Volume>* cells_set)
+		{
+			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_volumeCellsSets);
+			item->setFlags(item->flags() | Qt::ItemIsEditable);
+			if (cells_set->is_mutually_exclusive())
+				item->setCheckState(Qt::Checked);
+			else
+				item->setCheckState(Qt::Unchecked);
+		});
 	}
 
 	updating_ui_ = false;

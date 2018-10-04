@@ -25,10 +25,12 @@
 #define SCHNAPPS_PLUGIN_CMAP2_PROVIDER_CMAP2_CELLS_SET_H_
 
 #include <schnapps/plugins/cmap2_provider/dll.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
 
 #include <schnapps/core/types.h>
 
 #include <cgogn/core/basic/cell.h>
+#include <cgogn/core/cmap/cmap2.h>
 
 #include <QObject>
 
@@ -86,12 +88,11 @@ protected:
 		selection_changed_ = false;
 	}
 
-	CMap2Handler& mh_;
+	const CMap2Handler& mh_;
 	QString name_;
 	bool mutually_exclusive_;
 	bool selection_changed_;
 };
-
 
 template <typename CELL>
 class CMap2CellsSet : public CMap2CellsSetGen
@@ -100,9 +101,6 @@ public:
 
 	using Inherit = CMap2CellsSetGen;
 	using Self = CMap2CellsSet<CELL>;
-
-	using Inherit::select;
-	using Inherit::unselect;
 
 	CMap2CellsSet(CMap2Handler& mh, const QString& name) :
 		Inherit(mh, name),
@@ -277,18 +275,6 @@ protected:
 	std::map<uint32, CELL> cells_;
 	std::vector<Self*> mutually_exclusive_sets_;
 };
-
-} // namespace plugin_cmap2_provider
-
-} // namespace schnapps
-
-
-namespace schnapps
-{
-
-namespace plugin_cmap2_provider
-{
-
 
 } // namespace plugin_cmap2_provider
 
