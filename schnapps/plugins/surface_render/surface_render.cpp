@@ -26,6 +26,7 @@
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
 
+#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 

@@ -10,6 +10,7 @@ add_library(schnapps::core ALIAS schnapps_core)
 
 target_sources(${PROJECT_NAME}
 	PRIVATE
+	    "${CMAKE_CURRENT_LIST_DIR}/dll.h"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window.h"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window_factory.h"

@@ -23,15 +23,13 @@
 
 #include <schnapps/plugins/surface_render_transp/surface_render_transp.h>
 
-#include <schnapps/plugins/surface_render/surface_render.h>
+//#include <schnapps/plugins/surface_render/surface_render.h>
 //#include <schnapps/plugins/volume_render/volume_render.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
 //#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 
 #include <schnapps/core/view.h>
-#include <schnapps/core/camera.h>
-#include <schnapps/core/object.h>
 
 namespace schnapps
 {
@@ -62,7 +60,7 @@ void Plugin_SurfaceRenderTransp::draw_object(View*, Object*, const QMatrix4x4&, 
 
 void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	auto  it_trdr = transp_drawer_set_.find(view);
+	auto it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr == transp_drawer_set_.end())
 	{
 		auto ptr = new cgogn::rendering::SurfaceTransparencyDrawer();
@@ -77,7 +75,8 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 	it_trdr->second->draw([&] ()
 	{
 		// surfaces
-		if (view->is_linked_to_plugin(plugin_surface_render::Plugin_SurfaceRender::plugin_name()))
+//		if (view->is_linked_to_plugin(plugin_surface_render::Plugin_SurfaceRender::plugin_name()))
+		if (view->is_linked_to_plugin("surface_render"))
 		{
 			if (it2f != tr2maps_flat_.end())
 			{
@@ -207,42 +206,6 @@ void Plugin_SurfaceRenderTransp::remove_tr_phong(View* view, CMap2Handler* mh, c
 //	auto it = std::find(pairs.begin(), pairs.end(), p);
 //	if (it != pairs.end())
 //		pairs.erase(it);
-//}
-
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_flat(Plugin* plug, View* view, CMap2Handler* mh, cgogn::rendering::ShaderFlatTransp::Param* param)
-{
-	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
-	trplug->add_tr_flat(view, mh, param);
-}
-
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_phong(Plugin* plug, View* view, CMap2Handler* mh, cgogn::rendering::ShaderPhongTransp::Param* param)
-{
-	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
-	trplug->add_tr_phong(view, mh, param);
-}
-
-//SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void add_tr_vol(Plugin* plug, View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
-//{
-//	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
-//	trplug->add_tr_vol(view, mh, rend);
-//}
-
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_flat(Plugin* plug, View* view, CMap2Handler* mh, cgogn::rendering::ShaderFlatTransp::Param* param)
-{
-	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
-	trplug->remove_tr_flat(view, mh, param);
-}
-
-SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_phong(Plugin* plug, View* view, CMap2Handler* mh, cgogn::rendering::ShaderPhongTransp::Param* param)
-{
-	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
-	trplug->remove_tr_phong(view, mh, param);
-}
-
-//SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API void remove_tr_vol(Plugin* plug, View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
-//{
-//	Plugin_SurfaceRenderTransp* trplug = reinterpret_cast<Plugin_SurfaceRenderTransp*>(plug);
-//	trplug->remove_tr_vol(view, mh, rend);
 //}
 
 } // namespace plugin_surface_render_transp

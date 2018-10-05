@@ -94,9 +94,9 @@ SCHNApps::SCHNApps(
 
 	settings_ = Settings::from_file(settings_path_);
 	settings_->set_widget(window->settings_widget_.get());
-	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
+	for (const QVariant& plugin_dir_v : core_setting("Plugins paths").toList())
 		register_plugins_directory(plugin_dir_v.toString());
-	for (const QVariant& plugin_v : get_core_setting("Load modules").toList())
+	for (const QVariant& plugin_v : core_setting("Load modules").toList())
 		enable_plugin(plugin_v.toString());
 
 	connect(first_view_, &View::viewerInitialized, [this, &init_plugin_name] ()
@@ -417,10 +417,10 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 		{
 			Plugin* plugin = qobject_cast<Plugin*>(plugin_object);
 
-			// set the plugin with correct parameters (name, filepath, SCHNApps)
-//			plugin->set_name(plugin_name);
 			if (plugin_name != plugin->name())
 				cgogn_log_warning("SCHNApps::enable_plugin") << "plugin name incompatibility: " << plugin_name.toStdString() << " != " << plugin->name().toStdString();
+
+			// set the plugin with correct parameters (filepath, SCHNApps)
 			plugin->set_file_path(plugin_file_path);
 			plugin->set_schnapps(this);
 

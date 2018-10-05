@@ -50,7 +50,7 @@ class SCHNAPPS_PLUGIN_CMAP2_PROVIDER_API Plugin_CMap2Provider : public PluginPro
 public:
 
 	Plugin_CMap2Provider();
-	inline ~Plugin_CMap2Provider() override {}
+	inline ~Plugin_CMap2Provider() override {}	
 	static QString plugin_name();
 
 private:

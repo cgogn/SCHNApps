@@ -642,7 +642,7 @@ void View::object_added(Object* o)
 	if (o)
 	{
 		dialog_objects_->add_item(o->provider()->name() + "/" + o->name());
-		if (schnapps_->get_core_setting("Add object to selected view").toBool() && is_selected_view())
+		if (schnapps_->core_setting("Link new object to selected view").toBool() && is_selected_view())
 			link_object(o);
 	}
 }

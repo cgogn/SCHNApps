@@ -27,8 +27,6 @@
 #include <schnapps/plugins/surface_render_transp/dll.h>
 
 #include <schnapps/core/plugin_interaction.h>
-#include <schnapps/core/types.h>
-#include <schnapps/core/schnapps.h>
 
 #include <cgogn/rendering/transparency_shaders/shader_transparent_flat.h>
 #include <cgogn/rendering/transparency_shaders/shader_transparent_phong.h>

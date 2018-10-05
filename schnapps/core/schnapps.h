@@ -324,7 +324,7 @@ public:
 		return settings_->add_setting(module_name,name,val);
 	}
 
-	inline const QVariant get_core_setting(const QString& name) const
+	inline const QVariant core_setting(const QString& name) const
 	{
 		return settings_->setting("core", name);
 	}
@@ -351,9 +351,6 @@ protected:
 	std::map<Plugin*, std::list<QWidget*>> control_dock_tabs_;
 	ControlDock_CameraTab* control_camera_tab_;
 	ControlDock_PluginTab* control_plugin_tab_;
-
-//	std::map<QString, std::unique_ptr<MapHandlerGen>> maps_;
-//	ControlDock_MapTab* control_map_tab_;
 
 	SCHNAppsWindow* window_;
 
