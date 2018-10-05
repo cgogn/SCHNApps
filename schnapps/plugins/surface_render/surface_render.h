@@ -25,12 +25,10 @@
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 
 #include <schnapps/plugins/surface_render/dll.h>
+#include <schnapps/plugins/surface_render/map_parameters.h>
 
 #include <schnapps/core/types.h>
-#include <schnapps/core/schnapps.h>
 #include <schnapps/core/plugin_interaction.h>
-
-#include <schnapps/plugins/surface_render/map_parameters.h>
 
 #include <QAction>
 #include <map>
@@ -38,6 +36,7 @@
 namespace schnapps
 {
 
+class View;
 namespace plugin_cmap2_provider { class CMap2Handler; }
 
 #ifdef USE_TRANSPARENCY

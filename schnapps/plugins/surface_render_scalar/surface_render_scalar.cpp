@@ -26,6 +26,7 @@
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
 
+#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
@@ -51,7 +52,7 @@ QString Plugin_SurfaceRenderScalar::plugin_name()
 MapParameters& Plugin_SurfaceRenderScalar::parameters(View* view, CMap2Handler* mh)
 {
 	cgogn_message_assert(view, "Try to access parameters for null view");
-	cgogn_message_assert(map, "Try to access parameters for null map");
+	cgogn_message_assert(mh, "Try to access parameters for null map");
 
 	view->makeCurrent();
 

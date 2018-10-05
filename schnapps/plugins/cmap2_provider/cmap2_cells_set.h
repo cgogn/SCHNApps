@@ -57,12 +57,13 @@ public:
 	inline const QString& name() { return name_; }
 
 	virtual const CMap2Handler& map_handler() const { return mh_; }
+	virtual cgogn::Orbit orbit() const = 0;
 	virtual std::size_t nb_cells() const = 0;
 
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
 	virtual void set_mutually_exclusive(bool b) = 0;
 
-	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
+//	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
 
 	virtual void select(cgogn::Dart d, bool emit_signal = true) = 0;
 	virtual void select(const std::vector<cgogn::Dart>& cells) = 0;
@@ -109,6 +110,11 @@ public:
 
 	~CMap2CellsSet() override
 	{}
+
+	inline cgogn::Orbit orbit() const override
+	{
+		return CELL::ORBIT;
+	}
 
 	inline std::size_t nb_cells() const override
 	{
@@ -238,11 +244,11 @@ public:
 			f(cell.second);
 	}
 
-	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const override
-	{
-		for (const auto& cell : cells_)
-			func(cell.second.dart);
-	}
+//	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const override
+//	{
+//		for (const auto& cell : cells_)
+//			func(cell.second.dart);
+//	}
 
 	virtual void select(cgogn::Dart d, bool emit_signal) override
 	{

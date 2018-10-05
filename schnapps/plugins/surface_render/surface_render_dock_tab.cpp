@@ -125,6 +125,9 @@ void SurfaceRender_DockTab::selected_map_changed()
 		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 	}
+
+	if (plugin_->check_docktab_activation())
+		refresh_ui();
 }
 
 void SurfaceRender_DockTab::position_vbo_changed(int)

@@ -127,6 +127,14 @@ public:
 			f(static_cast<CMap2CellsSet<CellType>*>(cells_set_it.second));
 	}
 
+	template <typename FUNC>
+	void foreach_cells_set(cgogn::Orbit orbit, const FUNC& f) const
+	{
+		static_assert(cgogn::is_func_parameter_same<FUNC, CMap2CellsSetGen*>::value, "Wrong function parameter type");
+		for (const auto& cells_set_it : cells_sets_[orbit])
+			f(cells_set_it.second);
+	}
+
 	template <typename CellType>
 	void notify_cells_set_mutually_exclusive_change(const QString& name) const
 	{

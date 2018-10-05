@@ -21,44 +21,67 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_SURFACE_SELECTION_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_SURFACE_SELECTION_DOCK_TAB_H_
 
-#include <schnapps/plugins/selection/dll.h>
-#include <schnapps/plugins/selection/map_parameters.h>
+#include <schnapps/plugins/surface_selection/dll.h>
 
-#include <ui_selection.h>
+#include <schnapps/core/types.h>
 
-#include <schnapps/core/map_handler.h>
+#include <ui_surface_selection.h>
+
+namespace cgogn { enum Orbit: numerics::uint32; }
 
 namespace schnapps
 {
 
-namespace plugin_selection
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+class CMap2CellsSetGen;
+}
+
+class SCHNApps;
+class View;
+class Object;
+
+namespace plugin_surface_selection
 {
 
-class Plugin_Selection;
+enum SelectionMethod: unsigned int;
+class Plugin_SurfaceSelection;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2CellsSetGen = plugin_cmap2_provider::CMap2CellsSetGen;
 
-class SCHNAPPS_PLUGIN_SELECTION_API Selection_DockTab : public QWidget, public Ui::Selection_TabWidget
+class SCHNAPPS_PLUGIN_SURFACE_SELECTION_API SurfaceSelection_DockTab : public QWidget, public Ui::SurfaceSelection_TabWidget
 {
 	Q_OBJECT
 
 public:
 
-	Selection_DockTab(SCHNApps* s, Plugin_Selection* p);
-	~Selection_DockTab() override;
+	SurfaceSelection_DockTab(SCHNApps* s, Plugin_SurfaceSelection* p);
+	~SurfaceSelection_DockTab() override;
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_Selection* plugin_;
+	Plugin_SurfaceSelection* plugin_;
 
-//	MapHandlerGen* selected_map_;
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+
+	CMap2Handler* selected_map_;
+
 	bool updating_ui_;
+
+	cgogn::Orbit orbit_from_index(int index);
+	int index_from_orbit(cgogn::Orbit orbit);
 
 private slots:
 
 	// slots called from UI signals
+	void selected_map_changed();
+
 	void position_attribute_changed(int index);
 	void normal_attribute_changed(int index);
 	void cell_type_changed(int index);
@@ -69,25 +92,32 @@ private slots:
 	void color_changed(int i);
 
 	// slots called from SCHNApps signals
+	void object_added(Object* o);
+	void object_removed(Object* o);
 	void selected_view_changed(View* old, View* cur);
-	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
 
-	// slots called from MapHandlerGen signals
+	// slots called from CMap2Handler signals
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
-	void selected_map_cells_set_added(CellType ct, const QString& name);
-	void selected_map_cells_set_removed(CellType ct, const QString& name);
+	void selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
+
+private:
+
+	void map_added(CMap2Handler* mh);
+	void map_removed(CMap2Handler* mh);
 
 public:
 
 	// methods used to update the UI from the plugin
 	void set_position_attribute(const QString& name);
 	void set_normal_attribute(const QString& name);
-	void set_cells_set(CellsSetGen* cs);
-	void set_selection_method(MapParameters::SelectionMethod m);
+	void set_cells_set(CMap2CellsSetGen* cs);
+	void set_selection_method(SelectionMethod m);
 	void set_vertex_scale_factor(float sf);
 	void set_color(const QColor& color);
 
+	CMap2Handler* selected_map() { return selected_map_; }
 	void refresh_ui();
 
 private:
@@ -97,8 +127,8 @@ private:
 	void update_after_selection_method_changed();
 };
 
-} // namespace plugin_selection
+} // namespace plugin_surface_selection
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SELECTION_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_SURFACE_SELECTION_DOCK_TAB_H_

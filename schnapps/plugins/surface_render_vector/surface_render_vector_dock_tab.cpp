@@ -178,7 +178,7 @@ void SurfaceRenderVector_DockTab::object_added(Object* o)
 		map_added(mh);
 }
 
-void SurfaceRenderVector_DockTab::map_added(CMap2Handler *mh)
+void SurfaceRenderVector_DockTab::map_added(CMap2Handler* mh)
 {
 	updating_ui_ = true;
 	list_maps->addItem(mh->name());
@@ -192,7 +192,7 @@ void SurfaceRenderVector_DockTab::object_removed(Object* o)
 		map_removed(mh);
 }
 
-void SurfaceRenderVector_DockTab::map_removed(CMap2Handler *mh)
+void SurfaceRenderVector_DockTab::map_removed(CMap2Handler* mh)
 {
 	if (selected_map_ == mh)
 	{

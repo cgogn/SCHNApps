@@ -25,16 +25,15 @@
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 
 #include <schnapps/plugins/surface_render_vector/dll.h>
+#include <schnapps/plugins/surface_render_vector/map_parameters.h>
 
 #include <schnapps/core/types.h>
-#include <schnapps/core/schnapps.h>
 #include <schnapps/core/plugin_interaction.h>
-
-#include <schnapps/plugins/surface_render_vector/map_parameters.h>
 
 namespace schnapps
 {
 
+class View;
 namespace plugin_cmap2_provider { class CMap2Handler; }
 
 namespace plugin_surface_render_vector
