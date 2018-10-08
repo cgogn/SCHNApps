@@ -7,7 +7,8 @@ version: 1.0.{build}
 
 branches:
   only:
-    - cmake
+    - develop
+    - test_attributes
 
 skip_commits:
   message: /\[skip ci\]|\[ci skip\]|\[skip appveyor\]|\[ci appveyor\]/
@@ -22,42 +23,68 @@ clone_folder: c:\projects\myproject
 shallow_clone: true 
 
 image:
-  #- Visual Studio 2015
+  - Visual Studio 2015
   - Visual Studio 2017
 
 configuration:
   - Release
-  #- Debug
+  - Debug
 
 environment:
+  CMAKE_TOOLCHAIN_FILE: -DCMAKE_TOOLCHAIN_FILE="C:\tools\vcpkg\scripts\buildsystems\vcpkg.cmake"
   matrix:
-    - arch: Win64
+    - arch: x64
 
 build:
   parallel: true
   verbosity: minimal
 
+# skip unsupported combinations
 init:
   - echo %arch%
   - echo %APPVEYOR_BUILD_WORKER_IMAGE%
-  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" (set GENERATOR="Visual Studio 15 2017 %arch%" && set QT_DIR="C:\Qt\5.10.1\msvc2017_64\lib\cmake\Qt5")
-  #- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (set GENERATOR="Visual Studio 14 2015 %arch%" && set QT_DIR="C:\Qt\5.10.1\msvc2015_64\lib\cmake\Qt5")
-  #- if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2013" (set GENERATOR="Visual Studio 12 2013 %arch%" && set QT_DIR="C:\Qt\5.8\msvc2013_64\lib\cmake\Qt5")
+  - if "%arch%"=="x64" (set TARGET_PLATFORM= Win64)
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2017" (set GENERATOR="Visual Studio 15 2017%TARGET_PLATFORM%" && set QT_DIR="C:\Qt\5.10.1\msvc2017_64\lib\cmake\Qt5")
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2015" (set GENERATOR="Visual Studio 14 2015%TARGET_PLATFORM%" && set QT_DIR="C:\Qt\5.10.1\msvc2015_64\lib\cmake\Qt5")
+  - if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2013" (set GENERATOR="Visual Studio 12 2013%TARGET_PLATFORM%" && set QT_DIR="C:\Qt\5.8\msvc2013_64\lib\cmake\Qt5")
   - echo %GENERATOR%
   - echo %QT_DIR%
 
+install:
+  - vcpkg remove --outdated --recurse
+  - vcpkg install --recurse
+        zlib
+        eigen3
+        tinyxml2
+        --triplet %arch%-windows
 
 build_script:
   - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
   - cd CGoGN_2
   - md build
   - cd build
-  - cmake -Wno-dev -Wno-deprecated -G %GENERATOR% .. -DCMAKE_SUPPRESS_REGENERATION=1 -DQt5_DIR=%QT_DIR%
+  - cmake -Wno-dev -Wno-deprecated -G %GENERATOR% .. %CMAKE_TOOLCHAIN_FILE% 
+        -DCMAKE_SUPPRESS_REGENERATION=1 
+        -DQt5_DIR=%QT_DIR%
   - cmake --build . --config "%CONFIGURATION%" -- /verbosity:minimal
   - cmake --build . --config "%CONFIGURATION%" --target INSTALL -- /verbosity:minimal
   - cd ../..
   - md build
   - cd build
-  - cmake -Wno-dev -Wno-deprecated -G %GENERATOR% ../ -DCMAKE_SUPPRESS_REGENERATION=1 -DCMAKE_PREFIX_PATH="C:\Program Files\CGoGN" -DQt5_DIR=%QT_DIR% -DUSE_PLUGIN_image=OFF -DUSE_PLUGIN_meshgen=OFF
+  - cmake -Wno-dev -Wno-deprecated -G %GENERATOR% ../ %CMAKE_TOOLCHAIN_FILE%
+        -DCMAKE_SUPPRESS_REGENERATION=1 
+        -DCMAKE_PREFIX_PATH="C:\Program Files\CGoGN" 
+		-DQt5_DIR=%QT_DIR%
+		-DUSE_PLUGIN_cmap2_provider:BOOL=ON
+		-DUSE_PLUGIN_cmap3_provider:BOOL=ON
+		-DUSE_PLUGIN_import:BOOL=ON
+		-DUSE_PLUGIN_surface_differential_properties:BOOL=ON
+		-DUSE_PLUGIN_surface_modelisation:BOOL=ON
+		-DUSE_PLUGIN_surface_render:BOOL=ON
+		-DUSE_PLUGIN_surface_render_scalar:BOOL=ON
+		-DUSE_PLUGIN_surface_render_transp:BOOL=ON
+		-DUSE_PLUGIN_surface_render_vector:BOOL=ON
+		-DUSE_PLUGIN_surface_selection:BOOL=ON
+		-DUSE_PLUGIN_volume_render:BOOL=ON ;
   - cmake --build . --config "%CONFIGURATION%" -- /verbosity:minimal
   - cmake --build . --config "%CONFIGURATION%" --target INSTALL -- /verbosity:minimal
