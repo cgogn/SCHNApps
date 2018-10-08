@@ -61,32 +61,32 @@ script:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
       cmake .. 
         -DCMAKE_CXX_COMPILER=g++-5 
-		-DCMAKE_C_COMPILER=gcc-5
-		-DUSE_PLUGIN_cmap2_provider:BOOL=ON
-		-DUSE_PLUGIN_cmap3_provider:BOOL=ON
-		-DUSE_PLUGIN_import:BOOL=ON
+        -DCMAKE_C_COMPILER=gcc-5
+        -DUSE_PLUGIN_cmap2_provider:BOOL=ON
+        -DUSE_PLUGIN_cmap3_provider:BOOL=ON
+        -DUSE_PLUGIN_import:BOOL=ON
         -DUSE_PLUGIN_surface_differential_properties:BOOL=ON
-		-DUSE_PLUGIN_surface_modelisation:BOOL=ON
+        -DUSE_PLUGIN_surface_modelisation:BOOL=ON
         -DUSE_PLUGIN_surface_render:BOOL=ON
         -DUSE_PLUGIN_surface_render_scalar:BOOL=ON
         -DUSE_PLUGIN_surface_render_transp:BOOL=ON
-		-DUSE_PLUGIN_surface_render_vector:BOOL=ON
-		-DUSE_PLUGIN_surface_selection:BOOL=ON
-		-DUSE_PLUGIN_volume_render:BOOL=ON ;
+        -DUSE_PLUGIN_surface_render_vector:BOOL=ON
+        -DUSE_PLUGIN_surface_selection:BOOL=ON
+        -DUSE_PLUGIN_volume_render:BOOL=ON ;
     fi
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
       cmake ..
-	    -DCMAKE_PREFIX_PATH=$(brew --prefix qt)
-		-DUSE_PLUGIN_cmap2_provider:BOOL=ON
-		-DUSE_PLUGIN_cmap3_provider:BOOL=ON
-		-DUSE_PLUGIN_import:BOOL=ON
-		-DUSE_PLUGIN_surface_differential_properties:BOOL=ON
-		-DUSE_PLUGIN_surface_modelisation:BOOL=ON
-		-DUSE_PLUGIN_surface_render:BOOL=ON
-		-DUSE_PLUGIN_surface_render_scalar:BOOL=ON
-		-DUSE_PLUGIN_surface_render_transp:BOOL=ON
-		-DUSE_PLUGIN_surface_render_vector:BOOL=ON
-		-DUSE_PLUGIN_surface_selection:BOOL=ON
-		-DUSE_PLUGIN_volume_render:BOOL=ON ;
+        -DCMAKE_PREFIX_PATH=$(brew --prefix qt)
+        -DUSE_PLUGIN_cmap2_provider:BOOL=ON
+        -DUSE_PLUGIN_cmap3_provider:BOOL=ON
+        -DUSE_PLUGIN_import:BOOL=ON
+        -DUSE_PLUGIN_surface_differential_properties:BOOL=ON
+        -DUSE_PLUGIN_surface_modelisation:BOOL=ON
+        -DUSE_PLUGIN_surface_render:BOOL=ON
+        -DUSE_PLUGIN_surface_render_scalar:BOOL=ON
+        -DUSE_PLUGIN_surface_render_transp:BOOL=ON
+        -DUSE_PLUGIN_surface_render_vector:BOOL=ON
+        -DUSE_PLUGIN_surface_selection:BOOL=ON
+        -DUSE_PLUGIN_volume_render:BOOL=ON ;
     fi
 - make -j2
