@@ -35,14 +35,21 @@ namespace cgogn { namespace rendering { class VBO; } }
 namespace schnapps
 {
 
+namespace plugin_cmap3_provider
+{
+class Plugin_CMap3Provider;
+class CMap3Handler;
+}
+
 class SCHNApps;
 class View;
-class MapHandlerGen;
+class Object;
 
 namespace plugin_volume_render
 {
 
 class Plugin_VolumeRender;
+using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 class SCHNAPPS_PLUGIN_VOLUME_RENDER_API VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
 {
@@ -58,7 +65,10 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_VolumeRender* plugin_;
 
-	MapHandlerGen* selected_map_;
+	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+
+	CMap3Handler* selected_map_;
+
 	bool updating_ui_;
 
 	QColorDialog* color_dial_;
@@ -70,6 +80,8 @@ private:
 private slots:
 
 	// slots called from UI signals
+	void selected_map_changed();
+
 	void position_vbo_changed(int index);
 	void render_vertices_changed(bool b);
 	void render_edges_changed(bool b);
@@ -87,12 +99,18 @@ private slots:
 	void color_selected();
 
 	// slots called from SCHNApps signals
+	void object_added(Object* o);
+	void object_removed(Object* o);
 	void selected_view_changed(View* old, View* cur);
-	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
 
 	// slots called from MapHandlerGen signals
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
+
+private:
+
+	void map_added(CMap3Handler* mh);
+	void map_removed(CMap3Handler* mh);
 
 public:
 
@@ -111,6 +129,7 @@ public:
 	void set_transparency_enabled(bool b);
 	void set_transparency_factor(int tf);
 
+	CMap3Handler* selected_map() { return selected_map_; }
 	void refresh_ui();
 
 private:

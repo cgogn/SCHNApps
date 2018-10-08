@@ -29,6 +29,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
 	schnapps::cmap2_provider
+	schnapps::cmap3_provider
 	cgogn::io
 )
 

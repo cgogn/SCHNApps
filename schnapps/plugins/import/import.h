@@ -39,17 +39,17 @@ class Plugin_CMap2Provider;
 class CMap2Handler;
 }
 
-//namespace plugin_cmap3_provider
-//{
-//class Plugin_CMap3Provider;
-//class CMap3Handler;
-//}
+namespace plugin_cmap3_provider
+{
+class Plugin_CMap3Provider;
+class CMap3Handler;
+}
 
 namespace plugin_import
 {
 
 using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-//using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 /**
 * @brief Plugin for CGoGN mesh import
@@ -73,34 +73,25 @@ private:
 
 private slots:
 
-	/**
-	* @brief import a surface mesh by opening a FileDialog
-	*/
 	void import_surface_mesh_from_file_dialog();
-
-//	void import_volume_mesh_from_file_dialog();
+	void import_volume_mesh_from_file_dialog();
 
 public:
 
-	/**
-	* @brief import a surface mesh from a file
-	* @param filename file name of mesh file
-	* @return a new MapHandlerGen that handles the mesh
-	*/
 	CMap2Handler* import_surface_mesh_from_file(const QString& filename);
-
-//	CMap3Handler* import_volume_mesh_from_file(const QString& filename);
+	CMap3Handler* import_volume_mesh_from_file(const QString& filename);
 
 private:
 
 	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
 
 	QString setting_bbox_name_;
 	QStringList setting_vbo_names_;
 	QString setting_default_path_;
 
 	QAction* import_surface_mesh_action_;
-//	QAction* import_volume_mesh_action_;
+	QAction* import_volume_mesh_action_;
 };
 
 } // namespace plugin_import

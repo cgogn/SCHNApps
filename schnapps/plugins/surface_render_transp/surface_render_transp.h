@@ -40,13 +40,13 @@ namespace schnapps
 {
 
 namespace plugin_cmap2_provider { class CMap2Handler; }
-//namespace plugin_cmap3_provider { class CMap3Handler; }
+namespace plugin_cmap3_provider { class CMap3Handler; }
 
 namespace plugin_surface_render_transp
 {
 
 using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-//using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 /**
 * @brief Plugin for surface rendering
@@ -67,11 +67,11 @@ public:
 
 	void add_tr_flat(View* view, CMap2Handler* mh, cgogn::rendering::ShaderFlatTransp::Param* param);
 	void add_tr_phong(View* view, CMap2Handler* mh, cgogn::rendering::ShaderPhongTransp::Param* param);
-//	void add_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
+	void add_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
 
 	void remove_tr_flat(View* view, CMap2Handler* mh, cgogn::rendering::ShaderFlatTransp::Param* param);
 	void remove_tr_phong(View* view, CMap2Handler* mh, cgogn::rendering::ShaderPhongTransp::Param* param);
-//	void remove_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
+	void remove_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend);
 
 private:
 
@@ -102,7 +102,7 @@ private:
 	std::map<View*, cgogn::rendering::SurfaceTransparencyDrawer*> transp_drawer_set_;
 	std::map<View*,std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderFlatTransp::Param*>>> tr2maps_flat_;
 	std::map<View*,std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderPhongTransp::Param*>>> tr2maps_phong_;
-//	std::map<View*,std::vector<std::pair<CMap3Handler*, cgogn::rendering::VolumeTransparencyDrawer::Renderer*>>> tr3maps_;
+	std::map<View*,std::vector<std::pair<CMap3Handler*, cgogn::rendering::VolumeTransparencyDrawer::Renderer*>>> tr3maps_;
 };
 
 } // namespace plugin_surface_render_transp_transp

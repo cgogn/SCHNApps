@@ -2,6 +2,8 @@ project(plugin_volume_render
 	LANGUAGES CXX
 )
 
+define_property(TARGET PROPERTY USE_TRANSPARENCY BRIEF_DOCS "use transparency or not" FULL_DOCS "use transparency or not")
+
 find_package(cgogn_rendering REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED "")
@@ -18,6 +20,12 @@ target_sources(${PROJECT_NAME}
 		"${CMAKE_CURRENT_LIST_DIR}/volume_render_dock_tab.cpp"
 )
 
+if (USE_TRANSPARENCY)
+	set_target_properties(${PROJECT_NAME} PROPERTIES USE_TRANSPARENCY "ON")
+else()
+	set_target_properties(${PROJECT_NAME} PROPERTIES USE_TRANSPARENCY "OFF")
+endif()
+
 set_target_properties(${PROJECT_NAME} PROPERTIES
 										DEBUG_POSTFIX "_d"
 										EXPORT_NAME volume_render)
@@ -33,6 +41,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
 	schnapps::cmap3_provider
+	$<$<BOOL:$<TARGET_PROPERTY:USE_TRANSPARENCY>>:plugin_surface_render_transp>
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

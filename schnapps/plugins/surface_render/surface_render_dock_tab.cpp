@@ -353,15 +353,15 @@ void SurfaceRender_DockTab::selected_view_changed(View*, View*)
 
 void SurfaceRender_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
-	updating_ui_ = true;
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 	{
+		updating_ui_ = true;
 		combo_positionVBO->addItem(vbo_name);
 		combo_normalVBO->addItem(vbo_name);
 		combo_colorVBO->addItem(vbo_name);
+		updating_ui_ = false;
 	}
-	updating_ui_ = false;
 }
 
 void SurfaceRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
@@ -369,6 +369,7 @@ void SurfaceRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 	{
+		updating_ui_ = true;
 		int index = combo_positionVBO->findText(vbo_name, Qt::MatchExactly);
 		if (index > 0)
 			combo_positionVBO->removeItem(index);
@@ -380,6 +381,7 @@ void SurfaceRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 		index = combo_colorVBO->findText(vbo_name, Qt::MatchExactly);
 		if (index > 0)
 			combo_colorVBO->removeItem(index);
+		updating_ui_ = false;
 	}
 }
 

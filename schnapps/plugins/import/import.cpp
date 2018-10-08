@@ -24,6 +24,7 @@
 #include <schnapps/plugins/import/import.h>
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -53,8 +54,8 @@ bool Plugin_Import::enable()
 	import_surface_mesh_action_ = schnapps_->add_menu_action("Import;Surface Mesh", "import surface mesh");
 	connect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 
-//	import_volume_mesh_action_ = schnapps_->add_menu_action("Import;Volume Mesh", "import volume mesh");
-//	connect(import_volume_mesh_action_, SIGNAL(triggered()), this, SLOT(import_volume_mesh_from_file_dialog()));
+	import_volume_mesh_action_ = schnapps_->add_menu_action("Import;Volume Mesh", "import volume mesh");
+	connect(import_volume_mesh_action_, SIGNAL(triggered()), this, SLOT(import_volume_mesh_from_file_dialog()));
 
 	if (setting("Bounding box attribute").isValid())
 		setting_bbox_name_ = setting("Bounding box attribute").toString();
@@ -72,6 +73,7 @@ bool Plugin_Import::enable()
 		setting_default_path_ = add_setting("Default path", schnapps_->app_path() ).toString();
 
 	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap3_provider_ = reinterpret_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
 
 	return true;
 }
@@ -79,7 +81,7 @@ bool Plugin_Import::enable()
 void Plugin_Import::disable()
 {
 	schnapps_->remove_menu_action(import_surface_mesh_action_);
-//	schnapps_->remove_menu_action(import_volume_mesh_action_);
+	schnapps_->remove_menu_action(import_volume_mesh_action_);
 }
 
 CMap2Handler* Plugin_Import::import_surface_mesh_from_file(const QString& filename)
@@ -164,88 +166,87 @@ void Plugin_Import::import_surface_mesh_from_file_dialog()
 	}
 }
 
-//MapHandlerGen* Plugin_Import::import_volume_mesh_from_file(const QString& filename)
-//{
-//	QFileInfo fi(filename);
-//	if (fi.exists())
-//	{
-//		MapHandlerGen* mhg = schnapps_->add_map(fi.baseName(), 3);
-//		if (mhg)
-//		{
-//			CMap3Handler* mh = static_cast<CMap3Handler*>(mhg);
-//			CMap3* map = mh->get_map();
+CMap3Handler* Plugin_Import::import_volume_mesh_from_file(const QString& filename)
+{
+	QFileInfo fi(filename);
+	if (fi.exists())
+	{
+		CMap3Handler* mh = plugin_cmap3_provider_->add_map(fi.baseName());
+		if (mh)
+		{
+			CMap3* map = mh->map();
 
-//			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
+			cgogn::io::import_volume<VEC3>(*map, filename.toStdString());
 
-//			mh->notify_connectivity_change();
+			mh->notify_connectivity_change();
 
-//			if (mh->is_embedded(Dart_Cell))
-//			{
-//				const auto* container = mh->attribute_container(Dart_Cell);
-//				const std::vector<std::string>& names = container->names();
-//				for (std::size_t i = 0u; i < names.size(); ++i)
-//					mh->notify_attribute_added(mh->orbit(Dart_Cell), QString::fromStdString(names[i]));
-//			}
-//			if (mh->is_embedded(Vertex_Cell))
-//			{
-//				const auto* container = mh->attribute_container(Vertex_Cell);
-//				const std::vector<std::string>& names = container->names();
-//				for (std::size_t i = 0u; i < names.size(); ++i)
-//					mh->notify_attribute_added(mh->orbit(Vertex_Cell), QString::fromStdString(names[i]));
-//			}
-//			if (mh->is_embedded(Edge_Cell))
-//			{
-//				const auto* container = mh->attribute_container(Edge_Cell);
-//				const std::vector<std::string>& names = container->names();
-//				for (std::size_t i = 0u; i < names.size(); ++i)
-//					mh->notify_attribute_added(mh->orbit(Edge_Cell), QString::fromStdString(names[i]));
-//			}
-//			if (mh->is_embedded(Face_Cell))
-//			{
-//				const auto* container = mh->attribute_container(Face_Cell);
-//				const std::vector<std::string>& names = container->names();
-//				for (std::size_t i = 0u; i < names.size(); ++i)
-//					mh->notify_attribute_added(mh->orbit(Face_Cell), QString::fromStdString(names[i]));
-//			}
-//			if (mh->is_embedded(Volume_Cell))
-//			{
-//				const auto* container = mh->attribute_container(Volume_Cell);
-//				const std::vector<std::string>& names = container->names();
-//				for (std::size_t i = 0u; i < names.size(); ++i)
-//					mh->notify_attribute_added(mh->orbit(Volume_Cell), QString::fromStdString(names[i]));
-//			}
+			if (map->is_embedded<CMap3::CDart>())
+			{
+				const auto& container = map->attribute_container<CMap3::CDart::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(CMap3::CDart::ORBIT, QString::fromStdString(names[i]));
+			}
+			if (map->is_embedded<CMap3::Vertex>())
+			{
+				const auto& container = map->attribute_container<CMap3::Vertex::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(CMap3::Vertex::ORBIT, QString::fromStdString(names[i]));
+			}
+			if (map->is_embedded<CMap3::Edge>())
+			{
+				const auto& container = map->attribute_container<CMap3::Edge::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(CMap3::Edge::ORBIT, QString::fromStdString(names[i]));
+			}
+			if (map->is_embedded<CMap3::Face>())
+			{
+				const auto& container = map->attribute_container<CMap3::Face::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(CMap3::Face::ORBIT, QString::fromStdString(names[i]));
+			}
+			if (map->is_embedded<CMap3::Volume>())
+			{
+				const auto& container = map->attribute_container<CMap3::Volume::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					mh->notify_attribute_added(CMap3::Volume::ORBIT, QString::fromStdString(names[i]));
+			}
 
-//			if (mhg->nb_cells(CellType::Vertex_Cell) > 0)
-//			{
-//				for (const QString& vbo_name : setting_vbo_names_)
-//					mhg->create_vbo(vbo_name);
+			if (mh->map()->nb_cells<CMap3::Vertex>() > 0)
+			{
+				for (const QString& vbo_name : setting_vbo_names_)
+					mh->create_vbo(vbo_name);
 
-//				mh->set_bb_vertex_attribute(setting_bbox_name_);
-//			}
-//		}
-//		return mhg;
-//	}
-//	else
-//		return nullptr;
-//}
+				mh->set_bb_vertex_attribute(setting_bbox_name_);
+			}
+		}
+		return mh;
+	}
+	else
+		return nullptr;
+}
 
-//void Plugin_Import::import_volume_mesh_from_file_dialog()
-//{
-//	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", setting_default_path_, "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
-//	QStringList::Iterator it = filenames.begin();
+void Plugin_Import::import_volume_mesh_from_file_dialog()
+{
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", setting_default_path_, "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
+	QStringList::Iterator it = filenames.begin();
 
-//	if  (it != filenames.end())
-//	{
-//		QFileInfo info(*it);
-//		setting_default_path_ = info.path();
-//	}
+	if  (it != filenames.end())
+	{
+		QFileInfo info(*it);
+		setting_default_path_ = info.path();
+	}
 
-//	while (it != filenames.end())
-//	{
-//		import_volume_mesh_from_file(*it);
-//		++it;
-//	}
-//}
+	while (it != filenames.end())
+	{
+		import_volume_mesh_from_file(*it);
+		++it;
+	}
+}
 
 } // namespace plugin_import
 

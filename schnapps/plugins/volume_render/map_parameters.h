@@ -232,9 +232,9 @@ private:
 		}
 
 		VEC3F position;
-		frame_manip_->position(position);
+		frame_manip_->get_position(position);
 		VEC3F z_axis;
-		frame_manip_->axis(cgogn::rendering::FrameManipulator::Zt, z_axis);
+		frame_manip_->get_axis(cgogn::rendering::FrameManipulator::Zt, z_axis);
 		float32 d = -(position.dot(z_axis));
 
 		volume_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
@@ -248,7 +248,7 @@ private:
 	{
 		if (position_vbo_)
 		{
-			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
 			if (!pos_attr.is_valid())
 			{
 				cgogn_log_warning("plugin_volume_render|MapParameters::update_topo_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
@@ -264,7 +264,7 @@ private:
 	{
 		if (position_vbo_)
 		{
-			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
 			if (!pos_attr.is_valid())
 			{
 				cgogn_log_warning("plugin_volume_render|MapParameters::update_volume_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";

@@ -27,7 +27,7 @@
 //#include <schnapps/plugins/volume_render/volume_render.h>
 
 #include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
-//#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 
 #include <schnapps/core/view.h>
 
@@ -70,7 +70,7 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 
 	auto it2f = tr2maps_flat_.find(view);
 	auto it2p = tr2maps_phong_.find(view);
-//	auto it3 = tr3maps_.find(view);
+	auto it3 = tr3maps_.find(view);
 
 	it_trdr->second->draw([&] ()
 	{
@@ -104,18 +104,19 @@ void Plugin_SurfaceRenderTransp::draw(View* view, const QMatrix4x4& proj, const 
 		}
 		// volumes
 //		if (view->is_linked_to_plugin(plugin_volume_render::Plugin_VolumeRender::plugin_name()))
-//		{
-//			if (it3 != tr3maps_.end())
-//			{
-//				for (const auto& pm : it3->second)
-//				{
-//					const auto& m = pm.first;
-//					QMatrix4x4 mmv = mv * m->frame_matrix() * m->transformation_matrix();
-//					cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend = pm.second;
-//					rend->draw_faces(proj, mmv);
-//				}
-//			}
-//		}
+		if (view->is_linked_to_plugin("volume_render"))
+		{
+			if (it3 != tr3maps_.end())
+			{
+				for (const auto& pm : it3->second)
+				{
+					const auto& m = pm.first;
+					QMatrix4x4 mmv = mv * m->frame_matrix() * m->transformation_matrix();
+					cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend = pm.second;
+					rend->draw_faces(proj, mmv);
+				}
+			}
+		}
 	});
 }
 
@@ -172,14 +173,14 @@ void Plugin_SurfaceRenderTransp::add_tr_phong(View* view, CMap2Handler* mh, cgog
 		pairs.push_back(p);
 }
 
-//void Plugin_SurfaceRenderTransp::add_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
-//{
-//	auto& pairs = tr3maps_[view];
-//	auto p = std::make_pair(mh, rend);
-//	auto it = std::find(pairs.begin(), pairs.end(), p);
-//	if (it == pairs.end())
-//		pairs.push_back(p);
-//}
+void Plugin_SurfaceRenderTransp::add_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
+{
+	auto& pairs = tr3maps_[view];
+	auto p = std::make_pair(mh, rend);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it == pairs.end())
+		pairs.push_back(p);
+}
 
 void Plugin_SurfaceRenderTransp::remove_tr_flat(View* view, CMap2Handler* mh, cgogn::rendering::ShaderFlatTransp::Param* param)
 {
@@ -199,14 +200,14 @@ void Plugin_SurfaceRenderTransp::remove_tr_phong(View* view, CMap2Handler* mh, c
 		pairs.erase(it);
 }
 
-//void Plugin_SurfaceRenderTransp::remove_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
-//{
-//	auto& pairs = tr3maps_[view];
-//	auto p = std::make_pair(mh, rend);
-//	auto it = std::find(pairs.begin(), pairs.end(), p);
-//	if (it != pairs.end())
-//		pairs.erase(it);
-//}
+void Plugin_SurfaceRenderTransp::remove_tr_vol(View* view, CMap3Handler* mh, cgogn::rendering::VolumeTransparencyDrawer::Renderer* rend)
+{
+	auto& pairs = tr3maps_[view];
+	auto p = std::make_pair(mh, rend);
+	auto it = std::find(pairs.begin(), pairs.end(), p);
+	if (it != pairs.end())
+		pairs.erase(it);
+}
 
 } // namespace plugin_surface_render_transp
 

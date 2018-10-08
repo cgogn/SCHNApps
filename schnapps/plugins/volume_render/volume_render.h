@@ -39,6 +39,10 @@ namespace schnapps
 class View;
 namespace plugin_cmap3_provider { class CMap3Handler; }
 
+#ifdef USE_TRANSPARENCY
+namespace plugin_surface_render_transp { class Plugin_SurfaceRenderTransp; }
+#endif
+
 namespace plugin_volume_render
 {
 
@@ -132,7 +136,7 @@ private:
 	QString setting_auto_load_position_attribute_;
 
 #ifdef USE_TRANSPARENCY
-	PluginInteraction* plugin_transparency_;
+	plugin_surface_render_transp::Plugin_SurfaceRenderTransp* plugin_transparency_;
 #endif
 };
 
