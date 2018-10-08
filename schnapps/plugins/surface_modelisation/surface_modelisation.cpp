@@ -23,10 +23,11 @@
 
 #include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/modeling/algos/decimation.h>
 #include <cgogn/modeling/algos/loop.h>
@@ -69,6 +70,8 @@ bool Plugin_SurfaceModelisation::enable()
 	connect(filtering_action_, SIGNAL(triggered()), this, SLOT(open_filtering_dialog()));
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
+
+	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
 
 	return true;
 }
@@ -126,76 +129,82 @@ void Plugin_SurfaceModelisation::decimate(
 	const QString& position_attribute_name,
 	double percentVerticesToRemove)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	uint32 nbv = mh->nb_cells(Vertex_Cell);
-	cgogn::modeling::decimate(*mh->get_map(), position, cgogn::modeling::EdgeTraversor_QEM_T, cgogn::modeling::EdgeApproximator_QEM_T, percentVerticesToRemove * nbv);
+	uint32 nbv = map->nb_cells<CMap2::Vertex>();
+	cgogn::modeling::decimate(*map, position, cgogn::modeling::EdgeTraversor_QEM_T, cgogn::modeling::EdgeApproximator_QEM_T, percentVerticesToRemove * nbv);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::subdivide_loop(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	cgogn::modeling::loop(*mh->get_map(), position);
+	cgogn::modeling::loop(*map, position);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::subdivide_catmull_clark(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	cgogn::modeling::catmull_clark(*mh->get_map(), position);
+	cgogn::modeling::catmull_clark(*map, position);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::subdivide_lsm(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
-
-	CMap2* map = mh->get_map();
 
 	CMap2::CellCache initial_cache(*map);
 	initial_cache.template build<CMap2::Vertex>();
@@ -218,55 +227,58 @@ void Plugin_SurfaceModelisation::subdivide_lsm(
 	},
 	initial_cache);
 
+	// TODO
 
-
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::remesh(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	cgogn::modeling::pliant_remeshing(*mh->get_map(), position);
+	cgogn::modeling::pliant_remeshing(*map, position);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_connectivity_change();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::filter_average(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	CMap2* map2 = mh->get_map();
-	CMap2::VertexAttribute<VEC3> position2 = map2->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_average_result");
-	cgogn::geometry::filter_average(*map2, position, position2);
-	map2->swap_attributes(position, position2);
-	map2->remove_attribute(position2);
+	CMap2::VertexAttribute<VEC3> position2 = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_average_result");
+	cgogn::geometry::filter_average(*map, position, position2);
+	map->swap_attributes(position, position2);
+	map->remove_attribute(position2);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::filter_bilateral(
@@ -274,72 +286,75 @@ void Plugin_SurfaceModelisation::filter_bilateral(
 	const QString& position_attribute_name,
 	const QString& normal_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	CMap2::VertexAttribute<VEC3> normal = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name);
+	CMap2::VertexAttribute<VEC3> normal = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(normal_attribute_name.toStdString());
 	if (!normal.is_valid())
 		return;
 
-	CMap2* map2 = mh->get_map();
-	CMap2::VertexAttribute<VEC3> position2 = map2->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_bilateral_result");
-	cgogn::geometry::filter_bilateral(*map2, position, position2, normal);
-	map2->swap_attributes(position, position2);
-	map2->remove_attribute(position2);
+	CMap2::VertexAttribute<VEC3> position2 = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_bilateral_result");
+	cgogn::geometry::filter_bilateral(*map, position, position2, normal);
+	map->swap_attributes(position, position2);
+	map->remove_attribute(position2);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::filter_taubin(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	CMap2* map2 = mh->get_map();
-	CMap2::VertexAttribute<VEC3> position2 = map2->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_taubin_tmp");
-	cgogn::geometry::filter_taubin(*map2, position, position2);
-	map2->remove_attribute(position2);
+	CMap2::VertexAttribute<VEC3> position2 = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_taubin_tmp");
+	cgogn::geometry::filter_taubin(*map, position, position2);
+	map->remove_attribute(position2);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 void Plugin_SurfaceModelisation::filter_laplacian(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
 	if (!mh)
 		return;
 
-	CMap2::VertexAttribute<VEC3> position = mh->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name);
+	CMap2* map = mh->map();
+
+	CMap2::VertexAttribute<VEC3> position = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_attribute_name.toStdString());
 	if (!position.is_valid())
 		return;
 
-	CMap2* map2 = mh->get_map();
-	CMap2::VertexAttribute<VEC3> position2 = map2->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_laplacian_result");
-	cgogn::geometry::filter_laplacian(*map2, position, position2);
-	map2->swap_attributes(position, position2);
-	map2->remove_attribute(position2);
+	CMap2::VertexAttribute<VEC3> position2 = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__position_laplacian_result");
+	cgogn::geometry::filter_laplacian(*map, position, position2);
+	map->swap_attributes(position, position2);
+	map->remove_attribute(position2);
 
-	schnapps_->get_selected_view()->get_current_camera()->disable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->disable_views_bb_fitting();
 	mh->notify_attribute_change(CMap2::Vertex::ORBIT, position_attribute_name);
-	schnapps_->get_selected_view()->get_current_camera()->enable_views_bb_fitting();
+	schnapps_->selected_view()->current_camera()->enable_views_bb_fitting();
 }
 
 } // namespace plugin_surface_modelisation

@@ -34,13 +34,21 @@
 
 #include <QAction>
 
+namespace cgogn { enum Orbit: numerics::uint32; }
+
 namespace schnapps
 {
 
-class MapHandlerGen;
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
 
 namespace plugin_surface_modelisation
 {
+
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 /**
  * @brief Plugin that exposes some surface modelisation algorithms
@@ -139,6 +147,8 @@ private:
 	QAction* subdivision_action_;
 	QAction* remeshing_action_;
 	QAction* filtering_action_;
+
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
 };
 
 } // namespace plugin_surface_modelisation

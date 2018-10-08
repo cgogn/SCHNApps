@@ -92,7 +92,7 @@ VolumeRender_DockTab::~VolumeRender_DockTab()
 	disconnect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
 	disconnect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
 
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_ui()));
+	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 }
 
 /*****************************************************************************/
