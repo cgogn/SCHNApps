@@ -57,7 +57,6 @@ SurfaceSelection_DockTab::SurfaceSelection_DockTab(SCHNApps* s, Plugin_SurfaceSe
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 
-
 	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
 	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
 
@@ -73,8 +72,10 @@ SurfaceSelection_DockTab::SurfaceSelection_DockTab(SCHNApps* s, Plugin_SurfaceSe
 
 SurfaceSelection_DockTab::~SurfaceSelection_DockTab()
 {
+	disconnect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	disconnect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
+
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 }
 
 cgogn::Orbit SurfaceSelection_DockTab::orbit_from_index(int index)
@@ -265,12 +266,14 @@ void SurfaceSelection_DockTab::selected_map_cells_set_added(cgogn::Orbit orbit, 
 
 void SurfaceSelection_DockTab::selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name)
 {
+	updating_ui_ = true;
 	if (orbit == orbit_from_index(combo_cellType->currentIndex()))
 	{
 		int index = combo_cellsSet->findText(name);
 		if (index > 0)
 			combo_cellsSet->removeItem(index);
 	}
+	updating_ui_ = false;
 }
 
 void SurfaceSelection_DockTab::selected_map_attribute_added(cgogn::Orbit orbit, const QString& name)

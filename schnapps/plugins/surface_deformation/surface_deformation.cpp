@@ -49,28 +49,26 @@ QString Plugin_SurfaceDeformation::plugin_name()
 	return SCHNAPPS_PLUGIN_NAME;
 }
 
-MapParameters& Plugin_SurfaceDeformation::get_parameters(MapHandlerGen* map)
+MapParameters& Plugin_SurfaceDeformation::parameters(CMap2Handler* mh)
 {
-	cgogn_message_assert(map, "Try to access parameters for null map");
-	cgogn_message_assert(map->dimension() == 2, "Try to access parameters for map with dimension other than 2");
+	cgogn_message_assert(mh, "Try to access parameters for null map");
 
-	if (parameter_set_.count(map) == 0)
+	if (parameter_set_.count(mh) == 0)
 	{
-		MapParameters& p = parameter_set_[map];
-		p.map_ = static_cast<CMap2Handler*>(map);
-		p.working_cells_ = cgogn::make_unique<CMap2::CellCache>(*p.map_->get_map());
+		MapParameters& p = parameter_set_[mh];
+		p.mh_ = mh;
+		p.working_cells_ = cgogn::make_unique<CMap2::CellCache>(*p.mh_->map());
 		return p;
 	}
 	else
-		return parameter_set_[map];
+		return parameter_set_[mh];
 }
 
 bool Plugin_SurfaceDeformation::check_docktab_activation()
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
+	View* view = schnapps_->selected_view();
 
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 2)
+	if (view && view->is_linked_to_plugin(this))
 	{
 		schnapps_->enable_plugin_tab_widgets(this);
 		return true;
@@ -84,8 +82,8 @@ bool Plugin_SurfaceDeformation::check_docktab_activation()
 
 bool Plugin_SurfaceDeformation::enable()
 {
-	if (get_setting("Auto load position attribute").isValid())
-		setting_auto_load_position_attribute_ = get_setting("Auto load position attribute").toString();
+	if (setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = setting("Auto load position attribute").toString();
 	else
 		setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position").toString();
 
@@ -103,38 +101,34 @@ void Plugin_SurfaceDeformation::disable()
 
 bool Plugin_SurfaceDeformation::keyPress(View* view, QKeyEvent* event)
 {
-	switch (event->key())
+	CMap2Handler* mh = dock_tab_->selected_map();
+	if (mh && mh->is_linked_to_view(view))
 	{
-		case Qt::Key_D: {
-			MapHandlerGen* mhg = schnapps_->get_selected_map();
-			if (mhg && mhg->dimension() == 2)
-			{
-				const MapParameters& p = get_parameters(mhg);
-				if (!dragging_ && p.get_handle_vertex_set() && p.get_handle_vertex_set()->get_nb_cells() > 0)
+		switch (event->key())
+		{
+			case Qt::Key_D: {
+				const MapParameters& p = parameters(mh);
+				if (!dragging_ && p.handle_vertex_set_ && p.handle_vertex_set_->nb_cells() > 0)
 					start_dragging(view);
 				else
 					stop_dragging(view);
+				break;
 			}
-			break;
-		}
 
-		case Qt::Key_R : {
-			MapHandlerGen* mhg = schnapps_->get_selected_map();
-			if (mhg && mhg->dimension() == 2)
-			{
-				const MapParameters& p = get_parameters(mhg);
+			case Qt::Key_R : {
+				const MapParameters& p = parameters(mh);
 				if (p.initialized_)
 				{
-					view->get_current_camera()->disable_views_bb_fitting();
-					as_rigid_as_possible(mhg);
-					mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
+					view->current_camera()->disable_views_bb_fitting();
+					as_rigid_as_possible(mh);
+					mh->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(p.position_.name()));
 
-					for (View* view : mhg->get_linked_views())
+					for (View* view : mh->linked_views())
 						view->update();
-					view->get_current_camera()->enable_views_bb_fitting();
+					view->current_camera()->enable_views_bb_fitting();
 				}
+				break;
 			}
-			break;
 		}
 	}
 
@@ -146,7 +140,7 @@ void Plugin_SurfaceDeformation::start_dragging(View* view)
 	dragging_ = true;
 	drag_init_ = false;
 	view->setMouseTracking(true);
-	view->get_current_camera()->disable_views_bb_fitting();
+	view->current_camera()->disable_views_bb_fitting();
 }
 
 void Plugin_SurfaceDeformation::stop_dragging(View* view)
@@ -154,17 +148,17 @@ void Plugin_SurfaceDeformation::stop_dragging(View* view)
 	dragging_ = false;
 	drag_init_ = false;
 	view->setMouseTracking(false);
-	view->get_current_camera()->enable_views_bb_fitting();
+	view->current_camera()->enable_views_bb_fitting();
 }
 
 bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
 {
 	if (dragging_)
 	{
-		MapHandlerGen* mhg = schnapps_->get_selected_map();
-		if (mhg && mhg->dimension() == 2)
+		CMap2Handler* mh = dock_tab_->selected_map();
+		if (mh)
 		{
-			MapParameters& p = get_parameters(mhg);
+			MapParameters& p = parameters(mh);
 			if (!drag_init_)
 			{
 				drag_z_ = 0;
@@ -174,7 +168,7 @@ bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
 					qoglviewer::Vec q = view->camera()->projectedCoordinatesOf(qoglviewer::Vec(pp[0],pp[1],pp[2]));
 					drag_z_ += q.z;
 				});
-				drag_z_ /= p.handle_vertex_set_->get_nb_cells();
+				drag_z_ /= p.handle_vertex_set_->nb_cells();
 
 				qoglviewer::Vec pp(event->x(), event->y(), drag_z_);
 				drag_previous_ = view->camera()->unprojectedCoordinatesOf(pp);
@@ -197,10 +191,10 @@ bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
 
 				if (p.initialized_)
 				{
-					if (as_rigid_as_possible(mhg))
+					if (as_rigid_as_possible(mh))
 					{
-						mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
-						for (View* view : mhg->get_linked_views())
+						mh->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(p.position_.name()));
+						for (View* view : mh->linked_views())
 							view->update();
 					}
 					else
@@ -215,8 +209,8 @@ bool Plugin_SurfaceDeformation::mouseMove(View* view, QMouseEvent* event)
 				}
 				else
 				{
-					mhg->notify_attribute_change(CMap2::Vertex::ORBIT, p.get_position_attribute_name());
-					for (View* view : mhg->get_linked_views())
+					mh->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(p.position_.name()));
+					for (View* view : mh->linked_views())
 						view->update();
 				}
 			}
@@ -231,10 +225,15 @@ void Plugin_SurfaceDeformation::view_linked(View* view)
 	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
-	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(view, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { add_linked_map(view, map); }
+	for (Object* o : view->linked_objects())
+	{
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		if (mh)
+			add_linked_map(view, mh);
+	}
 }
 
 void Plugin_SurfaceDeformation::view_unlinked(View* view)
@@ -242,101 +241,106 @@ void Plugin_SurfaceDeformation::view_unlinked(View* view)
 	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
-	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	disconnect(view, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { remove_linked_map(view, map); }
+	for (Object* o : view->linked_objects())
+	{
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		if (mh)
+			remove_linked_map(view, mh);
+	}
 }
 
-void Plugin_SurfaceDeformation::map_linked(MapHandlerGen *map)
+void Plugin_SurfaceDeformation::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	add_linked_map(view, map);
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		add_linked_map(view, mh);
 }
 
-void Plugin_SurfaceDeformation::add_linked_map(View* view, MapHandlerGen* map)
+void Plugin_SurfaceDeformation::add_linked_map(View*, CMap2Handler* mh)
 {
-	MapParameters& p = get_parameters(map);
-	p.set_position_attribute(setting_auto_load_position_attribute_);
+	set_position_attribute(mh, setting_auto_load_position_attribute_, true);
 
-	connect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
-	connect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
-	connect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)), Qt::UniqueConnection);
-
-	if (check_docktab_activation())
-		dock_tab_->refresh_ui();
+	connect(mh, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_cells_set_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 }
 
-void Plugin_SurfaceDeformation::map_unlinked(MapHandlerGen *map)
+void Plugin_SurfaceDeformation::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	remove_linked_map(view, map);
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		remove_linked_map(view, mh);
 }
 
-void Plugin_SurfaceDeformation::remove_linked_map(View* view, MapHandlerGen* map)
+void Plugin_SurfaceDeformation::remove_linked_map(View*, CMap2Handler* mh)
 {
-	disconnect(map, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
-	disconnect(map, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)));
-	disconnect(map, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(linked_map_cells_set_removed(CellType, const QString&)));
+	if (parameter_set_.count(mh) > 0ul)
+		parameter_set_.erase(mh);
 
-	if (check_docktab_activation())
-		dock_tab_->refresh_ui();
+	disconnect(mh, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_added(cgogn::Orbit, const QString&)));
+	disconnect(mh, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_removed(cgogn::Orbit, const QString&)));
+	disconnect(mh, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_cells_set_removed(cgogn::Orbit, const QString&)));
 }
 
 void Plugin_SurfaceDeformation::linked_map_attribute_added(cgogn::Orbit orbit, const QString& name)
 {
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
-
-		if (parameter_set_.count(map) > 0ul)
+		if (parameter_set_.count(mh) > 0ul)
 		{
-			MapParameters& p = parameter_set_[map];
-			if (!p.get_position_attribute().is_valid() && name == setting_auto_load_position_attribute_)
-				set_position_attribute(map, name, true);
+			MapParameters& p = parameter_set_[mh];
+			if (!p.position_attribute().is_valid() && name == setting_auto_load_position_attribute_)
+				set_position_attribute(mh, name, true);
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
 
 void Plugin_SurfaceDeformation::linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
 {
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
-
-		if (parameter_set_.count(map) > 0ul)
+		if (parameter_set_.count(mh) > 0ul)
 		{
-			MapParameters& p = parameter_set_[map];
-			if (p.get_position_attribute_name() == name)
-				set_position_attribute(map, "", true);
+			MapParameters& p = parameter_set_[mh];
+			if (QString::fromStdString(p.position_.name()) == name)
+				set_position_attribute(mh, "", true);
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
 
-void Plugin_SurfaceDeformation::linked_map_cells_set_removed(CellType ct, const QString& name)
+void Plugin_SurfaceDeformation::linked_map_cells_set_removed(cgogn::Orbit orbit, const QString& name)
 {
-	if (ct == Vertex_Cell)
-	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
 
-		if (parameter_set_.count(map) > 0ul)
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		if (parameter_set_.count(mh) > 0ul)
 		{
-			MapParameters& p = parameter_set_[map];
-			CellsSetGen* fvs = p.get_free_vertex_set();
-			if (fvs && fvs->get_name() == name)
-				set_free_vertex_set(map, nullptr, true);
-			CellsSetGen* hvs = p.get_handle_vertex_set();
-			if (hvs && hvs->get_name() == name)
-				set_handle_vertex_set(map, nullptr, true);
+			MapParameters& p = parameter_set_[mh];
+			CMap2CellsSetGen* fvs = p.free_vertex_set();
+			if (fvs && fvs->name() == name)
+				set_free_vertex_set(mh, nullptr, true);
+			CMap2CellsSetGen* hvs = p.handle_vertex_set();
+			if (hvs && hvs->name() == name)
+				set_handle_vertex_set(mh, nullptr, true);
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
@@ -345,97 +349,97 @@ void Plugin_SurfaceDeformation::linked_map_cells_set_removed(CellType ct, const 
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_SurfaceDeformation::set_position_attribute(MapHandlerGen* map, const QString& name, bool update_dock_tab)
+void Plugin_SurfaceDeformation::set_position_attribute(CMap2Handler* mh, const QString& name, bool update_dock_tab)
 {
-	if (map && map->dimension() == 2)
+	if (mh)
 	{
-		MapParameters& p = get_parameters(map);
+		MapParameters& p = parameters(mh);
 		bool success = p.set_position_attribute(name);
-		if (update_dock_tab && map->is_selected_map())
+		if (update_dock_tab && dock_tab_->selected_map() == mh)
 		{
 			if (success)
 				dock_tab_->set_position_attribute(name);
 			else
 				dock_tab_->set_position_attribute("");
 		}
-		stop(map, true);
+		stop(mh, true);
 	}
 }
 
-void Plugin_SurfaceDeformation::set_free_vertex_set(MapHandlerGen* map, CellsSetGen* cs, bool update_dock_tab)
+void Plugin_SurfaceDeformation::set_free_vertex_set(CMap2Handler* mh, CMap2CellsSet<CMap2::Vertex>* cs, bool update_dock_tab)
 {
-	if (map && map->dimension() == 2)
+	if (mh)
 	{
-		MapParameters& p = get_parameters(map);
+		MapParameters& p = parameters(mh);
 		bool success = p.set_free_vertex_set(cs);
-		if (update_dock_tab && map->is_selected_map())
+		if (update_dock_tab && dock_tab_->selected_map() == mh)
 		{
 			if (success)
 				dock_tab_->set_free_vertex_set(cs);
 			else
 				dock_tab_->set_free_vertex_set(nullptr);
 		}
-		stop(map, true);
+		stop(mh, true);
 	}
 }
 
-void Plugin_SurfaceDeformation::set_handle_vertex_set(MapHandlerGen* map, CellsSetGen* cs, bool update_dock_tab)
+void Plugin_SurfaceDeformation::set_handle_vertex_set(CMap2Handler* mh, CMap2CellsSet<CMap2::Vertex>* cs, bool update_dock_tab)
 {
-	if (map && map->dimension() == 2)
+	if (mh)
 	{
-		MapParameters& p = get_parameters(map);
+		MapParameters& p = parameters(mh);
 		bool success = p.set_handle_vertex_set(cs);
-		if (update_dock_tab && map->is_selected_map())
+		if (update_dock_tab && dock_tab_->selected_map() == mh)
 		{
 			if (success)
 				dock_tab_->set_handle_vertex_set(cs);
 			else
 				dock_tab_->set_handle_vertex_set(nullptr);
 		}
-		stop(map, true);
+		stop(mh, true);
 	}
 }
 
-void Plugin_SurfaceDeformation::initialize(MapHandlerGen* map, bool update_dock_tab)
+void Plugin_SurfaceDeformation::initialize(CMap2Handler* mh, bool update_dock_tab)
 {
-	if (map && map->dimension() == 2)
+	if (mh)
 	{
-		MapParameters& p = get_parameters(map);
+		MapParameters& p = parameters(mh);
 		if (!p.initialized_)
 		{
 			p.initialize();
-			if (update_dock_tab && map->is_selected_map())
+			if (update_dock_tab && dock_tab_->selected_map() == mh)
 				dock_tab_->set_deformation_initialized(p.initialized_);
 		}
 	}
 }
 
-void Plugin_SurfaceDeformation::stop(MapHandlerGen* map, bool update_dock_tab)
+void Plugin_SurfaceDeformation::stop(CMap2Handler* mh, bool update_dock_tab)
 {
-	if (map && map->dimension() == 2)
+	if (mh)
 	{
-		MapParameters& p = get_parameters(map);
+		MapParameters& p = parameters(mh);
 		if (p.initialized_)
 		{
 			p.stop();
-			if (update_dock_tab && map->is_selected_map())
+			if (update_dock_tab && dock_tab_->selected_map() == mh)
 				dock_tab_->set_deformation_initialized(p.initialized_);
 		}
 	}
 }
 
-bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
+bool Plugin_SurfaceDeformation::as_rigid_as_possible(CMap2Handler* mh)
 {
-	if (map && map->dimension() == 2)
+	if (mh)
 	{
-		MapParameters& p = get_parameters(map);
+		MapParameters& p = parameters(mh);
 		if (p.initialized_)
 		{
 			if (!p.solver_ready_)
 				if (!p.build_solver())
 					return false;
 
-			CMap2* map2 = p.map_->get_map();
+			CMap2* map = p.mh_->map();
 
 			auto compute_rotation_matrix = [&] (CMap2::Vertex v)
 			{
@@ -443,7 +447,7 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				cov.setZero();
 				const VEC3& pos = p.position_[v];
 				const VEC3& pos_i = p.position_init_[v];
-				map2->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av)
+				map->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av)
 				{
 					VEC3 vec = p.position_[av] - pos;
 					VEC3 vec_i = p.position_init_[av] - pos_i;
@@ -462,14 +466,14 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				}
 				p.vertex_rotation_matrix_[v] = R;
 			};
-			map2->parallel_foreach_cell(compute_rotation_matrix, *p.working_cells_);
+			map->parallel_foreach_cell(compute_rotation_matrix, *p.working_cells_);
 
 			auto compute_rotated_diff_coord = [&] (CMap2::Vertex v)
 			{
 				uint32 degree = 0;
 				MAT33 r;
 				r.setZero();
-				map2->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av)
+				map->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av)
 				{
 					r += p.vertex_rotation_matrix_[av];
 					++degree;
@@ -478,12 +482,12 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 				r /= degree + 1;
 				p.rotated_diff_coord_[v] = r * p.diff_coord_[v];
 			};
-			map2->parallel_foreach_cell(compute_rotated_diff_coord, *p.working_cells_);
+			map->parallel_foreach_cell(compute_rotated_diff_coord, *p.working_cells_);
 
 			uint32 nb_vertices = p.working_cells_->size<CMap2::Vertex>();
 
 			Eigen::MatrixXd rdiff(nb_vertices, 3);
-			map2->parallel_foreach_cell(
+			map->parallel_foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					const VEC3& rdcv = p.rotated_diff_coord_[v];
@@ -496,7 +500,7 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 			);
 			Eigen::MatrixXd rbdiff(nb_vertices, 3);
 			rbdiff = p.working_LAPL_ * rdiff;
-			map2->parallel_foreach_cell(
+			map->parallel_foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					VEC3& rbdcv = p.rotated_bi_diff_coord_[v];
@@ -511,7 +515,7 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 			Eigen::MatrixXd x(nb_vertices, 3);
 			Eigen::MatrixXd b(nb_vertices, 3);
 
-			map2->parallel_foreach_cell(
+			map->parallel_foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					uint32 vidx = p.v_index_[v];
@@ -535,7 +539,7 @@ bool Plugin_SurfaceDeformation::as_rigid_as_possible(MapHandlerGen* map)
 
 			x = p.solver_->solve(b);
 
-			map2->parallel_foreach_cell(
+			map->parallel_foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					uint32 vidx = p.v_index_[v];

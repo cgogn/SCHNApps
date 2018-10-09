@@ -29,7 +29,7 @@
 #include <cgogn/core/utils/numerics.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 
-#include <unsupported/Eigen/AlignedVector3>
+//#include <unsupported/Eigen/AlignedVector3>
 
 namespace cgogn
 {
@@ -69,8 +69,8 @@ using MAT3D = Eigen::Matrix3d;
 using MAT4F = Eigen::Matrix4f;
 using MAT4D = Eigen::Matrix4d;
 
-using AVEC3F = Eigen::AlignedVector3<float32>;
-using AVEC3D = Eigen::AlignedVector3<float64>;
+//using AVEC3F = Eigen::AlignedVector3<float32>;
+//using AVEC3D = Eigen::AlignedVector3<float64>;
 
 #ifdef SCHNAPPS_DOUBLE_PRECISION
 using VEC2 = VEC2D;

@@ -10,61 +10,61 @@ matrix:
           osx_image: xcode10
 
 addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - sourceline: "ppa:beineri/opt-qt58-trusty"
-      - sourceline: "ppa:corentinjabot/cmake-backport" #cmake 3.7.2
-      # for cmake 3.12 use ppa:dluxen/cmake-backports
-      - sourceline: "ppa:nschloe/eigen-backports" #eigen 3.3.2
-    packages:
-      - gcc-5
-      - g++-5
-      - libglu1-mesa-dev
-      - qt58base
-      - cmake
-      - libeigen3-dev
-      - libtinyxml2-dev/trusty-backports
-  homebrew:
-    packages:
-      - qt5
-      - eigen
-      - tinyxml2
+    apt:
+      sources:
+        - ubuntu-toolchain-r-test
+        - sourceline: "ppa:beineri/opt-qt58-trusty"
+        - sourceline: "ppa:corentinjabot/cmake-backport" #cmake 3.7.2
+        # for cmake 3.12 use ppa:dluxen/cmake-backports
+        - sourceline: "ppa:nschloe/eigen-backports" #eigen 3.3.2
+      packages:
+        - gcc-5
+        - g++-5
+        - libglu1-mesa-dev
+        - qt58base
+        - cmake
+        - libeigen3-dev
+        - libtinyxml2-dev/trusty-backports
+    homebrew:
+      packages:
+        - qt5
+        - eigen
+        - tinyxml2
 
 script:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-      source /opt/qt58/bin/qt58-env.sh ;
-    fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        source /opt/qt58/bin/qt58-env.sh ;
+      fi
 
 branches:
-  only:
-    - develop
+    only:
+      - develop
 
 install:
-  - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
-  - cd CGoGN_2
-  - mkdir build
-  - cd build
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
-      cmake .. -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 ; 
-    fi 
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then  
-      cmake .. -DCMAKE_PREFIX_PATH=$(brew --prefix qt) ; 
-    fi
-  - make -j2
-  - sudo make install
-  - cd ../..
+    - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
+    - cd CGoGN_2
+    - mkdir build
+    - cd build
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+        cmake .. -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 ; 
+      fi 
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then  
+        cmake .. -DCMAKE_PREFIX_PATH=$(brew --prefix qt) ; 
+      fi
+    - make -j2
+    - sudo make install
+    - cd ../..
 
 script:
-  - mkdir build
-  - cd build
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
-      cmake .. 
-        -DCMAKE_CXX_COMPILER=g++-5 
-        -DCMAKE_C_COMPILER=gcc-5 ;
-    fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
-      cmake ..
-        -DCMAKE_PREFIX_PATH=$(brew --prefix qt) ;
-    fi
-- make -j2
+    - mkdir build
+    - cd build
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+        cmake .. 
+          -DCMAKE_CXX_COMPILER=g++-5 
+          -DCMAKE_C_COMPILER=gcc-5 ;
+      fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
+        cmake ..
+          -DCMAKE_PREFIX_PATH=$(brew --prefix qt) ;
+      fi
+    - make -j2

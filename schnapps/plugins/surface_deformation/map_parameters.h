@@ -26,8 +26,9 @@
 
 #include <schnapps/plugins/surface_deformation/dll.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/geometry/algos/angle.h>
 #include <cgogn/geometry/algos/area.h>
@@ -39,13 +40,17 @@ namespace plugin_surface_deformation
 {
 
 class Plugin_SurfaceDeformation;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+template <typename CELL>
+using CMap2CellsSet = plugin_cmap2_provider::CMap2CellsSet<CELL>;
+using CMap2CellsSetGen = plugin_cmap2_provider::CMap2CellsSetGen;
 
 struct MapParameters
 {
 	friend class Plugin_SurfaceDeformation;
 
 	MapParameters() :
-		map_(nullptr),
+		mh_(nullptr),
 		free_vertex_set_(nullptr),
 		handle_vertex_set_(nullptr),
 		initialized_(false),
@@ -54,56 +59,58 @@ struct MapParameters
 	{}
 
 	~MapParameters()
-	{}
+	{
+		if (solver_)
+			delete solver_;
+	}
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	const CMap2::VertexAttribute<VEC3>& get_position_attribute() const { return position_; }
-	QString get_position_attribute_name() const { return QString::fromStdString(position_.name()); }
-	CMap2Handler::VertexSet* get_free_vertex_set() const { return free_vertex_set_; }
-	CMap2Handler::VertexSet* get_handle_vertex_set() const { return handle_vertex_set_; }
-	bool get_initialized() const { return initialized_; }
+	const CMap2::VertexAttribute<VEC3>& position_attribute() const { return position_; }
+	CMap2CellsSet<CMap2::Vertex>* free_vertex_set() const { return free_vertex_set_; }
+	CMap2CellsSet<CMap2::Vertex>* handle_vertex_set() const { return handle_vertex_set_; }
+	bool initialized() const { return initialized_; }
 
 	void initialize()
 	{
 		if (!initialized_ && position_.is_valid())
 		{
-			position_init_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position_init");
+			CMap2* map = mh_->map();
+
+			position_init_ = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>("position_init");
 			if (!position_init_.is_valid())
-				position_init_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position_init");
+				position_init_ = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("position_init");
 
-			diff_coord_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("diff_coord");
+			diff_coord_ = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>("diff_coord");
 			if (!diff_coord_.is_valid())
-				diff_coord_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("diff_coord");
+				diff_coord_ = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("diff_coord");
 
-			bi_diff_coord_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("bi_diff_coord");
+			bi_diff_coord_ = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>("bi_diff_coord");
 			if (!bi_diff_coord_.is_valid())
-				bi_diff_coord_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("bi_diff_coord");
+				bi_diff_coord_ = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("bi_diff_coord");
 
-			vertex_rotation_matrix_ = map_->get_attribute<MAT33, CMap2::Vertex::ORBIT>("vertex_rotation_matrix");
+			vertex_rotation_matrix_ = map->get_attribute<MAT33, CMap2::Vertex::ORBIT>("vertex_rotation_matrix");
 			if (!vertex_rotation_matrix_.is_valid())
-				vertex_rotation_matrix_ = map_->add_attribute<MAT33, CMap2::Vertex::ORBIT>("vertex_rotation_matrix");
+				vertex_rotation_matrix_ = map->add_attribute<MAT33, CMap2::Vertex::ORBIT>("vertex_rotation_matrix");
 
-			rotated_diff_coord_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_diff_coord");
+			rotated_diff_coord_ = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_diff_coord");
 			if (!rotated_diff_coord_.is_valid())
-				rotated_diff_coord_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_diff_coord");
+				rotated_diff_coord_ = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_diff_coord");
 
-			rotated_bi_diff_coord_ = map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_bi_diff_coord");
+			rotated_bi_diff_coord_ = map->get_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_bi_diff_coord");
 			if (!rotated_bi_diff_coord_.is_valid())
-				rotated_bi_diff_coord_ = map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_bi_diff_coord");
+				rotated_bi_diff_coord_ = map->add_attribute<VEC3, CMap2::Vertex::ORBIT>("rotated_bi_diff_coord");
 
-			edge_weight_ = map_->get_attribute<SCALAR, CMap2::Edge::ORBIT>("edge_weight");
+			edge_weight_ = map->get_attribute<SCALAR, CMap2::Edge::ORBIT>("edge_weight");
 			if (!edge_weight_.is_valid())
-				edge_weight_ = map_->add_attribute<SCALAR, CMap2::Edge::ORBIT>("edge_weight");
+				edge_weight_ = map->add_attribute<SCALAR, CMap2::Edge::ORBIT>("edge_weight");
 
-			v_index_ = map_->get_attribute<uint32, CMap2::Vertex::ORBIT>("v_index");
+			v_index_ = map->get_attribute<uint32, CMap2::Vertex::ORBIT>("v_index");
 			if (!v_index_.is_valid())
-				v_index_ = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("v_index");
-
-			CMap2* map2 = map_->get_map();
+				v_index_ = map->add_attribute<uint32, CMap2::Vertex::ORBIT>("v_index");
 
 			// initialize position init values
-			map2->copy_attribute(position_init_, position_);
+			map->copy_attribute(position_init_, position_);
 
 			// initialize vertex rotation matrix
 			MAT33 m;
@@ -111,35 +118,35 @@ struct MapParameters
 			vertex_rotation_matrix_.set_all_values(m);
 
 			// compute edges weight
-			map2->parallel_foreach_cell([&] (CMap2::Edge e)
+			map->parallel_foreach_cell([&] (CMap2::Edge e)
 			{
-				if (!map2->is_incident_to_boundary(e))
+				if (!map->is_incident_to_boundary(e))
 				{
 					edge_weight_[e] = (
-						std::tan(M_PI_2 - cgogn::geometry::angle(*map2, CMap2::CDart(map2->phi_1(e.dart)), position_)) +
-						std::tan(M_PI_2 - cgogn::geometry::angle(*map2, CMap2::CDart(map2->phi_1(map2->phi2(e.dart))), position_))
+						std::tan(M_PI_2 - cgogn::geometry::angle(*map, CMap2::CDart(map->phi_1(e.dart)), position_)) +
+						std::tan(M_PI_2 - cgogn::geometry::angle(*map, CMap2::CDart(map->phi_1(map->phi2(e.dart))), position_))
 					) / 2.0;
 				}
 				else
 				{
-					cgogn::Dart d = map2->boundary_dart(e);
-					edge_weight_[e] = std::tan(M_PI_2 - cgogn::geometry::angle(*map2, CMap2::CDart(map2->phi_1(map2->phi2(d))), position_));
+					cgogn::Dart d = map->boundary_dart(e);
+					edge_weight_[e] = std::tan(M_PI_2 - cgogn::geometry::angle(*map, CMap2::CDart(map->phi_1(map->phi2(d))), position_));
 				}
 			});
 
 			// compute vertices laplacian
 			uint32 nb_vertices = 0;
-			map2->foreach_cell([&] (CMap2::Vertex v)
+			map->foreach_cell([&] (CMap2::Vertex v)
 			{
 				v_index_[v] = nb_vertices++;
 			});
 			Eigen::SparseMatrix<SCALAR, Eigen::ColMajor> LAPL(nb_vertices, nb_vertices);
 			std::vector<Eigen::Triplet<SCALAR>> LAPLcoeffs;
 			LAPLcoeffs.reserve(nb_vertices * 10);
-			map2->foreach_cell([&] (CMap2::Edge e)
+			map->foreach_cell([&] (CMap2::Edge e)
 			{
 				SCALAR w = edge_weight_[e];
-				auto vertices = map2->vertices(e);
+				auto vertices = map->vertices(e);
 				uint32 vidx1 = v_index_[vertices.first];
 				uint32 vidx2 = v_index_[vertices.second];
 
@@ -151,7 +158,7 @@ struct MapParameters
 			});
 			LAPL.setFromTriplets(LAPLcoeffs.begin(), LAPLcoeffs.end());
 			Eigen::MatrixXd vpos(nb_vertices, 3);
-			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
+			map->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				const VEC3& pv = position_[v];
 				uint32 vidx = v_index_[v];
@@ -161,7 +168,7 @@ struct MapParameters
 			});
 			Eigen::MatrixXd lapl(nb_vertices, 3);
 			lapl = LAPL * vpos;
-			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
+			map->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				VEC3& dcv = diff_coord_[v];
 				uint32 vidx = v_index_[v];
@@ -175,7 +182,7 @@ struct MapParameters
 			BILAPL = LAPL * LAPL;
 			Eigen::MatrixXd bilapl(nb_vertices, 3);
 			bilapl = BILAPL * vpos;
-			map2->parallel_foreach_cell([&] (CMap2::Vertex v)
+			map->parallel_foreach_cell([&] (CMap2::Vertex v)
 			{
 				VEC3& bdcv = bi_diff_coord_[v];
 				uint32 vidx = v_index_[v];
@@ -210,19 +217,19 @@ struct MapParameters
 	bool build_solver()
 	{
 		if (initialized_ && !solver_ready_ &&
-			free_vertex_set_ && free_vertex_set_->get_nb_cells() > 0 &&
-			handle_vertex_set_ && handle_vertex_set_->get_nb_cells() > 0)
+			free_vertex_set_ && free_vertex_set_->nb_cells() > 0 &&
+			handle_vertex_set_ && handle_vertex_set_->nb_cells() > 0)
 		{
-			CMap2* map2 = map_->get_map();
-			CMap2::CellMarkerStore<CMap2::Vertex::ORBIT> working_vertices_marker(*map2);
+			CMap2* map = mh_->map();
+			CMap2::CellMarkerStore<CMap2::Vertex::ORBIT> working_vertices_marker(*map);
 
 			// check that handle vertices are surrounded only by handle or free vertices
 			bool handle_ok = true;
-			map2->foreach_cell([&] (CMap2::Vertex v) -> bool
+			map->foreach_cell([&] (CMap2::Vertex v) -> bool
 			{
 				if (handle_vertex_set_->is_selected(v))
 				{
-					map2->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool
+					map->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) -> bool
 					{
 						if (!handle_vertex_set_->is_selected(av) && !free_vertex_set_->is_selected(av))
 							handle_ok = false;
@@ -248,7 +255,7 @@ struct MapParameters
 				if (free_vertex_set_->is_selected(v)) // free vertices
 				{
 					working_vertices_marker.mark(v);
-					map2->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) // and their 2-ring
+					map->foreach_adjacent_vertex_through_edge(v, [&] (CMap2::Vertex av) // and their 2-ring
 					{
 						if (!free_vertex_set_->is_selected(av) &&
 							!handle_vertex_set_->is_selected(av) &&
@@ -256,7 +263,7 @@ struct MapParameters
 						{
 							working_cells_->add(av);
 							working_vertices_marker.mark(av);
-							map2->foreach_adjacent_vertex_through_edge(av, [&] (CMap2::Vertex aav)
+							map->foreach_adjacent_vertex_through_edge(av, [&] (CMap2::Vertex aav)
 							{
 
 								if (!free_vertex_set_->is_selected(aav) &&
@@ -277,7 +284,7 @@ struct MapParameters
 			// build the cell cache of working area edges
 			working_cells_->build<CMap2::Edge>([&] (CMap2::Edge e) -> bool
 			{
-				auto vertices = map2->vertices(e);
+				auto vertices = map->vertices(e);
 				return (
 					working_vertices_marker.is_marked(vertices.first) &&
 					working_vertices_marker.is_marked(vertices.second)
@@ -287,7 +294,7 @@ struct MapParameters
 			// index the working area vertices
 			uint32 nb_vertices = 0;
 			// start with the free vertices
-			map2->foreach_cell(
+			map->foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					if (free_vertex_set_->is_selected(v))
@@ -296,7 +303,7 @@ struct MapParameters
 				*working_cells_
 			);
 			// then the others (handle & area boundary <=> constrained)
-			map2->foreach_cell(
+			map->foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					if (!free_vertex_set_->is_selected(v))
@@ -310,11 +317,11 @@ struct MapParameters
 			working_LAPL_.resize(nb_vertices, nb_vertices);
 			std::vector<Eigen::Triplet<SCALAR>> LAPLcoeffs;
 			LAPLcoeffs.reserve(nb_vertices * 10);
-			map2->foreach_cell(
+			map->foreach_cell(
 				[&] (CMap2::Edge e)
 				{
 					SCALAR w = edge_weight_[e];
-					auto vertices = map2->vertices(e);
+					auto vertices = map->vertices(e);
 					uint32 vidx1 = v_index_[vertices.first];
 					uint32 vidx2 = v_index_[vertices.second];
 
@@ -334,7 +341,7 @@ struct MapParameters
 			working_BILAPL_ = working_LAPL_ * working_LAPL_;
 
 			// set contrained vertices
-			map2->foreach_cell(
+			map->foreach_cell(
 				[&] (CMap2::Vertex v)
 				{
 					if (!free_vertex_set_->is_selected(v))
@@ -366,21 +373,21 @@ private:
 
 	bool set_position_attribute(const QString& attribute_name)
 	{
-		position_ = map_->get_attribute<VEC3, CMap2Handler::Vertex::ORBIT>(attribute_name);
+		position_ = mh_->map()->get_attribute<VEC3, CMap2::Vertex::ORBIT>(attribute_name.toStdString());
 		if (position_.is_valid())
 			return true;
 		else
 			return false;
 	}
 
-	bool set_free_vertex_set(CellsSetGen* cs)
+	bool set_free_vertex_set(CMap2CellsSet<CMap2::Vertex>* cs)
 	{
 		if (free_vertex_set_)
 			QObject::disconnect(fvs_connection_);
-		if (cs && cs->get_map() == map_ && cs->get_cell_type() == Vertex_Cell)
+		if (cs && &cs->map_handler() == mh_)
 		{
-			free_vertex_set_ = static_cast<CMap2Handler::VertexSet*>(cs);
-			fvs_connection_ = QObject::connect(free_vertex_set_, &CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
+			free_vertex_set_ = cs;
+			fvs_connection_ = QObject::connect(free_vertex_set_, &CMap2CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
 			return true;
 		}
 		else
@@ -390,14 +397,14 @@ private:
 		}
 	}
 
-	bool set_handle_vertex_set(CellsSetGen* cs)
+	bool set_handle_vertex_set(CMap2CellsSet<CMap2::Vertex>* cs)
 	{
 		if (handle_vertex_set_)
 			QObject::disconnect(hvs_connection_);
-		if (cs && cs->get_map() == map_ && cs->get_cell_type() == Vertex_Cell)
+		if (cs && &cs->map_handler() == mh_)
 		{
-			handle_vertex_set_ = static_cast<CMap2Handler::VertexSet*>(cs);
-			hvs_connection_ = QObject::connect(handle_vertex_set_, &CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
+			handle_vertex_set_ = cs;
+			hvs_connection_ = QObject::connect(handle_vertex_set_, &CMap2CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
 			return true;
 		}
 		else
@@ -407,13 +414,13 @@ private:
 		}
 	}
 
-	CMap2Handler* map_;
+	CMap2Handler* mh_;
 	std::unique_ptr<CMap2::CellCache> working_cells_;
 
 	CMap2::VertexAttribute<VEC3> position_;
 
-	CMap2Handler::VertexSet* free_vertex_set_;
-	CMap2Handler::VertexSet* handle_vertex_set_;
+	CMap2CellsSet<CMap2::Vertex>* free_vertex_set_;
+	CMap2CellsSet<CMap2::Vertex>* handle_vertex_set_;
 	QMetaObject::Connection fvs_connection_;
 	QMetaObject::Connection hvs_connection_;
 

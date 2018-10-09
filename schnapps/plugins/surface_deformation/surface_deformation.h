@@ -27,15 +27,20 @@
 #include <schnapps/plugins/surface_deformation/dll.h>
 #include <schnapps/plugins/surface_deformation/map_parameters.h>
 
+#include <schnapps/core/types.h>
 #include <schnapps/core/plugin_interaction.h>
 
 namespace schnapps
 {
 
+class View;
+namespace plugin_cmap2_provider { class CMap2Handler; }
+
 namespace plugin_surface_deformation
 {
 
 class SurfaceDeformation_DockTab;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 /**
 * @brief Surface deformation
@@ -52,7 +57,7 @@ public:
 	~Plugin_SurfaceDeformation() override {}
 	static QString plugin_name();
 
-	MapParameters& get_parameters(MapHandlerGen* map);
+	MapParameters& parameters(CMap2Handler* mh);
 	bool check_docktab_activation();
 
 private:
@@ -61,7 +66,7 @@ private:
 	void disable() override;
 
 	inline void draw(View*, const QMatrix4x4&, const QMatrix4x4&) override {}
-	inline void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
+	void draw_object(View*, Object*, const QMatrix4x4&, const QMatrix4x4&) override {}
 
 	bool keyPress(View* view, QKeyEvent* event) override;
 	inline bool keyRelease(View*, QKeyEvent*) override { return true; }
@@ -81,36 +86,36 @@ private:
 private slots:
 
 	// slots called from View signals
-	void map_linked(MapHandlerGen* map);
-	void map_unlinked(MapHandlerGen* map);
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
 
 private:
 
-	void add_linked_map(View* view, MapHandlerGen* map);
-	void remove_linked_map(View* view, MapHandlerGen* map);
+	void add_linked_map(View* view, CMap2Handler* mh);
+	void remove_linked_map(View* view, CMap2Handler* mh);
 
 private slots:
 
 	// slots called from MapHandlerGen signals
 	void linked_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
-	void linked_map_cells_set_removed(CellType ct, const QString& name);
+	void linked_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
 
 public slots:
 
-	void set_position_attribute(MapHandlerGen* map, const QString& name, bool update_dock_tab);
-	void set_free_vertex_set(MapHandlerGen* map, CellsSetGen* cs, bool update_dock_tab);
-	void set_handle_vertex_set(MapHandlerGen* map, CellsSetGen* cs, bool update_dock_tab);
+	void set_position_attribute(CMap2Handler* mh, const QString& name, bool update_dock_tab);
+	void set_free_vertex_set(CMap2Handler* mh, CMap2CellsSet<CMap2::Vertex>* cs, bool update_dock_tab);
+	void set_handle_vertex_set(CMap2Handler* mh, CMap2CellsSet<CMap2::Vertex>* cs, bool update_dock_tab);
 
-	void initialize(MapHandlerGen* map, bool update_dock_tab);
-	void stop(MapHandlerGen* map, bool update_dock_tab);
+	void initialize(CMap2Handler* mh, bool update_dock_tab);
+	void stop(CMap2Handler* mh, bool update_dock_tab);
 
-	bool as_rigid_as_possible(MapHandlerGen* map);
+	bool as_rigid_as_possible(CMap2Handler* mh);
 
 private:
 
 	SurfaceDeformation_DockTab* dock_tab_;
-	std::map<MapHandlerGen*, MapParameters> parameter_set_;
+	std::map<CMap2Handler*, MapParameters> parameter_set_;
 
 	QString setting_auto_load_position_attribute_;
 

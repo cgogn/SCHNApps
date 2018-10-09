@@ -156,25 +156,25 @@ cgogn::rendering::VBO* CMap3Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap3::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap3::Vertex::ORBIT>(name.toStdString());
-		if (ava3d.is_valid())
-		{
-			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
-			vbo = vbos_.at(name).get();
-			cgogn::rendering::update_vbo(ava3d, vbo);
-			emit(vbo_added(vbo));
-			return vbo;
-		}
+//		const CMap3::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap3::Vertex::ORBIT>(name.toStdString());
+//		if (ava3d.is_valid())
+//		{
+//			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
+//			vbo = vbos_.at(name).get();
+//			cgogn::rendering::update_vbo(ava3d, vbo);
+//			emit(vbo_added(vbo));
+//			return vbo;
+//		}
 
-		const CMap3::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap3::Vertex::ORBIT>(name.toStdString());
-		if (ava3f.is_valid())
-		{
-			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
-			vbo = vbos_.at(name).get();
-			cgogn::rendering::update_vbo(ava3f, vbo);
-			emit(vbo_added(vbo));
-			return vbo;
-		}
+//		const CMap3::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap3::Vertex::ORBIT>(name.toStdString());
+//		if (ava3f.is_valid())
+//		{
+//			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
+//			vbo = vbos_.at(name).get();
+//			cgogn::rendering::update_vbo(ava3f, vbo);
+//			emit(vbo_added(vbo));
+//			return vbo;
+//		}
 	}
 
 	return vbo;
@@ -249,21 +249,21 @@ void CMap3Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap3::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap3::Vertex::ORBIT>(name.toStdString());
-		if (ava3f.is_valid())
-		{
-			vbo = vbos_.at(name).get();
-			cgogn::rendering::update_vbo(ava3f, vbo);
-			return;
-		}
+//		const CMap3::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap3::Vertex::ORBIT>(name.toStdString());
+//		if (ava3f.is_valid())
+//		{
+//			vbo = vbos_.at(name).get();
+//			cgogn::rendering::update_vbo(ava3f, vbo);
+//			return;
+//		}
 
-		const CMap3::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap3::Vertex::ORBIT>(name.toStdString());
-		if (ava3d.is_valid())
-		{
-			vbo = vbos_.at(name).get();
-			cgogn::rendering::update_vbo(ava3d, vbo);
-			return;
-		}
+//		const CMap3::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap3::Vertex::ORBIT>(name.toStdString());
+//		if (ava3d.is_valid())
+//		{
+//			vbo = vbos_.at(name).get();
+//			cgogn::rendering::update_vbo(ava3d, vbo);
+//			return;
+//		}
 	}
 }
 
