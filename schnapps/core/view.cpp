@@ -252,7 +252,7 @@ bool View::is_linked_to_plugin(const QString& name) const
 }
 
 /*********************************************************
- * MANAGE LINKED MAPS
+ * MANAGE LINKED OBJECTS
  *********************************************************/
 
 void View::link_object(Object* o, bool update_dialog_list)
@@ -650,7 +650,10 @@ void View::object_added(Object* o)
 void View::object_removed(Object* o)
 {
 	if (o)
+	{
 		dialog_objects_->remove_item(o->name());
+		unlink_object(o);
+	}
 }
 
 void View::object_check_state_changed(QListWidgetItem* item)

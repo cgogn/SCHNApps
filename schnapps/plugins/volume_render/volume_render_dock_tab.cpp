@@ -74,24 +74,17 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 
-	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
-	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
-
-	schnapps_->foreach_object([this] (Object* o)
-	{
-		CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
-		if (mh)
-			map_added(mh);
-	});
+	View* v = schnapps_->selected_view();
+	connect(v, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(v, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	for (Object* o : v->linked_objects())
+		object_linked(o);
 
 	plugin_cmap3_provider_ = reinterpret_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
 }
 
 VolumeRender_DockTab::~VolumeRender_DockTab()
 {
-	disconnect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
-	disconnect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
-
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 }
 
@@ -126,7 +119,7 @@ void VolumeRender_DockTab::selected_map_changed()
 		refresh_ui();
 }
 
-void VolumeRender_DockTab::position_vbo_changed(int index)
+void VolumeRender_DockTab::position_vbo_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 		plugin_->set_position_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_positionVBO->currentText()), false);
@@ -247,28 +240,55 @@ void VolumeRender_DockTab::color_selected()
 // slots called from SCHNApps signals
 /*****************************************************************************/
 
-void VolumeRender_DockTab::object_added(Object* o)
+void VolumeRender_DockTab::selected_view_changed(View* old, View* cur)
+{
+	updating_ui_ = true;
+	list_maps->clear();
+	updating_ui_ = false;
+
+	if (old)
+	{
+		disconnect(old, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		disconnect(old, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	}
+	if (cur)
+	{
+		connect(cur, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		connect(cur, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+		for (Object* o : cur->linked_objects())
+			object_linked(o);
+	}
+
+	if (plugin_->check_docktab_activation())
+		refresh_ui();
+}
+
+/*****************************************************************************/
+// slots called from View signals
+/*****************************************************************************/
+
+void VolumeRender_DockTab::object_linked(Object* o)
 {
 	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
 	if (mh)
-		map_added(mh);
+		map_linked(mh);
 }
 
-void VolumeRender_DockTab::map_added(CMap3Handler *mh)
+void VolumeRender_DockTab::map_linked(CMap3Handler *mh)
 {
 	updating_ui_ = true;
 	list_maps->addItem(mh->name());
 	updating_ui_ = false;
 }
 
-void VolumeRender_DockTab::object_removed(Object* o)
+void VolumeRender_DockTab::object_unlinked(Object* o)
 {
 	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
 	if (mh)
-		map_removed(mh);
+		map_unlinked(mh);
 }
 
-void VolumeRender_DockTab::map_removed(CMap3Handler *mh)
+void VolumeRender_DockTab::map_unlinked(CMap3Handler *mh)
 {
 	if (selected_map_ == mh)
 	{
@@ -284,12 +304,6 @@ void VolumeRender_DockTab::map_removed(CMap3Handler *mh)
 		delete items[0];
 		updating_ui_ = false;
 	}
-}
-
-void VolumeRender_DockTab::selected_view_changed(View* old, View* cur)
-{
-	if (plugin_->check_docktab_activation())
-		refresh_ui();
 }
 
 /*****************************************************************************/

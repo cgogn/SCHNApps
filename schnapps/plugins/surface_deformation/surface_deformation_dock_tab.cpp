@@ -51,25 +51,17 @@ SurfaceDeformation_DockTab::SurfaceDeformation_DockTab(SCHNApps* s, Plugin_Surfa
 
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 
-
-	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
-	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
-
-	schnapps_->foreach_object([this] (Object* o)
-	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
-		if (mh)
-			map_added(mh);
-	});
+	View* v = schnapps_->selected_view();
+	connect(v, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(v, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	for (Object* o : v->linked_objects())
+		object_linked(o);
 
 	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
 }
 
 SurfaceDeformation_DockTab::~SurfaceDeformation_DockTab()
 {
-	disconnect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
-	disconnect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
-
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 }
 
@@ -148,28 +140,55 @@ void SurfaceDeformation_DockTab::start_stop_button_clicked()
 // slots called from SCHNApps signals
 /*****************************************************************************/
 
-void SurfaceDeformation_DockTab::object_added(Object* o)
+void SurfaceDeformation_DockTab::selected_view_changed(View* old, View* cur)
+{
+	updating_ui_ = true;
+	list_maps->clear();
+	updating_ui_ = false;
+
+	if (old)
+	{
+		disconnect(old, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		disconnect(old, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	}
+	if (cur)
+	{
+		connect(cur, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		connect(cur, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+		for (Object* o : cur->linked_objects())
+			object_linked(o);
+	}
+
+	if (plugin_->check_docktab_activation())
+		refresh_ui();
+}
+
+/*****************************************************************************/
+// slots called from View signals
+/*****************************************************************************/
+
+void SurfaceDeformation_DockTab::object_linked(Object* o)
 {
 	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
 	if (mh)
-		map_added(mh);
+		map_linked(mh);
 }
 
-void SurfaceDeformation_DockTab::map_added(CMap2Handler* mh)
+void SurfaceDeformation_DockTab::map_linked(CMap2Handler* mh)
 {
 	updating_ui_ = true;
 	list_maps->addItem(mh->name());
 	updating_ui_ = false;
 }
 
-void SurfaceDeformation_DockTab::object_removed(Object* o)
+void SurfaceDeformation_DockTab::object_unlinked(Object* o)
 {
 	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
 	if (mh)
-		map_removed(mh);
+		map_unlinked(mh);
 }
 
-void SurfaceDeformation_DockTab::map_removed(CMap2Handler* mh)
+void SurfaceDeformation_DockTab::map_unlinked(CMap2Handler* mh)
 {
 	if (selected_map_ == mh)
 	{
@@ -187,12 +206,6 @@ void SurfaceDeformation_DockTab::map_removed(CMap2Handler* mh)
 		delete items[0];
 		updating_ui_ = false;
 	}
-}
-
-void SurfaceDeformation_DockTab::selected_view_changed(View*, View*)
-{
-	if (plugin_->check_docktab_activation())
-		refresh_ui();
 }
 
 /*****************************************************************************/

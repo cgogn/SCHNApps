@@ -40,7 +40,7 @@ class View;
 namespace plugin_cmap3_provider { class CMap3Handler; }
 
 #ifdef USE_TRANSPARENCY
-namespace plugin_surface_render_transp { class Plugin_SurfaceRenderTransp; }
+namespace plugin_render_transparency { class Plugin_RenderTransparency; }
 #endif
 
 namespace plugin_volume_render
@@ -136,7 +136,7 @@ private:
 	QString setting_auto_load_position_attribute_;
 
 #ifdef USE_TRANSPARENCY
-	plugin_surface_render_transp::Plugin_SurfaceRenderTransp* plugin_transparency_;
+	plugin_render_transparency::Plugin_RenderTransparency* plugin_transparency_;
 #endif
 };
 

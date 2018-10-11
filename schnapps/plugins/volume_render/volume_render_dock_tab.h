@@ -99,9 +99,11 @@ private slots:
 	void color_selected();
 
 	// slots called from SCHNApps signals
-	void object_added(Object* o);
-	void object_removed(Object* o);
 	void selected_view_changed(View* old, View* cur);
+
+	// slots called from View signals
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
 
 	// slots called from MapHandlerGen signals
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
@@ -109,8 +111,8 @@ private slots:
 
 private:
 
-	void map_added(CMap3Handler* mh);
-	void map_removed(CMap3Handler* mh);
+	void map_linked(CMap3Handler* mh);
+	void map_unlinked(CMap3Handler* mh);
 
 public:
 

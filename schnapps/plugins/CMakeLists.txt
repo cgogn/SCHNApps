@@ -11,7 +11,7 @@ foreach(plug_dir ${SCHNAPPS_CONFIGURED_PLUGINS})
 endforeach()
 
 
-if ((Qt5Widgets_VERSION VERSION_GREATER 5.5.99) AND ${USE_PLUGIN_surface_render_transp})
+if ((Qt5Widgets_VERSION VERSION_GREATER 5.5.99) AND ${USE_PLUGIN_render_transparency})
   add_definitions("-D USE_TRANSPARENCY")
   set (USE_TRANSPARENCY ON)
 endif()
@@ -26,4 +26,3 @@ foreach(plug_dir ${SCHNAPPS_CONFIGURED_PLUGINS})
 	  endif()
   endif()
 endforeach()
-

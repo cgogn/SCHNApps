@@ -31,7 +31,7 @@
 #include <schnapps/core/camera.h>
 
 #ifdef USE_TRANSPARENCY
-#include <schnapps/plugins/surface_render_transp/surface_render_transp.h>
+#include <schnapps/plugins/render_transparency/render_transparency.h>
 #endif
 
 namespace schnapps
@@ -112,7 +112,7 @@ bool Plugin_SurfaceRender::enable()
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 #ifdef USE_TRANSPARENCY
-	plugin_transparency_ = reinterpret_cast<plugin_surface_render_transp::Plugin_SurfaceRenderTransp*>(schnapps_->enable_plugin(plugin_surface_render_transp::Plugin_SurfaceRenderTransp::plugin_name()));
+	plugin_transparency_ = reinterpret_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
 #endif
 
 	return true;

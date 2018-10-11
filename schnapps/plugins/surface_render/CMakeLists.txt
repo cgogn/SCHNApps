@@ -41,7 +41,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
 	schnapps::cmap2_provider
-	$<$<BOOL:$<TARGET_PROPERTY:USE_TRANSPARENCY>>:plugin_surface_render_transp>
+	$<$<BOOL:$<TARGET_PROPERTY:USE_TRANSPARENCY>>:plugin_render_transparency>
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

@@ -21,10 +21,10 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_
+#ifndef SCHNAPPS_PLUGIN_RENDER_TRANSPARENCY_H_
+#define SCHNAPPS_PLUGIN_RENDER_TRANSPARENCY_H_
 
-#include <schnapps/plugins/surface_render_transp/dll.h>
+#include <schnapps/plugins/render_transparency/dll.h>
 
 #include <schnapps/core/plugin_interaction.h>
 
@@ -42,16 +42,16 @@ namespace schnapps
 namespace plugin_cmap2_provider { class CMap2Handler; }
 namespace plugin_cmap3_provider { class CMap3Handler; }
 
-namespace plugin_surface_render_transp
+namespace plugin_render_transparency
 {
 
 using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 /**
-* @brief Plugin for surface rendering
+* @brief Plugin for transparency rendering
 */
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API Plugin_SurfaceRenderTransp : public PluginInteraction
+class SCHNAPPS_PLUGIN_RENDER_TRANSPARENCY_API Plugin_RenderTransparency : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -59,8 +59,8 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_API Plugin_SurfaceRenderTransp : pub
 
 public:
 
-	Plugin_SurfaceRenderTransp();
-	inline ~Plugin_SurfaceRenderTransp() override {}
+	Plugin_RenderTransparency();
+	inline ~Plugin_RenderTransparency() override {}
 	static QString plugin_name();
 
 	inline bool auto_activate() override { return true; }
@@ -100,13 +100,13 @@ private slots:
 private:
 
 	std::map<View*, cgogn::rendering::SurfaceTransparencyDrawer*> transp_drawer_set_;
-	std::map<View*,std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderFlatTransp::Param*>>> tr2maps_flat_;
-	std::map<View*,std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderPhongTransp::Param*>>> tr2maps_phong_;
-	std::map<View*,std::vector<std::pair<CMap3Handler*, cgogn::rendering::VolumeTransparencyDrawer::Renderer*>>> tr3maps_;
+	std::map<View*, std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderFlatTransp::Param*>>> tr2maps_flat_;
+	std::map<View*, std::vector<std::pair<CMap2Handler*, cgogn::rendering::ShaderPhongTransp::Param*>>> tr2maps_phong_;
+	std::map<View*, std::vector<std::pair<CMap3Handler*, cgogn::rendering::VolumeTransparencyDrawer::Renderer*>>> tr3maps_;
 };
 
-} // namespace plugin_surface_render_transp_transp
+} // namespace plugin_render_transparency
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_TRANSP_H_
+#endif // SCHNAPPS_PLUGIN_RENDER_TRANSPARENCY_H_
