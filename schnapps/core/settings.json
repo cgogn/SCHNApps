@@ -1,13 +1,12 @@
 {
     "core": {
-		"Add map to selected view": true,
-		"Added map is selected": true,
+		"Link new object to selected view": true,
 		"Load modules": [
 			"import",
 			"surface_render"
 		],
 		"Plugins paths": [
-		 ]
+		]
     },
     "import": {
         "Bounding box attribute": "position",

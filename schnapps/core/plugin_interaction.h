@@ -35,7 +35,7 @@ namespace schnapps
 {
 
 class View;
-class MapHandlerGen;
+class Object;
 
 class SCHNAPPS_CORE_API PluginInteraction : public Plugin
 {
@@ -70,7 +70,7 @@ public slots:
 private:
 
 	virtual void draw(View* view, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
-	virtual void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
+	virtual void draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv) = 0;
 
 	virtual bool keyPress(View* view, QKeyEvent* event) = 0;
 	virtual bool keyRelease(View* view, QKeyEvent* event) = 0;
@@ -81,11 +81,11 @@ private:
 
 	virtual void resizeGL(View* view, int width, int height) = 0;
 
-	virtual void view_linked(View* view) = 0;
-	virtual void view_unlinked(View* view) = 0;
-
 	void link_view(View* view);
 	void unlink_view(View* view);
+
+	virtual void view_linked(View* view) = 0;
+	virtual void view_unlinked(View* view) = 0;
 
 protected:
 

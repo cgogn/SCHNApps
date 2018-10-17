@@ -35,9 +35,8 @@ set(SCHNAPPS_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(SCHNAPPS_EXEC_NAME schnapps)
 
-#### CGOGN_PATH 
-set(CGOGN_BUILD_OR_INSTALL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../CGoGN_2-build" CACHE PATH "CGoGN build or install dir")
-
+#### CGOGN_PATH
+set(CGOGN_BUILD_OR_INSTALL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../build-CGoGN_2-Desktop-Release" CACHE PATH "CGoGN build or install dir")
 
 ### Build configuration
 if (APPLE)

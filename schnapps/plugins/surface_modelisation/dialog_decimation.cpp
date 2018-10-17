@@ -24,8 +24,9 @@
 #include <schnapps/plugins/surface_modelisation/dialog_decimation.h>
 #include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
@@ -36,24 +37,68 @@ namespace plugin_surface_modelisation
 Decimation_Dialog::Decimation_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
 	schnapps_(s),
 	plugin_(p),
-	selected_map_(nullptr)
+	selected_map_(nullptr),
+	updating_ui_(false)
 {
 	setupUi(this);
 
-	if (plugin_->get_setting("Auto load position attribute").isValid())
-		setting_auto_load_position_attribute_ = plugin_->get_setting("Auto load position attribute").toString();
+	if (plugin_->setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = plugin_->setting("Auto load position attribute").toString();
 	else
 		setting_auto_load_position_attribute_ = plugin_->add_setting("Auto load position attribute", "position").toString();
-
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
 	connect(this, SIGNAL(accepted()), this, SLOT(decimate()));
 	connect(button_apply, SIGNAL(clicked()), this, SLOT(decimate()));
 
-	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
+
+	schnapps_->foreach_object([this] (Object* o)
+	{
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		if (mh)
+			map_added(mh);
+	});
+
+	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+}
+
+Decimation_Dialog::~Decimation_Dialog()
+{
+	disconnect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	disconnect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
+}
+
+/*****************************************************************************/
+// slots called from UI signals
+/*****************************************************************************/
+
+void Decimation_Dialog::selected_map_changed()
+{
+	if (selected_map_)
+	{
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
+
+	selected_map_ = nullptr;
+
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		selected_map_ = plugin_cmap2_provider_->map(map_name);
+	}
+
+	if (selected_map_)
+	{
+		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
+
+	refresh_ui();
 }
 
 void Decimation_Dialog::decimate()
@@ -68,71 +113,52 @@ void Decimation_Dialog::decimate()
 	}
 }
 
-void Decimation_Dialog::selected_map_changed()
+/*****************************************************************************/
+// slots called from SCHNApps signals
+/*****************************************************************************/
+
+void Decimation_Dialog::object_added(Object* o)
 {
-	if (selected_map_)
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_added(mh);
+}
+
+void Decimation_Dialog::map_added(CMap2Handler *mh)
+{
+	updating_ui_ = true;
+	list_maps->addItem(mh->name());
+	updating_ui_ = false;
+}
+
+void Decimation_Dialog::object_removed(Object* o)
+{
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_removed(mh);
+}
+
+void Decimation_Dialog::map_removed(CMap2Handler *mh)
+{
+	if (selected_map_ == mh)
+	{
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-
-	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
-	if (!currentItems.empty())
-	{
-		combo_positionAttribute->clear();
-
-		const QString& map_name = currentItems[0]->text();
-		MapHandlerGen* mhg = schnapps_->get_map(map_name);
-		selected_map_ = dynamic_cast<CMap2Handler*>(mhg);
-
-		if (selected_map_)
-		{
-			const CMap2* map2 = selected_map_->get_map();
-			if (map2->is_embedded<CMap2::Vertex::ORBIT>())
-			{
-				QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
-
-				const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
-				const std::vector<std::string>& names = container.names();
-				const std::vector<std::string>& type_names = container.type_names();
-
-				for (std::size_t i = 0u; i < names.size(); ++i)
-				{
-					QString name = QString::fromStdString(names[i]);
-					QString type = QString::fromStdString(type_names[i]);
-					if (type == vec3_type_name)
-					{
-						combo_positionAttribute->addItem(name);
-						if (name == setting_auto_load_position_attribute_)
-							combo_positionAttribute->setCurrentIndex(combo_positionAttribute->count() - 1);
-					}
-				}
-			}
-			connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-		}
-	}
-	else
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 		selected_map_ = nullptr;
-}
-
-void Decimation_Dialog::map_added(MapHandlerGen* map)
-{
-	if (map->dimension() == 2)
-	{
-		QListWidgetItem* item = new QListWidgetItem(map->get_name(), list_maps);
-		item->setCheckState(Qt::Unchecked);
 	}
-}
 
-void Decimation_Dialog::map_removed(MapHandlerGen* map)
-{
-	QList<QListWidgetItem*> items = list_maps->findItems(map->get_name(), Qt::MatchExactly);
+	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
 	if (!items.empty())
-		delete items[0];
-
-	if (selected_map_ == map)
 	{
-		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-		selected_map_ = nullptr;
+		updating_ui_ = true;
+		delete items[0];
+		updating_ui_ = false;
 	}
 }
+
+/*****************************************************************************/
+// slots called from CMap2Handler signals
+/*****************************************************************************/
 
 void Decimation_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
 {
@@ -140,15 +166,75 @@ void Decimation_Dialog::selected_map_attribute_added(cgogn::Orbit orbit, const Q
 	{
 		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-		const CMap2* map2 = selected_map_->get_map();
-		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2* map = selected_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
 		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
 
 		if (attribute_type_name == vec3_type_name)
 		{
+			updating_ui_ = true;
 			combo_positionAttribute->addItem(attribute_name);
+			updating_ui_ = false;
 		}
 	}
+}
+
+void Decimation_Dialog::selected_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
+		const CMap2* map = selected_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
+		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
+
+		if (attribute_type_name == vec3_type_name)
+		{
+			int index = combo_positionAttribute->findText(attribute_name, Qt::MatchExactly);
+			if (index > 0)
+			{
+				updating_ui_ = true;
+				combo_positionAttribute->removeItem(index);
+				updating_ui_ = false;
+			}
+		}
+	}
+}
+
+void Decimation_Dialog::refresh_ui()
+{
+	updating_ui_ = true;
+
+	combo_positionAttribute->clear();
+
+	if (selected_map_)
+	{
+		const CMap2* map = selected_map_->map();
+
+		if (map->is_embedded<CMap2::Vertex>())
+		{
+			QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
+			const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
+			const std::vector<std::string>& names = container.names();
+			const std::vector<std::string>& type_names = container.type_names();
+
+			for (std::size_t i = 0u; i < names.size(); ++i)
+			{
+				QString name = QString::fromStdString(names[i]);
+				QString type = QString::fromStdString(type_names[i]);
+				if (type == vec3_type_name)
+					combo_positionAttribute->addItem(name);
+			}
+
+			int idx = combo_positionAttribute->findText(setting_auto_load_position_attribute_);
+			if (idx != -1)
+				combo_positionAttribute->setCurrentIndex(idx);
+		}
+	}
+
+	updating_ui_ = false;
 }
 
 } // namespace plugin_surface_modelisation

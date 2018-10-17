@@ -6,11 +6,11 @@ find_package(cgogn_rendering REQUIRED)
 find_package(QOGLViewer REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED "")
-
 add_library(schnapps::core ALIAS schnapps_core)
 
 target_sources(${PROJECT_NAME}
 	PRIVATE
+	    "${CMAKE_CURRENT_LIST_DIR}/dll.h"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window.h"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window_factory.h"
@@ -30,26 +30,28 @@ target_sources(${PROJECT_NAME}
 		"${CMAKE_CURRENT_LIST_DIR}/plugin_processing.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/plugin_interaction.h"
 		"${CMAKE_CURRENT_LIST_DIR}/plugin_interaction.cpp"
-		"${CMAKE_CURRENT_LIST_DIR}/map_handler.h"
-		"${CMAKE_CURRENT_LIST_DIR}/map_handler.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/plugin_provider.h"
+		"${CMAKE_CURRENT_LIST_DIR}/plugin_provider.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/object.h"
+		"${CMAKE_CURRENT_LIST_DIR}/object.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/control_dock_camera_tab.h"
 		"${CMAKE_CURRENT_LIST_DIR}/control_dock_camera_tab.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/control_dock_plugin_tab.h"
 		"${CMAKE_CURRENT_LIST_DIR}/control_dock_plugin_tab.cpp"
-		"${CMAKE_CURRENT_LIST_DIR}/control_dock_map_tab.h"
-		"${CMAKE_CURRENT_LIST_DIR}/control_dock_map_tab.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/types.h"
 		"${CMAKE_CURRENT_LIST_DIR}/types.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/color_combo_box.h"
 		"${CMAKE_CURRENT_LIST_DIR}/color_combo_box.cpp"
-		"${CMAKE_CURRENT_LIST_DIR}/cells_set.h"
-		"${CMAKE_CURRENT_LIST_DIR}/cells_set.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/settings.h"
 		"${CMAKE_CURRENT_LIST_DIR}/settings.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/settings_widget.h"
 		"${CMAKE_CURRENT_LIST_DIR}/settings_widget.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/status_bar_output.h"
 		"${CMAKE_CURRENT_LIST_DIR}/status_bar_output.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/schnapps.ui"
+		"${CMAKE_CURRENT_LIST_DIR}/control_dock_camera_tab_widget.ui"
+		"${CMAKE_CURRENT_LIST_DIR}/control_dock_plugin_tab_widget.ui"
+		"${CMAKE_CURRENT_LIST_DIR}/settings_widget.ui"
 		"${SCHNAPPS_SOURCE_DIR}/schnapps/resources/resources.qrc"
 )
 
@@ -71,6 +73,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 										EXPORT_NAME core)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )

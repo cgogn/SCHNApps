@@ -36,14 +36,21 @@ namespace cgogn { namespace rendering { class VBO; } }
 namespace schnapps
 {
 
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
+
 class SCHNApps;
 class View;
-class MapHandlerGen;
+class Object;
 
 namespace plugin_surface_render
 {
 
 class Plugin_SurfaceRender;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 class SCHNAPPS_PLUGIN_SURFACE_RENDER_API SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
@@ -59,7 +66,10 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceRender* plugin_;
 
-//	MapHandlerGen* selected_map_;
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+
+	CMap2Handler* selected_map_;
+
 	bool updating_ui_;
 
 	QColorDialog* color_dial_;
@@ -72,6 +82,8 @@ private:
 private slots:
 
 	// slots called from UI signals
+	void selected_map_changed();
+
 	void position_vbo_changed(int index);
 	void normal_vbo_changed(int index);
 	void color_vbo_changed(int index);
@@ -94,11 +106,19 @@ private slots:
 
 	// slots called from SCHNApps signals
 	void selected_view_changed(View* old, View* cur);
-	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
 
-	// slots called from MapHandlerGen signals
+	// slots called from View signals
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
+
+	// slots called from CMap2Handler signals
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
+
+private:
+
+	void map_linked(CMap2Handler* mh);
+	void map_unlinked(CMap2Handler* mh);
 
 public:
 
@@ -120,6 +140,7 @@ public:
 	void set_transparency_enabled(bool b);
 	void set_transparency_factor(int tf);
 
+	CMap2Handler* selected_map() { return selected_map_; }
 	void refresh_ui();
 
 private:

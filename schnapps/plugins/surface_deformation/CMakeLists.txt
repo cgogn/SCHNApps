@@ -5,7 +5,6 @@ project(plugin_surface_deformation
 find_package(schnapps_core REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED "")
-
 add_library(schnapps::surface_deformation ALIAS plugin_surface_deformation)
 
 target_sources(${PROJECT_NAME}
@@ -13,8 +12,9 @@ target_sources(${PROJECT_NAME}
 		"${CMAKE_CURRENT_LIST_DIR}/dll.h"
 		"${CMAKE_CURRENT_LIST_DIR}/map_parameters.h"
 		"${CMAKE_CURRENT_LIST_DIR}/surface_deformation.h"
-		"${CMAKE_CURRENT_LIST_DIR}/surface_deformation_dock_tab.h"
 		"${CMAKE_CURRENT_LIST_DIR}/surface_deformation.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/surface_deformation.ui"
+		"${CMAKE_CURRENT_LIST_DIR}/surface_deformation_dock_tab.h"
 		"${CMAKE_CURRENT_LIST_DIR}/surface_deformation_dock_tab.cpp"
 )
 
@@ -25,12 +25,14 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SURFACE_DEFORMATION_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
+	schnapps::cmap2_provider
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

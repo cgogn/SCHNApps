@@ -26,8 +26,9 @@
 
 #include <schnapps/plugins/surface_render_scalar/dll.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>
 
@@ -38,13 +39,14 @@ namespace plugin_surface_render_scalar
 {
 
 class Plugin_SurfaceRenderScalar;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 {
 	friend class Plugin_SurfaceRenderScalar;
 
 	MapParameters() :
-		map_(nullptr),
+		mh_(nullptr),
 		position_vbo_(nullptr),
 		scalar_vbo_(nullptr),
 		color_map_(cgogn::rendering::ShaderScalarPerVertex::BWR),
@@ -60,15 +62,15 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	inline cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	inline cgogn::rendering::VBO* get_scalar_vbo() const { return scalar_vbo_; }
-	inline cgogn::rendering::ShaderScalarPerVertex::ColorMap get_color_map() const { return color_map_; }
-	inline SCALAR get_scalar_min() const { return scalar_min_; }
-	inline SCALAR get_scalar_max() const { return scalar_max_; }
-	inline bool get_auto_update_min_max() const { return auto_update_min_max_; }
-	inline int32 get_expansion() const { return expansion_; }
-	inline bool get_show_iso_lines() const { return show_iso_lines_; }
-	inline int32 get_nb_iso_levels() const { return nb_iso_levels_; }
+	inline cgogn::rendering::VBO* position_vbo() const { return position_vbo_; }
+	inline cgogn::rendering::VBO* scalar_vbo() const { return scalar_vbo_; }
+	inline cgogn::rendering::ShaderScalarPerVertex::ColorMap color_map() const { return color_map_; }
+	inline SCALAR scalar_min() const { return scalar_min_; }
+	inline SCALAR scalar_max() const { return scalar_max_; }
+	inline bool auto_update_min_max() const { return auto_update_min_max_; }
+	inline int32 expansion() const { return expansion_; }
+	inline bool show_iso_lines() const { return show_iso_lines_; }
+	inline int32 nb_iso_levels() const { return nb_iso_levels_; }
 
 private:
 
@@ -153,7 +155,7 @@ private:
 
 	void update_min_max()
 	{
-		const CMap2::VertexAttribute<SCALAR>& attr = map_->template get_attribute<SCALAR, CMap2::Vertex::ORBIT>(QString::fromStdString(scalar_vbo_->name()));
+		const CMap2::VertexAttribute<SCALAR>& attr = mh_->map()->get_attribute<SCALAR, CMap2::Vertex::ORBIT>(scalar_vbo_->name());
 		if (!attr.is_valid())
 		{
 			cgogn_log_warning("plugin_surface_render_scalar|MapParameters::update_min_max") << "The attribute \"" << scalar_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(SCALAR()) << ".";
@@ -171,7 +173,7 @@ private:
 		shader_scalar_per_vertex_param_->max_value_ = scalar_max_;
 	}
 
-	CMap2Handler* map_;
+	CMap2Handler* mh_;
 
 	std::unique_ptr<cgogn::rendering::ShaderScalarPerVertex::Param> shader_scalar_per_vertex_param_;
 

@@ -25,20 +25,22 @@
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 
 #include <schnapps/plugins/surface_render_scalar/dll.h>
-
-#include <schnapps/core/plugin_interaction.h>
-#include <schnapps/core/types.h>
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-
-#include <schnapps/plugins/surface_render_scalar/surface_render_scalar_dock_tab.h>
 #include <schnapps/plugins/surface_render_scalar/map_parameters.h>
+
+#include <schnapps/core/types.h>
+#include <schnapps/core/plugin_interaction.h>
 
 namespace schnapps
 {
 
+class View;
+namespace plugin_cmap2_provider { class CMap2Handler; }
+
 namespace plugin_surface_render_scalar
 {
+
+class SurfaceRenderScalar_DockTab;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 /**
 * @brief Plugin that renders color-coded scalar values on surface vertices
@@ -55,7 +57,7 @@ public:
 	~Plugin_SurfaceRenderScalar() override {}
 	static QString plugin_name();
 
-	MapParameters& get_parameters(View* view, MapHandlerGen* map);
+	MapParameters& parameters(View* view, CMap2Handler* mh);
 	bool check_docktab_activation();
 
 private:
@@ -64,7 +66,7 @@ private:
 	void disable() override;
 
 	inline void draw(View*, const QMatrix4x4&, const QMatrix4x4&) override {}
-	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
+	void draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
 	inline bool keyPress(View*, QKeyEvent*) override { return true; }
 	inline bool keyRelease(View*, QKeyEvent*) override { return true; }
@@ -81,13 +83,13 @@ private:
 private slots:
 
 	// slots called from View signals
-	void map_linked(MapHandlerGen* map);
-	void map_unlinked(MapHandlerGen* map);
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
 
 private:
 
-	void add_linked_map(View* view, MapHandlerGen* map);
-	void remove_linked_map(View* view, MapHandlerGen* map);
+	void add_linked_map(View* view, CMap2Handler* mh);
+	void remove_linked_map(View* view, CMap2Handler* mh);
 
 private slots:
 
@@ -101,22 +103,22 @@ private slots:
 
 public:
 
-	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_scalar_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_color_map(View* view, MapHandlerGen* map, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm, bool update_dock_tab);
-	void set_auto_update_min_max(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_scalar_min(View* view, MapHandlerGen* map, double d, bool update_dock_tab);
-	void set_scalar_max(View* view, MapHandlerGen* map, double d, bool update_dock_tab);
-	void set_expansion(View* view, MapHandlerGen* map, int32 i, bool update_dock_tab);
-	void set_show_iso_lines(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_nb_iso_levels(View* view, MapHandlerGen* map, int32 i, bool update_dock_tab);
+	void set_position_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_scalar_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_color_map(View* view, CMap2Handler* mh, cgogn::rendering::ShaderScalarPerVertex::ColorMap cm, bool update_dock_tab);
+	void set_auto_update_min_max(View* view, CMap2Handler* mh, bool b, bool update_dock_tab);
+	void set_scalar_min(View* view, CMap2Handler* mh, double d, bool update_dock_tab);
+	void set_scalar_max(View* view, CMap2Handler* mh, double d, bool update_dock_tab);
+	void set_expansion(View* view, CMap2Handler* mh, int32 i, bool update_dock_tab);
+	void set_show_iso_lines(View* view, CMap2Handler* mh, bool b, bool update_dock_tab);
+	void set_nb_iso_levels(View* view, CMap2Handler* mh, int32 i, bool update_dock_tab);
 
-	void update_min_max(View* view, MapHandlerGen* map, bool update_dock_tab);
+	void update_min_max(View* view, CMap2Handler* mh, bool update_dock_tab);
 
 private:
 
 	SurfaceRenderScalar_DockTab* dock_tab_;
-	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
+	std::map<View*, std::map<CMap2Handler*, MapParameters>> parameter_set_;
 
 	QString setting_auto_load_position_attribute_;
 };

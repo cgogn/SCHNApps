@@ -26,22 +26,30 @@
 
 #include <schnapps/plugins/surface_render_scalar/dll.h>
 
+#include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>
+
 #include <ui_surface_render_scalar.h>
 
-#include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>
+namespace cgogn { namespace rendering { class VBO; } }
 
 namespace schnapps
 {
 
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
+
 class SCHNApps;
 class View;
-class MapHandlerGen;
+class Object;
 
 namespace plugin_surface_render_scalar
 {
 
 class Plugin_SurfaceRenderScalar;
-struct MapParameters;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
 {
@@ -57,11 +65,17 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceRenderScalar* plugin_;
 
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+
+	CMap2Handler* selected_map_;
+
 	bool updating_ui_;
 
 private slots:
 
 	// slots called from UI signals
+	void selected_map_changed();
+
 	void position_vbo_changed(int index);
 	void selected_scalar_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
 	void color_map_changed(int index);
@@ -74,11 +88,19 @@ private slots:
 
 	// slots called from SCHNApps signals
 	void selected_view_changed(View* old, View* cur);
-	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
 
-	// slots called from MapHandlerGen signals
+	// slots called from View signals
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
+
+	// slots called from CMap2Handler signals
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
+
+private:
+
+	void map_linked(CMap2Handler* mh);
+	void map_unlinked(CMap2Handler* mh);
 
 public:
 
@@ -93,6 +115,7 @@ public:
 	void set_show_iso_lines(bool b);
 	void set_nb_iso_levels(int i);
 
+	CMap2Handler* selected_map() { return selected_map_; }
 	void refresh_ui();
 
 private:

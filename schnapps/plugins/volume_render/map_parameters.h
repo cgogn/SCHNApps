@@ -26,8 +26,9 @@
 
 #include <schnapps/plugins/volume_render/dll.h>
 
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+
 #include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
@@ -46,12 +47,14 @@ namespace plugin_volume_render
 {
 
 class Plugin_VolumeRender;
+using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 {
 	friend class Plugin_VolumeRender;
 
 	MapParameters() :
+		mh_(nullptr),
 	#ifdef USE_TRANSPARENCY
 		volume_transparency_drawer_(nullptr),
 		volume_transparency_drawer_rend_(nullptr),
@@ -77,23 +80,23 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	inline cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	inline bool get_render_vertices() const { return render_vertices_; }
-	inline bool get_render_edges() const { return render_edges_; }
-	inline bool get_render_faces() const { return render_faces_; }
-	inline bool get_render_topology() const { return render_topology_; }
-	inline bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
-	inline const QColor& get_vertex_color() const { return vertex_color_; }
-	inline const QColor& get_edge_color() const { return edge_color_; }
-	inline const QColor& get_face_color() const { return face_color_; }
-	inline float32 get_vertex_base_size() const { return vertex_base_size_; }
-	inline float32 get_vertex_scale_factor() const { return vertex_scale_factor_; }
-	inline float32 get_volume_explode_factor() const { return volume_explode_factor_; }
-	inline bool get_transparency_enabled() const { return use_transparency_; }
-	inline int32 get_transparency_factor() const { return transparency_factor_; }
+	inline cgogn::rendering::VBO* position_vbo() const { return position_vbo_; }
+	inline bool render_vertices() const { return render_vertices_; }
+	inline bool render_edges() const { return render_edges_; }
+	inline bool render_faces() const { return render_faces_; }
+	inline bool render_topology() const { return render_topology_; }
+	inline bool apply_clipping_plane() const { return apply_clipping_plane_; }
+	inline const QColor& vertex_color() const { return vertex_color_; }
+	inline const QColor& edge_color() const { return edge_color_; }
+	inline const QColor& face_color() const { return face_color_; }
+	inline float32 vertex_base_size() const { return vertex_base_size_; }
+	inline float32 vertex_scale_factor() const { return vertex_scale_factor_; }
+	inline float32 volume_explode_factor() const { return volume_explode_factor_; }
+	inline bool transparency_enabled() const { return use_transparency_; }
+	inline int32 transparency_factor() const { return transparency_factor_; }
 
 #ifdef USE_TRANSPARENCY
-	inline cgogn::rendering::VolumeTransparencyDrawer::Renderer* get_transp_drawer_rend()
+	inline cgogn::rendering::VolumeTransparencyDrawer::Renderer* transp_drawer_rend()
 	{
 		return volume_transparency_drawer_rend_.get();
 	}
@@ -223,8 +226,8 @@ private:
 		if (!clipping_plane_initialized_)
 		{
 			clipping_plane_initialized_ = true;
-			frame_manip_->set_size(map_->get_bb_diagonal_size() / 12.0f);
-			frame_manip_->set_position(map_->get_bb().max());
+			frame_manip_->set_size(mh_->bb_diagonal_size() / 12.0f);
+			frame_manip_->set_position(mh_->bb().max());
 			frame_manip_->z_plane_param(QColor(200, 200, 200), 0.0f, 0.0f, 3.0f);
 		}
 
@@ -245,7 +248,7 @@ private:
 	{
 		if (position_vbo_)
 		{
-			const CMap3::VertexAttribute<VEC3>& pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
 			if (!pos_attr.is_valid())
 			{
 				cgogn_log_warning("plugin_volume_render|MapParameters::update_topo_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
@@ -253,7 +256,7 @@ private:
 				return;
 			}
 
-			topo_drawer_->update(*map_->get_map(), pos_attr);
+			topo_drawer_->update(*mh_->map(), pos_attr);
 		}
 	}
 
@@ -261,17 +264,17 @@ private:
 	{
 		if (position_vbo_)
 		{
-			const CMap3::VertexAttribute<VEC3>& pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
 			if (!pos_attr.is_valid())
 			{
 				cgogn_log_warning("plugin_volume_render|MapParameters::update_volume_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
 				position_vbo_ = nullptr;
 				return;
 			}
-			volume_drawer_->update_edge(*map_->get_map(), pos_attr);
-			volume_drawer_->update_face(*map_->get_map(), pos_attr);
+			volume_drawer_->update_edge(*mh_->map(), pos_attr);
+			volume_drawer_->update_face(*mh_->map(), pos_attr);
 #ifdef USE_TRANSPARENCY
-			volume_transparency_drawer_->update_face(*map_->get_map(), pos_attr);
+			volume_transparency_drawer_->update_face(*mh_->map(), pos_attr);
 #endif
 		}
 	}
@@ -310,7 +313,7 @@ private:
 		set_transparency_factor(transparency_factor_);
 	}
 
-	MapHandler<CMap3>* map_;
+	CMap3Handler* mh_;
 
 	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;

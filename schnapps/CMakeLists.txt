@@ -9,7 +9,6 @@ set(CMAKE_AUTOMOC ON)
 #CMake will handle automatically uic for all Qt targets
 set(CMAKE_AUTOUIC ON)
 
-
 include(GenerateExportHeader)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/core")

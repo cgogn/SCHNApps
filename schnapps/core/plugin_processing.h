@@ -30,6 +30,8 @@
 namespace schnapps
 {
 
+class Object;
+
 class SCHNAPPS_CORE_API PluginProcessing : public Plugin
 {
 	Q_OBJECT

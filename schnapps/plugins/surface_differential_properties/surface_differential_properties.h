@@ -24,21 +24,29 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_
 
-#include <schnapps/core/plugin_processing.h>
-
 #include <schnapps/plugins/surface_differential_properties/dll.h>
 #include <schnapps/plugins/surface_differential_properties/dialog_compute_normal.h>
 #include <schnapps/plugins/surface_differential_properties/dialog_compute_curvature.h>
 
+#include <schnapps/core/plugin_processing.h>
+
 #include <QAction>
+
+namespace cgogn { enum Orbit: numerics::uint32; }
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
 
 namespace plugin_sdp
 {
+
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 /**
  * @brief Plugin that manages the computation of differential properties
@@ -65,18 +73,23 @@ private:
 private slots:
 
 	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
+	void object_added(Object* o);
+	void object_removed(Object* o);
 	void schnapps_closing();
 
-	// slots called from MapHandler signals
+	// slots called from CMap2Handler signals
 	void attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
 
 	// slots called from action signals
 	void open_compute_normal_dialog();
 	void open_compute_curvature_dialog();
 
-public slots:
+private:
+
+	void map_added(CMap2Handler* mh);
+	void map_removed(CMap2Handler* mh);
+
+public:
 
 	/**
 	 * @brief compute the normals of a mesh
@@ -233,6 +246,8 @@ private:
 
 	std::map<CMap2Handler*, ComputeNormalParameters> compute_normal_last_parameters_;
 	std::map<CMap2Handler*, ComputeCurvatureParameters> compute_curvature_last_parameters_;
+
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
 };
 
 } // namespace plugin_sdp

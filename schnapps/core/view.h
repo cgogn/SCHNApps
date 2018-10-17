@@ -44,7 +44,7 @@ class SCHNApps;
 class Camera;
 class Plugin;
 class PluginInteraction;
-class MapHandlerGen;
+class Object;
 
 /**
 * @brief View class inherit from QOGLViewer (http://libqglviewer.com/refManual/classQGLViewer.html)
@@ -60,8 +60,6 @@ class SCHNAPPS_CORE_API View : public QOGLViewer
 {
 	Q_OBJECT
 
-	friend class SCHNApps;
-
 public:
 
 	static uint32 view_count_;
@@ -70,7 +68,7 @@ public:
 
 	~View();
 
-	inline const QString& get_name() const { return name_; }
+	inline const QString& name() const { return name_; }
 
 public slots:
 
@@ -78,13 +76,13 @@ public slots:
 	 * @brief get the name of view
 	 * @return name
 	 */
-	inline QString get_name() { return name_; }
+	inline QString name() { return name_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	inline SCHNApps* get_schnapps() const { return schnapps_; }
+	inline SCHNApps* schnapps() const { return schnapps_; }
 
 	/**
 	 * @brief test if the view is the selected one
@@ -112,7 +110,7 @@ public slots:
 	* @brief get the current camera of the view
 	* @return the camera object
 	*/
-	inline Camera* get_current_camera() const { return current_camera_; }
+	inline Camera* current_camera() const { return current_camera_; }
 
 	/**
 	 * @brief test if this view use a camera
@@ -131,23 +129,13 @@ public slots:
 	 * MANAGE LINKED PLUGINS
 	 *********************************************************/
 
-	void link_plugin(PluginInteraction* plugin);
+	void link_plugin(PluginInteraction* plugin, bool update_dialog_list = true);
+	void link_plugin(const QString& name, bool update_dialog_list = true);
 
-	/**
-	* @brief link a plugin with the view
-	* @param name the name of plugin
-	*/
-	void link_plugin(const QString& name);
+	void unlink_plugin(PluginInteraction* plugin, bool update_dialog_list = true);
+	void unlink_plugin(const QString& name, bool update_dialog_list = true);
 
-	void unlink_plugin(PluginInteraction* plugin);
-
-	/**
-	* @brief unlink a plugin of the view
-	* @param name the name of plugin
-	*/
-	void unlink_plugin(const QString& name);
-
-	inline const std::list<PluginInteraction*>& get_linked_plugins() const { return plugins_; }
+	inline const std::list<PluginInteraction*>& linked_plugins() const { return plugins_; }
 
 	inline bool is_linked_to_plugin(PluginInteraction* plugin) const
 	{
@@ -161,37 +149,21 @@ public slots:
 	bool is_linked_to_plugin(const QString& name) const;
 
 	/*********************************************************
-	 * MANAGE LINKED MAPS
+	 * MANAGE LINKED OBJECTS
 	 *********************************************************/
 
-	void link_map(MapHandlerGen* map);
+	void link_object(Object* o, bool update_dialog_list = true);
+	void link_object(const QString& name, bool update_dialog_list = true);
 
-	/**
-	* @brief link a map with the view
-	* @param name the name of map
-	*/
-	void link_map(const QString& name);
+	void unlink_object(Object* o, bool update_dialog_list = true);
+	void unlink_object(const QString& name, bool update_dialog_list = true);
 
-	void unlink_map(MapHandlerGen* map);
+	inline const std::list<Object*>& linked_objects() const { return objects_; }
 
-	/**
-	* @brief unlink a map of the view
-	* @param name the name of map
-	*/
-	void unlink_map(const QString& name);
-
-	inline const std::list<MapHandlerGen*>& get_linked_maps() const { return maps_; }
-
-	inline bool is_linked_to_map(MapHandlerGen* map) const
+	inline bool is_linked_to_object(Object* o) const
 	{
-		return std::find(maps_.begin(), maps_.end(), map) != maps_.end();
+		return std::find(objects_.begin(), objects_.end(), o) != objects_.end();
 	}
-
-	/**
-	* @brief test if the view is linked to a lao
-	* @param name the name of map
-	*/
-	bool is_linked_to_map(const QString& name) const;
 
 private:
 
@@ -227,7 +199,7 @@ public:
 	 * @param bb_min min to be filled
 	 * @param bb_max max to be filled
 	 */
-	inline void get_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
+	inline void bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
 	{
 		bb_min = bb_min_;
 		bb_max = bb_max_;
@@ -240,11 +212,9 @@ private slots:
 
 	void close_dialogs();
 
-	void selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur);
-
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
-	void map_check_state_changed(QListWidgetItem* item);
+	void object_added(Object* o);
+	void object_removed(Object* o);
+	void object_check_state_changed(QListWidgetItem* item);
 
 	void plugin_enabled(Plugin *plugin);
 	void plugin_disabled(Plugin *plugin);
@@ -254,7 +224,11 @@ private slots:
 	void camera_removed(Camera* camera);
 	void camera_check_state_changed(QListWidgetItem* item);
 
+public slots:
+
 	void update_bb();
+
+private slots:
 
 	void color_selected();
 
@@ -263,7 +237,7 @@ private slots:
 	void ui_close_view(int x, int y, int globalX, int globalY);
 	void ui_color_view(int x, int y, int globalX, int globalY);
 
-	void ui_maps_list_view(int x, int y, int globalX, int globalY);
+	void ui_objects_list_view(int x, int y, int globalX, int globalY);
 	void ui_plugins_list_view(int x, int y, int globalX, int globalY);
 	void ui_cameras_list_view(int x, int y, int globalX, int globalY);
 
@@ -271,8 +245,8 @@ signals:
 
 	void current_camera_changed(Camera*, Camera*);
 
-	void map_linked(MapHandlerGen*);
-	void map_unlinked(MapHandlerGen*);
+	void object_linked(Object*);
+	void object_unlinked(Object*);
 
 	void plugin_linked(PluginInteraction*);
 	void plugin_unlinked(PluginInteraction*);
@@ -289,7 +263,7 @@ protected:
 
 	Camera* current_camera_;
 	std::list<PluginInteraction*> plugins_;
-	std::list<MapHandlerGen*> maps_;
+	std::list<Object*> objects_;
 
 	qoglviewer::Vec bb_min_;
 	qoglviewer::Vec bb_max_;
@@ -303,13 +277,13 @@ protected:
 
 	ViewButtonArea* button_area_left_;
 
-	ViewButton* maps_button_;
+	ViewButton* objects_button_;
 	ViewButton* plugins_button_;
 	ViewButton* cameras_button_;
 
 	QString text_info_;
 
-	ViewDialogList* dialog_maps_;
+	ViewDialogList* dialog_objects_;
 	ViewDialogList* dialog_plugins_;
 	ViewDialogList* dialog_cameras_;
 

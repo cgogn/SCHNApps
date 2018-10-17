@@ -64,28 +64,18 @@
       <string>Computed attributes</string>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <italic>true</italic>
-          <bold>true</bold>
-         </font>
-        </property>
+      <item row="6" column="0" colspan="2">
+       <widget class="QCheckBox" name="check_compute_kgaussian">
         <property name="text">
-         <string>Kmax :</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+         <string>compute kgaussian</string>
         </property>
        </widget>
       </item>
-      <item row="0" column="1" colspan="2">
-       <widget class="QLineEdit" name="Kmax_attribute_name"/>
+      <item row="6" column="2" colspan="2">
+       <widget class="QLineEdit" name="kgaussian_attribute_name"/>
       </item>
-      <item row="0" column="3" colspan="2">
-       <widget class="QCheckBox" name="check_create_vbo_Kmax">
+      <item row="5" column="4">
+       <widget class="QCheckBox" name="check_create_vbo_kmean">
         <property name="text">
          <string>Create VBO</string>
         </property>
@@ -111,11 +101,42 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="1" colspan="2">
-       <widget class="QLineEdit" name="kmax_attribute_name"/>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_4">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <italic>true</italic>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Kmax :</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
       </item>
-      <item row="1" column="3" colspan="2">
-       <widget class="QCheckBox" name="check_create_vbo_kmax">
+      <item row="4" column="0">
+       <widget class="QLabel" name="label_15">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <italic>true</italic>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Knormal :</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="4">
+       <widget class="QCheckBox" name="check_create_vbo_kgaussian">
         <property name="text">
          <string>Create VBO</string>
         </property>
@@ -141,18 +162,15 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1" colspan="2">
-       <widget class="QLineEdit" name="Kmin_attribute_name"/>
-      </item>
-      <item row="2" column="3" colspan="2">
-       <widget class="QCheckBox" name="check_create_vbo_Kmin">
+      <item row="5" column="0" colspan="2">
+       <widget class="QCheckBox" name="check_compute_kmean">
         <property name="text">
-         <string>Create VBO</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
+         <string>compute kmean</string>
         </property>
        </widget>
+      </item>
+      <item row="5" column="2" colspan="2">
+       <widget class="QLineEdit" name="kmean_attribute_name"/>
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="label_13">
@@ -171,10 +189,50 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="1" colspan="2">
-       <widget class="QLineEdit" name="kmin_attribute_name"/>
+      <item row="7" column="0" colspan="4">
+       <widget class="QCheckBox" name="check_auto_update">
+        <property name="font">
+         <font>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Auto update</string>
+        </property>
+       </widget>
       </item>
-      <item row="3" column="3" colspan="2">
+      <item row="0" column="4">
+       <widget class="QCheckBox" name="check_create_vbo_Kmax">
+        <property name="text">
+         <string>Create VBO</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QCheckBox" name="check_create_vbo_kmax">
+        <property name="text">
+         <string>Create VBO</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QCheckBox" name="check_create_vbo_Kmin">
+        <property name="text">
+         <string>Create VBO</string>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
        <widget class="QCheckBox" name="check_create_vbo_kmin">
         <property name="text">
          <string>Create VBO</string>
@@ -184,27 +242,7 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_15">
-        <property name="font">
-         <font>
-          <weight>75</weight>
-          <italic>true</italic>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Knormal :</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1" colspan="2">
-       <widget class="QLineEdit" name="Knormal_attribute_name"/>
-      </item>
-      <item row="4" column="3" colspan="2">
+      <item row="4" column="4">
        <widget class="QCheckBox" name="check_create_vbo_Knormal">
         <property name="text">
          <string>Create VBO</string>
@@ -214,45 +252,20 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="0" colspan="2">
-       <widget class="QCheckBox" name="check_compute_kmean">
-        <property name="text">
-         <string>compute kmean</string>
-        </property>
-       </widget>
+      <item row="0" column="1" colspan="3">
+       <widget class="QLineEdit" name="Kmax_attribute_name"/>
       </item>
-      <item row="5" column="2" colspan="2">
-       <widget class="QLineEdit" name="kmean_attribute_name"/>
+      <item row="1" column="1" colspan="3">
+       <widget class="QLineEdit" name="kmax_attribute_name"/>
       </item>
-      <item row="5" column="4">
-       <widget class="QCheckBox" name="check_create_vbo_kmean">
-        <property name="text">
-         <string>Create VBO</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
+      <item row="2" column="1" colspan="3">
+       <widget class="QLineEdit" name="Kmin_attribute_name"/>
       </item>
-      <item row="6" column="0" colspan="2">
-       <widget class="QCheckBox" name="check_compute_kgaussian">
-        <property name="text">
-         <string>compute kgaussian</string>
-        </property>
-       </widget>
+      <item row="3" column="1" colspan="3">
+       <widget class="QLineEdit" name="kmin_attribute_name"/>
       </item>
-      <item row="6" column="2" colspan="2">
-       <widget class="QLineEdit" name="kgaussian_attribute_name"/>
-      </item>
-      <item row="6" column="4">
-       <widget class="QCheckBox" name="check_create_vbo_kgaussian">
-        <property name="text">
-         <string>Create VBO</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
+      <item row="4" column="1" colspan="3">
+       <widget class="QLineEdit" name="Knormal_attribute_name"/>
       </item>
      </layout>
     </widget>

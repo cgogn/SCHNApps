@@ -36,76 +36,103 @@ namespace plugin_surface_deformation
 SurfaceDeformation_DockTab::SurfaceDeformation_DockTab(SCHNApps* s, Plugin_SurfaceDeformation* p) :
 	schnapps_(s),
 	plugin_(p),
+	plugin_cmap2_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false)
 {
 	setupUi(this);
+
+	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
 	connect(combo_positionAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(position_attribute_changed(int)));
 	connect(combo_freeVertexSet, SIGNAL(currentIndexChanged(int)), this, SLOT(free_vertex_set_changed(int)));
 	connect(combo_handleVertexSet, SIGNAL(currentIndexChanged(int)), this, SLOT(handle_vertex_set_changed(int)));
 	connect(button_startStop, SIGNAL(clicked()), this, SLOT(start_stop_button_clicked()));
 
-	MapHandlerGen* smap = schnapps_->get_selected_map();
-	if (smap && smap->dimension() == 2)
-	{
-		selected_map_ = static_cast<CMap2Handler*>(smap);
-		connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-		connect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
-	}
-
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
-	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
+
+	View* v = schnapps_->selected_view();
+	connect(v, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(v, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	for (Object* o : v->linked_objects())
+		object_linked(o);
+
+	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
 }
 
 SurfaceDeformation_DockTab::~SurfaceDeformation_DockTab()
 {
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 }
 
 /*****************************************************************************/
 // slots called from UI signals
 /*****************************************************************************/
 
-void SurfaceDeformation_DockTab::position_attribute_changed(int index)
+void SurfaceDeformation_DockTab::selected_map_changed()
 {
-	if (!updating_ui_)
+	if (selected_map_)
+	{
+		disconnect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
+
+	selected_map_ = nullptr;
+
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		selected_map_ = plugin_cmap2_provider_->map(map_name);
+	}
+
+	if (selected_map_)
+	{
+		connect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+		connect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
+		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
+		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
+
+	if (plugin_->check_docktab_activation())
+		refresh_ui();
+}
+
+void SurfaceDeformation_DockTab::position_attribute_changed(int)
+{
+	if (!updating_ui_ && selected_map_)
 		plugin_->set_position_attribute(selected_map_, combo_positionAttribute->currentText(), false);
 }
 
-void SurfaceDeformation_DockTab::free_vertex_set_changed(int index)
+void SurfaceDeformation_DockTab::free_vertex_set_changed(int)
 {
-	if (!updating_ui_)
+	if (!updating_ui_ && selected_map_)
 	{
-		CellsSetGen* cs = selected_map_->get_cells_set(Vertex_Cell, combo_freeVertexSet->currentText());
-		plugin_->set_free_vertex_set(schnapps_->get_selected_map(), cs, false);
+		CMap2CellsSet<CMap2::Vertex>* cs = selected_map_->cells_set<CMap2::Vertex>(combo_freeVertexSet->currentText());
+		plugin_->set_free_vertex_set(selected_map_, cs, false);
 	}
 }
 
-void SurfaceDeformation_DockTab::handle_vertex_set_changed(int index)
+void SurfaceDeformation_DockTab::handle_vertex_set_changed(int)
 {
-	if (!updating_ui_)
+	if (!updating_ui_ && selected_map_)
 	{
-		CellsSetGen* cs = selected_map_->get_cells_set(Vertex_Cell, combo_handleVertexSet->currentText());
-		plugin_->set_handle_vertex_set(schnapps_->get_selected_map(), cs, false);
+		CMap2CellsSet<CMap2::Vertex>* cs = selected_map_->cells_set<CMap2::Vertex>(combo_handleVertexSet->currentText());
+		plugin_->set_handle_vertex_set(selected_map_, cs, false);
 	}
 }
 
 void SurfaceDeformation_DockTab::start_stop_button_clicked()
 {
-	if (!updating_ui_)
+	if (!updating_ui_ && selected_map_)
 	{
-		if (selected_map_)
-		{
-			const MapParameters& p = plugin_->get_parameters(selected_map_);
-			if (!p.get_initialized())
-				plugin_->initialize(selected_map_, true);
-			else
-				plugin_->stop(selected_map_, true);
-		}
+		const MapParameters& p = plugin_->parameters(selected_map_);
+		if (!p.initialized())
+			plugin_->initialize(selected_map_, true);
+		else
+			plugin_->stop(selected_map_, true);
 	}
 }
 
@@ -115,78 +142,119 @@ void SurfaceDeformation_DockTab::start_stop_button_clicked()
 
 void SurfaceDeformation_DockTab::selected_view_changed(View* old, View* cur)
 {
+	updating_ui_ = true;
+	list_maps->clear();
+	updating_ui_ = false;
+
+	if (old)
+	{
+		disconnect(old, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		disconnect(old, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	}
+	if (cur)
+	{
+		connect(cur, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		connect(cur, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+		for (Object* o : cur->linked_objects())
+			object_linked(o);
+	}
+
 	if (plugin_->check_docktab_activation())
 		refresh_ui();
 }
 
-void SurfaceDeformation_DockTab::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
+/*****************************************************************************/
+// slots called from View signals
+/*****************************************************************************/
+
+void SurfaceDeformation_DockTab::object_linked(Object* o)
 {
-	cgogn_assert(selected_map_ == old);
-	if (selected_map_)
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_linked(mh);
+}
+
+void SurfaceDeformation_DockTab::map_linked(CMap2Handler* mh)
+{
+	updating_ui_ = true;
+	list_maps->addItem(mh->name());
+	updating_ui_ = false;
+}
+
+void SurfaceDeformation_DockTab::object_unlinked(Object* o)
+{
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_unlinked(mh);
+}
+
+void SurfaceDeformation_DockTab::map_unlinked(CMap2Handler* mh)
+{
+	if (selected_map_ == mh)
 	{
-		disconnect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-		disconnect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
 		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
 		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
-	}
-	if (cur && cur->dimension() == 2)
-	{
-		selected_map_ = static_cast<CMap2Handler*>(cur);
-		connect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-		connect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, const QString&)));
-		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
-	}
-	else
 		selected_map_ = nullptr;
+	}
 
-	if (plugin_->check_docktab_activation())
-		refresh_ui();
+	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
+	if (!items.empty())
+	{
+		updating_ui_ = true;
+		delete items[0];
+		updating_ui_ = false;
+	}
 }
 
 /*****************************************************************************/
 // slots called from MapHandlerGen signals
 /*****************************************************************************/
 
-void SurfaceDeformation_DockTab::selected_map_cells_set_added(CellType ct, const QString& name)
+void SurfaceDeformation_DockTab::selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name)
 {
-	updating_ui_ = true;
-	if (ct == Vertex_Cell)
+	if (orbit == CMap2::Vertex::ORBIT)
 	{
+		updating_ui_ = true;
 		combo_freeVertexSet->addItem(name);
 		combo_handleVertexSet->addItem(name);
+		updating_ui_ = false;
 	}
-	updating_ui_ = false;
 }
 
-void SurfaceDeformation_DockTab::selected_map_cells_set_removed(CellType ct, const QString& name)
+void SurfaceDeformation_DockTab::selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name)
 {
-	if (ct == Vertex_Cell)
+	if (orbit == CMap2::Vertex::ORBIT)
 	{
+		updating_ui_ = true;
 		int index = combo_freeVertexSet->findText(name);
 		if (index > 0)
 			combo_freeVertexSet->removeItem(index);
 		index = combo_handleVertexSet->findText(name);
 		if (index > 0)
 			combo_handleVertexSet->removeItem(index);
+		updating_ui_ = false;
 	}
 }
 
 void SurfaceDeformation_DockTab::selected_map_attribute_added(cgogn::Orbit orbit, const QString& name)
 {
-	updating_ui_ = true;
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
 		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-		const CMap2* map2 = selected_map_->get_map();
-		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
+		const CMap2* map = selected_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
 		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(name.toStdString())->type_name());
 
 		if (attribute_type_name == vec3_type_name)
+		{
+			updating_ui_ = true;
 			combo_positionAttribute->addItem(name);
+			updating_ui_ = false;
+		}
 	}
-	updating_ui_ = false;
 }
 
 void SurfaceDeformation_DockTab::selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
@@ -195,7 +263,11 @@ void SurfaceDeformation_DockTab::selected_map_attribute_removed(cgogn::Orbit orb
 	{
 		int index = combo_positionAttribute->findText(name, Qt::MatchExactly);
 		if (index > 0)
+		{
+			updating_ui_ = true;
 			combo_positionAttribute->removeItem(index);
+			updating_ui_ = false;
+		}
 	}
 }
 
@@ -214,12 +286,12 @@ void SurfaceDeformation_DockTab::set_position_attribute(const QString& name)
 	updating_ui_ = false;
 }
 
-void SurfaceDeformation_DockTab::set_free_vertex_set(CellsSetGen* cs)
+void SurfaceDeformation_DockTab::set_free_vertex_set(CMap2CellsSet<CMap2::Vertex>* cs)
 {
 	updating_ui_ = true;
-	if (cs && cs->get_cell_type() == Vertex_Cell)
+	if (cs)
 	{
-		int index = combo_freeVertexSet->findText(cs->get_name());
+		int index = combo_freeVertexSet->findText(cs->name());
 		if (index > 0)
 			combo_freeVertexSet->setCurrentIndex(index);
 		else
@@ -230,12 +302,12 @@ void SurfaceDeformation_DockTab::set_free_vertex_set(CellsSetGen* cs)
 	updating_ui_ = false;
 }
 
-void SurfaceDeformation_DockTab::set_handle_vertex_set(CellsSetGen* cs)
+void SurfaceDeformation_DockTab::set_handle_vertex_set(CMap2CellsSet<CMap2::Vertex>* cs)
 {
 	updating_ui_ = true;
-	if (cs && cs->get_cell_type() == Vertex_Cell)
+	if (cs)
 	{
-		int index = combo_handleVertexSet->findText(cs->get_name());
+		int index = combo_handleVertexSet->findText(cs->name());
 		if (index > 0)
 			combo_handleVertexSet->setCurrentIndex(index);
 		else
@@ -255,12 +327,12 @@ void SurfaceDeformation_DockTab::set_deformation_initialized(bool b)
 
 void SurfaceDeformation_DockTab::refresh_ui()
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
+	CMap2Handler* mh = selected_map_;
 
-	if (!map)
+	if (!mh)
 		return;
 
-	const MapParameters& p = plugin_->get_parameters(map);
+	const MapParameters& p = plugin_->parameters(mh);
 
 	updating_ui_ = true;
 
@@ -275,9 +347,9 @@ void SurfaceDeformation_DockTab::refresh_ui()
 
 	QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-	const MapHandlerGen::ChunkArrayContainer<uint32>* container = map->attribute_container(CellType::Vertex_Cell);
-	const std::vector<std::string>& names = container->names();
-	const std::vector<std::string>& type_names = container->type_names();
+	const CMap2::ChunkArrayContainer<uint32>& container = mh->map()->attribute_container<CMap2::Vertex::ORBIT>();
+	const std::vector<std::string>& names = container.names();
+	const std::vector<std::string>& type_names = container.type_names();
 
 	unsigned int i = 1;
 	for (std::size_t j = 0u; j < names.size(); ++j)
@@ -287,30 +359,30 @@ void SurfaceDeformation_DockTab::refresh_ui()
 		if (type == vec3_type_name)
 		{
 			combo_positionAttribute->addItem(name);
-			if (p.get_position_attribute().is_valid() && p.get_position_attribute_name() == name)
+			if (p.position_attribute().is_valid() && QString::fromStdString(p.position_attribute().name()) == name)
 				combo_positionAttribute->setCurrentIndex(i);
 			++i;
 		}
 	}
 
-	CellsSetGen* fvs = p.get_free_vertex_set();
-	CellsSetGen* hvs = p.get_handle_vertex_set();
+	CMap2CellsSet<CMap2::Vertex>* fvs = p.free_vertex_set();
+	CMap2CellsSet<CMap2::Vertex>* hvs = p.handle_vertex_set();
 
 	i = 1;
-	map->foreach_cells_set(Vertex_Cell, [&] (CellsSetGen* cells_set)
+	mh->foreach_cells_set<CMap2::Vertex>([&] (CMap2CellsSet<CMap2::Vertex>* cells_set)
 	{
-		combo_freeVertexSet->addItem(cells_set->get_name());
+		combo_freeVertexSet->addItem(cells_set->name());
 		if (cells_set == fvs)
 			combo_freeVertexSet->setCurrentIndex(i);
 
-		combo_handleVertexSet->addItem(cells_set->get_name());
+		combo_handleVertexSet->addItem(cells_set->name());
 		if (cells_set == hvs)
 			combo_handleVertexSet->setCurrentIndex(i);
 
 		++i;
 	});
 
-	button_startStop->setText(p.get_initialized() ? "Stop" : "Start");
+	button_startStop->setText(p.initialized() ? "Stop" : "Start");
 
 	updating_ui_ = false;
 }

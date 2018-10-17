@@ -5,7 +5,6 @@ project(plugin_surface_render_vector
 find_package(schnapps_core REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED "")
-
 add_library(schnapps::surface_render_vector ALIAS plugin_surface_render_vector)
 
 target_sources(${PROJECT_NAME}
@@ -26,12 +25,14 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
+	schnapps::cmap2_provider
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

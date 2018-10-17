@@ -45,36 +45,33 @@ public:
 	inline Plugin() {}
 	virtual ~Plugin();
 
-	inline const QString& get_name() const { return name_; }
+	inline const QString& name() const { return name_; }
 
 	virtual inline bool auto_activate() { return false; }
-
-public slots:
 
 	/**
 	 * @brief get the name of Plugin object
 	 * @return name
 	 */
-	inline QString get_name() { return name_; }
+	inline QString name() { return name_; }
 
 	/**
 	 * @brief get the file path to the plugin library file
 	 * @return file path
 	 */
-	inline QString get_file_path() { return file_path_; }
+	inline QString file_path() { return file_path_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	inline SCHNApps* get_schnapps() const { return schnapps_; }
+	inline SCHNApps* schnapps() const { return schnapps_; }
 
-	const QVariant get_setting(const QString& name) const;
+	const QVariant setting(const QString& name) const;
 
 	QVariant add_setting(const QString& name, const QVariant& default_value);
 
 private:
-
 
 	inline void set_file_path(const QString& f) { file_path_ = f; }
 

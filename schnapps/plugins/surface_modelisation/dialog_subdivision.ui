@@ -7,7 +7,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>274</width>
+    <width>307</width>
     <height>246</height>
    </rect>
   </property>
@@ -52,6 +52,13 @@
       <widget class="QPushButton" name="button_catmull_clark">
        <property name="text">
         <string>Catmull-Clark</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="button_lsm">
+       <property name="text">
+        <string>LSM</string>
        </property>
       </widget>
      </item>
