@@ -32,8 +32,6 @@
 
 #include <ui_surface_deformation.h>
 
-namespace cgogn { enum Orbit: numerics::uint32; }
-
 namespace schnapps
 {
 
