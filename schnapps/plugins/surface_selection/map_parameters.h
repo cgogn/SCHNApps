@@ -27,6 +27,7 @@
 #include <schnapps/plugins/surface_selection/dll.h>
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/view.h>

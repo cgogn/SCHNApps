@@ -27,6 +27,7 @@
 #include <schnapps/plugins/surface_deformation/dll.h>
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
 
 #include <schnapps/core/types.h>
 

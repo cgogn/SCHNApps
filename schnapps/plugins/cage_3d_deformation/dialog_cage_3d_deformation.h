@@ -26,19 +26,29 @@
 
 #include <schnapps/plugins/cage_3d_deformation/dll.h>
 
-#include <schnapps/core/map_handler.h>
+#include <schnapps/core/types.h>
 
 #include <ui_dialog_cage_3d_deformation.h>
+
+namespace cgogn { enum Orbit: numerics::uint32; }
 
 namespace schnapps
 {
 
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
+
 class SCHNApps;
+class Object;
 
 namespace plugin_cage_3d_deformation
 {
 
 class Plugin_Cage3dDeformation;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Cage3dDeformation_Dialog : public QDialog, public Ui::Cage3dDeformation_Dialog
 {
@@ -47,13 +57,16 @@ class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Cage3dDeformation_Dialog : public 
 public:
 
 	Cage3dDeformation_Dialog(SCHNApps* s, Plugin_Cage3dDeformation* p);
+	~Cage3dDeformation_Dialog() override;
 
 private:
 
 	SCHNApps* schnapps_;
 	Plugin_Cage3dDeformation* plugin_;
 
-	MapHandlerGen* selected_deformed_map_;
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+
+	CMap2Handler* selected_deformed_map_;
 	CMap2Handler* selected_control_map_;
 
 	bool updating_ui_;
@@ -68,17 +81,19 @@ private slots:
 	void toggle_control();
 
 	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
+	void object_added(Object* o);
+	void object_removed(Object* o);
 
-	// slots called from MapHandlerGen signals
+	// slots called from CMap2Handler signals
 	void selected_deformed_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void selected_deformed_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name);
 	void selected_control_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void selected_control_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name);
 
 public:
 
 	CMap2Handler* selected_control_map() const { return selected_control_map_; }
-	MapHandlerGen* selected_deformed_map() const { return selected_deformed_map_; }
+	CMap2Handler* selected_deformed_map() const { return selected_deformed_map_; }
 
 	// methods used to update the UI from the plugin
 	void set_deformed_position_attribute(const QString& name);
@@ -87,6 +102,9 @@ public:
 	void set_linked(bool state);
 
 private:
+
+	void map_added(CMap2Handler* mh);
+	void map_removed(CMap2Handler* mh);
 
 	// internal UI cascading updates
 	void update_after_selected_deformed_map_changed();

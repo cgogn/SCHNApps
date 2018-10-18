@@ -83,7 +83,7 @@ private slots:
 	void object_added(Object* o);
 	void object_removed(Object* o);
 
-	// slots called from MapHandlerGen signals
+	// slots called from CMap2Handler signals
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
 	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name);
 

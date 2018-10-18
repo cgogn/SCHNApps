@@ -25,9 +25,8 @@
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_
 
 #include <schnapps/plugins/surface_differential_properties/dll.h>
-#include <schnapps/plugins/surface_differential_properties/dialog_compute_normal.h>
-#include <schnapps/plugins/surface_differential_properties/dialog_compute_curvature.h>
 
+#include <schnapps/core/types.h>
 #include <schnapps/core/plugin_processing.h>
 
 #include <QAction>
@@ -45,6 +44,9 @@ class CMap2Handler;
 
 namespace plugin_sdp
 {
+
+class ComputeNormal_Dialog;
+class ComputeCurvature_Dialog;
 
 using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
@@ -152,8 +154,6 @@ public:
 		bool create_vbo_kgaussian,
 		bool auto_update
 	);
-
-public:
 
 	struct ComputeNormalParameters
 	{

@@ -22,6 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
 
 #include <schnapps/core/view.h>
 
