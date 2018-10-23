@@ -651,7 +651,7 @@ void View::object_removed(Object* o)
 {
 	if (o)
 	{
-		dialog_objects_->remove_item(o->name());
+		dialog_objects_->remove_item(o->provider()->name() + "/" + o->name());
 		unlink_object(o);
 	}
 }
