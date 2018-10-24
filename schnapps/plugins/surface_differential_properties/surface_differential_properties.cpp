@@ -22,6 +22,8 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/surface_differential_properties/surface_differential_properties.h>
+#include <schnapps/plugins/surface_differential_properties/dialog_compute_normal.h>
+#include <schnapps/plugins/surface_differential_properties/dialog_compute_curvature.h>
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
 
@@ -100,9 +102,9 @@ void Plugin_SurfaceDifferentialProperties::object_added(Object* o)
 		map_added(mh);
 }
 
-void Plugin_SurfaceDifferentialProperties::map_added(CMap2Handler *map)
+void Plugin_SurfaceDifferentialProperties::map_added(CMap2Handler* mh)
 {
-	connect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
+	connect(mh, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
 }
 
 void Plugin_SurfaceDifferentialProperties::object_removed(Object* o)
@@ -112,9 +114,9 @@ void Plugin_SurfaceDifferentialProperties::object_removed(Object* o)
 		map_removed(mh);
 }
 
-void Plugin_SurfaceDifferentialProperties::map_removed(CMap2Handler *map)
+void Plugin_SurfaceDifferentialProperties::map_removed(CMap2Handler* mh)
 {
-	disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
+	disconnect(mh, SIGNAL(attribute_changed(cgogn::Orbit, QString)), this, SLOT(attribute_changed(cgogn::Orbit, const QString&)));
 }
 
 void Plugin_SurfaceDifferentialProperties::schnapps_closing()

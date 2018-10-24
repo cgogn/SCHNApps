@@ -31,13 +31,23 @@
 
 #include <QAction>
 
+namespace cgogn { enum Orbit: numerics::uint32; }
+
 namespace schnapps
 {
+
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
 
 namespace plugin_cage_3d_deformation
 {
 
 class Cage3dDeformation_Dialog;
+
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 /**
 * @brief Cage 3d deformation
@@ -54,7 +64,7 @@ public:
 	~Plugin_Cage3dDeformation() override {}
 	static QString plugin_name();
 
-	MapParameters& get_parameters(MapHandlerGen* map);
+	MapParameters& parameters(CMap2Handler* mh);
 
 private:
 
@@ -64,8 +74,8 @@ private:
 private slots:
 
 	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
+	void object_added(Object* o);
+	void object_removed(Object* o);
 	void schnapps_closing();
 
 	// slots called from MapHandler signals
@@ -76,12 +86,17 @@ private slots:
 	// slots called from action signals
 	void open_dialog();
 
-public slots:
+private:
 
-	void set_deformed_position_attribute(MapHandlerGen* map, const QString& name, bool update_dialog);
-	void set_control_map(MapHandlerGen* map, CMap2Handler* control, bool update_dialog);
-	void set_control_position_attribute(MapHandlerGen* map, const QString& name, bool update_dialog);
-	void toggle_control(MapHandlerGen* map, bool update_dialog);
+	void map_added(CMap2Handler* mh);
+	void map_removed(CMap2Handler* mh);
+
+public:
+
+	void set_deformed_position_attribute(CMap2Handler* mh, const QString& name, bool update_dialog);
+	void set_control_map(CMap2Handler* mh, CMap2Handler* control, bool update_dialog);
+	void set_control_position_attribute(CMap2Handler* mh, const QString& name, bool update_dialog);
+	void toggle_control(CMap2Handler* mh, bool update_dialog);
 
 private:
 
@@ -91,7 +106,9 @@ private:
 	QString setting_auto_load_control_position_attribute_;
 	QString setting_auto_load_deformed_position_attribute_;
 
-	std::map<MapHandlerGen*, MapParameters> parameter_set_;
+	std::map<CMap2Handler*, MapParameters> parameter_set_;
+
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
 };
 
 } // namespace plugin_cage_3d_deformation

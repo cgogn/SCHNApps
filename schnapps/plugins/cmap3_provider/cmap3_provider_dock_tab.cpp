@@ -23,6 +23,7 @@
 
 #include <schnapps/plugins/cmap3_provider/cmap3_provider_dock_tab.h>
 #include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_cells_set.h>
 
 namespace schnapps
 {

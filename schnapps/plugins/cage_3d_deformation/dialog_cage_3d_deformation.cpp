@@ -24,8 +24,9 @@
 #include <schnapps/plugins/cage_3d_deformation/dialog_cage_3d_deformation.h>
 #include <schnapps/plugins/cage_3d_deformation/cage_3d_deformation.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 
 namespace schnapps
 {
@@ -53,10 +54,23 @@ Cage3dDeformation_Dialog::Cage3dDeformation_Dialog(SCHNApps* s, Plugin_Cage3dDef
 
 	connect(button_linkUnlink, SIGNAL(clicked()), this, SLOT(toggle_control()));
 
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
 
-	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+	schnapps_->foreach_object([this] (Object* o)
+	{
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		if (mh)
+			map_added(mh);
+	});
+
+	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+}
+
+Cage3dDeformation_Dialog::~Cage3dDeformation_Dialog()
+{
+	disconnect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	disconnect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
 }
 
 /*****************************************************************************/
@@ -66,17 +80,23 @@ Cage3dDeformation_Dialog::Cage3dDeformation_Dialog(SCHNApps* s, Plugin_Cage3dDef
 void Cage3dDeformation_Dialog::selected_deformed_map_changed()
 {
 	if (selected_deformed_map_)
+	{
 		disconnect(selected_deformed_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_deformed_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_deformed_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_deformed_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
 
 	QList<QListWidgetItem*> currentItems = list_deformed_maps->selectedItems();
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
 
-		selected_deformed_map_ = schnapps_->get_map(map_name);
+		selected_deformed_map_ = plugin_cmap2_provider_->map(map_name);
 
 		if (selected_deformed_map_)
+		{
 			connect(selected_deformed_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_deformed_map_attribute_added(cgogn::Orbit, const QString&)));
+			connect(selected_deformed_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_deformed_map_attribute_removed(cgogn::Orbit, const QString&)));
+		}
 
 		update_after_selected_deformed_map_changed();
 	}
@@ -89,7 +109,7 @@ void Cage3dDeformation_Dialog::selected_deformed_map_changed()
 	}
 }
 
-void Cage3dDeformation_Dialog::deformed_position_attribute_changed(int index)
+void Cage3dDeformation_Dialog::deformed_position_attribute_changed(int)
 {
 	if (!updating_ui_)
 		plugin_->set_deformed_position_attribute(selected_deformed_map_, combo_deformedPositionAttribute->currentText(), false);
@@ -98,25 +118,31 @@ void Cage3dDeformation_Dialog::deformed_position_attribute_changed(int index)
 void Cage3dDeformation_Dialog::selected_control_map_changed()
 {
 	if (selected_control_map_)
+	{
 		disconnect(selected_control_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_control_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_control_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_control_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
 
 	QList<QListWidgetItem*> currentItems = list_control_maps->selectedItems();
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
 
-		selected_control_map_ = dynamic_cast<CMap2Handler*>(schnapps_->get_map(map_name));
+		selected_control_map_ = plugin_cmap2_provider_->map(map_name);
 		if (!updating_ui_)
 			plugin_->set_control_map(selected_deformed_map_, selected_control_map_, false);
 
 		if (selected_control_map_)
+		{
 			connect(selected_control_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_control_map_attribute_added(cgogn::Orbit, const QString&)));
+			connect(selected_control_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_control_map_attribute_removed(cgogn::Orbit, const QString&)));
+		}
 
 		update_after_selected_control_map_changed();
 	}
 }
 
-void Cage3dDeformation_Dialog::control_position_attribute_changed(int index)
+void Cage3dDeformation_Dialog::control_position_attribute_changed(int)
 {
 	if (!updating_ui_)
 		plugin_->set_control_position_attribute(selected_deformed_map_, combo_controlPositionAttribute->currentText(), false);
@@ -124,56 +150,102 @@ void Cage3dDeformation_Dialog::control_position_attribute_changed(int index)
 
 void Cage3dDeformation_Dialog::toggle_control()
 {
-	plugin_->toggle_control(selected_deformed_map_, true);
+	if (selected_deformed_map_)
+		plugin_->toggle_control(selected_deformed_map_, true);
 }
 
 /*****************************************************************************/
 // slots called from SCHNApps signals
 /*****************************************************************************/
 
-void Cage3dDeformation_Dialog::map_added(MapHandlerGen* map)
+void Cage3dDeformation_Dialog::object_added(Object* o)
 {
-	list_deformed_maps->addItem(map->get_name());
-	if (map->dimension() == 2)
-		list_control_maps->addItem(map->get_name());
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_added(mh);
 }
 
-void Cage3dDeformation_Dialog::map_removed(MapHandlerGen* map)
+void Cage3dDeformation_Dialog::map_added(CMap2Handler* mh)
 {
-	if (selected_deformed_map_ == map)
+	updating_ui_ = true;
+	list_deformed_maps->addItem(mh->name());
+	list_control_maps->addItem(mh->name());
+	updating_ui_ = false;
+}
+
+void Cage3dDeformation_Dialog::object_removed(Object* o)
+{
+	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	if (mh)
+		map_removed(mh);
+}
+
+void Cage3dDeformation_Dialog::map_removed(CMap2Handler* mh)
+{
+	if (selected_deformed_map_ == mh)
 	{
 		disconnect(selected_deformed_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_deformed_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_deformed_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_deformed_map_attribute_removed(cgogn::Orbit, const QString&)));
 		selected_deformed_map_ = nullptr;
 	}
-	QList<QListWidgetItem*> deformed_items = list_deformed_maps->findItems(map->get_name(), Qt::MatchExactly);
+	QList<QListWidgetItem*> deformed_items = list_deformed_maps->findItems(mh->name(), Qt::MatchExactly);
 	if (!deformed_items.empty())
 		delete deformed_items[0];
 
-	if (selected_control_map_ == map)
+	if (selected_control_map_ == mh)
 	{
 		disconnect(selected_control_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_control_map_attribute_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_control_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_control_map_attribute_removed(cgogn::Orbit, const QString&)));
 		selected_control_map_ = nullptr;
 	}
-	QList<QListWidgetItem*> control_items = list_control_maps->findItems(map->get_name(), Qt::MatchExactly);
+	QList<QListWidgetItem*> control_items = list_control_maps->findItems(mh->name(), Qt::MatchExactly);
 	if (!control_items.empty())
 		delete control_items[0];
 }
 
 /*****************************************************************************/
-// slots called from MapHandlerGen signals
+// slots called from CMap2Handler signals
 /*****************************************************************************/
 
 void Cage3dDeformation_Dialog::selected_deformed_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
 {
-	if (orbit == selected_deformed_map_->orbit(CellType::Vertex_Cell))
+	if (orbit == CMap2::Vertex::ORBIT)
 	{
 		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-		const MapHandlerGen::ChunkArrayContainer<uint32>* container = selected_deformed_map_->attribute_container(CellType::Vertex_Cell);
-		QString attribute_type_name = QString::fromStdString(container->get_chunk_array(attribute_name.toStdString())->type_name());
+		const CMap2* map = selected_deformed_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
+		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
 
 		if (attribute_type_name == vec3_type_name)
+		{
+			updating_ui_ = true;
 			combo_deformedPositionAttribute->addItem(attribute_name);
+			updating_ui_ = false;
+		}
+	}
+}
+
+void Cage3dDeformation_Dialog::selected_deformed_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
+		const CMap2* map = selected_deformed_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
+		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
+
+		if (attribute_type_name == vec3_type_name)
+		{
+			int index = combo_deformedPositionAttribute->findText(attribute_name, Qt::MatchExactly);
+			if (index > 0)
+			{
+				updating_ui_ = true;
+				combo_deformedPositionAttribute->removeItem(index);
+				updating_ui_ = false;
+			}
+		}
 	}
 }
 
@@ -183,12 +255,39 @@ void Cage3dDeformation_Dialog::selected_control_map_attribute_added(cgogn::Orbit
 	{
 		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-		const CMap2* map2 = selected_control_map_->get_map();
+		const CMap2* map2 = selected_control_map_->map();
 		const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
 		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
 
 		if (attribute_type_name == vec3_type_name)
+		{
+			updating_ui_ = true;
 			combo_controlPositionAttribute->addItem(attribute_name);
+			updating_ui_ = false;
+		}
+	}
+}
+
+void Cage3dDeformation_Dialog::selected_control_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	if (orbit == CMap2::Vertex::ORBIT)
+	{
+		QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
+
+		const CMap2* map = selected_control_map_->map();
+		const CMap2::ChunkArrayContainer<uint32>& container = map->attribute_container<CMap2::Vertex::ORBIT>();
+		QString attribute_type_name = QString::fromStdString(container.get_chunk_array(attribute_name.toStdString())->type_name());
+
+		if (attribute_type_name == vec3_type_name)
+		{
+			int index = combo_controlPositionAttribute->findText(attribute_name, Qt::MatchExactly);
+			if (index > 0)
+			{
+				updating_ui_ = true;
+				combo_controlPositionAttribute->removeItem(index);
+				updating_ui_ = false;
+			}
+		}
 	}
 }
 
@@ -218,7 +317,7 @@ void Cage3dDeformation_Dialog::set_selected_control_map(CMap2Handler* map)
 		connect(selected_control_map_, SIGNAL(attribute_added(cgogn::Orbit, const QString&)), this, SLOT(selected_control_map_attribute_added(cgogn::Orbit, const QString&)));
 
 	updating_ui_ = true;
-	QList<QListWidgetItem*> foundItems = list_control_maps->findItems(selected_control_map_->get_name(), Qt::MatchExactly);
+	QList<QListWidgetItem*> foundItems = list_control_maps->findItems(selected_control_map_->name(), Qt::MatchExactly);
 	if (!foundItems.empty())
 		list_control_maps->setCurrentItem(foundItems[0]);
 	updating_ui_ = false;
@@ -258,16 +357,17 @@ void Cage3dDeformation_Dialog::update_after_selected_deformed_map_changed()
 
 	if (selected_deformed_map_)
 	{
-		if (selected_deformed_map_->is_embedded(CellType::Vertex_Cell))
+		const CMap2* map2 = selected_deformed_map_->map();
+		if (map2->is_embedded<CMap2::Vertex>())
 		{
-			const MapHandlerGen::ChunkArrayContainer<uint32>* container = selected_deformed_map_->attribute_container(CellType::Vertex_Cell);
-			const std::vector<std::string>& names = container->names();
-			const std::vector<std::string>& type_names = container->type_names();
+			const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
+			const std::vector<std::string>& names = container.names();
+			const std::vector<std::string>& type_names = container.type_names();
 			QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-			const MapParameters& p = plugin_->get_parameters(selected_deformed_map_);
+			const MapParameters& p = plugin_->parameters(selected_deformed_map_);
 
-			const MapHandlerGen::Attribute_T<VEC3>& pos = p.get_deformed_position_attribute();
+			const CMap2::VertexAttribute<VEC3>& pos = p.deformed_position_attribute();
 			unsigned int i = 1;
 			for (std::size_t j = 0u; j < names.size(); ++j)
 			{
@@ -283,7 +383,7 @@ void Cage3dDeformation_Dialog::update_after_selected_deformed_map_changed()
 				}
 			}
 
-			if (!p.get_linked())
+			if (!p.linked())
 			{
 				list_control_maps->setEnabled(true);
 				combo_controlPositionAttribute->setEnabled(true);
@@ -298,10 +398,10 @@ void Cage3dDeformation_Dialog::update_after_selected_deformed_map_changed()
 				button_linkUnlink->setText("Unlink");
 			}
 
-			CMap2Handler* control_map = p.get_control_map();
+			CMap2Handler* control_map = p.control_map();
 			if (control_map)
 			{
-				QList<QListWidgetItem*> items = list_control_maps->findItems(control_map->get_name(), Qt::MatchExactly);
+				QList<QListWidgetItem*> items = list_control_maps->findItems(control_map->name(), Qt::MatchExactly);
 				if (!items.empty())
 					list_control_maps->setCurrentItem(items[0]);
 			}
@@ -326,7 +426,7 @@ void Cage3dDeformation_Dialog::update_after_selected_control_map_changed()
 
 	if (selected_deformed_map_ && selected_control_map_)
 	{
-		const CMap2* map2 = selected_control_map_->get_map();
+		const CMap2* map2 = selected_control_map_->map();
 		if (map2->is_embedded<CMap2::Vertex::ORBIT>())
 		{
 			const CMap2::ChunkArrayContainer<uint32>& container = map2->attribute_container<CMap2::Vertex::ORBIT>();
@@ -334,7 +434,7 @@ void Cage3dDeformation_Dialog::update_after_selected_control_map_changed()
 			const std::vector<std::string>& type_names = container.type_names();
 			QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
-			const MapParameters& p = plugin_->get_parameters(selected_deformed_map_);
+			const MapParameters& p = plugin_->parameters(selected_deformed_map_);
 
 			unsigned int i = 1;
 			for (std::size_t j = 0u; j < names.size(); ++j)
@@ -344,7 +444,7 @@ void Cage3dDeformation_Dialog::update_after_selected_control_map_changed()
 				if (type == vec3_type_name)
 				{
 					combo_controlPositionAttribute->addItem(name);
-					const MapHandlerGen::Attribute_T<VEC3>& pos = p.get_control_position_attribute();
+					const CMap2::VertexAttribute<VEC3>& pos = p.control_position_attribute();
 					if (pos.is_valid() && QString::fromStdString(pos.name()) == name)
 						combo_controlPositionAttribute->setCurrentIndex(i);
 

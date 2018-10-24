@@ -281,25 +281,4 @@ protected:
 
 } // namespace schnapps
 
-#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
-
-namespace schnapps
-{
-
-namespace plugin_cmap2_provider
-{
-
-//template <typename CellType, typename FUNC>
-//void CMap2Handler::foreach_cells_set(const FUNC& f)
-//{
-//	static_assert(cgogn::is_func_parameter_same<FUNC, CMap2CellsSet<CellType>*>::value, "Wrong function parameter type");
-//	static const cgogn::Orbit ORBIT = CellType::ORBIT;
-//	for (const auto& cells_set_it : cells_sets_[ORBIT])
-//		f(cells_set_it.second);
-//}
-
-} // namespace plugin_cmap2_provider
-
-} // namespace schnapps
-
 #endif // SCHNAPPS_PLUGIN_CMAP2_PROVIDER_CMAP2_HANDLER_H_

@@ -281,25 +281,4 @@ protected:
 
 } // namespace schnapps
 
-#include <schnapps/plugins/cmap3_provider/cmap3_cells_set.h>
-
-namespace schnapps
-{
-
-namespace plugin_cmap3_provider
-{
-
-//template <typename CellType, typename FUNC>
-//void CMap3Handler::foreach_cells_set(const FUNC& f)
-//{
-//	static_assert(cgogn::is_func_parameter_same<FUNC, CMap3CellsSet<CellType>*>::value, "Wrong function parameter type");
-//	static const cgogn::Orbit ORBIT = CellType::ORBIT;
-//	for (const auto& cells_set_it : cells_sets_[ORBIT])
-//		f(cells_set_it.second);
-//}
-
-} // namespace plugin_cmap3_provider
-
-} // namespace schnapps
-
 #endif // SCHNAPPS_PLUGIN_CMAP3_PROVIDER_CMAP3_HANDLER_H_

@@ -23,6 +23,7 @@
 
 #include <schnapps/plugins/cmap2_provider/cmap2_provider_dock_tab.h>
 #include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
 
 namespace schnapps
 {

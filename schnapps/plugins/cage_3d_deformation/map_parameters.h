@@ -26,11 +26,14 @@
 
 #include <schnapps/plugins/cage_3d_deformation/dll.h>
 
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+
 #include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/geometry/algos/angle.h>
 #include <cgogn/geometry/algos/area.h>
+
+#include <QString>
 
 namespace schnapps
 {
@@ -39,6 +42,7 @@ namespace plugin_cage_3d_deformation
 {
 
 class Plugin_Cage3dDeformation;
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 struct MapParameters
 {
@@ -56,16 +60,36 @@ struct MapParameters
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	MapHandlerGen* get_deformed_map() const { return deformed_map_; }
-	const MapHandlerGen::Attribute_T<VEC3>& get_deformed_position_attribute() const { return deformed_position_; }
-	QString get_deformed_position_attribute_name() const { return QString::fromStdString(deformed_position_.name()); }
+	CMap2Handler* deformed_map() const { return deformed_map_; }
+	const CMap2::VertexAttribute<VEC3>& deformed_position_attribute() const { return deformed_position_; }
 
-	CMap2Handler* get_control_map() const { return control_map_; }
-	const CMap2Handler::VertexAttribute<VEC3>& get_control_position_attribute() const { return control_position_; }
-	QString get_control_position_attribute_name() const { return QString::fromStdString(control_position_.name()); }
+	CMap2Handler* control_map() const { return control_map_; }
+	const CMap2::VertexAttribute<VEC3>& control_position_attribute() const { return control_position_; }
 
-	bool get_linked() const { return linked_; }
-	bool get_updating() const { return updating_; }
+	bool linked() const { return linked_; }
+	bool updating() const { return updating_; }
+
+private:
+
+	bool set_deformed_position_attribute(const QString& attribute_name)
+	{
+		deformed_position_ = deformed_map_->map()->get_attribute<VEC3, CMap2::Vertex::ORBIT>(attribute_name.toStdString());
+		return deformed_position_.is_valid();
+	}
+
+	bool set_control_map(CMap2Handler* mh)
+	{
+		control_map_ = mh;
+		return true;
+	}
+
+	bool set_control_position_attribute(const QString& attribute_name)
+	{
+		control_position_ = control_map_->map()->get_attribute<VEC3, CMap2::Vertex::ORBIT>(attribute_name.toStdString());
+		return control_position_.is_valid();
+	}
+
+public:
 
 	bool toggle_control()
 	{
@@ -76,14 +100,11 @@ struct MapParameters
 			control_position_.is_valid()
 		)
 		{
-			CMap2* cm2 = control_map_->get_map();
+			CMap2* cm2 = control_map_->map();
 			uint32 nbcv = cm2->nb_cells<CMap2::Vertex>();
-			uint32 nbdv = deformed_map_->nb_cells(CellType::Vertex_Cell);
+			uint32 nbdv = deformed_map_->map()->nb_cells<CMap2::Vertex>();
 
-			if (deformed_map_->dimension() == 2)
-				deformed_position_saved_ = static_cast<CMap2Handler*>(deformed_map_)->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__deformed_position_saved");
-			else // deformed_map_->dimension() == 3
-				deformed_position_saved_ = static_cast<CMap3Handler*>(deformed_map_)->add_attribute<VEC3, CMap3::Vertex::ORBIT>("__deformed_position_saved");
+			deformed_position_saved_ = deformed_map_->add_attribute<VEC3, CMap2::Vertex::ORBIT>("__deformed_position_saved");
 
 			coords_.setZero();
 			coords_.resize(nbdv, nbcv);
@@ -97,9 +118,9 @@ struct MapParameters
 			std::vector<double> coords_tmp(nbcv);
 
 			uint32 dvidx = 0;
-			deformed_map_->foreach_cell(CellType::Vertex_Cell, [&] (cgogn::Dart d)
+			deformed_map_->map()->foreach_cell([&] (CMap2::Vertex v)
 			{
-				const VEC3& dv_pos = deformed_position_[d];
+				const VEC3& dv_pos = deformed_position_[v];
 
 				for (auto& c : coords_tmp) c = 0.;
 
@@ -149,7 +170,7 @@ struct MapParameters
 					++cvidx;
 				}
 
-				deformed_position_saved_[d] = dv_pos;
+				deformed_position_saved_[v] = dv_pos;
 
 				++dvidx;
 			});
@@ -169,7 +190,7 @@ struct MapParameters
 		{
 			updating_ = true;
 
-			CMap2* cm2 = control_map_->get_map();
+			CMap2* cm2 = control_map_->map();
 
 			uint32 cvidx = 0;
 			cm2->foreach_cell([&] (CMap2::Vertex cv)
@@ -184,13 +205,13 @@ struct MapParameters
 			def_pos_ = coords_ * cage_pos_;
 
 			uint32 dvidx = 0;
-			deformed_map_->foreach_cell(CellType::Vertex_Cell, [&] (cgogn::Dart d)
+			deformed_map_->map()->foreach_cell([&] (CMap2::Vertex v)
 			{
-				VEC3& def = deformed_position_[d];
+				VEC3& def = deformed_position_[v];
 				def[0] = def_pos_(dvidx, 0);
 				def[1] = def_pos_(dvidx, 1);
 				def[2] = def_pos_(dvidx, 2);
-				deformed_position_saved_[d] = def;
+				deformed_position_saved_[v] = def;
 				++dvidx;
 			});
 
@@ -206,18 +227,18 @@ struct MapParameters
 		{
 			updating_ = true;
 
-			CMap2* cm2 = control_map_->get_map();
+			CMap2* cm2 = control_map_->map();
 			uint32 nbcv = cm2->nb_cells<CMap2::Vertex>();
-			uint32 nbdv = deformed_map_->nb_cells(CellType::Vertex_Cell);
+			uint32 nbdv = deformed_map_->map()->nb_cells<CMap2::Vertex>();
 
 			Eigen::VectorXd rhs(nbdv);
 
 			for (uint32 dim = 0; dim < 3; ++dim)
 			{
 				uint32 dvidx = 0;
-				deformed_map_->foreach_cell(CellType::Vertex_Cell, [&] (cgogn::Dart d)
+				deformed_map_->map()->foreach_cell([&] (CMap2::Vertex v)
 				{
-					rhs[dvidx] = 2.0 * (deformed_position_[d] - deformed_position_saved_[d])[dim];
+					rhs[dvidx] = 2.0 * (deformed_position_[v] - deformed_position_saved_[v])[dim];
 					++dvidx;
 				});
 
@@ -234,7 +255,7 @@ struct MapParameters
 				});
 			}
 
-			update_deformed_map();
+//			update_deformed_map();
 
 			control_map_->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(control_position_.name()));
 
@@ -244,39 +265,12 @@ struct MapParameters
 
 private:
 
-	bool set_deformed_position_attribute(const QString& attribute_name)
-	{
-		if (deformed_map_->dimension() == 2)
-			deformed_position_ = static_cast<CMap2Handler*>(deformed_map_)->get_attribute<VEC3, CMap2::Vertex::ORBIT>(attribute_name);
-		else // deformed_map_->dimension() == 3
-			deformed_position_ = static_cast<CMap3Handler*>(deformed_map_)->get_attribute<VEC3, CMap3::Vertex::ORBIT>(attribute_name);
-		if (deformed_position_.is_valid())
-			return true;
-		else
-			return false;
-	}
-
-	bool set_control_map(CMap2Handler* map)
-	{
-		control_map_ = map;
-		return true;
-	}
-
-	bool set_control_position_attribute(const QString& attribute_name)
-	{
-		control_position_ = control_map_->get_attribute<VEC3, CMap2::Vertex::ORBIT>(attribute_name);
-		if (control_position_.is_valid())
-			return true;
-		else
-			return false;
-	}
-
-	MapHandlerGen* deformed_map_;
-	MapHandlerGen::Attribute_T<VEC3> deformed_position_;
-	MapHandlerGen::Attribute_T<VEC3> deformed_position_saved_;
+	CMap2Handler* deformed_map_;
+	CMap2::VertexAttribute<VEC3> deformed_position_;
+	CMap2::VertexAttribute<VEC3> deformed_position_saved_;
 
 	CMap2Handler* control_map_;
-	CMap2Handler::VertexAttribute<VEC3> control_position_;
+	CMap2::VertexAttribute<VEC3> control_position_;
 
 	Eigen::MatrixXd coords_;
 	Eigen::MatrixXd cage_pos_;
