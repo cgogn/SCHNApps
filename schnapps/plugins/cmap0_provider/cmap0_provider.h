@@ -1,6 +1,6 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
-* Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
+* Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
 *                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -21,47 +21,27 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP0_PROVIDER_H_
+#define SCHNAPPS_PLUGIN_CMAP0_PROVIDER_H_
 
-#include <schnapps/plugins/import/dll.h>
+#include <schnapps/plugins/cmap0_provider/dll.h>
+#include <schnapps/plugins/cmap0_provider/cmap0_handler.h>
 
-#include <schnapps/core/plugin_processing.h>
-
-#include <QAction>
+#include <schnapps/core/types.h>
+#include <schnapps/core/plugin_provider.h>
 
 namespace schnapps
 {
 
 namespace plugin_cmap0_provider
 {
-class Plugin_CMap0Provider;
-class CMap0Handler;
-}
 
-namespace plugin_cmap2_provider
-{
-class Plugin_CMap2Provider;
-class CMap2Handler;
-}
-
-namespace plugin_cmap3_provider
-{
-class Plugin_CMap3Provider;
-class CMap3Handler;
-}
-
-namespace plugin_import
-{
-
-using CMap0Handler = plugin_cmap0_provider::CMap0Handler;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+class CMap0Provider_DockTab;
 
 /**
-* @brief Plugin for CGoGN mesh import
+* @brief CGoGN CMap0 provider
 */
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
+class SCHNAPPS_PLUGIN_CMAP0_PROVIDER_API Plugin_CMap0Provider : public PluginProvider
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -69,8 +49,8 @@ class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
 
 public:
 
-	Plugin_Import();
-	inline ~Plugin_Import() override {}
+	Plugin_CMap0Provider();
+	inline ~Plugin_CMap0Provider() override {}
 	static QString plugin_name();
 
 private:
@@ -78,35 +58,26 @@ private:
 	bool enable() override;
 	void disable() override;
 
-private slots:
-
-	void import_point_set_from_file_dialog();
-	void import_surface_mesh_from_file_dialog();
-	void import_volume_mesh_from_file_dialog();
-
 public:
 
-	CMap0Handler* import_point_set_from_file(const QString& filename);
-	CMap2Handler* import_surface_mesh_from_file(const QString& filename);
-	CMap3Handler* import_volume_mesh_from_file(const QString& filename);
+	CMap0Handler* add_map(const QString& name);
+	void remove_map(const QString& name);
+	CMap0Handler* duplicate_map(const QString& name);
+	CMap0Handler* map(const QString& name) const;
+
+private slots:
+
+	// slots called from SCHNApps signals
+	void schnapps_closing();
 
 private:
 
-	plugin_cmap0_provider::Plugin_CMap0Provider* plugin_cmap0_provider_;
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
-
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
-	QString setting_default_path_;
-
-	QAction* import_point_set_action_;
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
+	CMap0Provider_DockTab* dock_tab_;
 };
 
-} // namespace plugin_import
+} // namespace plugin_cmap0_provider
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
+#endif // SCHNAPPS_PLUGIN_CMAP0_PROVIDER_H_
+

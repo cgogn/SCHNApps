@@ -21,92 +21,28 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_IMPORT_H_
-#define SCHNAPPS_PLUGIN_IMPORT_H_
-
-#include <schnapps/plugins/import/dll.h>
-
-#include <schnapps/core/plugin_processing.h>
-
-#include <QAction>
+#include <schnapps/plugins/cmap0_provider/cmap0_cells_set.h>
 
 namespace schnapps
 {
 
 namespace plugin_cmap0_provider
 {
-class Plugin_CMap0Provider;
-class CMap0Handler;
+
+uint32 CMap0CellsSetGen::cells_set_count_ = 0;
+
+CMap0CellsSetGen::CMap0CellsSetGen(const CMap0Handler& mh, const QString& name) :
+	mh_(mh),
+	name_(name),
+	mutually_exclusive_(false),
+	selection_changed_(false)
+{
+	++cells_set_count_;
 }
 
-namespace plugin_cmap2_provider
-{
-class Plugin_CMap2Provider;
-class CMap2Handler;
-}
+CMap0CellsSetGen::~CMap0CellsSetGen()
+{}
 
-namespace plugin_cmap3_provider
-{
-class Plugin_CMap3Provider;
-class CMap3Handler;
-}
-
-namespace plugin_import
-{
-
-using CMap0Handler = plugin_cmap0_provider::CMap0Handler;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
-
-/**
-* @brief Plugin for CGoGN mesh import
-*/
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
-{
-	Q_OBJECT
-	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
-	Q_INTERFACES(schnapps::Plugin)
-
-public:
-
-	Plugin_Import();
-	inline ~Plugin_Import() override {}
-	static QString plugin_name();
-
-private:
-
-	bool enable() override;
-	void disable() override;
-
-private slots:
-
-	void import_point_set_from_file_dialog();
-	void import_surface_mesh_from_file_dialog();
-	void import_volume_mesh_from_file_dialog();
-
-public:
-
-	CMap0Handler* import_point_set_from_file(const QString& filename);
-	CMap2Handler* import_surface_mesh_from_file(const QString& filename);
-	CMap3Handler* import_volume_mesh_from_file(const QString& filename);
-
-private:
-
-	plugin_cmap0_provider::Plugin_CMap0Provider* plugin_cmap0_provider_;
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
-
-	QString setting_bbox_name_;
-	QStringList setting_vbo_names_;
-	QString setting_default_path_;
-
-	QAction* import_point_set_action_;
-	QAction* import_surface_mesh_action_;
-	QAction* import_volume_mesh_action_;
-};
-
-} // namespace plugin_import
+} // namespace plugin_cmap0_provider
 
 } // namespace schnapps
-
-#endif // SCHNAPPS_PLUGIN_IMPORT_H_
