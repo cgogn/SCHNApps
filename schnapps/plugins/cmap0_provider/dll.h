@@ -21,94 +21,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_CORE_TYPES_H_
-#define SCHNAPPS_CORE_TYPES_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP0_PROVIDER_DLL_H_
+#define SCHNAPPS_PLUGIN_CMAP0_PROVIDER_DLL_H_
 
-#include <schnapps/core/dll.h>
-
-#include <cgogn/core/utils/numerics.h>
-#include <cgogn/geometry/types/geometry_traits.h>
-
-//#include <unsupported/Eigen/AlignedVector3>
-
-namespace cgogn
-{
-
-class MapBaseData;
-
-struct CMap0Type;
-template <typename MAP_TYPE>
-class CMap0_T;
-
-struct CMap2Type;
-template <typename MAP_TYPE>
-class CMap2_T;
-
-struct CMap3Type;
-template <typename MAP_TYPE>
-class CMap3_T;
-
-}
-
-namespace schnapps
-{
-
-using namespace cgogn::numerics;
-
-using MapBaseData = cgogn::MapBaseData;
-using CMap0 = cgogn::CMap0_T<cgogn::CMap0Type>;
-using CMap2 = cgogn::CMap2_T<cgogn::CMap2Type>;
-using CMap3 = cgogn::CMap3_T<cgogn::CMap3Type>;
-
-using VEC4F = Eigen::Vector4f;
-using VEC4D = Eigen::Vector4d;
-using VEC3F = Eigen::Vector3f;
-using VEC3D = Eigen::Vector3d;
-using VEC2F = Eigen::Vector2f;
-using VEC2D = Eigen::Vector2d;
-
-using MAT2F = Eigen::Matrix2f;
-using MAT2D = Eigen::Matrix2d;
-using MAT3F = Eigen::Matrix3f;
-using MAT3D = Eigen::Matrix3d;
-using MAT4F = Eigen::Matrix4f;
-using MAT4D = Eigen::Matrix4d;
-
-//using AVEC3F = Eigen::AlignedVector3<float32>;
-//using AVEC3D = Eigen::AlignedVector3<float64>;
-
-#ifdef SCHNAPPS_DOUBLE_PRECISION
-using VEC2 = VEC2D;
-#ifdef SCHNAPPS_USE_ALIGNEDVEC3
-using VEC3 = AVEC3D;
+#ifdef WIN32
+#ifndef SCHNAPPS_PLUGIN_CMAP0_PROVIDER_API
+#if defined SCHNAPPS_PLUGIN_CMAP0_PROVIDER_DLL_EXPORT
+#define SCHNAPPS_PLUGIN_CMAP0_PROVIDER_API __declspec(dllexport)
 #else
-using VEC3 = VEC3D;
-#endif
-using VEC4 = VEC4D;
-
-using MAT22 = MAT2D;
-using MAT33 = MAT3D;
-using MAT44 = MAT4D;
-#else
-#ifdef SCHNAPPS_SINGLE_PRECISION
-using VEC4 = VEC4F;
-#ifdef SCHNAPPS_USE_ALIGNEDVEC3
-using VEC3 = AVEC3F;
-#else
-using VEC3 = VEC3F;
-#endif
-using VEC2 = VEC2F;
-
-using MAT22 = MAT2F;
-using MAT33 = MAT3F;
-using MAT44 = MAT4F;
-#else
-#error Neither SCHNAPPS_SINGLE_PRECISION or SCHNAPPS_DOUBLE_PRECISION is defined.
+#define SCHNAPPS_PLUGIN_CMAP0_PROVIDER_API __declspec(dllimport)
 #endif
 #endif
+#else
+#define SCHNAPPS_PLUGIN_CMAP0_PROVIDER_API
+#endif
 
-using SCALAR = cgogn::geometry::vector_traits<VEC3>::Scalar;
-
-} // namespace schnapps
-
-#endif // SCHNAPPS_CORE_TYPES_H_
+#endif // SCHNAPPS_PLUGIN_CMAP0_PROVIDER_DLL_H_

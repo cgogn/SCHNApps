@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(schnapps_core REQUIRED)
+
+if(NOT TARGET schnapps::cmap0_provider)
+	include("${CMAKE_CURRENT_LIST_DIR}/plugin_cmap0_providerTargets.cmake")
+endif()
