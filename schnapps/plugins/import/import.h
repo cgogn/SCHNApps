@@ -33,6 +33,12 @@
 namespace schnapps
 {
 
+namespace plugin_cmap0_provider
+{
+class Plugin_CMap0Provider;
+class CMap0Handler;
+}
+
 namespace plugin_cmap2_provider
 {
 class Plugin_CMap2Provider;
@@ -48,6 +54,7 @@ class CMap3Handler;
 namespace plugin_import
 {
 
+using CMap0Handler = plugin_cmap0_provider::CMap0Handler;
 using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
@@ -73,16 +80,19 @@ private:
 
 private slots:
 
+	void import_point_set_from_file_dialog();
 	void import_surface_mesh_from_file_dialog();
 	void import_volume_mesh_from_file_dialog();
 
 public:
 
+	CMap0Handler* import_point_set_from_file(const QString& filename);
 	CMap2Handler* import_surface_mesh_from_file(const QString& filename);
 	CMap3Handler* import_volume_mesh_from_file(const QString& filename);
 
 private:
 
+	plugin_cmap0_provider::Plugin_CMap0Provider* plugin_cmap0_provider_;
 	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
 	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
 
@@ -90,6 +100,7 @@ private:
 	QStringList setting_vbo_names_;
 	QString setting_default_path_;
 
+	QAction* import_point_set_action_;
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
 };
