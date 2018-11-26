@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
 
 #include <schnapps/plugins/point_set_render/dll.h>
 #include <schnapps/plugins/point_set_render/map_parameters.h>
@@ -125,4 +125,4 @@ public:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
