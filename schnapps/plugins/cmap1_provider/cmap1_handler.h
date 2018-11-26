@@ -192,11 +192,8 @@ private:
 		else
 			this->bb_diagonal_size_ = .0f;
 	}
-
+/*
 public:
-	/*********************************************************
-	 * MANAGE BOUNDING BOX
-	 *********************************************************/
 
 	QString obb_vertex_attribute_name() const
 	{
@@ -246,7 +243,7 @@ private:
 		else
 			this->obb_diagonal_size_ = .0f;
 	}
-
+*/
 	/**********************************************************
 	 * MANAGE ATTRIBUTES & CONNECTIVITY                       *
 	 *********************************************************/
@@ -296,7 +293,7 @@ public:
 signals:
 
 	void bb_vertex_attribute_changed(const QString&);
-	void obb_vertex_attribute_changed(const QString&);
+	//void obb_vertex_attribute_changed(const QString&);
 
 	void vbo_added(cgogn::rendering::VBO*);
 	void vbo_removed(cgogn::rendering::VBO*);
@@ -328,7 +325,7 @@ protected:
 	std::map<QString, CMap1CellsSetGen*> cells_sets_;
 
 	CMap1::VertexAttribute<VEC3> bb_vertex_attribute_;
-	CMap1::VertexAttribute<VEC3> obb_vertex_attribute_;
+	//CMap1::VertexAttribute<VEC3> obb_vertex_attribute_;
 };
 
 

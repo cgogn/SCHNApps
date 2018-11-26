@@ -78,7 +78,7 @@ private slots:
 	void remove_current_map_clicked();
 
 	void bb_vertex_attribute_changed(int index);
-	void obb_vertex_attribute_changed(int index);
+//	void obb_vertex_attribute_changed(int index);
 	void vertex_attribute_check_state_changed(QListWidgetItem* item);
 
 	void cells_set_check_state_changed(QListWidgetItem* item);
@@ -91,7 +91,7 @@ private slots:
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
 	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
 	void selected_map_bb_vertex_attribute_changed(const QString& name);
-	void selected_map_obb_vertex_attribute_changed(const QString& name);
+//	void selected_map_obb_vertex_attribute_changed(const QString& name);
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void selected_map_connectivity_changed();

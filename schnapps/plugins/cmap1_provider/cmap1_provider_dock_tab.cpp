@@ -45,7 +45,7 @@ CMap1Provider_DockTab::CMap1Provider_DockTab(SCHNApps* s, Plugin_CMap1Provider* 
 	connect(button_remove, SIGNAL(clicked()), this, SLOT(remove_current_map_clicked()));
 
 	connect(combo_bbVertexAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(bb_vertex_attribute_changed(int)));
-	connect(combo_obbVertexAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(obb_vertex_attribute_changed(int)));
+//	connect(combo_obbVertexAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(obb_vertex_attribute_changed(int)));
 	connect(list_vertexAttributes, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(vertex_attribute_check_state_changed(QListWidgetItem*)));
 
 	connect(list_vertexCellsSets, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
@@ -84,7 +84,7 @@ void CMap1Provider_DockTab::selected_map_changed()
 		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
-		disconnect(selected_map_, SIGNAL(obb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_obb_vertex_attribute_changed(const QString&)));
+//		disconnect(selected_map_, SIGNAL(obb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_obb_vertex_attribute_changed(const QString&)));
 		disconnect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 		disconnect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
 		disconnect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
@@ -107,7 +107,7 @@ void CMap1Provider_DockTab::selected_map_changed()
 		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 		connect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
-		connect(selected_map_, SIGNAL(obb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_obb_vertex_attribute_changed(const QString&)));
+//		connect(selected_map_, SIGNAL(obb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_obb_vertex_attribute_changed(const QString&)));
 		connect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 		connect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
 		connect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
@@ -135,11 +135,11 @@ void CMap1Provider_DockTab::bb_vertex_attribute_changed(int)
 		selected_map_->set_bb_vertex_attribute(combo_bbVertexAttribute->currentText());
 }
 
-void CMap1Provider_DockTab::obb_vertex_attribute_changed(int)
-{
-	if (!updating_ui_ && selected_map_)
-		selected_map_->set_obb_vertex_attribute(combo_obbVertexAttribute->currentText());
-}
+//void CMap1Provider_DockTab::obb_vertex_attribute_changed(int)
+//{
+//	if (!updating_ui_ && selected_map_)
+//		selected_map_->set_obb_vertex_attribute(combo_obbVertexAttribute->currentText());
+//}
 
 void CMap1Provider_DockTab::vertex_attribute_check_state_changed(QListWidgetItem* item)
 {
@@ -272,14 +272,14 @@ void CMap1Provider_DockTab::selected_map_bb_vertex_attribute_changed(const QStri
 	updating_ui_ = false;
 }
 
-void CMap1Provider_DockTab::selected_map_obb_vertex_attribute_changed(const QString& name)
-{
-	updating_ui_ = true;
-	int index = combo_obbVertexAttribute->findText(name, Qt::MatchExactly);
-	if (index > 0)
-		combo_obbVertexAttribute->setCurrentIndex(index);
-	updating_ui_ = false;
-}
+//void CMap1Provider_DockTab::selected_map_obb_vertex_attribute_changed(const QString& name)
+//{
+//	updating_ui_ = true;
+//	int index = combo_obbVertexAttribute->findText(name, Qt::MatchExactly);
+//	if (index > 0)
+//		combo_obbVertexAttribute->setCurrentIndex(index);
+//	updating_ui_ = false;
+//}
 
 void CMap1Provider_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
@@ -402,7 +402,7 @@ void CMap1Provider_DockTab::remove_map(CMap1Handler* mh)
 		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
-		disconnect(selected_map_, SIGNAL(obb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_obb_vertex_attribute_changed(const QString&)));
+//		disconnect(selected_map_, SIGNAL(obb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_obb_vertex_attribute_changed(const QString&)));
 		disconnect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
 		disconnect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
 		disconnect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
@@ -425,8 +425,8 @@ void CMap1Provider_DockTab::refresh_ui()
 
 	combo_bbVertexAttribute->clear();
 	combo_bbVertexAttribute->addItem("- select attribute -");
-	combo_obbVertexAttribute->clear();
-	combo_obbVertexAttribute->addItem("- select attribute -");
+//	combo_obbVertexAttribute->clear();
+//	combo_obbVertexAttribute->addItem("- select attribute -");
 	QString vec3_type_name = QString::fromStdString(cgogn::name_of_type(VEC3()));
 
 	list_vertexAttributes->clear();
@@ -460,9 +460,9 @@ void CMap1Provider_DockTab::refresh_ui()
 					if (selected_map_->bb_vertex_attribute_name() == name)
 						combo_bbVertexAttribute->setCurrentIndex(bb_index);
 
-					combo_obbVertexAttribute->addItem(name);
-					if (selected_map_->obb_vertex_attribute_name() == name)
-						combo_obbVertexAttribute->setCurrentIndex(bb_index);
+//					combo_obbVertexAttribute->addItem(name);
+//					if (selected_map_->obb_vertex_attribute_name() == name)
+//						combo_obbVertexAttribute->setCurrentIndex(bb_index);
 
 					++bb_index;
 				}
@@ -487,7 +487,7 @@ void CMap1Provider_DockTab::refresh_ui()
 	updating_ui_ = false;
 }
 
-/*****************************************************************************/
+/*******************************Ò**********************************************/
 // internal UI cascading updates
 /*****************************************************************************/
 
