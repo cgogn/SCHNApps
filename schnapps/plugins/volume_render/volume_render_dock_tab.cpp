@@ -232,7 +232,7 @@ void VolumeRender_DockTab::color_selected()
 	{
 		face_color_ = col;
 		faceColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-		plugin_->set_face_color(view, mh, edge_color_, false);
+		plugin_->set_face_color(view, mh, face_color_, false);
 	}
 }
 
