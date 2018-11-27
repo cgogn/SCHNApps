@@ -73,8 +73,8 @@ public:
 	 * MANAGE DRAWING                                         *
 	 *********************************************************/
 
-	void draw(cgogn::rendering::DrawingType primitive);
-	void init_primitives(cgogn::rendering::DrawingType primitive);
+	void draw(cgogn::rendering::DrawingType primitive, cgogn::CellFilters* f);
+	void init_primitives(cgogn::rendering::DrawingType primitive, cgogn::CellFilters* f);
 
 	/**********************************************************
 	 * MANAGE VBOs                                            *

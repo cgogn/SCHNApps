@@ -49,20 +49,26 @@ CMap3Handler::~CMap3Handler()
  * MANAGE DRAWING
  *********************************************************/
 
-void CMap3Handler::draw(cgogn::rendering::DrawingType primitive)
+void CMap3Handler::draw(cgogn::rendering::DrawingType primitive, cgogn::CellFilters* f)
 {
 	if (!render_.is_primitive_uptodate(primitive))
 	{
 		lock_topo_access();
-		render_.init_primitives(*map_, primitive);
+		if(f == nullptr)
+			render_.init_primitives(*map_, primitive);
+		else
+			render_.init_primitives(*map_, *f, primitive);
 		unlock_topo_access();
 	}
 	render_.draw(primitive);
 }
 
-void CMap3Handler::init_primitives(cgogn::rendering::DrawingType primitive)
+void CMap3Handler::init_primitives(cgogn::rendering::DrawingType primitive, cgogn::CellFilters* f)
 {
-	render_.init_primitives(*map_, primitive);
+	if(f == nullptr)
+		render_.init_primitives(*map_, primitive);
+	else
+		render_.init_primitives(*map_, *f, primitive);
 }
 
 /*********************************************************

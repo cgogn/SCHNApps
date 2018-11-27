@@ -126,6 +126,7 @@ public slots:
 	void set_volume_explode_factor(View* view, CMap3Handler* mh, float32 vef, bool update_dock_tab);
 	void set_transparency_enabled(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
 	void set_transparency_factor(View* view, CMap3Handler* mh, int32 tf, bool update_dock_tab);
+	void set_filter(CMap3Handler* mh, cgogn::CellFilters* mask);
 
 private:
 
