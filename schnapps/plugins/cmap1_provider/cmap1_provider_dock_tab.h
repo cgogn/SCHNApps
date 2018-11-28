@@ -21,108 +21,95 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
-#define SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP1_PROVIDER_DOCK_TAB_H_
+#define SCHNAPPS_PLUGIN_CMAP1_PROVIDER_DOCK_TAB_H_
 
-#include <schnapps/plugins/point_set_render/dll.h>
-#include <schnapps/plugins/point_set_render/map_parameters.h>
+#include <schnapps/plugins/cmap1_provider/dll.h>
 
-#include <ui_point_set_render.h>
+#include <schnapps/core/types.h>
 
-#include <QColorDialog>
+#include <ui_cmap1_provider.h>
 
-namespace cgogn { namespace rendering { class VBO; } }
+namespace cgogn
+{
+enum Orbit: numerics::uint32;
+namespace rendering { class VBO; }
+}
 
 namespace schnapps
 {
 
-namespace plugin_cmap0_provider
-{
-class Plugin_CMap0Provider;
-class CMap0Handler;
-}
-
 class SCHNApps;
-class View;
 class Object;
 
-namespace plugin_point_set_render
+namespace plugin_cmap1_provider
 {
 
-class Plugin_PointSetRender;
-using CMap0Handler = plugin_cmap0_provider::CMap0Handler;
+class Plugin_CMap1Provider;
+class CMap1Handler;
 
-class SCHNAPPS_PLUGIN_POINT_SET_RENDER_API PointSetRender_DockTab : public QWidget, public Ui::PointSetRender_TabWidget
+class SCHNAPPS_PLUGIN_CMAP1_PROVIDER_API CMap1Provider_DockTab : public QWidget, public Ui::CMap1Provider_TabWidget
 {
 	Q_OBJECT
 
 public:
 
-	PointSetRender_DockTab(SCHNApps* s, Plugin_PointSetRender* p);
-	~PointSetRender_DockTab() override;
+	CMap1Provider_DockTab(SCHNApps* s, Plugin_CMap1Provider* p);
+	~CMap1Provider_DockTab() override;
 
 private:
 
 	SCHNApps* schnapps_;
-	Plugin_PointSetRender* plugin_;
+	Plugin_CMap1Provider* plugin_;
 
-	plugin_cmap0_provider::Plugin_CMap0Provider* plugin_cmap0_provider_;
-
-	CMap0Handler* selected_map_;
+	CMap1Handler* selected_map_;
 
 	bool updating_ui_;
 
-	QColorDialog* color_dial_;
-	int current_color_dial_;
-	QColor vertex_color_;
+	cgogn::Orbit current_orbit();
+	QString orbit_name(cgogn::Orbit orbit);
 
 private slots:
 
 	// slots called from UI signals
 	void selected_map_changed();
 
-	void position_vbo_changed(int index);
+//	void duplicate_current_map_clicked();
+	void remove_current_map_clicked();
 
-	void color_vbo_changed(int index);
-	void render_vertices_changed(bool b);
-	void vertex_scale_factor_changed(int i);
+	void bb_vertex_attribute_changed(int index);
+//	void obb_vertex_attribute_changed(int index);
+	void vertex_attribute_check_state_changed(QListWidgetItem* item);
 
-	void vertex_color_clicked();
-	void color_selected();
+	void cells_set_check_state_changed(QListWidgetItem* item);
+	void add_cells_set();
+	void remove_cells_set();
 
 	// slots called from SCHNApps signals
-	void selected_view_changed(View* old, View* cur);
 
-	// slots called from View signals
-	void object_linked(Object* o);
-	void object_unlinked(Object* o);
-
-	// slots called from CMap0Handler signals
+	// slots called from CMap1Handler signals
+	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
+	void selected_map_bb_vertex_attribute_changed(const QString& name);
+//	void selected_map_obb_vertex_attribute_changed(const QString& name);
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
-
-private:
-
-	void map_linked(CMap0Handler* mh);
-	void map_unlinked(CMap0Handler* mh);
+	void selected_map_connectivity_changed();
+	void selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
+	void selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit orbit, const QString& name);
 
 public:
 
 	// methods used to update the UI from the plugin
-	void set_position_vbo(cgogn::rendering::VBO* vbo);
-	void set_color_vbo(cgogn::rendering::VBO* vbo);
-	void set_render_vertices(bool b);
-	void set_vertex_color(const QColor& color);
-	void set_vertex_scale_factor(float sf);
+	void add_map(CMap1Handler* mh);
+	void remove_map(CMap1Handler* mh);
 
-
-	CMap0Handler* selected_map() { return selected_map_; }
 	void refresh_ui();
-
 };
 
-} // namespace plugin_surface_render
+} // namespace plugin_cmap1_provider
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
+#endif // SCHNAPPS_PLUGIN_CMAP1_PROVIDER_DOCK_TAB_H_

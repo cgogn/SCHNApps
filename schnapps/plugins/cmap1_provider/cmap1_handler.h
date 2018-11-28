@@ -21,19 +21,17 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_CMAP3_PROVIDER_CMAP3_HANDLER_H_
-#define SCHNAPPS_PLUGIN_CMAP3_PROVIDER_CMAP3_HANDLER_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP1_PROVIDER_CMAP1_HANDLER_H_
+#define SCHNAPPS_PLUGIN_CMAP1_PROVIDER_CMAP1_HANDLER_H_
 
-#include <schnapps/plugins/cmap3_provider/dll.h>
+#include <schnapps/plugins/cmap1_provider/dll.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/object.h>
 
 #include <cgogn/geometry/algos/bounding_box.h>
-#include <cgogn/core/cmap/cmap3.h>
+#include <cgogn/core/cmap/cmap1.h>
 #include <cgogn/rendering/map_render.h>
-
-#include <QString>
 
 namespace schnapps
 {
@@ -41,13 +39,13 @@ namespace schnapps
 class SCHNApps;
 class PluginProvider;
 
-namespace plugin_cmap3_provider
+namespace plugin_cmap1_provider
 {
 
-class CMap3CellsSetGen;
-template <typename CELL> class CMap3CellsSet;
+class CMap1CellsSetGen;
+template <typename CELL> class CMap1CellsSet;
 
-class SCHNAPPS_PLUGIN_CMAP3_PROVIDER_API CMap3Handler : public Object
+class SCHNAPPS_PLUGIN_CMAP1_PROVIDER_API CMap1Handler : public Object
 {
 	Q_OBJECT
 
@@ -55,8 +53,8 @@ public:
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-	CMap3Handler(const QString& name, PluginProvider* p);
-	~CMap3Handler();
+	CMap1Handler(const QString& name, PluginProvider* p);
+	~CMap1Handler();
 
 public:
 
@@ -64,7 +62,7 @@ public:
 	 * BASIC FUNCTIONS                                        *
 	 *********************************************************/
 
-	inline CMap3* map() const { return map_; }
+	inline CMap1* map() const { return map_; }
 
 	void view_linked(View*) {}
 	void view_unlinked(View*) {}
@@ -73,8 +71,8 @@ public:
 	 * MANAGE DRAWING                                         *
 	 *********************************************************/
 
-	void draw(cgogn::rendering::DrawingType primitive, cgogn::CellFilters* f);
-	void init_primitives(cgogn::rendering::DrawingType primitive, cgogn::CellFilters* f);
+	void draw(cgogn::rendering::DrawingType primitive);
+	void init_primitives(cgogn::rendering::DrawingType primitive);
 
 	/**********************************************************
 	 * MANAGE VBOs                                            *
@@ -97,23 +95,23 @@ public:
 	 * MANAGE CELLS SETS                                      *
 	 *********************************************************/
 
-	CMap3CellsSetGen* add_cells_set(cgogn::Orbit orbit, QString name);
+	CMap1CellsSetGen* add_cells_set(cgogn::Orbit orbit, QString name);
 	void remove_cells_set(cgogn::Orbit orbit, const QString& name);
 
-	CMap3CellsSetGen* cells_set(cgogn::Orbit orbit, const QString& name)
+	CMap1CellsSetGen* cells_set(cgogn::Orbit orbit, const QString& name)
 	{
-		if (cells_sets_[orbit].count(name) > 0ul)
-				return cells_sets_[orbit].at(name);
+		if (cells_sets_.count(name) > 0ul)
+				return cells_sets_.at(name);
 			else
 				return nullptr;
 	}
 
 	template <typename CellType>
-	CMap3CellsSet<CellType>* cells_set(const QString& name)
+	CMap1CellsSet<CellType>* cells_set(const QString& name)
 	{
 		static const cgogn::Orbit ORBIT = CellType::ORBIT;
-		if (cells_sets_[ORBIT].count(name) > 0ul)
-				return static_cast<CMap3CellsSet<CellType>*>(cells_sets_[ORBIT].at(name));
+		if (cells_sets_.count(name) > 0ul)
+				return reinterpret_cast<CMap1CellsSet<CMap1::Vertex>*>(cells_sets_.at(name));
 			else
 				return nullptr;
 	}
@@ -121,17 +119,17 @@ public:
 	template <typename CellType, typename FUNC>
 	void foreach_cells_set(const FUNC& f) const
 	{
-		static_assert(cgogn::is_func_parameter_same<FUNC, CMap3CellsSet<CellType>*>::value, "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, CMap1CellsSet<CMap1::Vertex>*>::value, "Wrong function parameter type");
 		static const cgogn::Orbit ORBIT = CellType::ORBIT;
-		for (const auto& cells_set_it : cells_sets_[ORBIT])
-			f(static_cast<CMap3CellsSet<CellType>*>(cells_set_it.second));
+		for (const auto& cells_set_it : cells_sets_)
+			f(reinterpret_cast<CMap1CellsSet<CMap1::Vertex>*>(cells_set_it.second));
 	}
 
 	template <typename FUNC>
 	void foreach_cells_set(cgogn::Orbit orbit, const FUNC& f) const
 	{
-		static_assert(cgogn::is_func_parameter_same<FUNC, CMap3CellsSetGen*>::value, "Wrong function parameter type");
-		for (const auto& cells_set_it : cells_sets_[orbit])
+		static_assert(cgogn::is_func_parameter_same<FUNC, CMap1CellsSetGen*>::value, "Wrong function parameter type");
+		for (const auto& cells_set_it : cells_sets_)
 			f(cells_set_it.second);
 	}
 
@@ -156,7 +154,7 @@ public:
 
 	void set_bb_vertex_attribute(const QString& attribute_name)
 	{
-		bb_vertex_attribute_ = map_->template get_attribute<VEC3, CMap3::Vertex::ORBIT>(attribute_name.toStdString());
+		bb_vertex_attribute_ = map_->template get_attribute<VEC3, CMap1::Vertex::ORBIT>(attribute_name.toStdString());
 		if (bb_vertex_attribute_.is_valid())
 		{
 			compute_bb();
@@ -171,7 +169,7 @@ public:
 		if (bb_vertex_attribute_.is_valid())
 		{
 			QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
-			if (orbit == CMap3::Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
+			if (orbit == CMap1::Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
 			{
 				compute_bb();
 				this->update_bb_drawer();
@@ -194,7 +192,58 @@ private:
 		else
 			this->bb_diagonal_size_ = .0f;
 	}
+/*
+public:
 
+	QString obb_vertex_attribute_name() const
+	{
+		if (obb_vertex_attribute_.is_valid())
+			return QString::fromStdString(obb_vertex_attribute_.name());
+		else
+			return QString();
+	}
+
+	void set_obb_vertex_attribute(const QString& attribute_name)
+	{
+		obb_vertex_attribute_ = map_->template get_attribute<VEC3, CMap1::Vertex::ORBIT>(attribute_name.toStdString());
+		if (obb_vertex_attribute_.is_valid())
+		{
+			compute_obb();
+			this->update_obb_drawer();
+			emit(obb_vertex_attribute_changed(attribute_name));
+			emit(obb_changed());
+		}
+	}
+
+	void check_obb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name)
+	{
+		if (obb_vertex_attribute_.is_valid())
+		{
+			QString obb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
+			if (orbit == CMap1::Vertex::ORBIT && attribute_name == obb_vertex_attribute_name)
+			{
+				compute_obb();
+				this->update_obb_drawer();
+				emit(obb_changed());
+			}
+		}
+	}
+
+private:
+
+	void compute_obb()
+	{
+		this->obb_.reset();
+
+		if (obb_vertex_attribute_.is_valid())
+			cgogn::geometry::compute_OBB(obb_vertex_attribute_, this->obb_);
+
+		if (this->obb_.is_initialized())
+			this->obb_diagonal_size_ = this->obb_.diag_size();
+		else
+			this->obb_diagonal_size_ = .0f;
+	}
+*/
 	/**********************************************************
 	 * MANAGE ATTRIBUTES & CONNECTIVITY                       *
 	 *********************************************************/
@@ -244,6 +293,7 @@ public:
 signals:
 
 	void bb_vertex_attribute_changed(const QString&);
+	//void obb_vertex_attribute_changed(const QString&);
 
 	void vbo_added(cgogn::rendering::VBO*);
 	void vbo_removed(cgogn::rendering::VBO*);
@@ -261,7 +311,7 @@ signals:
 
 protected:
 
-	CMap3* map_;
+	CMap1* map_;
 
 	std::mutex topo_access_;
 
@@ -272,13 +322,16 @@ protected:
 	std::map<QString, std::unique_ptr<cgogn::rendering::VBO>> vbos_;
 
 	// CellsSets of the map
-	std::array<std::map<QString, CMap3CellsSetGen*>, cgogn::NB_ORBITS> cells_sets_;
+	std::map<QString, CMap1CellsSetGen*> cells_sets_;
 
-	CMap3::VertexAttribute<VEC3> bb_vertex_attribute_;
+	CMap1::VertexAttribute<VEC3> bb_vertex_attribute_;
+	//CMap1::VertexAttribute<VEC3> obb_vertex_attribute_;
 };
 
-} // namespace plugin_cmap3_provider
+
+} // namespace plugin_cmap1_provider
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_CMAP3_PROVIDER_CMAP3_HANDLER_H_
+#endif // SCHNAPPS_PLUGIN_CMAP2_PROVIDER_CMAP1_HANDLER_H_
+

@@ -21,11 +21,11 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
-#define SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
+#ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
+#define SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
 
-#include <schnapps/plugins/volume_render/dll.h>
-#include <schnapps/plugins/volume_render/map_parameters.h>
+#include <schnapps/plugins/polyline_render/dll.h>
+#include <schnapps/plugins/polyline_render/map_parameters.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/plugin_interaction.h>
@@ -37,22 +37,19 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap3_provider { class CMap3Handler; }
+namespace plugin_cmap1_provider { class CMap1Handler; }
 
-#ifdef USE_TRANSPARENCY
-namespace plugin_render_transparency { class Plugin_RenderTransparency; }
-#endif
 
-namespace plugin_volume_render
+namespace plugin_polyline_render
 {
 
-class VolumeRender_DockTab;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+class PolylineRender_DockTab;
+using CMap1Handler = plugin_cmap1_provider::CMap1Handler;
 
 /**
-* @brief Plugin for volume rendering
+* @brief Plugin for surface rendering
 */
-class SCHNAPPS_PLUGIN_VOLUME_RENDER_API Plugin_VolumeRender : public PluginInteraction
+class SCHNAPPS_PLUGIN_POLYLINE_RENDER_API Plugin_PolylineRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -60,11 +57,11 @@ class SCHNAPPS_PLUGIN_VOLUME_RENDER_API Plugin_VolumeRender : public PluginInter
 
 public:
 
-	Plugin_VolumeRender();
-	inline ~Plugin_VolumeRender() override {}
+	Plugin_PolylineRender();
+	inline ~Plugin_PolylineRender() override {}
 	static QString plugin_name();
 
-	MapParameters& parameters(View* view, CMap3Handler* mh);
+	MapParameters& parameters(View* view, CMap1Handler* mh);
 	bool check_docktab_activation();
 
 private:
@@ -77,15 +74,16 @@ private:
 
 	inline bool keyPress(View*, QKeyEvent*) override { return true; }
 	inline bool keyRelease(View*, QKeyEvent*) override { return true; }
-	bool mousePress(View*, QMouseEvent*) override;
-	bool mouseRelease(View*, QMouseEvent*) override;
-	bool mouseMove(View*, QMouseEvent*) override;
+	inline bool mousePress(View*, QMouseEvent*) override { return true; }
+	inline bool mouseRelease(View*, QMouseEvent*) override { return true; }
+	inline bool mouseMove(View*, QMouseEvent*) override { return true; }
 	inline bool wheelEvent(View*, QWheelEvent*) override { return true; }
 
 	inline void resizeGL(View*, int, int) override {}
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
+
 
 private slots:
 
@@ -95,8 +93,8 @@ private slots:
 
 private:
 
-	void add_linked_map(View* view, CMap3Handler* mh);
-	void remove_linked_map(View* view, CMap3Handler* mh);
+	void add_linked_map(View* view, CMap1Handler* mh);
+	void remove_linked_map(View* view, CMap1Handler* mh);
 
 private slots:
 
@@ -104,45 +102,34 @@ private slots:
 	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
 	void linked_map_bb_changed();
-	void linked_map_connectivity_changed();
-	void linked_map_attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
 
 	void viewer_initialized();
 
 	void enable_on_selected_view(Plugin* p);
 
-public slots:
+public:
 
-	void set_position_vbo(View* view, CMap3Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_render_vertices(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
-	void set_render_edges(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
-	void set_render_faces(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
-	void set_render_topology(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
-	void set_apply_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
-	void set_vertex_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
-	void set_edge_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
-	void set_face_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
-	void set_vertex_scale_factor(View* view, CMap3Handler* mh, float32 sf, bool update_dock_tab);
-	void set_volume_explode_factor(View* view, CMap3Handler* mh, float32 vef, bool update_dock_tab);
-	void set_transparency_enabled(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
-	void set_transparency_factor(View* view, CMap3Handler* mh, int32 tf, bool update_dock_tab);
-	void set_filter(CMap3Handler* mh, cgogn::CellFilters* mask);
+	void set_position_vbo(View* view, CMap1Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_color_vbo(View* view, CMap1Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_render_vertices(View* view, CMap1Handler* mh, bool b, bool update_dock_tab);
+	void set_render_edges(View* view, CMap1Handler* mh, bool b, bool update_dock_tab);
+	void set_vertex_color(View* view, CMap1Handler* mh, const QColor& color, bool update_dock_tab);
+	void set_edge_color(View* view, CMap1Handler* mh, const QColor& color, bool update_dock_tab);
+	void set_vertex_scale_factor(View* view, CMap1Handler* mh, float32 sf, bool update_dock_tab);
 
 private:
 
-	VolumeRender_DockTab* dock_tab_;
-	std::map<View*, std::map<CMap3Handler*, MapParameters>> parameter_set_;
+	PolylineRender_DockTab* dock_tab_;
+	std::map<View*, std::map<CMap1Handler*, MapParameters>> parameter_set_;
 
 	bool setting_auto_enable_on_selected_view_;
 	QString setting_auto_load_position_attribute_;
-
-#ifdef USE_TRANSPARENCY
-	plugin_render_transparency::Plugin_RenderTransparency* plugin_transparency_;
-#endif
+	QString setting_auto_load_normal_attribute_;
+	QString setting_auto_load_color_attribute_;
 };
 
-} // namespace plugin_volume_render
+} // namespace plugin_polyline_render
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
+#endif // SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
