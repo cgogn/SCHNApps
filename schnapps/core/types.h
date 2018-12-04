@@ -40,6 +40,10 @@ struct CMap0Type;
 template <typename MAP_TYPE>
 class CMap0_T;
 
+struct CMap1Type;
+template <typename MAP_TYPE>
+class CMap1_T;
+
 struct CMap2Type;
 template <typename MAP_TYPE>
 class CMap2_T;
@@ -57,6 +61,7 @@ using namespace cgogn::numerics;
 
 using MapBaseData = cgogn::MapBaseData;
 using CMap0 = cgogn::CMap0_T<cgogn::CMap0Type>;
+using CMap1 = cgogn::CMap1_T<cgogn::CMap1Type>;
 using CMap2 = cgogn::CMap2_T<cgogn::CMap2Type>;
 using CMap3 = cgogn::CMap3_T<cgogn::CMap3Type>;
 

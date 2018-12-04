@@ -46,14 +46,11 @@ set(TinyXML2_VERSION ${PC_TinyXML2_VERSION})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(TinyXML2
-    REQUIRED_VARS TinyXML2_INCLUDE_DIR TinyXML2_LIBRARY
+	REQUIRED_VARS TinyXML2_LIBRARY TinyXML2_INCLUDE_DIR
     VERSION_VAR TinyXML2_VERSION
 )
 
 if(TinyXML2_FOUND)
-    set(TinyXML2_INCLUDE_DIRS ${TinyXML2_INCLUDE_DIR})
-	set(TinyXML2_LIBRARIES ${TinyXML2_LIBRARY})
-
 	if(NOT TARGET TinyXML2::TinyXML2)
 	    add_library(TinyXML2::TinyXML2 UNKNOWN IMPORTED)
 	    set_target_properties(TinyXML2::TinyXML2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${TinyXML2_INCLUDE_DIR}")
@@ -74,4 +71,14 @@ if(TinyXML2_FOUND)
 	endif()
 endif()
 
+include(FeatureSummary)
+set_package_properties(TinyXML2 PROPERTIES
+	URL https://github.com/leethomason/tinyxml2
+	DESCRIPTION "A simple, small, efficient, C++ XML parser."
+)
+
 mark_as_advanced(TinyXML2_INCLUDE_DIR TinyXML2_LIBRARY)
+
+# compatibility variables
+set(TinyXML2_LIBRARIES ${TinyXML2_LIBRARY})
+set(TinyXML2_INCLUDE_DIRS ${TinyXML2_INCLUDE_DIR})

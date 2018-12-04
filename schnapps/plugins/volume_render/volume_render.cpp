@@ -138,7 +138,7 @@ void Plugin_VolumeRender::draw_object(View* view, Object *o, const QMatrix4x4& p
 			if (p.position_vbo_)
 			{
 				p.shader_point_sprite_param_->bind(proj, mv);
-				mh->draw(cgogn::rendering::POINTS);
+				mh->draw(cgogn::rendering::POINTS, p.filter_);
 				p.shader_point_sprite_param_->release();
 			}
 		}
@@ -152,7 +152,7 @@ void Plugin_VolumeRender::draw_object(View* view, Object *o, const QMatrix4x4& p
 				else
 				{
 					p.shader_simple_color_param_->bind(proj, mv);
-					mh->draw(cgogn::rendering::LINES);
+					mh->draw(cgogn::rendering::LINES, p.filter_);
 					p.shader_simple_color_param_->release();
 				}
 			}
@@ -621,6 +621,16 @@ void Plugin_VolumeRender::set_transparency_factor(View* view, CMap3Handler* mh, 
 		view->update();
 	}
 }
+
+void Plugin_VolumeRender::set_filter(CMap3Handler* mh, cgogn::CellFilters* mask)
+{
+	for (auto& it : parameter_set_)
+	{
+		MapParameters& p = parameters(it.first, mh);
+		p.set_filter(mask);
+	}
+}
+
 
 } // namespace plugin_volume_render
 
