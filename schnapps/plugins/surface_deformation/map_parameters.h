@@ -32,7 +32,7 @@
 #include <schnapps/core/types.h>
 
 #include <cgogn/geometry/algos/angle.h>
-#include <cgogn/geometry/algos/area.h>
+//#include <cgogn/geometry/algos/area.h>
 
 namespace schnapps
 {
@@ -347,7 +347,7 @@ struct MapParameters
 				{
 					if (!free_vertex_set_->is_selected(v))
 					{
-						uint32 idx = v_index_[v];
+						int idx = (int)(v_index_[v]);
 						working_LAPL_.prune([&] (int i, int, SCALAR) { return i != idx; });
 						working_LAPL_.coeffRef(idx, idx) = 1.0;
 						working_BILAPL_.prune([&] (int i, int, SCALAR) { return i != idx; });

@@ -28,9 +28,6 @@
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
 
-#include <cgogn/geometry/algos/angle.h>
-#include <cgogn/geometry/algos/area.h>
-
 namespace schnapps
 {
 
