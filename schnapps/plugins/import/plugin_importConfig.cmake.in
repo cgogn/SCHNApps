@@ -2,6 +2,8 @@
 include(CMakeFindDependencyMacro)
 find_dependency(schnapps_core REQUIRED)
 find_dependency(cgogn_io REQUIRED)
+find_dependency(plugin_cmap0_provider REQUIRED)
+find_dependency(plugin_cmap1_provider REQUIRED)
 find_dependency(plugin_cmap2_provider REQUIRED)
 find_dependency(plugin_cmap3_provider REQUIRED)
 
