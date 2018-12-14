@@ -125,9 +125,18 @@ void Plugin_PointSetRender::draw_object(View* view, Object *o, const QMatrix4x4&
 		{
 			if (p.position_vbo_)
 			{
-				p.shader_point_sprite_param_->bind(proj, mv);
-				mh->draw(cgogn::rendering::POINTS);
-				p.shader_point_sprite_param_->release();
+				if (p.color_vbo_)
+				{
+					p.shader_point_sprite_color_param_->bind(proj, mv);
+					mh->draw(cgogn::rendering::POINTS);
+					p.shader_point_sprite_color_param_->release();
+				}
+				else
+				{
+					p.shader_point_sprite_param_->bind(proj, mv);
+					mh->draw(cgogn::rendering::POINTS);
+					p.shader_point_sprite_param_->release();
+				}
 			}
 		}
 	}
