@@ -57,6 +57,18 @@ void Object::frame_changed()
 	emit(bb_changed());
 }
 
+void Object::rescale(float32 sx, float32 sy, float32 sz)
+{
+	transformation_matrix_(0,0) = sx;
+	transformation_matrix_(1,1) = sy;
+	transformation_matrix_(2,2) = sz;
+
+	for(View* view : views_)
+		view->update();
+
+	emit(bb_changed());
+}
+
 bool Object::transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
 {
 	if (!bb_.is_initialized())

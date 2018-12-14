@@ -99,6 +99,8 @@ private slots:
 	void selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
 	void selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit orbit, const QString& name);
 
+	void scale_object();
+
 public:
 
 	// methods used to update the UI from the plugin
