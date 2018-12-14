@@ -183,7 +183,7 @@ void Object::unlink_view(View* view)
 
 void Object::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view)
 	{
 		view->makeCurrent();

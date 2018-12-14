@@ -101,7 +101,7 @@ void Plugin_SurfaceRenderVector::disable()
 
 void Plugin_SurfaceRenderVector::draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 	{
 		view->makeCurrent();
@@ -130,7 +130,7 @@ void Plugin_SurfaceRenderVector::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -147,7 +147,7 @@ void Plugin_SurfaceRenderVector::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -156,7 +156,7 @@ void Plugin_SurfaceRenderVector::view_unlinked(View* view)
 void Plugin_SurfaceRenderVector::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -173,7 +173,7 @@ void Plugin_SurfaceRenderVector::add_linked_map(View* view, CMap2Handler* mh)
 void Plugin_SurfaceRenderVector::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -189,7 +189,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_added(cgogn::rendering::VBO* vbo
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
@@ -212,7 +212,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
@@ -234,7 +234,7 @@ void Plugin_SurfaceRenderVector::linked_map_vbo_removed(cgogn::rendering::VBO* v
 
 void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	for (auto& it : parameter_set_)
 	{
@@ -253,7 +253,7 @@ void Plugin_SurfaceRenderVector::linked_map_bb_changed()
 
 void Plugin_SurfaceRenderVector::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];

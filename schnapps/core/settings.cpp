@@ -107,7 +107,7 @@ void Settings::to_file(const QString& filename)
 
 void Settings::set_widget(QWidget* widget)
 {
-	settings_widget_ = dynamic_cast<SettingsWidget*>(widget);
+	settings_widget_ = qobject_cast<SettingsWidget*>(widget);
 	if (settings_widget_)
 		settings_widget_->settings_ = this;
 }
@@ -152,7 +152,7 @@ void Settings::setting_changed_string(const QString& str)
 void Settings::setting_changed_list(QListWidgetItem* item)
 {
 	QObject* sender = this->sender();
-	QListWidget* listw = dynamic_cast<QListWidget*>(sender);
+	QListWidget* listw = qobject_cast<QListWidget*>(sender);
 	if (listw)
 	{
 		const QString module_name = sender->parent()->objectName();

@@ -185,11 +185,12 @@ void SCHNAppsWindow::remove_menu_action(QAction* action)
 	// which is an instance of QMenu if the action was created
 	// using the add_menu_action() method
 	QObject* parent = action->parent();
+	qobject_cast<QMenu*>(parent)->removeAction(action);
 	delete action;
 
 	while(parent != nullptr)
 	{
-		QMenu* parent_menu = dynamic_cast<QMenu*>(parent);
+		QMenu* parent_menu = qobject_cast<QMenu*>(parent);
 		if (parent_menu && parent_menu->actions().empty())
 		{
 			parent = parent->parent();

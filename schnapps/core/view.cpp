@@ -212,7 +212,7 @@ void View::link_plugin(PluginInteraction* plugin, bool update_dialog_list)
 
 void View::link_plugin(const QString& name, bool update_dialog_list)
 {
-	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->plugin(name));
+	PluginInteraction* p = qobject_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
 		link_plugin(p, update_dialog_list);
 }
@@ -240,14 +240,14 @@ void View::unlink_plugin(PluginInteraction* plugin, bool update_dialog_list)
 
 void View::unlink_plugin(const QString& name, bool update_dialog_list)
 {
-	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->plugin(name));
+	PluginInteraction* p = qobject_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
 		unlink_plugin(p, update_dialog_list);
 }
 
 bool View::is_linked_to_plugin(const QString& name) const
 {
-	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->plugin(name));
+	PluginInteraction* p = qobject_cast<PluginInteraction*>(schnapps_->plugin(name));
 	return is_linked_to_plugin(p);
 }
 
@@ -285,7 +285,7 @@ void View::link_object(Object* o, bool update_dialog_list)
 void View::link_object(const QString& name, bool update_dialog_list)
 {
 	QStringList names = name.split('/');
-	PluginProvider* provider = dynamic_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
+	PluginProvider* provider = qobject_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
 	if (provider)
 	{
 		Object* o = provider->object(names.at(1));
@@ -324,7 +324,7 @@ void View::unlink_object(Object* o, bool update_dialog_list)
 void View::unlink_object(const QString& name, bool update_dialog_list)
 {
 	QStringList names = name.split('/');
-	PluginProvider* provider = dynamic_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
+	PluginProvider* provider = qobject_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
 	if (provider)
 	{
 		Object* o = provider->object(names.at(1));
@@ -669,13 +669,13 @@ void View::object_check_state_changed(QListWidgetItem* item)
 
 void View::plugin_enabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
+	if (qobject_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->add_item(plugin->name());
 }
 
 void View::plugin_disabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
+	if (qobject_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
 		dialog_plugins_->remove_item(plugin->name());
 }
 

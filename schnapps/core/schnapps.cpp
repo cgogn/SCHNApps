@@ -313,7 +313,7 @@ QString SCHNApps::get_split_view_positions()
 		for (int i = 0; i < spl->count(); ++i)
 		{
 			QWidget* w = spl->widget(i);
-			QSplitter* qw = dynamic_cast<QSplitter*>(w);
+			QSplitter* qw = qobject_cast<QSplitter*>(w);
 			if (qw != nullptr)
 				liste.push_back(qw);
 		}
@@ -338,7 +338,7 @@ void SCHNApps::set_split_view_positions(QString positions)
 		for (int i = 0; i < spl->count(); ++i)
 		{
 			QWidget *w = spl->widget(i);
-			QSplitter* qw = dynamic_cast<QSplitter*>(w);
+			QSplitter* qw = qobject_cast<QSplitter*>(w);
 			if (qw != nullptr)
 				liste.push_back(qw);
 		}
@@ -458,7 +458,7 @@ void SCHNApps::disable_plugin(const QString& plugin_name)
 		auto plugin = std::move(plugins_.at(plugin_name));
 
 		// unlink linked views (for interaction plugins)
-		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin.get());
+		PluginInteraction* pi = qobject_cast<PluginInteraction*>(plugin.get());
 		if (pi)
 		{
 			while (!pi->get_linked_views().empty()) // Safe way to iterate over a container that is currently being modified
@@ -498,7 +498,7 @@ void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QS
 		int idx = window_->plugin_dock_tab_widget_->addTab(tab_widget, tab_text);
 		window_->plugin_dock_->setVisible(true);
 
-		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin);
+		PluginInteraction* pi = qobject_cast<PluginInteraction*>(plugin);
 		if (pi)
 		{
 			if (pi->is_linked_to_view(selected_view_))

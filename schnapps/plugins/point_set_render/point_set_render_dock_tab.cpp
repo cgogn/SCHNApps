@@ -64,7 +64,7 @@ PointSetRender_DockTab::PointSetRender_DockTab(SCHNApps* s, Plugin_PointSetRende
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap0_provider_ = reinterpret_cast<plugin_cmap0_provider::Plugin_CMap0Provider*>(schnapps_->enable_plugin(plugin_cmap0_provider::Plugin_CMap0Provider::plugin_name()));
+	plugin_cmap0_provider_ = qobject_cast<plugin_cmap0_provider::Plugin_CMap0Provider*>(schnapps_->enable_plugin(plugin_cmap0_provider::Plugin_CMap0Provider::plugin_name()));
 }
 
 PointSetRender_DockTab::~PointSetRender_DockTab()
@@ -182,7 +182,7 @@ void PointSetRender_DockTab::selected_view_changed(View* old, View* cur)
 
 void PointSetRender_DockTab::object_linked(Object* o)
 {
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -196,7 +196,7 @@ void PointSetRender_DockTab::map_linked(CMap0Handler* mh)
 
 void PointSetRender_DockTab::object_unlinked(Object* o)
 {
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }

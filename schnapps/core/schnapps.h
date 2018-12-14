@@ -244,7 +244,7 @@ public:
 		static_assert(cgogn::is_func_parameter_same<FUNC, Object*>::value, "Wrong function parameter type");
 		foreach_plugin([f] (Plugin* p)
 		{
-			PluginProvider* pp = dynamic_cast<PluginProvider*>(p);
+			PluginProvider* pp = qobject_cast<PluginProvider*>(p);
 			if (pp)
 				pp->foreach_object(f);
 		});

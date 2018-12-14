@@ -68,7 +68,7 @@ PolylineRender_DockTab::PolylineRender_DockTab(SCHNApps* s, Plugin_PolylineRende
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap1_provider_ = reinterpret_cast<plugin_cmap1_provider::Plugin_CMap1Provider*>(schnapps_->enable_plugin(plugin_cmap1_provider::Plugin_CMap1Provider::plugin_name()));
+	plugin_cmap1_provider_ = qobject_cast<plugin_cmap1_provider::Plugin_CMap1Provider*>(schnapps_->enable_plugin(plugin_cmap1_provider::Plugin_CMap1Provider::plugin_name()));
 }
 
 PolylineRender_DockTab::~PolylineRender_DockTab()
@@ -207,7 +207,7 @@ void PolylineRender_DockTab::selected_view_changed(View* old, View* cur)
 
 void PolylineRender_DockTab::object_linked(Object* o)
 {
-	CMap1Handler* mh = dynamic_cast<CMap1Handler*>(o);
+	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -221,7 +221,7 @@ void PolylineRender_DockTab::map_linked(CMap1Handler* mh)
 
 void PolylineRender_DockTab::object_unlinked(Object* o)
 {
-	CMap1Handler* mh = dynamic_cast<CMap1Handler*>(o);
+	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }
