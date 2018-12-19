@@ -500,7 +500,8 @@ void CMap3Provider_DockTab::selected_map_cells_set_mutually_exclusive_changed(cg
 
 void CMap3Provider_DockTab::scale_object()
 {
-	selected_map_->rescale(spin_scaling_x->value(),spin_scaling_y->value(),spin_scaling_z->value());
+	if(selected_map_)
+		selected_map_->rescale(spin_scaling_x->value(),spin_scaling_y->value(),spin_scaling_z->value());
 }
 
 /*****************************************************************************/
@@ -710,6 +711,11 @@ void CMap3Provider_DockTab::refresh_ui()
 			else
 				item->setCheckState(Qt::Unchecked);
 		});
+
+		QVector3D s = selected_map_->scale();
+		spin_scaling_x->setValue(s[0]);
+		spin_scaling_y->setValue(s[1]);
+		spin_scaling_z->setValue(s[2]);
 	}
 
 	updating_ui_ = false;

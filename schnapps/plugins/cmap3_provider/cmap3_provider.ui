@@ -567,7 +567,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QDoubleSpinBox" name="spin_scaling_z">
+      <widget class="QDoubleSpinBox" name="spin_scaling_x">
        <property name="maximum">
         <double>9.990000000000000</double>
        </property>
@@ -593,7 +593,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QDoubleSpinBox" name="spin_scaling_x">
+      <widget class="QDoubleSpinBox" name="spin_scaling_z">
        <property name="maximum">
         <double>9.990000000000000</double>
        </property>

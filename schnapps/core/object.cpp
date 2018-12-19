@@ -69,6 +69,12 @@ void Object::rescale(float32 sx, float32 sy, float32 sz)
 	emit(bb_changed());
 }
 
+//TODO Object should store scale vector separatly
+QVector3D Object::scale()
+{
+	return QVector3D(transformation_matrix_(0,0), transformation_matrix_(1,1), transformation_matrix_(2,2));
+}
+
 bool Object::transformed_bb(qoglviewer::Vec& bb_min, qoglviewer::Vec& bb_max) const
 {
 	if (!bb_.is_initialized())
