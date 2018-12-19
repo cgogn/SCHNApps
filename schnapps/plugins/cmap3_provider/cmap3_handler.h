@@ -190,7 +190,7 @@ private:
 			cgogn::geometry::compute_AABB(bb_vertex_attribute_, this->bb_);
 
 		if (this->bb_.is_initialized())
-			this->bb_diagonal_size_ = this->bb_.diag_size();
+			this->bb_diagonal_size_ = cgogn::geometry::diagonal(this->bb_).norm();
 		else
 			this->bb_diagonal_size_ = .0f;
 	}
