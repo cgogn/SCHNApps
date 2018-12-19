@@ -96,11 +96,12 @@ CMap0Handler* Plugin_CMap0Provider::duplicate_map(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
 	{
-//		CMap2Handler* mh = objects_.at(name);
-//		CMap0Handler* duplicate = this->add_map(QString("copy_") + name);
-//		duplicate->map_->merge(mh->map_);
-//		return duplicate;
-		return nullptr;
+		CMap0Handler* mh = qobject_cast<CMap0Handler*>(objects_.at(name));
+		CMap0Handler* duplicate = this->add_map(QString("copy_") + name);
+		CMap0::DartMarker dm(*mh->map());
+		duplicate->map()->merge(*mh->map(), dm);
+		return duplicate;
+//		return nullptr;
 	}
 	else
 		return nullptr;
