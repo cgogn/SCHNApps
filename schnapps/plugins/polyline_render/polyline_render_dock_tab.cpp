@@ -68,7 +68,7 @@ PolylineRender_DockTab::PolylineRender_DockTab(SCHNApps* s, Plugin_PolylineRende
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap1_provider_ = qobject_cast<plugin_cmap1_provider::Plugin_CMap1Provider*>(schnapps_->enable_plugin(plugin_cmap1_provider::Plugin_CMap1Provider::plugin_name()));
+	plugin_cmap1_provider_ = static_cast<plugin_cmap1_provider::Plugin_CMap1Provider*>(schnapps_->enable_plugin(plugin_cmap1_provider::Plugin_CMap1Provider::plugin_name()));
 }
 
 PolylineRender_DockTab::~PolylineRender_DockTab()

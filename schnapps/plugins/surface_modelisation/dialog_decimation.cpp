@@ -62,7 +62,7 @@ Decimation_Dialog::Decimation_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p)
 			map_added(mh);
 	});
 
-	plugin_cmap2_provider_ = qobject_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
 }
 
 Decimation_Dialog::~Decimation_Dialog()

@@ -64,7 +64,7 @@ PointSetRender_DockTab::PointSetRender_DockTab(SCHNApps* s, Plugin_PointSetRende
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap0_provider_ = qobject_cast<plugin_cmap0_provider::Plugin_CMap0Provider*>(schnapps_->enable_plugin(plugin_cmap0_provider::Plugin_CMap0Provider::plugin_name()));
+	plugin_cmap0_provider_ = static_cast<plugin_cmap0_provider::Plugin_CMap0Provider*>(schnapps_->enable_plugin(plugin_cmap0_provider::Plugin_CMap0Provider::plugin_name()));
 }
 
 PointSetRender_DockTab::~PointSetRender_DockTab()

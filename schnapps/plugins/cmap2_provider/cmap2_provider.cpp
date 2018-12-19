@@ -82,7 +82,7 @@ void Plugin_CMap2Provider::remove_map(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
 	{
-		CMap2Handler* mh = qobject_cast<CMap2Handler*>(objects_.at(name));
+		CMap2Handler* mh = static_cast<CMap2Handler*>(objects_.at(name));
 
 		dock_tab_->remove_map(mh);
 		schnapps_->notify_object_removed(mh);
@@ -109,7 +109,7 @@ CMap2Handler* Plugin_CMap2Provider::duplicate_map(const QString& name)
 CMap2Handler* Plugin_CMap2Provider::map(const QString& name) const
 {
 	if (objects_.count(name) > 0ul)
-		return qobject_cast<CMap2Handler*>(objects_.at(name));
+		return static_cast<CMap2Handler*>(objects_.at(name));
 	else
 		return nullptr;
 }

@@ -80,7 +80,7 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap3_provider_ = qobject_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
+	plugin_cmap3_provider_ = static_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
 }
 
 VolumeRender_DockTab::~VolumeRender_DockTab()

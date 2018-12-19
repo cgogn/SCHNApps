@@ -112,7 +112,7 @@ bool Plugin_SurfaceRender::enable()
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 #ifdef USE_TRANSPARENCY
-	plugin_transparency_ = qobject_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
+	plugin_transparency_ = static_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
 #endif
 
 	return true;
