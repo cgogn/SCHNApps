@@ -4,11 +4,18 @@ project(plugin_image
 
 find_package(cgogn_io REQUIRED)
 
+find_package(CGAL QUIET COMPONENTS Core ImageIO)
+
+if(NOT CGAL_FOUND)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+endif()
+
 if(MSVC)
 	find_package(Boost COMPONENTS system iostreams zlib)
 else()
 	find_package(Boost COMPONENTS system iostreams)
 endif()
+
 find_package(CGAL COMPONENTS Core ImageIO)
 
 if(CGAL_FOUND)
@@ -73,11 +80,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 #target_compile_definitions(${PROJECT_NAME} PUBLIC "-Dcimg_display=0")
 
 target_link_libraries(${PROJECT_NAME}
-	schnapps_core
-	${cgogn_core_LIBRARIES}
-	${cgogn_io_LIBRARIES}
-	${Qt5Widgets_LIBRARIES}
-	${QOGLViewer_LIBRARIES}
+	schnapps::core
+	cgogn::core
+	cgogn::io
+	Qt5::Widgets
+	cgogn::QOGLViewer
 )
 
 if(CGAL_FOUND)
