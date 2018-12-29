@@ -24,8 +24,8 @@
 #include <schnapps/plugins/merge/dll.h>
 #include <schnapps/plugins/merge/merge.h>
 #include <schnapps/plugins/merge/merge_dialog.h>
-
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 #include <schnapps/core/schnapps.h>
 
 namespace schnapps
@@ -39,54 +39,34 @@ MergeDialog::MergeDialog(SCHNApps* s, Plugin_Merge* p) :
 	plugin_(p)
 {
 	setupUi(this);
+}
 
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
-	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(merge_validated()));
-
-	schnapps_->foreach_map([&] (MapHandlerGen* mhg)
+void MergeDialog::update_map_list()
+{
+	combo_mapSelection->clear();
+	combo_mapSelection_2->clear();
+	schnapps_->foreach_object([this] (Object* o)
 	{
-		map_added(mhg);
+		plugin_cmap2_provider::CMap2Handler* mh2 = dynamic_cast<plugin_cmap2_provider::CMap2Handler*>(o);
+		if (mh2) {
+			combo_mapSelection->addItem(mh2->name());
+			combo_mapSelection_2->addItem(mh2->name());
+		} else {
+			plugin_cmap3_provider::CMap3Handler* mh3 = dynamic_cast<plugin_cmap3_provider::CMap3Handler*>(o);
+			if (mh3) {
+				combo_mapSelection->addItem(mh3->name());
+				combo_mapSelection_2->addItem(mh3->name());
+			}
+		}
 	});
 }
 
-/*****************************************************************************/
-// slots called from UI signals
-/*****************************************************************************/
-
-void MergeDialog::merge_validated()
+void MergeDialog::showEvent(QShowEvent* e)
 {
-	MapHandlerGen* mhg1 = schnapps_->get_map(combo_mapSelection->currentText());
-	MapHandlerGen* mhg2 = schnapps_->get_map(combo_mapSelection_2->currentText());
-
-	if (!mhg1 || !mhg2)
-		return;
-
-	MapHandlerGen* copy_mhg1 = schnapps_->duplicate_map(mhg1->get_name());
-	plugin_->merge(copy_mhg1, mhg2);
+	update_map_list();
+	QDialog::showEvent(e);
 }
 
-/*****************************************************************************/
-// slots called from SCHNApps signals
-/*****************************************************************************/
-
-void MergeDialog::map_added(MapHandlerGen* mhg)
-{
-	if (mhg)
-	{
-		combo_mapSelection->addItem(mhg->get_name());
-		combo_mapSelection_2->addItem(mhg->get_name());
-	}
-}
-
-void MergeDialog::map_removed(MapHandlerGen* mhg)
-{
-	if (mhg)
-	{
-		combo_mapSelection->removeItem(combo_mapSelection->findText(mhg->get_name()));
-		combo_mapSelection_2->removeItem(combo_mapSelection_2->findText(mhg->get_name()));
-	}
-}
 
 } // namespace plugin_merge
 

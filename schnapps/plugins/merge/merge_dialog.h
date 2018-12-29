@@ -32,7 +32,6 @@ namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
 
 namespace plugin_merge
 {
@@ -47,19 +46,14 @@ public:
 
 	MergeDialog(SCHNApps* s, Plugin_Merge* p);
 
-private slots:
-
-	// slots called from UI signals
-	void merge_validated();
-
-	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
-
 private:
-
 	SCHNApps* schnapps_;
 	Plugin_Merge* plugin_;
+
+	virtual void showEvent(QShowEvent* e) override;
+
+private:
+	void update_map_list();
 };
 
 } // namespace plugin_merge

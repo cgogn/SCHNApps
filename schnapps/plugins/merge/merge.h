@@ -27,13 +27,13 @@
 #include <schnapps/plugins/merge/dll.h>
 
 #include <schnapps/core/plugin_processing.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 
 #include <QAction>
 
 namespace schnapps
 {
-
-class MapHandlerGen;
 
 namespace plugin_merge
 {
@@ -68,17 +68,23 @@ private slots:
 	// slots called from action signals
 	void merge_dialog();
 
+	// slots called from UI signals
+	void merge_validated();
+
 public slots:
 
 	/**
 	 * @brief merge second_map into first_map
 	 */
-	bool merge(MapHandlerGen* first_map, const MapHandlerGen* second_map);
+	bool merge(plugin_cmap2_provider::CMap2Handler* first_map, const plugin_cmap2_provider::CMap2Handler* second_map);
+	bool merge(plugin_cmap3_provider::CMap3Handler* first_map, const plugin_cmap3_provider::CMap3Handler* second_map);
 
 private:
 
 	MergeDialog* merge_dialog_;
 	QAction* merge_action_;
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
 };
 
 } // namespace plugin_merge
