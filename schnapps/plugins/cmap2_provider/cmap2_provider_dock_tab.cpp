@@ -41,7 +41,7 @@ CMap2Provider_DockTab::CMap2Provider_DockTab(SCHNApps* s, Plugin_CMap2Provider* 
 
 	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
-//	connect(button_duplicate, SIGNAL(clicked()), this, SLOT(duplicate_current_map_clicked()));
+	connect(button_duplicate, SIGNAL(clicked()), this, SLOT(duplicate_current_map_clicked()));
 	connect(button_remove, SIGNAL(clicked()), this, SLOT(remove_current_map_clicked()));
 
 	connect(combo_bbVertexAttribute, SIGNAL(currentIndexChanged(int)), this, SLOT(bb_vertex_attribute_changed(int)));
@@ -144,11 +144,11 @@ void CMap2Provider_DockTab::selected_map_changed()
 	refresh_ui();
 }
 
-//void CMap2Provider_DockTab::duplicate_current_map_clicked()
-//{
-//	if (!updating_ui_ && selected_map_)
-//		plugin_->duplicate_map(selected_map_->name());
-//}
+void CMap2Provider_DockTab::duplicate_current_map_clicked()
+{
+	if (!updating_ui_ && selected_map_)
+		plugin_->duplicate_map(selected_map_->name());
+}
 
 void CMap2Provider_DockTab::remove_current_map_clicked()
 {
@@ -515,9 +515,9 @@ void CMap2Provider_DockTab::remove_map(CMap2Handler* mh)
 		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(bb_vertex_attribute_changed(const QString&)), this, SLOT(selected_map_bb_vertex_attribute_changed(const QString&)));
 		disconnect(selected_map_, SIGNAL(connectivity_changed()), this, SLOT(selected_map_connectivity_changed()));
-		disconnect(selected_map_, SIGNAL(cells_set_added(CellType, const QString&)), this, SLOT(selected_map_cells_set_added(CellType, const QString&)));
-		disconnect(selected_map_, SIGNAL(cells_set_removed(CellType, const QString&)), this, SLOT(selected_map_cells_set_removed(CellType, const QString&)));
-		disconnect(selected_map_, SIGNAL(cells_set_mutually_exclusive_changed(CellType, const QString&)), this, SLOT(selected_map_cells_set_mutually_exclusive_changed(CellType, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_added(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_added(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_removed(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit, const QString&)));
 		selected_map_ = nullptr;
 	}
 

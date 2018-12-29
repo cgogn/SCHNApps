@@ -96,14 +96,15 @@ CMap3Handler* Plugin_CMap3Provider::duplicate_map(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
 	{
-//		CMap3Handler* mh = objects_.at(name);
-//		CMap3Handler* duplicate = this->add_map(QString("copy_") + name);
-//		duplicate->map_->merge(mh->map_);
-//		return duplicate;
-		return nullptr;
+		CMap3Handler* mh = static_cast<CMap3Handler*>(objects_.at(name));
+		CMap3Handler* duplicate = this->add_map(QString("copy_") + name);
+		CMap3::DartMarker dm(*mh->map());
+		if (duplicate->map()->merge(*mh->map(), dm))
+			return duplicate;
+		else
+			this->remove_map(QString("copy_") + name);
 	}
-	else
-		return nullptr;
+	return nullptr;
 }
 
 CMap3Handler* Plugin_CMap3Provider::map(const QString& name) const

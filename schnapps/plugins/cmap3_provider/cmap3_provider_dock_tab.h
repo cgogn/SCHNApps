@@ -74,7 +74,7 @@ private slots:
 	// slots called from UI signals
 	void selected_map_changed();
 
-//	void duplicate_current_map_clicked();
+	void duplicate_current_map_clicked();
 	void remove_current_map_clicked();
 
 	void bb_vertex_attribute_changed(int index);
