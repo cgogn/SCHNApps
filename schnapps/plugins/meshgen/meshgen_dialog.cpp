@@ -22,12 +22,11 @@
 *                                                                              *
 *******************************************************************************/
 
+#include <schnapps/core/schnapps.h>
+#include <schnapps/core/object.h>
 #include <schnapps/plugins/meshgen/meshgen.h>
 #include <schnapps/plugins/meshgen/meshgen_dialog.h>
-
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
 #include <schnapps/plugins/image/image.h>
 
 namespace schnapps
@@ -99,8 +98,8 @@ VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_Vol
 	connect(netgen_dial->checkBox_quad_dominated, SIGNAL(toggled(bool)), this, SLOT(netgen_quad_dominated_toggled(bool)));
 	connect(netgen_dial->spinBox_optsteps_3d, SIGNAL(valueChanged(int)), this, SLOT(netgen_optsteps_3d_changed(int)));
 
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(map_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(map_removed(Object*)));
 
 	connect(export_dialog_->comboBox_images, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_image_changed(QString)));
 
@@ -140,16 +139,16 @@ void VolumeMeshFromSurfaceDialog::generator_changed(const QString& generator)
 		export_dialog_->hide();
 }
 
-void VolumeMeshFromSurfaceDialog::map_added(MapHandlerGen* mhg)
+void VolumeMeshFromSurfaceDialog::map_added(Object* mhg)
 {
 	if (mhg && dynamic_cast<CMap2Handler*>(mhg))
-		export_dialog_->comboBoxMapSelection->addItem(mhg->get_name());
+		export_dialog_->comboBoxMapSelection->addItem(mhg->name());
 }
 
-void VolumeMeshFromSurfaceDialog::map_removed(MapHandlerGen* mhg)
+void VolumeMeshFromSurfaceDialog::map_removed(Object* mhg)
 {
 	if (mhg && dynamic_cast<CMap2Handler*>(mhg))
-		export_dialog_->comboBoxMapSelection->removeItem(export_dialog_->comboBoxMapSelection->findText(mhg->get_name()));
+		export_dialog_->comboBoxMapSelection->removeItem(export_dialog_->comboBoxMapSelection->findText(mhg->name()));
 }
 
 void VolumeMeshFromSurfaceDialog::image_added(QString im_path)
@@ -169,10 +168,12 @@ QString VolumeMeshFromSurfaceDialog::get_selected_map() const
 
 void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 {
-	MapHandlerGen* mhg = schnapps_->get_map(map_name);
+	Object* mhg = plugin_->plugin_cmap2_provider_->map(map_name);
 	QSignalBlocker blocker(export_dialog_->comboBox_generator);
 	export_dialog_->comboBox_generator->clear();
-	if (mhg && dynamic_cast<CMap2Handler*>(mhg))
+
+	CMap2Handler* handler = dynamic_cast<CMap2Handler*>(mhg);
+	if (handler)
 	{
 		QStringList list;
 		list << "-select-" << "cgal" << "netgen" << "tetgen";
@@ -182,8 +183,8 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 
 
 		export_dialog_->comboBoxPositionSelection->clear();
-		const auto* vert_att_cont = mhg->attribute_container(CellType::Vertex_Cell);
-		for (const auto& att_name : vert_att_cont->names())
+		const auto& vert_att_cont = handler->map()->attribute_container<CMap2::Vertex::ORBIT>();
+		for (const auto& att_name : vert_att_cont.names())
 			export_dialog_->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
 	}
 }

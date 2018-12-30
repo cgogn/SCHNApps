@@ -22,14 +22,20 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
-#define SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
+#define SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
 
-#include "dll.h"
-#include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Polyhedron_3.h>
+#include <schnapps/plugins/meshgen/dll.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+
+#include <cgogn/io/volume_import.h>
+
+#include <functional>
+
+namespace nglib
+{
+	class Ng_Meshing_Parameters;
+} // namespace nglib
 
 namespace schnapps
 {
@@ -37,29 +43,33 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-class SCHNAPPS_PLUGIN_MESHGEN_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS>
+class NetgenParameters;
+
+class SCHNAPPS_PLUGIN_MESHGEN_API NetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3>
 {
 public:
 
-	using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
-	using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
-	using HalfedgeDS = Polyhedron::HalfedgeDS;
-	using Vertex = HalfedgeDS::Vertex;
-	using Point = Vertex::Point ;
+	using Inherit = cgogn::io::VolumeImport<CMap3>;
+	using Self = NetgenStructureVolumeImport;
+	using Scalar = SCALAR;
+	template <typename T>
+	using ChunkArray = typename Inherit::template ChunkArray<T>;
 
-	PolyhedronBuilder(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
-	void operator()(HalfedgeDS& hds);
+	explicit NetgenStructureVolumeImport(void** netgen_data, CMap3& map);
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(NetgenStructureVolumeImport);
+
+	void import_netgen_structure();
 
 private:
 
-	CMap2Handler* map_;
-	const CMap2::VertexAttribute<VEC3> position_attribute_;
+	void** volume_mesh_structure_;
 };
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<void*, std::function<void(void**)>> export_netgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
+SCHNAPPS_PLUGIN_MESHGEN_API nglib::Ng_Meshing_Parameters* setup_netgen_parameters(const NetgenParameters& params);
 
 } // namespace plugin_meshgen
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#endif // SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H

@@ -75,14 +75,18 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-	schnapps_core
+	schnapps::core
+	schnapps::cmap0_provider
+	schnapps::cmap1_provider
+	schnapps::cmap2_provider
+	schnapps::cmap3_provider
+	cgogn::io
 	netgen
 	tet
 	plugin_image
 	${CGAL_LIBRARIES}
-	${cgogn_core_LIBRARIES}
-	${cgogn_io_LIBRARIES}
-	${cgogn_modeling_LIBRARIES}
+	cgogn::core
+	cgogn::modeling
 	${CGAL_Core_LIBRARY}
 	${Boost_LIBRARIES}
 	${MPFR_LIBRARIES}

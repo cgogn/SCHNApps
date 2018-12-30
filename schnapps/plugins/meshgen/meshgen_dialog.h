@@ -40,7 +40,12 @@ namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
+class Object;
+
+namespace plugin_cmap2_provider
+{
+class CMap2Handler;
+} // namespace plugin_cmap2_provider
 
 namespace plugin_meshgen
 {
@@ -67,6 +72,8 @@ class SCHNAPPS_PLUGIN_MESHGEN_API VolumeMeshFromSurfaceDialog : QObject
 	friend class Plugin_VolumeMeshFromSurface;
 
 public:
+
+	using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
 	VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
 
@@ -108,8 +115,8 @@ private slots:
 	void exuder_changed(bool b);
 	void exuder_sliver_changed(double sb);
 
-	void map_added(MapHandlerGen* mhg);
-	void map_removed(MapHandlerGen* mhg);
+	void map_added(Object* mhg);
+	void map_removed(Object* mhg);
 
 	void image_added(QString im_path);
 	void image_removed(QString im_path);

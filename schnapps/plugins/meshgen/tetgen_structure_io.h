@@ -22,21 +22,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
-#define SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
+#define SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
 
 #include <schnapps/plugins/meshgen/dll.h>
-
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 
 #include <cgogn/io/volume_import.h>
+#include <cgogn/geometry/types/geometry_traits.h>
 
-#include <functional>
-
-namespace nglib
+namespace tetgen
 {
-	class Ng_Meshing_Parameters;
-} // namespace nglib
+class tetgenio;
+}
 
 namespace schnapps
 {
@@ -44,33 +42,31 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-class NetgenParameters;
-
-class SCHNAPPS_PLUGIN_MESHGEN_API NetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3>
+class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3>
 {
 public:
 
 	using Inherit = cgogn::io::VolumeImport<CMap3>;
-	using Self = NetgenStructureVolumeImport;
-	using Scalar = SCALAR;
+	using Self = TetgenStructureVolumeImport;
+	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
 	template <typename T>
 	using ChunkArray = typename Inherit::template ChunkArray<T>;
+	using tetgenio = tetgen::tetgenio;
 
-	explicit NetgenStructureVolumeImport(void** netgen_data, CMap3& map);
-	CGOGN_NOT_COPYABLE_NOR_MOVABLE(NetgenStructureVolumeImport);
+	explicit TetgenStructureVolumeImport(tetgenio* tetgen_output, CMap3& map);
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
 
-	void import_netgen_structure();
+	bool import_tetgen_structure();
 
 private:
 
-	void** volume_mesh_structure_;
+	tetgenio* volume_;
 };
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<void*, std::function<void(void**)>> export_netgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
-SCHNAPPS_PLUGIN_MESHGEN_API nglib::Ng_Meshing_Parameters* setup_netgen_parameters(const NetgenParameters& params);
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
 
 } // namespace plugin_meshgen
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
+#endif // SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H

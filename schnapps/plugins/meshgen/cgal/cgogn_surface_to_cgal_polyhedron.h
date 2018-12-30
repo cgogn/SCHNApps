@@ -22,20 +22,14 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
-#define SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
+#ifndef SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
+#define SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H
 
-#include <schnapps/plugins/meshgen/dll.h>
-
-#include <schnapps/core/map_handler.h>
-
-#include <cgogn/io/volume_import.h>
-#include <cgogn/geometry/types/geometry_traits.h>
-
-namespace tetgen
-{
-class tetgenio;
-}
+#include "dll.h"
+#include <schnapps/core/types.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
 
 namespace schnapps
 {
@@ -43,31 +37,30 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-class SCHNAPPS_PLUGIN_MESHGEN_API TetgenStructureVolumeImport : public cgogn::io::VolumeImport<CMap3>
+class SCHNAPPS_PLUGIN_MESHGEN_API PolyhedronBuilder : public CGAL::Modifier_base<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>::HalfedgeDS>
 {
 public:
 
-	using Inherit = cgogn::io::VolumeImport<CMap3>;
-	using Self = TetgenStructureVolumeImport;
-	using Scalar = cgogn::geometry::vector_traits<VEC3>::Scalar;
-	template <typename T>
-	using ChunkArray = typename Inherit::template ChunkArray<T>;
-	using tetgenio = tetgen::tetgenio;
+	using Kernel =  CGAL::Exact_predicates_inexact_constructions_kernel;
+	using Polyhedron = CGAL::Polyhedron_3<Kernel> ;
+	using HalfedgeDS = Polyhedron::HalfedgeDS;
+	using Vertex = HalfedgeDS::Vertex;
+	using Point = Vertex::Point ;
+	using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
 
-	explicit TetgenStructureVolumeImport(tetgenio* tetgen_output, CMap3& map);
-	CGOGN_NOT_COPYABLE_NOR_MOVABLE(TetgenStructureVolumeImport);
-
-	bool import_tetgen_structure();
+	PolyhedronBuilder(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
+	void operator()(HalfedgeDS& hds);
 
 private:
 
-	tetgenio* volume_;
+	CMap2Handler* map_;
+	const CMap2::VertexAttribute<VEC3> position_attribute_;
 };
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<tetgen::tetgenio> export_tetgen(CMap2& map, const CMap2::VertexAttribute<VEC3>& pos);
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(plugin_cmap2_provider::CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 
 } // namespace plugin_meshgen
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
+#endif // SCHNAPPS_PLUGIN_MESHGEN_CGOGN_SURFACE_TO_CGAL_POLYHEDRON_H

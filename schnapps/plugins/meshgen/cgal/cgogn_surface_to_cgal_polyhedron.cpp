@@ -46,11 +46,11 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 	uint32 id{0u};
 	auto id_attribute = map_->add_attribute<uint32, CMap2::Vertex::ORBIT>("ids_polyhedron_builder");
 
-	const CMap2& cmap2 = *map_->get_map();
+	const CMap2& cmap2 = *map_->map();
 	cmap2.foreach_cell([&](CMap2::Vertex v) { id_attribute[v] = id++; });
 
 	CGAL::Polyhedron_incremental_builder_3<HalfedgeDS> B( hds, true);
-	B.begin_surface( map_->nb_cells(CellType::Vertex_Cell), map_->nb_cells(CellType::Face_Cell) );
+	B.begin_surface( cmap2.nb_cells<CMap2::Vertex::ORBIT>(), cmap2.nb_cells<CMap2::Face::ORBIT>() );
 
 	cmap2.foreach_cell([&](CMap2::Vertex v)
 	{
@@ -73,7 +73,7 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 	map_->remove_attribute(id_attribute);
 }
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute)
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(plugin_cmap2_provider::CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute)
 {
 	if (!mh || !position_attribute.is_valid())
 		return nullptr;

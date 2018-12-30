@@ -27,12 +27,17 @@
 #include <cgal/cgal_image.h>
 #include <CGAL/Labeled_image_mesh_domain_3.h>
 #include <CGAL/Polyhedral_mesh_domain_3.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_handler.h>
 
 namespace schnapps
 {
 
 namespace plugin_meshgen
 {
+
+using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, CMap3Handler* output_volume_map)
 {
@@ -101,10 +106,10 @@ SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, con
 
 	// translate the mesh
 	const VEC3 origin(im->get_origin()[0], im->get_origin()[1], im->get_origin()[2]);
-	auto pos_attr = output_volume_map->get_attribute<VEC3, CMap3::Vertex::ORBIT>("position");
+	auto pos_attr = output_volume_map->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>("position");
 	if (pos_attr.is_valid())
 	{
-		output_volume_map->get_map()->foreach_cell([&](CMap3::Vertex v)
+		output_volume_map->map()->foreach_cell([&](CMap3::Vertex v)
 		{
 			pos_attr[v] += origin;
 		});

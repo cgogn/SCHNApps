@@ -1,6 +1,7 @@
 ﻿#ifndef FILE_PARTHREADS
 #define FILE_PARTHREADS
 
+
 /**************************************************************************/
 /* File:   parthreads.hh                                                  */
 /* Author: Joachim Schoeberl                                              */
@@ -10,6 +11,9 @@
 /*
   Parallel thread, Mutex,
 */
+
+#include <functional>
+#include <mutex>
 
 namespace netgen
 {

@@ -27,7 +27,8 @@
 
 #include <dll.h>
 #include <meshgen.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
 #include <cgogn/io/volume_import.h>
 
 #include <CGAL/Mesh_triangulation_3.h>
@@ -48,13 +49,16 @@ class Image3D;
 namespace plugin_meshgen
 {
 
+
 template <typename C3T3>
-class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3, VEC3>
+class C3T3VolumeImport : public cgogn::io::VolumeImport<CMap3>
 {
 public:
 
 	using Self = C3T3VolumeImport<C3T3>;
-	using Inherit = VolumeImport<CMap3, VEC3>;
+	using Inherit = VolumeImport<CMap3>;
+	using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+	using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
 
 	inline C3T3VolumeImport(const C3T3& cpx, CMap3& map) :
 		Inherit(map),
@@ -75,8 +79,8 @@ public:
 	{
 		const Triangulation& triangulation = cpx_.triangulation();
 		std::map<Vertex_handle, unsigned int> vertices_indices;
-		ChunkArray<VEC3>* position = this->position_attribute();
 
+		ChunkArray<VEC3>* position = this->template add_vertex_attribute<VEC3>("position");
 		const uint32 num_cells = cpx_.number_of_cells_in_complex();
 		this->reserve(num_cells);
 
@@ -89,7 +93,10 @@ public:
 		}
 
 		for (auto cit = cpx_.cells_in_complex_begin(), cend = cpx_.cells_in_complex_end(); cit != cend; ++cit)
-			this->add_tetra(vertices_indices[cit->vertex(0)], vertices_indices[cit->vertex(1)], vertices_indices[cit->vertex(2)], vertices_indices[cit->vertex(3)], true);
+		{
+			this->template reorient_tetra<VEC3>(*position, vertices_indices[cit->vertex(0)], vertices_indices[cit->vertex(1)], vertices_indices[cit->vertex(2)], vertices_indices[cit->vertex(3)]);
+			this->add_tetra(vertices_indices[cit->vertex(0)], vertices_indices[cit->vertex(1)], vertices_indices[cit->vertex(2)], vertices_indices[cit->vertex(3)]);
+		}
 
 
 		ChunkArray<float32>* subdomain_indices = this->template add_volume_attribute<float32>("subdomain index");
@@ -106,24 +113,24 @@ private:
 };
 
 template<typename C3T3>
-void import_c3t3(const C3T3& c3t3_in, MapHandler<CMap3>* map_out)
+void import_c3t3(const C3T3& c3t3_in, plugin_cmap3_provider::CMap3Handler* map_out)
 {
 	if (!map_out)
 		return;
 
-	C3T3VolumeImport<C3T3> volume_import(c3t3_in, *map_out->get_map());
+	C3T3VolumeImport<C3T3> volume_import(c3t3_in, *map_out->map());
 	volume_import.create_map();
 	map_out->attribute_added(CMap3::Vertex::ORBIT, "position");
 	map_out->attribute_added(CMap3::Volume::ORBIT, "subdomain index");
 	map_out->set_bb_vertex_attribute("position");
-	static_cast<MapHandlerGen*>(map_out)->create_vbo("position");
+	map_out->create_vbo("position");
 }
 
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, CMap3Handler* output_volume_map);
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, CMap3Handler* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, plugin_cmap2_provider::CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, plugin_cmap3_provider::CMap3Handler* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, plugin_cmap3_provider::CMap3Handler* output_volume_map);
 
 template <typename Domain_>
-void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, CMap3Handler* output_volume_map)
+void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, plugin_cmap3_provider::CMap3Handler* output_volume_map)
 {
 	using namespace CGAL::parameters;
 	using Triangulation_ = typename CGAL::Mesh_triangulation_3<Domain_>::type;

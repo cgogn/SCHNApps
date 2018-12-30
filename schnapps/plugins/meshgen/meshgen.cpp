@@ -24,9 +24,10 @@
 
 #include <schnapps/plugins/meshgen/meshgen.h>
 #include <schnapps/plugins/meshgen/tetgen_structure_io.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/io/map_export.h>
@@ -108,6 +109,8 @@ MeshGeneratorParameters::MeshGeneratorParameters() :
 Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
 	gen_mesh_action_(nullptr),
 	plugin_image_(nullptr),
+	plugin_cmap2_provider_(nullptr),
+	plugin_cmap3_provider_(nullptr),
 	generation_parameters_(),
 	dialog_(nullptr)
 {
@@ -130,14 +133,17 @@ bool Plugin_VolumeMeshFromSurface::enable()
 	gen_mesh_action_ = schnapps_->add_menu_action("Export;Tetrahedralize", "Tetrahedralize");
 	connect(gen_mesh_action_, SIGNAL(triggered()), dialog_.get(), SLOT(show_export_dialog()));
 
-	schnapps_->foreach_map([&](MapHandlerGen* mhg)
+	schnapps_->foreach_object([&](Object* mhg)
 	{
 		dialog_->map_added(mhg);
 	});
 
-	Plugin* image_plugin_gen = schnapps_->get_plugin("image");
-	plugin_enabled(image_plugin_gen);
+	plugin_image_ = static_cast<plugin_image::Plugin_Image*>(schnapps_->enable_plugin(plugin_image::Plugin_Image::plugin_name()));
+	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap3_provider_ = static_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
 
+	if (!(plugin_cmap2_provider_ && plugin_cmap3_provider_))
+		return false;
 	if (plugin_image_)
 		for (const auto& im : plugin_image_->get_images())
 			dialog_->image_added(im.first);
@@ -152,11 +158,10 @@ void Plugin_VolumeMeshFromSurface::disable()
 
 void Plugin_VolumeMeshFromSurface::generate_button_netgen_pressed()
 {
-	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
-	MapHandler2* handler_map2 = dynamic_cast<MapHandler2*>(mhg);
+	MapHandler2* handler_map2 = plugin_cmap2_provider_->map(dialog_->get_selected_map());
 	if (handler_map2)
 	{
-		Map2* map = handler_map2->get_map();
+		Map2* map = handler_map2->map();
 		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
 		auto position_att = map->template get_attribute<VEC3, Map2::Vertex::ORBIT>(position_att_name);
 
@@ -171,11 +176,10 @@ void Plugin_VolumeMeshFromSurface::generate_button_netgen_pressed()
 
 void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 {
-	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
-	MapHandler2* handler_map2 = dynamic_cast<MapHandler2*>(mhg);
+	MapHandler2* handler_map2 = plugin_cmap2_provider_->map(dialog_->get_selected_map());
 	if (handler_map2)
 	{
-		Map2* map = handler_map2->get_map();
+		Map2* map = handler_map2->map();
 		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
 		auto position_att = map->template get_attribute<VEC3, Map2::Vertex::ORBIT>(position_att_name);
 
@@ -194,20 +198,20 @@ Plugin_VolumeMeshFromSurface::MapHandler3*Plugin_VolumeMeshFromSurface::generate
 	if (!mh2 || !position_att.is_valid())
 		return nullptr;
 
-	Map2* map = mh2->get_map();
+	Map2* map = mh2->map();
 	auto netgen_structure = export_netgen(*map, position_att);
 	nglib::Ng_Meshing_Parameters* mp = setup_netgen_parameters(params);
 
 	nglib::Ng_GenerateVolumeMesh (netgen_structure.get(), mp);
 	delete mp;
 
-	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("netgen_export", 3));
-	NetgenStructureVolumeImport netgen_import(netgen_structure.get(), *handler_map3->get_map());
+	MapHandler3* handler_map3 = plugin_cmap3_provider_->add_map("netgen_export");
+	NetgenStructureVolumeImport netgen_import(netgen_structure.get(), *handler_map3->map());
 	netgen_import.create_map();
 
 	handler_map3->attribute_added(CMap3::Vertex::ORBIT, "position");
 	handler_map3->set_bb_vertex_attribute("position");
-	static_cast<MapHandlerGen*>(handler_map3)->create_vbo("position");
+	handler_map3->create_vbo("position");
 
 	return handler_map3;
 }
@@ -217,20 +221,20 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	if (!mh2 || !position_att.is_valid())
 		return nullptr;
 
-	Map2* map = mh2->get_map();
+	Map2* map = mh2->map();
 
 	auto tetgen_input = export_tetgen(*map, position_att);
 	tetgen::tetgenio tetgen_output;
 
 	tetgen::tetrahedralize(tetgen_args.c_str(), tetgen_input.get(), &tetgen_output);
 
-	MapHandler3* handler_map3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("tetgen_export", 3));
-	TetgenStructureVolumeImport tetgen_import(&tetgen_output, *handler_map3->get_map());
+	MapHandler3* handler_map3 = plugin_cmap3_provider_->add_map("tetgen_export");
+	TetgenStructureVolumeImport tetgen_import(&tetgen_output, *handler_map3->map());
 	tetgen_import.create_map();
 
 	handler_map3->attribute_added(CMap3::Vertex::ORBIT, "position");
 	handler_map3->set_bb_vertex_attribute("position");
-	static_cast<MapHandlerGen*>(handler_map3)->create_vbo("position");
+	handler_map3->create_vbo("position");
 
 	return handler_map3;
 }
@@ -241,7 +245,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	if (!mh2 || !position_att.is_valid())
 		return nullptr;
 
-	CMap2& map2 = *mh2->get_map();
+	CMap2& map2 = *mh2->map();
 	bool is_triangular = true;
 	map2.foreach_cell([&is_triangular, &map2](CMap2::Face f) -> bool
 	{
@@ -249,12 +253,12 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	});
 	if (!is_triangular)
 	{
-		cgogn::modeling::triangule<CMap2, VEC3>(map2, position_att);
+		cgogn::modeling::triangule<CMap2>(map2, position_att);
 		mh2->notify_connectivity_change();
 		mh2->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(position_att.name()));
 	}
 
-	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_export", 3));
+	MapHandler3* mh3 = plugin_cmap3_provider_->add_map("cgal_export");
 	tetrahedralize(params, mh2, position_att, mh3);
 	return mh3;
 #else
@@ -267,7 +271,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 #ifdef PLUGIN_MESHGEN_WITH_CGAL
 	if (!im)
 		return nullptr;
-	MapHandler3* mh3 = dynamic_cast<MapHandler3*>(schnapps_->add_map("cgal_image_export", 3));
+	MapHandler3* mh3 = plugin_cmap3_provider_->add_map("cgal_image_export");
 	tetrahedralize(params, im, mh3);
 	return mh3;
 #else
@@ -278,12 +282,11 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 {
 #ifdef PLUGIN_MESHGEN_WITH_CGAL
-	MapHandlerGen* mhg = schnapps_->get_map(dialog_->get_selected_map());
-	if (mhg)
+	MapHandler2* mh2 = plugin_cmap2_provider_->map(dialog_->get_selected_map());
+	if (mh2)
 	{
-		MapHandler2* mh2 = dynamic_cast<MapHandler2*>(mhg);
 		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
-		auto position_att = mh2->template get_attribute<VEC3, Map2::Vertex::ORBIT>(QString::fromStdString(position_att_name));
+		auto position_att = mh2->map()->get_attribute<VEC3, CMap2::Vertex::ORBIT>(position_att_name);
 		generate_cgal(mh2, position_att, generation_parameters_.cgal);
 
 	} else {
