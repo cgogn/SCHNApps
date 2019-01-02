@@ -22,44 +22,71 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
-#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
+#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
+#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
 
 #include <schnapps/plugins/extract_surface/dll.h>
 
-#include <ui_extract_dialog.h>
+#include <schnapps/core/plugin_processing.h>
+
+#include <QAction>
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
+class Object;
+
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
+
+namespace plugin_cmap3_provider
+{
+class Plugin_CMap3Provider;
+class CMap3Handler;
+}
 
 namespace plugin_extract_surface
 {
 
-class Plugin_ExtractSurface;
+class ExtractDialog;
 
-class SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API ExtractDialog : public QDialog, public Ui::ExtractSurface
+class SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API Plugin_ExtractSurface : public PluginProcessing
 {
 	Q_OBJECT
-	friend class Plugin_ExtractSurface;
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
 
 public:
-	ExtractDialog(SCHNApps* s, Plugin_ExtractSurface* p);
 
-private slots:
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
-	void selected_map_changed(const QString&);
-	void extract_validated();
+	Plugin_ExtractSurface();
+	inline ~Plugin_ExtractSurface() override {}
+	static QString plugin_name();
+
+	inline plugin_cmap2_provider::Plugin_CMap2Provider* map2_provider() { return plugin_cmap2_provider_; }
+	inline plugin_cmap3_provider::Plugin_CMap3Provider* map3_provider() { return plugin_cmap3_provider_; }
+
+	void extract_surface(plugin_cmap3_provider::CMap3Handler* in_map3, plugin_cmap2_provider::CMap2Handler* out_map2, const QString& pos_att_name);
+
 private:
-	SCHNApps* schnapps_;
-	Plugin_ExtractSurface* plugin_;
-	bool updating_ui_;
+
+	bool enable() override;
+	void disable() override;
+
+	QAction* extract_surface_action_;
+	ExtractDialog* extract_dialog_;
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+
+	public slots:
+	private slots:
+	void extract_surface_dialog();
 };
 
 } // namespace plugin_extract_surface
+
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
+#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
