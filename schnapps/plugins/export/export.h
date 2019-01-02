@@ -24,10 +24,9 @@
 #ifndef SCHNAPPS_PLUGIN_EXPORT_H_
 #define SCHNAPPS_PLUGIN_EXPORT_H_
 
+#include <schnapps/core/plugin_processing.h>
 #include <schnapps/plugins/export/dll.h>
 
-#include <schnapps/core/plugin_processing.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/io/map_export.h>
 
@@ -35,6 +34,33 @@ class QAction;
 
 namespace schnapps
 {
+
+class Object;
+
+
+namespace plugin_cmap0_provider
+{
+class Plugin_CMap0Provider;
+class CMap0Handler;
+}
+
+namespace plugin_cmap1_provider
+{
+class Plugin_CMap1Provider;
+class CMap1Handler;
+}
+
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
+
+namespace plugin_cmap3_provider
+{
+class Plugin_CMap3Provider;
+class CMap3Handler;
+}
 
 namespace plugin_export
 {
@@ -52,8 +78,15 @@ class SCHNAPPS_PLUGIN_EXPORT_API Plugin_Export : public PluginProcessing
 
 public:
 
+	using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+	using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+
 	Plugin_Export();
 	inline ~Plugin_Export() override {}
+
+	inline plugin_cmap2_provider::Plugin_CMap2Provider* map2_provider() { return plugin_cmap2_provider_;}
+	inline plugin_cmap3_provider::Plugin_CMap3Provider* map3_provider() { return plugin_cmap3_provider_;}
+
 	static QString plugin_name();
 
 private:
@@ -63,13 +96,15 @@ private:
 
 public slots:
 
-	void export_mesh(MapHandlerGen* mhg, cgogn::io::ExportOptions export_params);
+	void export_mesh(Object* mhg, cgogn::io::ExportOptions export_params);
 	void export_mesh_from_file_dialog();
 
 private:
 
 	QAction* export_mesh_action_;
 	ExportDialog* export_dialog_;
+	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
 };
 
 } // namespace plugin_export

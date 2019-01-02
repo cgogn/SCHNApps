@@ -21,10 +21,11 @@
 *                                                                              *
 *******************************************************************************/
 
+#include <schnapps/core/schnapps.h>
 #include <schnapps/plugins/export/export.h>
 #include <schnapps/plugins/export/export_dialog.h>
-
-#include <schnapps/core/schnapps.h>
+#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
 
 #include <QFileDialog>
 #include <QFileInfo>
@@ -39,7 +40,9 @@ namespace plugin_export
 
 Plugin_Export::Plugin_Export() :
 	export_mesh_action_(nullptr),
-	export_dialog_(nullptr)
+	export_dialog_(nullptr),
+	plugin_cmap2_provider_(nullptr),
+	plugin_cmap3_provider_(nullptr)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
@@ -51,6 +54,13 @@ QString Plugin_Export::plugin_name()
 
 bool Plugin_Export::enable()
 {
+	delete export_dialog_;
+	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap3_provider_ = reinterpret_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
+
+	if (!(plugin_cmap2_provider_ && plugin_cmap3_provider_))
+		return false;
+
 	export_dialog_ = new ExportDialog(schnapps_, this);
 
 	export_mesh_action_ = schnapps_->add_menu_action("Export;Export Mesh", "export surface/volume mesh");
@@ -66,22 +76,26 @@ void Plugin_Export::disable()
 	schnapps_->remove_menu_action(export_mesh_action_);
 
 	delete export_dialog_;
+	export_dialog_ = nullptr;
 }
 
-void Plugin_Export::export_mesh(MapHandlerGen* mhg, cgogn::io::ExportOptions export_params)
+void Plugin_Export::export_mesh(Object* mhg, cgogn::io::ExportOptions export_params)
 {
 	if (mhg)
 	{
 		if (CMap2Handler* m2h = dynamic_cast<CMap2Handler*>(mhg))
 		{
-			CMap2& cmap2 = *m2h->get_map();
+			CMap2& cmap2 = *m2h->map();
 			cgogn::io::export_surface(cmap2, export_params);
 		}
 		else
 		{
 			if (CMap3Handler* m3h = dynamic_cast<CMap3Handler*>(mhg))
 			{
-				CMap3& cmap3 = *m3h->get_map();
+				CMap3& cmap3 = *m3h->map();
+				cgogn_log_debug("export_mesh") << export_params.position_attributes_.size();
+				cgogn_log_debug("export_mesh2") << export_params.attributes_to_export_.size();
+
 				cgogn::io::export_volume(cmap3, export_params);
 			}
 		}

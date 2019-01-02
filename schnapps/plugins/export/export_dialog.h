@@ -25,14 +25,33 @@
 #define SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 
 #include <schnapps/plugins/export/dll.h>
-
 #include <ui_export_dialog.h>
+
+namespace cgogn
+{
+namespace io
+{
+class ExportOptions;
+}
+}
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
+class Object;
+
+namespace plugin_cmap2_provider
+{
+class Plugin_CMap2Provider;
+class CMap2Handler;
+}
+
+namespace plugin_cmap3_provider
+{
+class Plugin_CMap3Provider;
+class CMap3Handler;
+}
 
 namespace plugin_export
 {
@@ -56,15 +75,20 @@ private slots:
 	void export_validated();
 
 	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
+	void map_added(Object*);
+	void map_removed(Object*);
 
 private:
+
+	void selected_map_changed(const plugin_cmap2_provider::CMap2Handler* h);
+	void selected_map_changed(const plugin_cmap3_provider::CMap3Handler* h);
+	void export_map(plugin_cmap2_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt);
+	void export_map(plugin_cmap3_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt);
 
 	SCHNApps* schnapps_;
 	Plugin_Export* plugin_;
 
-	MapHandlerGen* selected_map_;
+	Object* selected_map_;
 };
 
 } // namespace plugin_export
