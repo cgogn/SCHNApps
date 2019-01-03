@@ -26,8 +26,8 @@
 
 #include <schnapps/plugins/surface_deformation/dll.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
 
 #include <schnapps/core/types.h>
 
@@ -41,10 +41,11 @@ namespace plugin_surface_deformation
 {
 
 class Plugin_SurfaceDeformation;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-template <typename CELL>
-using CMap2CellsSet = plugin_cmap2_provider::CMap2CellsSet<CELL>;
-using CMap2CellsSetGen = plugin_cmap2_provider::CMap2CellsSetGen;
+
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+using CMapCellsSetGen = plugin_cmap_provider::CMapCellsSetGen;
+template <typename CellType>
+using CMap2CellsSet = CMap2Handler::CMap2CellsSet<CellType>;
 
 struct MapParameters
 {
@@ -151,11 +152,11 @@ struct MapParameters
 				uint32 vidx1 = v_index_[vertices.first];
 				uint32 vidx2 = v_index_[vertices.second];
 
-				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx1, vidx2, w));
-				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx2, vidx1, w));
+				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx1), int(vidx2), w));
+				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx2), int(vidx1), w));
 
-				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx1, vidx1, -w));
-				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx2, vidx2, -w));
+				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx1), int(vidx1), -w));
+				LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx2), int(vidx2), -w));
 			});
 			LAPL.setFromTriplets(LAPLcoeffs.begin(), LAPLcoeffs.end());
 			Eigen::MatrixXd vpos(nb_vertices, 3);
@@ -326,11 +327,11 @@ struct MapParameters
 					uint32 vidx1 = v_index_[vertices.first];
 					uint32 vidx2 = v_index_[vertices.second];
 
-					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx1, vidx2, w));
-					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx2, vidx1, w));
+					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx1), int(vidx2), w));
+					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx2), int(vidx1), w));
 
-					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx1, vidx1, -w));
-					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(vidx2, vidx2, -w));
+					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx1), int(vidx1), -w));
+					LAPLcoeffs.push_back(Eigen::Triplet<SCALAR>(int(vidx2), int(vidx2), -w));
 				},
 				*working_cells_
 			);
@@ -347,7 +348,7 @@ struct MapParameters
 				{
 					if (!free_vertex_set_->is_selected(v))
 					{
-						int idx = (int)(v_index_[v]);
+						int idx = int(v_index_[v]);
 						working_LAPL_.prune([&] (int i, int, SCALAR) { return i != idx; });
 						working_LAPL_.coeffRef(idx, idx) = 1.0;
 						working_BILAPL_.prune([&] (int i, int, SCALAR) { return i != idx; });
@@ -385,10 +386,10 @@ private:
 	{
 		if (free_vertex_set_)
 			QObject::disconnect(fvs_connection_);
-		if (cs && &cs->map_handler() == mh_)
+		if (cs && cs->map_handler() == mh_)
 		{
 			free_vertex_set_ = cs;
-			fvs_connection_ = QObject::connect(free_vertex_set_, &CMap2CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
+			fvs_connection_ = QObject::connect(free_vertex_set_, &CMapCellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
 			return true;
 		}
 		else
@@ -402,10 +403,10 @@ private:
 	{
 		if (handle_vertex_set_)
 			QObject::disconnect(hvs_connection_);
-		if (cs && &cs->map_handler() == mh_)
+		if (cs && cs->map_handler() == mh_)
 		{
 			handle_vertex_set_ = cs;
-			hvs_connection_ = QObject::connect(handle_vertex_set_, &CMap2CellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
+			hvs_connection_ = QObject::connect(handle_vertex_set_, &CMapCellsSetGen::selected_cells_changed, [this] () { solver_ready_ = false; });
 			return true;
 		}
 		else

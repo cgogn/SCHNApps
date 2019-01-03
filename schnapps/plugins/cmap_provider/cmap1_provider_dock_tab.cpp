@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/cmap_provider/cmap1_provider_dock_tab.h>
-#include <schnapps/plugins/cmap_provider/cmap1_cells_set.h>
+#include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
@@ -174,7 +174,7 @@ void CMap1Provider_DockTab::cells_set_check_state_changed(QListWidgetItem* item)
 	if (!updating_ui_ && selected_map_)
 	{
 		cgogn::Orbit orbit = current_orbit();
-		CMap1CellsSetGen* cs = selected_map_->cells_set(orbit, item->text());
+		CMapCellsSetGen* cs = selected_map_->cells_set(orbit, item->text());
 		cs->set_mutually_exclusive(item->checkState() == Qt::Checked);
 	}
 }
@@ -184,7 +184,7 @@ void CMap1Provider_DockTab::add_cells_set()
 	if (!updating_ui_ && selected_map_)
 	{
 		cgogn::Orbit orbit = current_orbit();
-		QString set_name = orbit_name(orbit) + QString("_set_") + QString::number(CMap1CellsSetGen::cells_set_count_);
+		QString set_name = orbit_name(orbit) + QString("_set_") + QString::number(CMapCellsSetGen::cells_set_count_);
 		selected_map_->add_cells_set(orbit, set_name);
 	}
 }
@@ -328,7 +328,7 @@ void CMap1Provider_DockTab::selected_map_cells_set_added(cgogn::Orbit orbit, con
 	updating_ui_ = true;
 
 	QListWidgetItem* item = nullptr;
-	CMap1CellsSetGen* cs = nullptr;
+	CMapCellsSetGen* cs = nullptr;
 	switch (orbit)
 	{
 		case CMap1::Vertex::ORBIT:
@@ -374,7 +374,7 @@ void CMap1Provider_DockTab::selected_map_cells_set_mutually_exclusive_changed(cg
 {
 	updating_ui_ = true;
 
-	CMap1CellsSetGen* cs = nullptr;
+	CMapCellsSetGen* cs = nullptr;
 	QList<QListWidgetItem*> items;
 	switch (orbit)
 	{
@@ -482,7 +482,7 @@ void CMap1Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap1::Vertex>([&] (CMap1CellsSet<CMap1::Vertex>* cells_set)
+		selected_map_->foreach_cells_set<CMap1::Vertex>([&] (CMap1Handler::CMap1CellsSet<CMap1::Vertex>* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_vertexCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);

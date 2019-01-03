@@ -24,7 +24,7 @@
 #include <schnapps/plugins/surface_selection/surface_selection_dock_tab.h>
 #include <schnapps/plugins/surface_selection/surface_selection.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -38,7 +38,7 @@ namespace plugin_surface_selection
 SurfaceSelection_DockTab::SurfaceSelection_DockTab(SCHNApps* s, Plugin_SurfaceSelection* p) :
 	schnapps_(s),
 	plugin_(p),
-	plugin_cmap2_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false)
 {
@@ -63,7 +63,7 @@ SurfaceSelection_DockTab::SurfaceSelection_DockTab(SCHNApps* s, Plugin_SurfaceSe
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 SurfaceSelection_DockTab::~SurfaceSelection_DockTab()
@@ -117,7 +117,7 @@ void SurfaceSelection_DockTab::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap2(map_name);
 	}
 
 	if (selected_map_)
@@ -157,7 +157,7 @@ void SurfaceSelection_DockTab::cells_set_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 	{
-		CMap2CellsSetGen* cs = selected_map_->cells_set(orbit_from_index(combo_cellType->currentIndex()), combo_cellsSet->currentText());
+		CMapCellsSetGen* cs = selected_map_->cells_set(orbit_from_index(combo_cellType->currentIndex()), combo_cellsSet->currentText());
 		plugin_->set_cells_set(schnapps_->selected_view(), selected_map_, cs, false);
 		update_after_cells_set_changed();
 	}
@@ -176,7 +176,7 @@ void SurfaceSelection_DockTab::clear_clicked()
 {
 	if (!updating_ui_ && selected_map_)
 	{
-		CMap2CellsSetGen* cs = selected_map_->cells_set(orbit_from_index(combo_cellType->currentIndex()), combo_cellsSet->currentText());
+		CMapCellsSetGen* cs = selected_map_->cells_set(orbit_from_index(combo_cellType->currentIndex()), combo_cellsSet->currentText());
 		if (cs)
 			cs->clear();
 	}
@@ -363,7 +363,7 @@ void SurfaceSelection_DockTab::set_normal_attribute(const QString& name)
 	updating_ui_ = false;
 }
 
-void SurfaceSelection_DockTab::set_cells_set(CMap2CellsSetGen*)
+void SurfaceSelection_DockTab::set_cells_set(CMapCellsSetGen*)
 {
 	update_after_cells_set_changed();
 }
@@ -435,14 +435,14 @@ void SurfaceSelection_DockTab::refresh_ui()
 	}
 
 	cgogn::Orbit orbit = orbit_from_index(combo_cellType->currentIndex());
-	CMap2CellsSetGen* cs = p.cells_set();
+	CMapCellsSetGen* cs = p.cells_set();
 	if (cs)
 		orbit = cs->orbit();
 
 	combo_cellType->setCurrentIndex(index_from_orbit(orbit));
 
 	i = 1;
-	mh->foreach_cells_set(orbit_from_index(combo_cellType->currentIndex()), [&] (CMap2CellsSetGen* cells_set)
+	mh->foreach_cells_set(orbit_from_index(combo_cellType->currentIndex()), [&] (CMapCellsSetGen* cells_set)
 	{
 		combo_cellsSet->addItem(cells_set->name());
 		if (cs == cells_set)
@@ -492,7 +492,7 @@ void SurfaceSelection_DockTab::update_after_cells_set_changed()
 	const MapParameters& p = plugin_->parameters(view, mh);
 
 	cgogn::Orbit orbit = orbit_from_index(combo_cellType->currentIndex());
-	CMap2CellsSetGen* cs = p.cells_set();
+	CMapCellsSetGen* cs = p.cells_set();
 	if (cs)
 		orbit = cs->orbit();
 
@@ -502,7 +502,7 @@ void SurfaceSelection_DockTab::update_after_cells_set_changed()
 	combo_cellsSet->addItem("- select set -");
 
 	uint32 i = 1;
-	mh->foreach_cells_set(orbit, [&] (CMap2CellsSetGen* cells_set)
+	mh->foreach_cells_set(orbit, [&] (CMapCellsSetGen* cells_set)
 	{
 		combo_cellsSet->addItem(cells_set->name());
 		if (cells_set == cs)

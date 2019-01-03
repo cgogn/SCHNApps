@@ -33,37 +33,22 @@
 namespace schnapps
 {
 
-namespace plugin_cmap0_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap0Provider;
+class Plugin_CMapProvider;
 class CMap0Handler;
-}
-
-namespace plugin_cmap1_provider
-{
-class Plugin_CMap1Provider;
 class CMap1Handler;
-}
-
-namespace plugin_cmap2_provider
-{
-class Plugin_CMap2Provider;
 class CMap2Handler;
-}
-
-namespace plugin_cmap3_provider
-{
-class Plugin_CMap3Provider;
 class CMap3Handler;
 }
 
 namespace plugin_import
 {
 
-using CMap0Handler = plugin_cmap0_provider::CMap0Handler;
-using CMap1Handler = plugin_cmap1_provider::CMap1Handler;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+using CMap0Handler = plugin_cmap_provider::CMap0Handler;
+using CMap1Handler = plugin_cmap_provider::CMap1Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 /**
 * @brief Plugin for CGoGN mesh import
@@ -101,10 +86,7 @@ public:
 
 private:
 
-	plugin_cmap0_provider::Plugin_CMap0Provider* plugin_cmap0_provider_;
-	plugin_cmap1_provider::Plugin_CMap1Provider* plugin_cmap1_provider_;
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	QString setting_bbox_name_;
 	QStringList setting_vbo_names_;

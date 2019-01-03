@@ -87,7 +87,7 @@ bool Plugin_Cage3dDeformation::enable()
 			map_added(mh);
 	});
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
 	return true;
 }

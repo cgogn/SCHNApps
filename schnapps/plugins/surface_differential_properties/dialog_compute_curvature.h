@@ -35,9 +35,9 @@ namespace cgogn { enum Orbit: numerics::uint32; }
 namespace schnapps
 {
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap2Provider;
+class Plugin_CMapProvider;
 class CMap2Handler;
 }
 
@@ -48,7 +48,7 @@ namespace plugin_sdp
 {
 
 class Plugin_SurfaceDifferentialProperties;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 class SCHNAPPS_PLUGIN_SDP_API ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
 {
@@ -64,7 +64,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceDifferentialProperties* plugin_;
 
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	CMap2Handler* selected_map_;
 

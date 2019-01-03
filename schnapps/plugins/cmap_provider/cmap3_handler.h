@@ -33,8 +33,6 @@
 #include <cgogn/core/cmap/cmap3.h>
 #include <cgogn/rendering/map_render.h>
 
-#include <QString>
-
 namespace schnapps
 {
 
@@ -44,14 +42,20 @@ class PluginProvider;
 namespace plugin_cmap_provider
 {
 
-class CMap3CellsSetGen;
-template <typename CELL> class CMap3CellsSet;
+class CMapCellsSetGen;
+template <typename CMapHandler, typename CellType> class CMapCellsSet;
 
 class SCHNAPPS_PLUGIN_CMAP_PROVIDER_API CMap3Handler : public Object
 {
 	Q_OBJECT
 
 public:
+
+	using Self = CMap3Handler;
+	using MapType = CMap3;
+
+	template <typename CellType>
+	using CMap3CellsSet = CMapCellsSet<Self, CellType>;
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -97,7 +101,7 @@ public:
 	 * MANAGE CELLS SETS                                      *
 	 *********************************************************/
 
-	CMap3CellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name);
+	CMapCellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name);
 
 	template <typename CellType>
 	CMap3CellsSet<CellType>* add_cells_set(const QString& name)
@@ -115,7 +119,7 @@ public:
 
 	void remove_cells_set(cgogn::Orbit orbit, const QString& name);
 
-	CMap3CellsSetGen* cells_set(cgogn::Orbit orbit, const QString& name)
+	CMapCellsSetGen* cells_set(cgogn::Orbit orbit, const QString& name)
 	{
 		if (cells_sets_[orbit].count(name) > 0ul)
 				return cells_sets_[orbit].at(name);
@@ -145,7 +149,7 @@ public:
 	template <typename FUNC>
 	void foreach_cells_set(cgogn::Orbit orbit, const FUNC& f) const
 	{
-		static_assert(cgogn::is_func_parameter_same<FUNC, CMap3CellsSetGen*>::value, "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, CMapCellsSetGen*>::value, "Wrong function parameter type");
 		for (const auto& cells_set_it : cells_sets_[orbit])
 			f(cells_set_it.second);
 	}
@@ -287,7 +291,7 @@ protected:
 	std::map<QString, std::unique_ptr<cgogn::rendering::VBO>> vbos_;
 
 	// CellsSets of the map
-	std::array<std::map<QString, CMap3CellsSetGen*>, cgogn::NB_ORBITS> cells_sets_;
+	std::array<std::map<QString, CMapCellsSetGen*>, cgogn::NB_ORBITS> cells_sets_;
 
 	CMap3::VertexAttribute<VEC3> bb_vertex_attribute_;
 };

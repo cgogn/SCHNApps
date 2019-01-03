@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/cmap_provider/cmap1_cells_set.h>
+#include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
 
 namespace schnapps
 {
@@ -29,10 +29,9 @@ namespace schnapps
 namespace plugin_cmap_provider
 {
 
-uint32 CMap1CellsSetGen::cells_set_count_ = 0;
+uint32 CMapCellsSetGen::cells_set_count_ = 0;
 
-CMap1CellsSetGen::CMap1CellsSetGen(const CMap1Handler& mh, const QString& name) :
-	mh_(mh),
+CMapCellsSetGen::CMapCellsSetGen(const QString& name) :
 	name_(name),
 	mutually_exclusive_(false),
 	selection_changed_(false)
@@ -40,7 +39,7 @@ CMap1CellsSetGen::CMap1CellsSetGen(const CMap1Handler& mh, const QString& name) 
 	++cells_set_count_;
 }
 
-CMap1CellsSetGen::~CMap1CellsSetGen()
+CMapCellsSetGen::~CMapCellsSetGen()
 {}
 
 } // namespace plugin_cmap_provider

@@ -66,7 +66,7 @@ public:
 
 	View(const QString& name, SCHNApps* s);
 
-	~View();
+	~View() override;
 
 	inline const QString& name() const { return name_; }
 

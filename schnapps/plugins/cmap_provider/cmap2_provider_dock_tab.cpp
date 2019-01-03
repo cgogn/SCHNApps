@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/cmap_provider/cmap2_provider_dock_tab.h>
-#include <schnapps/plugins/cmap_provider/cmap2_cells_set.h>
+#include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
@@ -187,7 +187,7 @@ void CMap2Provider_DockTab::cells_set_check_state_changed(QListWidgetItem* item)
 	if (!updating_ui_ && selected_map_)
 	{
 		cgogn::Orbit orbit = current_orbit();
-		CMap2CellsSetGen* cs = selected_map_->cells_set(orbit, item->text());
+		CMapCellsSetGen* cs = selected_map_->cells_set(orbit, item->text());
 		cs->set_mutually_exclusive(item->checkState() == Qt::Checked);
 	}
 }
@@ -197,7 +197,7 @@ void CMap2Provider_DockTab::add_cells_set()
 	if (!updating_ui_ && selected_map_)
 	{
 		cgogn::Orbit orbit = current_orbit();
-		QString set_name = orbit_name(orbit) + QString("_set_") + QString::number(CMap2CellsSetGen::cells_set_count_);
+		QString set_name = orbit_name(orbit) + QString("_set_") + QString::number(CMapCellsSetGen::cells_set_count_);
 		selected_map_->add_cells_set(orbit, set_name);
 	}
 }
@@ -384,7 +384,7 @@ void CMap2Provider_DockTab::selected_map_cells_set_added(cgogn::Orbit orbit, con
 	updating_ui_ = true;
 
 	QListWidgetItem* item = nullptr;
-	CMap2CellsSetGen* cs = nullptr;
+	CMapCellsSetGen* cs = nullptr;
 	switch (orbit)
 	{
 		case CMap2::CDart::ORBIT:
@@ -462,7 +462,7 @@ void CMap2Provider_DockTab::selected_map_cells_set_mutually_exclusive_changed(cg
 {
 	updating_ui_ = true;
 
-	CMap2CellsSetGen* cs = nullptr;
+	CMapCellsSetGen* cs = nullptr;
 	QList<QListWidgetItem*> items;
 	switch (orbit)
 	{
@@ -577,7 +577,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::CDart>([&] (CMap2CellsSet<CMap2::CDart>* cells_set)
+		selected_map_->foreach_cells_set<CMap2::CDart>([&] (CMap2Handler::CMap2CellsSet<CMap2::CDart>* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_dartCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -615,7 +615,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Vertex>([&] (CMap2CellsSet<CMap2::Vertex>* cells_set)
+		selected_map_->foreach_cells_set<CMap2::Vertex>([&] (CMap2Handler::CMap2CellsSet<CMap2::Vertex>* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_vertexCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -641,7 +641,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Edge>([&] (CMap2CellsSet<CMap2::Edge>* cells_set)
+		selected_map_->foreach_cells_set<CMap2::Edge>([&] (CMap2Handler::CMap2CellsSet<CMap2::Edge>* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_edgeCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -667,7 +667,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Face>([&] (CMap2CellsSet<CMap2::Face>* cells_set)
+		selected_map_->foreach_cells_set<CMap2::Face>([&] (CMap2Handler::CMap2CellsSet<CMap2::Face>* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_faceCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -693,7 +693,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Volume>([&] (CMap2CellsSet<CMap2::Volume>* cells_set)
+		selected_map_->foreach_cells_set<CMap2::Volume>([&] (CMap2Handler::CMap2CellsSet<CMap2::Volume>* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_volumeCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);

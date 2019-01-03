@@ -22,7 +22,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
-#include <schnapps/plugins/cmap_provider/cmap2_cells_set.h>
+#include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
 
 #include <schnapps/core/view.h>
 
@@ -290,12 +290,12 @@ void CMap2Handler::delete_vbo(const QString &name)
  * MANAGE CELLS SETS                                      *
  *********************************************************/
 
-CMap2CellsSetGen* CMap2Handler::add_cells_set(cgogn::Orbit orbit, const QString& name)
+CMapCellsSetGen* CMap2Handler::add_cells_set(cgogn::Orbit orbit, const QString& name)
 {
 	if (cells_sets_[orbit].count(name) > 0ul)
 		return nullptr;
 
-	CMap2CellsSetGen* cells_set = nullptr;
+	CMapCellsSetGen* cells_set = nullptr;
 
 	switch (orbit)
 	{

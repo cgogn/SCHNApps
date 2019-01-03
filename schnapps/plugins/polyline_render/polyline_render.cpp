@@ -24,7 +24,7 @@
 #include <schnapps/plugins/polyline_render/polyline_render.h>
 #include <schnapps/plugins/polyline_render/polyline_render_dock_tab.h>
 
-#include <schnapps/plugins/cmap1_provider/cmap1_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>

@@ -23,7 +23,7 @@
 
 #include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -71,7 +71,7 @@ bool Plugin_SurfaceModelisation::enable()
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(schnapps_closing()));
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
 	return true;
 }
@@ -129,7 +129,7 @@ void Plugin_SurfaceModelisation::decimate(
 	const QString& position_attribute_name,
 	double percentVerticesToRemove)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -152,7 +152,7 @@ void Plugin_SurfaceModelisation::subdivide_loop(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -174,7 +174,7 @@ void Plugin_SurfaceModelisation::subdivide_catmull_clark(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -196,7 +196,7 @@ void Plugin_SurfaceModelisation::subdivide_lsm(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -239,7 +239,7 @@ void Plugin_SurfaceModelisation::remesh(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -261,7 +261,7 @@ void Plugin_SurfaceModelisation::filter_average(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -286,7 +286,7 @@ void Plugin_SurfaceModelisation::filter_bilateral(
 	const QString& position_attribute_name,
 	const QString& normal_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -314,7 +314,7 @@ void Plugin_SurfaceModelisation::filter_taubin(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -337,7 +337,7 @@ void Plugin_SurfaceModelisation::filter_laplacian(
 	const QString& map_name,
 	const QString& position_attribute_name)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 

@@ -37,7 +37,7 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap3_provider { class CMap3Handler; }
+namespace plugin_cmap_provider { class CMap3Handler; }
 
 #ifdef USE_TRANSPARENCY
 namespace plugin_render_transparency { class Plugin_RenderTransparency; }
@@ -47,7 +47,7 @@ namespace plugin_volume_render
 {
 
 class VolumeRender_DockTab;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 /**
 * @brief Plugin for volume rendering

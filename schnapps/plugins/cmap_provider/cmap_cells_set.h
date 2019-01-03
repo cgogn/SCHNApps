@@ -21,28 +21,26 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP1_CELLS_SET_H_
-#define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP1_CELLS_SET_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_
+#define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_
 
 #include <schnapps/plugins/cmap_provider/dll.h>
-#include <schnapps/plugins/cmap_provider/cmap1_handler.h>
 
 #include <schnapps/core/types.h>
 
 #include <cgogn/core/basic/cell.h>
-#include <cgogn/core/cmap/cmap1.h>
 
 #include <QObject>
 
 namespace schnapps
 {
 
+class Object;
+
 namespace plugin_cmap_provider
 {
 
-class CMap1Handler;
-
-class SCHNAPPS_PLUGIN_CMAP_PROVIDER_API CMap1CellsSetGen : public QObject
+class SCHNAPPS_PLUGIN_CMAP_PROVIDER_API CMapCellsSetGen : public QObject
 {
 	Q_OBJECT
 
@@ -51,12 +49,13 @@ public:
 	// counter for cells set unique naming
 	static uint32 cells_set_count_;
 
-	CMap1CellsSetGen(const CMap1Handler& mh, const QString& name);
-	~CMap1CellsSetGen();
+	CMapCellsSetGen(const QString& name);
+	~CMapCellsSetGen();
 
 	inline const QString& name() { return name_; }
 
-	virtual const CMap1Handler& map_handler() const { return mh_; }
+	virtual Object* map_handler() const = 0;
+
 	virtual cgogn::Orbit orbit() const = 0;
 	virtual std::size_t nb_cells() const = 0;
 
@@ -89,31 +88,38 @@ protected:
 		selection_changed_ = false;
 	}
 
-	const CMap1Handler& mh_;
 	QString name_;
 	bool mutually_exclusive_;
 	bool selection_changed_;
 };
 
-template <typename CELL>
-class CMap1CellsSet : public CMap1CellsSetGen
+template <typename CMapHandler, typename CellType>
+class CMapCellsSet : public CMapCellsSetGen
 {
 public:
 
-	using Inherit = CMap1CellsSetGen;
-	using Self = CMap1CellsSet<CELL>;
+	using Inherit = CMapCellsSetGen;
+	using Self = CMapCellsSet<CMapHandler, CellType>;
 
-	CMap1CellsSet(CMap1Handler& mh, const QString& name) :
-		Inherit(mh, name),
+	using MapType = typename CMapHandler::MapType;
+
+	CMapCellsSet(CMapHandler& mh, const QString& name) :
+		Inherit(name),
+		mh_(mh),
 		marker_(*mh.map())
 	{}
 
-	~CMap1CellsSet() override
+	~CMapCellsSet() override
 	{}
+
+	inline Object* map_handler() const override
+	{
+		return &mh_;
+	}
 
 	inline cgogn::Orbit orbit() const override
 	{
-		return CELL::ORBIT;
+		return CellType::ORBIT;
 	}
 
 	inline std::size_t nb_cells() const override
@@ -121,7 +127,7 @@ public:
 		return cells_.size();
 	}
 
-	inline void select(CELL c, bool emit_signal = true)
+	inline void select(CellType c, bool emit_signal = true)
 	{
 		if (!marker_.is_marked(c))
 		{
@@ -139,9 +145,9 @@ public:
 		}
 	}
 
-	inline void select(const std::vector<CELL>& cells)
+	inline void select(const std::vector<CellType>& cells)
 	{
-		for (CELL c : cells)
+		for (CellType c : cells)
 			select(c, false);
 		this->emit_if_selection_changed();
 		if (this->mutually_exclusive_ && !mutually_exclusive_sets_.empty())
@@ -151,7 +157,7 @@ public:
 		}
 	}
 
-	inline void unselect(CELL c, bool emit_signal = true)
+	inline void unselect(CellType c, bool emit_signal = true)
 	{
 		if(marker_.is_marked(c))
 		{
@@ -169,14 +175,14 @@ public:
 		}
 	}
 
-	inline void unselect(const std::vector<CELL>& cells)
+	inline void unselect(const std::vector<CellType>& cells)
 	{
-		for (CELL c : cells)
+		for (CellType c : cells)
 			unselect(c, false);
 		this->emit_if_selection_changed();
 	}
 
-	inline bool is_selected(CELL c)
+	inline bool is_selected(CellType c)
 	{
 		return marker_.is_marked(c);
 	}
@@ -212,23 +218,23 @@ public:
 		this->mutually_exclusive_ = b;
 
 		std::vector<Self*> mex;
-		mh_.foreach_cells_set<CELL>([&] (Self* cs)
+		mh_.template foreach_cells_set<CellType>([&] (Self* cs)
 		{
 			if (cs->is_mutually_exclusive())
 				mex.push_back(cs);
 		});
-		mh_.foreach_cells_set<CELL>([&] (Self* cs)
+		mh_.template foreach_cells_set<CellType>([&] (Self* cs)
 		{
 			cs->set_mutually_exclusive_sets(mex);
 		});
 
-		mh_.notify_cells_set_mutually_exclusive_change<CELL>(this->name_);
+		mh_.template notify_cells_set_mutually_exclusive_change<CellType>(this->name_);
 	}
 
 	inline void rebuild() override
 	{
 		cells_.clear();
-		mh_.map()->foreach_cell([&] (CELL c)
+		mh_.map()->foreach_cell([&] (CellType c)
 		{
 			if (marker_.is_marked(c))
 				cells_.insert(std::make_pair(mh_.map()->embedding(c), c));
@@ -239,7 +245,7 @@ public:
 	template <typename FUNC>
 	inline void foreach_cell(const FUNC& f)
 	{
-		static_assert(cgogn::is_func_parameter_same<FUNC, CELL>::value, "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, CellType>::value, "Wrong function parameter type");
 		for (const auto& cell : cells_)
 			f(cell.second);
 	}
@@ -252,33 +258,34 @@ public:
 
 	virtual void select(cgogn::Dart d, bool emit_signal) override
 	{
-		this->select(CELL(d), emit_signal);
+		this->select(CellType(d), emit_signal);
 	}
 
 	virtual void select(const std::vector<cgogn::Dart>& cells) override
 	{
-		this->select(reinterpret_cast<const std::vector<CELL>&>(cells));
+		this->select(reinterpret_cast<const std::vector<CellType>&>(cells));
 	}
 
 	virtual void unselect(cgogn::Dart d, bool emit_signal) override
 	{
-		this->unselect(CELL(d), emit_signal);
+		this->unselect(CellType(d), emit_signal);
 	}
 
 	virtual void unselect(const std::vector<cgogn::Dart>& cells) override
 	{
-		this->unselect(reinterpret_cast<const std::vector<CELL>&>(cells));
+		this->unselect(reinterpret_cast<const std::vector<CellType>&>(cells));
 	}
 
 	virtual bool is_selected(cgogn::Dart d) override
 	{
-		return this->is_selected(CELL(d));
+		return this->is_selected(CellType(d));
 	}
 
 protected:
 
-	typename CMap1::template CellMarker<CELL::ORBIT> marker_;
-	std::map<uint32, CELL> cells_;
+	CMapHandler& mh_;
+	typename MapType::template CellMarker<CellType::ORBIT> marker_;
+	std::map<uint32, CellType> cells_;
 	std::vector<Self*> mutually_exclusive_sets_;
 };
 
@@ -286,4 +293,4 @@ protected:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP1_CELLS_SET_H_
+#endif // SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_

@@ -37,14 +37,14 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap1_provider { class CMap1Handler; }
+namespace plugin_cmap_provider { class CMap1Handler; }
 
 
 namespace plugin_polyline_render
 {
 
 class PolylineRender_DockTab;
-using CMap1Handler = plugin_cmap1_provider::CMap1Handler;
+using CMap1Handler = plugin_cmap_provider::CMap1Handler;
 
 /**
 * @brief Plugin for surface rendering

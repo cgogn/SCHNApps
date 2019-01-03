@@ -329,10 +329,10 @@ void Plugin_SurfaceDeformation::linked_map_cells_set_removed(cgogn::Orbit orbit,
 		if (parameter_set_.count(mh) > 0ul)
 		{
 			MapParameters& p = parameter_set_[mh];
-			CMap2CellsSetGen* fvs = p.free_vertex_set();
+			CMapCellsSetGen* fvs = p.free_vertex_set();
 			if (fvs && fvs->name() == name)
 				set_free_vertex_set(mh, nullptr, true);
-			CMap2CellsSetGen* hvs = p.handle_vertex_set();
+			CMapCellsSetGen* hvs = p.handle_vertex_set();
 			if (hvs && hvs->name() == name)
 				set_handle_vertex_set(mh, nullptr, true);
 		}

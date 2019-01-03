@@ -36,7 +36,7 @@ namespace plugin_surface_deformation
 SurfaceDeformation_DockTab::SurfaceDeformation_DockTab(SCHNApps* s, Plugin_SurfaceDeformation* p) :
 	schnapps_(s),
 	plugin_(p),
-	plugin_cmap2_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false)
 {
@@ -57,7 +57,7 @@ SurfaceDeformation_DockTab::SurfaceDeformation_DockTab(SCHNApps* s, Plugin_Surfa
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 SurfaceDeformation_DockTab::~SurfaceDeformation_DockTab()
@@ -85,7 +85,7 @@ void SurfaceDeformation_DockTab::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap2(map_name);
 	}
 
 	if (selected_map_)
@@ -360,7 +360,7 @@ void SurfaceDeformation_DockTab::refresh_ui()
 		{
 			combo_positionAttribute->addItem(name);
 			if (p.position_attribute().is_valid() && QString::fromStdString(p.position_attribute().name()) == name)
-				combo_positionAttribute->setCurrentIndex(i);
+				combo_positionAttribute->setCurrentIndex(int(i));
 			++i;
 		}
 	}
@@ -373,11 +373,11 @@ void SurfaceDeformation_DockTab::refresh_ui()
 	{
 		combo_freeVertexSet->addItem(cells_set->name());
 		if (cells_set == fvs)
-			combo_freeVertexSet->setCurrentIndex(i);
+			combo_freeVertexSet->setCurrentIndex(int(i));
 
 		combo_handleVertexSet->addItem(cells_set->name());
 		if (cells_set == hvs)
-			combo_handleVertexSet->setCurrentIndex(i);
+			combo_handleVertexSet->setCurrentIndex(int(i));
 
 		++i;
 	});

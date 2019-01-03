@@ -40,7 +40,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps_core
-	schnapps::cmap3_provider
+        schnapps::cmap_provider
 	$<$<BOOL:$<TARGET_PROPERTY:USE_TRANSPARENCY>>:plugin_render_transparency>
 )
 

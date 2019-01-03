@@ -37,7 +37,7 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap2_provider { class CMap2Handler; }
+namespace plugin_cmap_provider { class CMap2Handler; }
 
 #ifdef USE_TRANSPARENCY
 namespace plugin_render_transparency { class Plugin_RenderTransparency; }
@@ -47,7 +47,7 @@ namespace plugin_surface_render
 {
 
 class SurfaceRender_DockTab;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 /**
 * @brief Plugin for surface rendering

@@ -36,9 +36,9 @@ namespace cgogn { enum Orbit: numerics::uint32; }
 namespace schnapps
 {
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap2Provider;
+class Plugin_CMapProvider;
 class CMap2Handler;
 }
 
@@ -48,7 +48,7 @@ namespace plugin_sdp
 class ComputeNormal_Dialog;
 class ComputeCurvature_Dialog;
 
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 /**
  * @brief Plugin that manages the computation of differential properties
@@ -247,7 +247,7 @@ private:
 	std::map<CMap2Handler*, ComputeNormalParameters> compute_normal_last_parameters_;
 	std::map<CMap2Handler*, ComputeCurvatureParameters> compute_curvature_last_parameters_;
 
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 };
 
 } // namespace plugin_sdp
