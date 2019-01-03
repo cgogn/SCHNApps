@@ -74,7 +74,7 @@ private slots:
 	// slots called from UI signals
 	void selected_map_changed();
 
-//	void duplicate_current_map_clicked();
+	void duplicate_current_map_clicked();
 	void remove_current_map_clicked();
 
 	void bb_vertex_attribute_changed(int index);
@@ -98,6 +98,8 @@ private slots:
 	void selected_map_cells_set_added(cgogn::Orbit orbit, const QString& name);
 	void selected_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
 	void selected_map_cells_set_mutually_exclusive_changed(cgogn::Orbit orbit, const QString& name);
+
+	void scale_object();
 
 public:
 

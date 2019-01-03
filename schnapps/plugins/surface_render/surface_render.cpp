@@ -112,7 +112,7 @@ bool Plugin_SurfaceRender::enable()
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 #ifdef USE_TRANSPARENCY
-	plugin_transparency_ = reinterpret_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
+	plugin_transparency_ = static_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
 #endif
 
 	return true;
@@ -128,7 +128,7 @@ void Plugin_SurfaceRender::disable()
 
 void Plugin_SurfaceRender::draw_object(View* view, Object *o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 	{
 		view->makeCurrent();
@@ -233,7 +233,7 @@ void Plugin_SurfaceRender::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -250,7 +250,7 @@ void Plugin_SurfaceRender::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -259,7 +259,7 @@ void Plugin_SurfaceRender::view_unlinked(View* view)
 void Plugin_SurfaceRender::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -284,7 +284,7 @@ void Plugin_SurfaceRender::add_linked_map(View* view, CMap2Handler* mh)
 void Plugin_SurfaceRender::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -306,7 +306,7 @@ void Plugin_SurfaceRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
@@ -333,7 +333,7 @@ void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
@@ -357,7 +357,7 @@ void Plugin_SurfaceRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_SurfaceRender::linked_map_bb_changed()
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 	const uint32 nbe = mh->map()->nb_cells<CMap2::Edge>();
 
 	for (auto& it : parameter_set_)
@@ -376,7 +376,7 @@ void Plugin_SurfaceRender::linked_map_bb_changed()
 
 void Plugin_SurfaceRender::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && parameter_set_.count(view) > 0)
 	{
 		auto& view_param_set = parameter_set_[view];

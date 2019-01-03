@@ -80,7 +80,7 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 VolumeRender_DockTab::~VolumeRender_DockTab()
@@ -269,7 +269,7 @@ void VolumeRender_DockTab::selected_view_changed(View* old, View* cur)
 
 void VolumeRender_DockTab::object_linked(Object* o)
 {
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -283,7 +283,7 @@ void VolumeRender_DockTab::map_linked(CMap3Handler *mh)
 
 void VolumeRender_DockTab::object_unlinked(Object* o)
 {
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }

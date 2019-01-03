@@ -2,6 +2,9 @@ project(plugin_volume_render
 	LANGUAGES CXX
 )
 
+find_package(schnapps_core REQUIRED)
+find_package(plugin_cmap3_provider REQUIRED)
+
 define_property(TARGET PROPERTY USE_TRANSPARENCY BRIEF_DOCS "use transparency or not" FULL_DOCS "use transparency or not")
 
 find_package(cgogn_rendering REQUIRED)

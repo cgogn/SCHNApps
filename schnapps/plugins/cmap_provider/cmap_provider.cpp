@@ -124,13 +124,14 @@ CMap0Handler* Plugin_CMapProvider::duplicate_cmap0(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
 	{
-//		CMap0Handler* mh = dynamic_cast<CMap0Handler*>(objects_.at(name));
-//		if (mh)
-//		{
-//			CMap0Handler* duplicate = add_cmap0(QString("copy_") + name);
-//			duplicate->map_->merge(mh->map_);
-//			return duplicate;
-//		}
+		CMap0Handler* mh = dynamic_cast<CMap0Handler*>(objects_.at(name));
+		if (mh)
+		{
+			CMap0Handler* duplicate = add_cmap0(QString("copy_") + name);
+			CMap0::DartMarker dm(*mh->map());
+			duplicate->map()->merge(*mh->map(), dm);
+			return duplicate;
+		}
 		return nullptr;
 	}
 	else
@@ -192,13 +193,14 @@ CMap1Handler* Plugin_CMapProvider::duplicate_cmap1(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
 	{
-//		CMap1Handler* mh = dynamic_cast<CMap1Handler*>(objects_.at(name));
-//		if (mh)
-//		{
-//			CMap1Handler* duplicate = add_cmap1(QString("copy_") + name);
-//			duplicate->map_->merge(mh->map_);
-//			return duplicate;
-//		}
+		CMap1Handler* mh = dynamic_cast<CMap1Handler*>(objects_.at(name));
+		if (mh)
+		{
+			CMap1Handler* duplicate = add_cmap1(QString("copy_") + name);
+			CMap1::DartMarker dm(*mh->map());
+			duplicate->map()->merge(*mh->map(), dm);
+			return duplicate;
+		}
 		return nullptr;
 	}
 	else
@@ -260,13 +262,14 @@ CMap2Handler* Plugin_CMapProvider::duplicate_cmap2(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
 	{
-//		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(objects_.at(name));
-//		if (mh)
-//		{
-//			CMap2Handler* duplicate = add_cmap2(QString("copy_") + name);
-//			duplicate->map_->merge(mh->map_);
-//			return duplicate;
-//		}
+		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(objects_.at(name));
+		if (mh)
+		{
+			CMap2Handler* duplicate = add_cmap2(QString("copy_") + name);
+			CMap2::DartMarker dm(*mh->map());
+			duplicate->map()->merge(*mh->map(), dm);
+			return duplicate;
+		}
 		return nullptr;
 	}
 	else
@@ -328,13 +331,14 @@ CMap3Handler* Plugin_CMapProvider::duplicate_cmap3(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
 	{
-//		CMap3Handler* mh = dynamic_cast<CMap3Handler*>(objects_.at(name));
-//		if (mh)
-//		{
-//			CMap3Handler* duplicate = add_cmap3(QString("copy_") + name);
-//			duplicate->map_->merge(mh->map_);
-//			return duplicate;
-//		}
+		CMap3Handler* mh = dynamic_cast<CMap3Handler*>(objects_.at(name));
+		if (mh)
+		{
+			CMap3Handler* duplicate = add_cmap3(QString("copy_") + name);
+			CMap3::DartMarker dm(*mh->map());
+			duplicate->map()->merge(*mh->map(), dm);
+			return duplicate;
+		}
 		return nullptr;
 	}
 	else

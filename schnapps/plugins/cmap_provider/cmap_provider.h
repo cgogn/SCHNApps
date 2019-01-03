@@ -31,7 +31,6 @@
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
-#include <schnapps/core/types.h>
 #include <schnapps/core/plugin_provider.h>
 
 namespace schnapps

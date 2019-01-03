@@ -54,10 +54,10 @@ void CMap3Handler::draw(cgogn::rendering::DrawingType primitive, cgogn::CellFilt
 	if (!render_.is_primitive_uptodate(primitive))
 	{
 		lock_topo_access();
-		if(f == nullptr)
+//		if(f == nullptr)
 			render_.init_primitives(*map_, primitive);
-		else
-			render_.init_primitives(*map_, *f, primitive);
+//		else
+//			render_.init_primitives(*map_, *f, primitive);
 		unlock_topo_access();
 	}
 	render_.draw(primitive);
@@ -65,10 +65,10 @@ void CMap3Handler::draw(cgogn::rendering::DrawingType primitive, cgogn::CellFilt
 
 void CMap3Handler::init_primitives(cgogn::rendering::DrawingType primitive, cgogn::CellFilters* f)
 {
-	if(f == nullptr)
+//	if(f == nullptr)
 		render_.init_primitives(*map_, primitive);
-	else
-		render_.init_primitives(*map_, *f, primitive);
+//	else
+//		render_.init_primitives(*map_, *f, primitive);
 }
 
 /*********************************************************

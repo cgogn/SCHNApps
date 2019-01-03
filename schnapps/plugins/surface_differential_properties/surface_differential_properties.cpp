@@ -68,12 +68,12 @@ bool Plugin_SurfaceDifferentialProperties::enable()
 
 	schnapps_->foreach_object([this] (Object* o)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			map_added(mh);
 	});
 
-	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
 	return true;
 }
@@ -97,7 +97,7 @@ void Plugin_SurfaceDifferentialProperties::disable()
 
 void Plugin_SurfaceDifferentialProperties::object_added(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_added(mh);
 }
@@ -109,7 +109,7 @@ void Plugin_SurfaceDifferentialProperties::map_added(CMap2Handler* mh)
 
 void Plugin_SurfaceDifferentialProperties::object_removed(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_removed(mh);
 }

@@ -8,7 +8,7 @@
     <x>0</x>
     <y>0</y>
     <width>220</width>
-    <height>673</height>
+    <height>723</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -103,7 +103,7 @@
       </size>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="dartInfo">
       <attribute name="title">
@@ -111,7 +111,7 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="4" column="0" colspan="3">
-		<widget class="QListWidget" name="list_dartCellsSets">
+        <widget class="QListWidget" name="list_dartCellsSets">
          <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
          </property>
@@ -142,7 +142,7 @@
         </widget>
        </item>
        <item row="3" column="1">
-		<widget class="QPushButton" name="button_dartAddCellsSet">
+        <widget class="QPushButton" name="button_dartAddCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -168,7 +168,7 @@
         </widget>
        </item>
        <item row="3" column="2">
-		<widget class="QPushButton" name="button_dartRemoveCellsSet">
+        <widget class="QPushButton" name="button_dartRemoveCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -187,7 +187,7 @@
         </widget>
        </item>
        <item row="3" column="0">
-		<widget class="QLabel" name="label_dartCellsSets">
+        <widget class="QLabel" name="label_dartCellsSets">
          <property name="text">
           <string>Cells sets :</string>
          </property>
@@ -201,14 +201,14 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout">
        <item row="3" column="0">
-		<widget class="QLabel" name="label_vertexCellsSets">
+        <widget class="QLabel" name="label_vertexCellsSets">
          <property name="text">
           <string>Cells sets :</string>
          </property>
         </widget>
        </item>
        <item row="3" column="2">
-		<widget class="QPushButton" name="button_vertexRemoveCellsSet">
+        <widget class="QPushButton" name="button_vertexRemoveCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -227,14 +227,14 @@
         </widget>
        </item>
        <item row="4" column="0" colspan="3">
-		<widget class="QListWidget" name="list_vertexCellsSets">
+        <widget class="QListWidget" name="list_vertexCellsSets">
          <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
          </property>
         </widget>
        </item>
        <item row="3" column="1">
-		<widget class="QPushButton" name="button_vertexAddCellsSet">
+        <widget class="QPushButton" name="button_vertexAddCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -291,7 +291,7 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
        <item row="4" column="0" colspan="3">
-		<widget class="QListWidget" name="list_edgeCellsSets">
+        <widget class="QListWidget" name="list_edgeCellsSets">
          <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
          </property>
@@ -322,7 +322,7 @@
         </widget>
        </item>
        <item row="3" column="1">
-		<widget class="QPushButton" name="button_edgeAddCellsSet">
+        <widget class="QPushButton" name="button_edgeAddCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -348,7 +348,7 @@
         </widget>
        </item>
        <item row="3" column="2">
-		<widget class="QPushButton" name="button_edgeRemoveCellsSet">
+        <widget class="QPushButton" name="button_edgeRemoveCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -367,7 +367,7 @@
         </widget>
        </item>
        <item row="3" column="0">
-		<widget class="QLabel" name="label_edgeCellsSets">
+        <widget class="QLabel" name="label_edgeCellsSets">
          <property name="text">
           <string>Cells sets :</string>
          </property>
@@ -388,7 +388,7 @@
         </widget>
        </item>
        <item row="3" column="2">
-		<widget class="QPushButton" name="button_faceRemoveCellsSet">
+        <widget class="QPushButton" name="button_faceRemoveCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -407,14 +407,14 @@
         </widget>
        </item>
        <item row="3" column="0">
-		<widget class="QLabel" name="label_faceCellsSets">
+        <widget class="QLabel" name="label_faceCellsSets">
          <property name="text">
           <string>Cells sets :</string>
          </property>
         </widget>
        </item>
        <item row="3" column="1">
-		<widget class="QPushButton" name="button_faceAddCellsSet">
+        <widget class="QPushButton" name="button_faceAddCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -440,7 +440,7 @@
         </widget>
        </item>
        <item row="4" column="0" colspan="3">
-		<widget class="QListWidget" name="list_faceCellsSets">
+        <widget class="QListWidget" name="list_faceCellsSets">
          <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
          </property>
@@ -471,14 +471,14 @@
       </attribute>
       <layout class="QGridLayout" name="gridLayout_5">
        <item row="4" column="0" colspan="4">
-		<widget class="QListWidget" name="list_volumeCellsSets">
+        <widget class="QListWidget" name="list_volumeCellsSets">
          <property name="selectionMode">
           <enum>QAbstractItemView::SingleSelection</enum>
          </property>
         </widget>
        </item>
        <item row="3" column="3">
-		<widget class="QPushButton" name="button_volumeRemoveCellsSet">
+        <widget class="QPushButton" name="button_volumeRemoveCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -497,7 +497,7 @@
         </widget>
        </item>
        <item row="3" column="0">
-		<widget class="QLabel" name="label_volumeCellsSets">
+        <widget class="QLabel" name="label_volumeCellsSets">
          <property name="text">
           <string>Cells sets :</string>
          </property>
@@ -521,7 +521,7 @@
         </widget>
        </item>
        <item row="3" column="2">
-		<widget class="QPushButton" name="button_volumeAddCellsSet">
+        <widget class="QPushButton" name="button_volumeAddCellsSet">
          <property name="minimumSize">
           <size>
            <width>25</width>
@@ -556,6 +556,56 @@
       </layout>
      </widget>
     </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Global render scaling</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QDoubleSpinBox" name="spin_scaling_x">
+       <property name="maximum">
+        <double>9.990000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spin_scaling_y">
+       <property name="maximum">
+        <double>9.990000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="spin_scaling_z">
+       <property name="maximum">
+        <double>9.990000000000000</double>
+       </property>
+       <property name="singleStep">
+        <double>0.100000000000000</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

@@ -63,7 +63,7 @@ SurfaceSelection_DockTab::SurfaceSelection_DockTab(SCHNApps* s, Plugin_SurfaceSe
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 SurfaceSelection_DockTab::~SurfaceSelection_DockTab()
@@ -227,7 +227,7 @@ void SurfaceSelection_DockTab::selected_view_changed(View* old, View* cur)
 
 void SurfaceSelection_DockTab::object_linked(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -241,7 +241,7 @@ void SurfaceSelection_DockTab::map_linked(CMap2Handler* mh)
 
 void SurfaceSelection_DockTab::object_unlinked(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }
