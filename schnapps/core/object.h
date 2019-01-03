@@ -82,6 +82,9 @@ public:
 
 	inline const QMatrix4x4& transformation_matrix() const { return transformation_matrix_; }
 
+	QVector3D scale();
+	void rescale(float32 sx, float32 sy, float32 sz);
+
 	/**********************************************************
 	 * BOUNDING BOX                                           *
 	 *********************************************************/

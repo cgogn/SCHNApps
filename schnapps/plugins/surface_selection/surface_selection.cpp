@@ -100,7 +100,7 @@ void Plugin_SurfaceSelection::disable()
 
 void Plugin_SurfaceSelection::draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh && dock_tab_->selected_map() == mh)
 	{
 		view->makeCurrent();
@@ -541,7 +541,7 @@ void Plugin_SurfaceSelection::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -558,7 +558,7 @@ void Plugin_SurfaceSelection::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -567,7 +567,7 @@ void Plugin_SurfaceSelection::view_unlinked(View* view)
 void Plugin_SurfaceSelection::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -586,7 +586,7 @@ void Plugin_SurfaceSelection::add_linked_map(View* view, CMap2Handler* mh)
 void Plugin_SurfaceSelection::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -606,7 +606,7 @@ void Plugin_SurfaceSelection::remove_linked_map(View* view, CMap2Handler* mh)
 
 void Plugin_SurfaceSelection::linked_map_attribute_added(cgogn::Orbit orbit, const QString& name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
@@ -628,7 +628,7 @@ void Plugin_SurfaceSelection::linked_map_attribute_added(cgogn::Orbit orbit, con
 
 void Plugin_SurfaceSelection::linked_map_attribute_changed(cgogn::Orbit orbit, const QString& name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
@@ -650,7 +650,7 @@ void Plugin_SurfaceSelection::linked_map_attribute_changed(cgogn::Orbit orbit, c
 
 void Plugin_SurfaceSelection::linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
@@ -674,7 +674,7 @@ void Plugin_SurfaceSelection::linked_map_attribute_removed(cgogn::Orbit orbit, c
 
 void Plugin_SurfaceSelection::linked_map_cells_set_removed(cgogn::Orbit orbit, const QString& name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	for (auto& it : parameter_set_)
 	{
@@ -694,7 +694,7 @@ void Plugin_SurfaceSelection::linked_map_cells_set_removed(cgogn::Orbit orbit, c
 
 void Plugin_SurfaceSelection::linked_map_bb_changed()
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 	uint32 nbe = mh->map()->nb_cells<CMap2::Edge>();
 
 	for (auto& it : parameter_set_)
@@ -713,7 +713,7 @@ void Plugin_SurfaceSelection::linked_map_bb_changed()
 
 void Plugin_SurfaceSelection::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];

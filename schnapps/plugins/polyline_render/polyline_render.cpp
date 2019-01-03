@@ -115,7 +115,7 @@ void Plugin_PolylineRender::disable()
 
 void Plugin_PolylineRender::draw_object(View* view, Object *o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap1Handler* mh = dynamic_cast<CMap1Handler*>(o);
+	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
 	if (mh)
 	{
 		view->makeCurrent();
@@ -154,7 +154,7 @@ void Plugin_PolylineRender::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap1Handler* mh = dynamic_cast<CMap1Handler*>(o);
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -171,7 +171,7 @@ void Plugin_PolylineRender::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap1Handler* mh = dynamic_cast<CMap1Handler*>(o);
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -180,7 +180,7 @@ void Plugin_PolylineRender::view_unlinked(View* view)
 void Plugin_PolylineRender::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap1Handler* mh = dynamic_cast<CMap1Handler*>(o);
+	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -198,7 +198,7 @@ void Plugin_PolylineRender::add_linked_map(View* view, CMap1Handler* mh)
 void Plugin_PolylineRender::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap1Handler* mh = dynamic_cast<CMap1Handler*>(o);
+	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -214,7 +214,7 @@ void Plugin_PolylineRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap1Handler* mh = dynamic_cast<CMap1Handler*>(sender());
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
@@ -239,7 +239,7 @@ void Plugin_PolylineRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap1Handler* mh = dynamic_cast<CMap1Handler*>(sender());
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
@@ -261,7 +261,7 @@ void Plugin_PolylineRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_PolylineRender::linked_map_bb_changed()
 {
-	CMap1Handler* mh = dynamic_cast<CMap1Handler*>(sender());
+	CMap1Handler* mh = qobject_cast<CMap1Handler*>(sender());
 	const uint32 nbv = mh->map()->nb_cells<CMap1::Vertex>();
 
 	for (auto& it : parameter_set_)
@@ -280,7 +280,7 @@ void Plugin_PolylineRender::linked_map_bb_changed()
 
 void Plugin_PolylineRender::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && parameter_set_.count(view) > 0)
 	{
 		auto& view_param_set = parameter_set_[view];

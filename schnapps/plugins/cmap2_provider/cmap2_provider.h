@@ -27,7 +27,6 @@
 #include <schnapps/plugins/cmap2_provider/dll.h>
 #include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
 
-#include <schnapps/core/types.h>
 #include <schnapps/core/plugin_provider.h>
 
 namespace schnapps

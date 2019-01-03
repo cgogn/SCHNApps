@@ -64,7 +64,7 @@ SurfaceRenderVector_DockTab::SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_Sur
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
 }
 
 SurfaceRenderVector_DockTab::~SurfaceRenderVector_DockTab()
@@ -193,7 +193,7 @@ void SurfaceRenderVector_DockTab::selected_view_changed(View* old, View* cur)
 
 void SurfaceRenderVector_DockTab::object_linked(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -207,7 +207,7 @@ void SurfaceRenderVector_DockTab::map_linked(CMap2Handler* mh)
 
 void SurfaceRenderVector_DockTab::object_unlinked(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }

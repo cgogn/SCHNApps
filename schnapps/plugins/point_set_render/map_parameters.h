@@ -44,6 +44,7 @@ struct SCHNAPPS_PLUGIN_POINT_SET_RENDER_API MapParameters
 
 	MapParameters() :
 		shader_point_sprite_param_(nullptr),
+		shader_point_sprite_color_param_(nullptr),
 		position_vbo_(nullptr),
 		color_vbo_(nullptr),
 		render_vertices_(true),
@@ -71,6 +72,7 @@ private:
 		if (position_vbo_ && position_vbo_->vector_dimension() == 3)
 		{
 			shader_point_sprite_param_->set_position_vbo(position_vbo_);
+			shader_point_sprite_color_param_->set_position_vbo(position_vbo_);
 		}
 		else
 			position_vbo_ = nullptr;
@@ -79,6 +81,12 @@ private:
 	void set_color_vbo(cgogn::rendering::VBO* v)
 	{
 		color_vbo_ = v;
+		if(color_vbo_ && color_vbo_->vector_dimension() == 3)
+		{
+			shader_point_sprite_color_param_->set_color_vbo(color_vbo_);
+		}
+		else
+			color_vbo_ = nullptr;
 	}
 
 	void set_render_vertices(bool b) { render_vertices_ = b; }
@@ -93,12 +101,14 @@ private:
 	{
 		vertex_base_size_ = bs;
 		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_color_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
 	void set_vertex_scale_factor(float32 sf)
 	{
 		vertex_scale_factor_ = sf;
 		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+		shader_point_sprite_color_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
 	inline void initialize_gl()
@@ -107,11 +117,16 @@ private:
 		shader_point_sprite_param_->color_ = vertex_color_;
 		shader_point_sprite_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
 
+		shader_point_sprite_color_param_ = cgogn::rendering::ShaderPointSpriteColor::generate_param();
+		shader_point_sprite_color_param_->size_ = vertex_base_size_ * vertex_scale_factor_;
+
 		set_position_vbo(position_vbo_);
 		set_color_vbo(color_vbo_);
 	}
 
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param> shader_point_sprite_param_;
+
+	std::unique_ptr<cgogn::rendering::ShaderPointSpriteColor::Param> shader_point_sprite_color_param_;
 
 	cgogn::rendering::VBO* position_vbo_;
 	cgogn::rendering::VBO* color_vbo_;

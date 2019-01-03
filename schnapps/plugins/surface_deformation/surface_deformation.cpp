@@ -230,7 +230,7 @@ void Plugin_SurfaceDeformation::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -246,7 +246,7 @@ void Plugin_SurfaceDeformation::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -255,7 +255,7 @@ void Plugin_SurfaceDeformation::view_unlinked(View* view)
 void Plugin_SurfaceDeformation::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -272,7 +272,7 @@ void Plugin_SurfaceDeformation::add_linked_map(View*, CMap2Handler* mh)
 void Plugin_SurfaceDeformation::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -289,7 +289,7 @@ void Plugin_SurfaceDeformation::remove_linked_map(View*, CMap2Handler* mh)
 
 void Plugin_SurfaceDeformation::linked_map_attribute_added(cgogn::Orbit orbit, const QString& name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
@@ -307,7 +307,7 @@ void Plugin_SurfaceDeformation::linked_map_attribute_added(cgogn::Orbit orbit, c
 
 void Plugin_SurfaceDeformation::linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	if (orbit == CMap2::Vertex::ORBIT)
 	{
@@ -325,7 +325,7 @@ void Plugin_SurfaceDeformation::linked_map_attribute_removed(cgogn::Orbit orbit,
 
 void Plugin_SurfaceDeformation::linked_map_cells_set_removed(cgogn::Orbit orbit, const QString& name)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(sender());
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(sender());
 
 	if (orbit == CMap2::Vertex::ORBIT)
 	{

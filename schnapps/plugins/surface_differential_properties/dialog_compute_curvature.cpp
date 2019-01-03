@@ -105,12 +105,12 @@ ComputeCurvature_Dialog::ComputeCurvature_Dialog(SCHNApps* s, Plugin_SurfaceDiff
 
 	schnapps_->foreach_object([this] (Object* o)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			map_added(mh);
 	});
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
 }
 
 ComputeCurvature_Dialog::~ComputeCurvature_Dialog()
@@ -198,7 +198,7 @@ void ComputeCurvature_Dialog::compute_curvature()
 
 void ComputeCurvature_Dialog::object_added(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_added(mh);
 }
@@ -212,7 +212,7 @@ void ComputeCurvature_Dialog::map_added(CMap2Handler* mh)
 
 void ComputeCurvature_Dialog::object_removed(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_removed(mh);
 }

@@ -50,6 +50,10 @@ CMap0Provider_DockTab::CMap0Provider_DockTab(SCHNApps* s, Plugin_CMap0Provider* 
 	connect(list_vertexCellsSets, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cells_set_check_state_changed(QListWidgetItem*)));
 	connect(button_vertexAddCellsSet, SIGNAL(clicked()), this, SLOT(add_cells_set()));
 	connect(button_vertexRemoveCellsSet, SIGNAL(clicked()), this, SLOT(remove_cells_set()));
+
+	connect(spin_scaling_x, SIGNAL(valueChanged(double)), this, SLOT(scale_object()));
+	connect(spin_scaling_y, SIGNAL(valueChanged(double)), this, SLOT(scale_object()));
+	connect(spin_scaling_z, SIGNAL(valueChanged(double)), this, SLOT(scale_object()));
 }
 
 CMap0Provider_DockTab::~CMap0Provider_DockTab()
@@ -364,6 +368,13 @@ void CMap0Provider_DockTab::selected_map_cells_set_mutually_exclusive_changed(cg
 	updating_ui_ = false;
 }
 
+void CMap0Provider_DockTab::scale_object()
+{
+	if(selected_map_)
+		selected_map_->rescale(spin_scaling_x->value(),spin_scaling_y->value(),spin_scaling_z->value());
+}
+
+
 /*****************************************************************************/
 // methods used to update the UI from the plugin
 /*****************************************************************************/
@@ -456,6 +467,11 @@ void CMap0Provider_DockTab::refresh_ui()
 			else
 				item->setCheckState(Qt::Unchecked);
 		});
+
+		QVector3D s = selected_map_->scale();
+		spin_scaling_x->setValue(s[0]);
+		spin_scaling_y->setValue(s[1]);
+		spin_scaling_z->setValue(s[2]);
 	}
 
 	updating_ui_ = false;

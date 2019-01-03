@@ -134,7 +134,7 @@ void Plugin_RenderTransparency::view_unlinked(View* view)
 
 void Plugin_RenderTransparency::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	auto it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr != transp_drawer_set_.end())
 	{
