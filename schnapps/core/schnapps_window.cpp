@@ -63,6 +63,7 @@ SCHNAppsWindow::SCHNAppsWindow(
 	control_dock_tab_widget_->setLayoutDirection(Qt::LeftToRight);
 	control_dock_tab_widget_->setTabPosition(QTabWidget::North);
 	control_dock_tab_widget_->setMovable(true);
+	control_dock_tab_widget_->setUsesScrollButtons(true);
 
 	addDockWidget(Qt::LeftDockWidgetArea, control_dock_);
 	control_dock_->setVisible(true);
