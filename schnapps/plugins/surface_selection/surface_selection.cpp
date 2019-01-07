@@ -270,7 +270,7 @@ bool Plugin_SurfaceSelection::mousePress(View* view, QMouseEvent* event)
 		MapParameters& p = parameters(view, mh);
 		if (p.selecting_ && (event->button() == Qt::LeftButton || event->button() == Qt::RightButton))
 		{
-			CMap2CellsSetGen* csg = p.cells_set_;
+			CMapCellsSetGen* csg = p.cells_set_;
 			switch (csg->orbit())
 			{
 				case CMap2::Vertex::ORBIT: {
@@ -682,7 +682,7 @@ void Plugin_SurfaceSelection::linked_map_cells_set_removed(cgogn::Orbit orbit, c
 		if (view_param_set.count(mh) > 0ul)
 		{
 			MapParameters& p = view_param_set[mh];
-			CMap2CellsSetGen* cs = p.cells_set();
+			CMapCellsSetGen* cs = p.cells_set();
 			if (cs && cs->orbit() == orbit && cs->name() == name)
 				set_cells_set(it.first, mh, nullptr, true);
 		}
@@ -750,7 +750,7 @@ void Plugin_SurfaceSelection::set_normal_attribute(View* view, CMap2Handler* mh,
 	}
 }
 
-void Plugin_SurfaceSelection::set_cells_set(View* view, CMap2Handler* mh, CMap2CellsSetGen* cs, bool update_dock_tab)
+void Plugin_SurfaceSelection::set_cells_set(View* view, CMap2Handler* mh, CMapCellsSetGen* cs, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{

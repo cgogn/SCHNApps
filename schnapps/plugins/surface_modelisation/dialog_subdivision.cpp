@@ -24,7 +24,7 @@
 #include <schnapps/plugins/surface_modelisation/dialog_subdivision.h>
 #include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -63,7 +63,7 @@ Subdivision_Dialog::Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* 
 			map_added(mh);
 	});
 
-	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 Subdivision_Dialog::~Subdivision_Dialog()
@@ -90,7 +90,7 @@ void Subdivision_Dialog::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap2(map_name);
 	}
 
 	if (selected_map_)

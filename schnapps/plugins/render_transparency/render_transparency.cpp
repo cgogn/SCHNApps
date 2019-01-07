@@ -23,8 +23,8 @@
 
 #include <schnapps/plugins/render_transparency/render_transparency.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
 #include <schnapps/core/view.h>
 

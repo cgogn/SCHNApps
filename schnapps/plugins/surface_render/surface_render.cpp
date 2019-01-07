@@ -24,7 +24,7 @@
 #include <schnapps/plugins/surface_render/surface_render.h>
 #include <schnapps/plugins/surface_render/surface_render_dock_tab.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>

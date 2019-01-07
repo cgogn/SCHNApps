@@ -24,7 +24,7 @@
 #include <schnapps/plugins/polyline_render/polyline_render_dock_tab.h>
 #include <schnapps/plugins/polyline_render/polyline_render.h>
 
-#include <schnapps/plugins/cmap1_provider/cmap1_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -38,7 +38,7 @@ namespace plugin_polyline_render
 PolylineRender_DockTab::PolylineRender_DockTab(SCHNApps* s, Plugin_PolylineRender* p) :
 	schnapps_(s),
 	plugin_(p),
-	plugin_cmap1_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false),
 	color_dial_(nullptr),
@@ -68,7 +68,7 @@ PolylineRender_DockTab::PolylineRender_DockTab(SCHNApps* s, Plugin_PolylineRende
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap1_provider_ = static_cast<plugin_cmap1_provider::Plugin_CMap1Provider*>(schnapps_->enable_plugin(plugin_cmap1_provider::Plugin_CMap1Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 PolylineRender_DockTab::~PolylineRender_DockTab()
@@ -94,7 +94,7 @@ void PolylineRender_DockTab::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap1_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap1(map_name);
 	}
 
 	if (selected_map_)

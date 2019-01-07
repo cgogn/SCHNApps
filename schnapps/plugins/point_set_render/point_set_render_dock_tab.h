@@ -36,9 +36,9 @@ namespace cgogn { namespace rendering { class VBO; } }
 namespace schnapps
 {
 
-namespace plugin_cmap0_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap0Provider;
+class Plugin_CMapProvider;
 class CMap0Handler;
 }
 
@@ -50,7 +50,7 @@ namespace plugin_point_set_render
 {
 
 class Plugin_PointSetRender;
-using CMap0Handler = plugin_cmap0_provider::CMap0Handler;
+using CMap0Handler = plugin_cmap_provider::CMap0Handler;
 
 class SCHNAPPS_PLUGIN_POINT_SET_RENDER_API PointSetRender_DockTab : public QWidget, public Ui::PointSetRender_TabWidget
 {
@@ -66,7 +66,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_PointSetRender* plugin_;
 
-	plugin_cmap0_provider::Plugin_CMap0Provider* plugin_cmap0_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	CMap0Handler* selected_map_;
 

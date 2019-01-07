@@ -36,13 +36,13 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap2_provider { class CMap2Handler; }
+namespace plugin_cmap_provider { class CMap2Handler; }
 
 namespace plugin_surface_selection
 {
 
 class SurfaceSelection_DockTab;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 /**
 * @brief Plugin for cells selection
@@ -110,7 +110,7 @@ public:
 
 	void set_position_attribute(View* view, CMap2Handler* mh, const QString& name, bool update_dock_tab);
 	void set_normal_attribute(View* view, CMap2Handler* mh, const QString& name, bool update_dock_tab);
-	void set_cells_set(View* view, CMap2Handler* mh, CMap2CellsSetGen* cs, bool update_dock_tab);
+	void set_cells_set(View* view, CMap2Handler* mh, CMapCellsSetGen* cs, bool update_dock_tab);
 	void set_selection_method(View* view, CMap2Handler* mh, SelectionMethod m, bool update_dock_tab);
 	void set_vertex_scale_factor(View* view, CMap2Handler* mh, float32 sf, bool update_dock_tab);
 	void set_color(View* view, CMap2Handler* mh, const QColor& color, bool update_dock_tab);

@@ -19,8 +19,8 @@ target_sources(${PROJECT_NAME}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-										DEBUG_POSTFIX "_d"
-										EXPORT_NAME cage_3d_deformation)
+                                                                                DEBUG_POSTFIX "_d"
+                                                                                EXPORT_NAME cage_3d_deformation)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DLL_EXPORT")
 
@@ -32,7 +32,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
-	schnapps::cmap2_provider
+        schnapps::cmap_provider
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

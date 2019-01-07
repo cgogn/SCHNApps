@@ -34,13 +34,13 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap2_provider { class CMap2Handler; }
+namespace plugin_cmap_provider { class CMap2Handler; }
 
 namespace plugin_surface_render_scalar
 {
 
 class SurfaceRenderScalar_DockTab;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 /**
 * @brief Plugin that renders color-coded scalar values on surface vertices

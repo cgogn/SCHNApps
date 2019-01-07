@@ -37,14 +37,14 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap0_provider { class CMap0Handler; }
+namespace plugin_cmap_provider { class CMap0Handler; }
 
 
 namespace plugin_point_set_render
 {
 
 class PointSetRender_DockTab;
-using CMap0Handler = plugin_cmap0_provider::CMap0Handler;
+using CMap0Handler = plugin_cmap_provider::CMap0Handler;
 
 /**
 * @brief Plugin for surface rendering

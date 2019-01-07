@@ -24,7 +24,7 @@
 #include <schnapps/plugins/volume_render/volume_render.h>
 #include <schnapps/plugins/volume_render/volume_render_dock_tab.h>
 
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>

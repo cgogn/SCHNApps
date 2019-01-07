@@ -35,11 +35,11 @@ namespace cgogn { enum Orbit: numerics::uint32; }
 namespace schnapps
 {
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap2Provider;
+class Plugin_CMapProvider;
 class CMap2Handler;
-class CMap2CellsSetGen;
+class CMapCellsSetGen;
 }
 
 class SCHNApps;
@@ -51,8 +51,9 @@ namespace plugin_surface_selection
 
 enum SelectionMethod: unsigned int;
 class Plugin_SurfaceSelection;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-using CMap2CellsSetGen = plugin_cmap2_provider::CMap2CellsSetGen;
+
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+using CMapCellsSetGen = plugin_cmap_provider::CMapCellsSetGen;
 
 class SCHNAPPS_PLUGIN_SURFACE_SELECTION_API SurfaceSelection_DockTab : public QWidget, public Ui::SurfaceSelection_TabWidget
 {
@@ -68,7 +69,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceSelection* plugin_;
 
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	CMap2Handler* selected_map_;
 
@@ -114,7 +115,7 @@ public:
 	// methods used to update the UI from the plugin
 	void set_position_attribute(const QString& name);
 	void set_normal_attribute(const QString& name);
-	void set_cells_set(CMap2CellsSetGen* cs);
+	void set_cells_set(CMapCellsSetGen* cs);
 	void set_selection_method(SelectionMethod m);
 	void set_vertex_scale_factor(float sf);
 	void set_color(const QColor& color);

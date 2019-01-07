@@ -24,7 +24,7 @@
 #include <schnapps/plugins/surface_render/surface_render_dock_tab.h>
 #include <schnapps/plugins/surface_render/surface_render.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -38,7 +38,7 @@ namespace plugin_surface_render
 SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* p) :
 	schnapps_(s),
 	plugin_(p),
-	plugin_cmap2_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false),
 	color_dial_(nullptr),
@@ -84,7 +84,7 @@ SurfaceRender_DockTab::SurfaceRender_DockTab(SCHNApps* s, Plugin_SurfaceRender* 
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 SurfaceRender_DockTab::~SurfaceRender_DockTab()
@@ -110,7 +110,7 @@ void SurfaceRender_DockTab::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap2(map_name);
 	}
 
 	if (selected_map_)
