@@ -30,6 +30,7 @@
 #include <schnapps/plugins/cmap_provider/cmap1_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/undirected_graph_handler.h>
 
 #include <schnapps/core/plugin_provider.h>
 
@@ -85,6 +86,11 @@ public:
 	void remove_cmap3(const QString& name);
 	CMap3Handler* duplicate_cmap3(const QString& name);
 	CMap3Handler* cmap3(const QString& name) const;
+
+	UndirectedGraphHandler* add_undirected_graph(const QString& name);
+	void remove_undirected_graph(const QString& name);
+	UndirectedGraphHandler* duplicate_undirected_graph(const QString& name);
+	UndirectedGraphHandler* undirected_graph(const QString& name) const;
 
 private slots:
 

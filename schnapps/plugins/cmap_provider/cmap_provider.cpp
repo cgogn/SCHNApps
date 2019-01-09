@@ -353,6 +353,77 @@ CMap3Handler* Plugin_CMapProvider::cmap3(const QString& name) const
 		return nullptr;
 }
 
+
+
+/*********************************************************
+ * UNDIRECTED_GRAPH
+ *********************************************************/
+
+UndirectedGraphHandler* Plugin_CMapProvider::add_undirected_graph(const QString& name)
+{
+	QString final_name = name;
+	if (objects_.count(name) > 0ul)
+	{
+		int i = 1;
+		do
+		{
+			final_name = name + QString("_") + QString::number(i);
+			++i;
+		} while (objects_.count(final_name) > 0ul);
+	}
+
+	UndirectedGraphHandler* mh = new UndirectedGraphHandler(final_name, this);
+	objects_.insert(std::make_pair(final_name, mh));
+
+//	undirected_graph_dock_tab_->add_map(mh);
+	schnapps_->notify_object_added(mh);
+
+	return mh;
+}
+
+void Plugin_CMapProvider::remove_undirected_graph(const QString& name)
+{
+	if (objects_.count(name) > 0ul)
+	{
+		UndirectedGraphHandler* mh = dynamic_cast<UndirectedGraphHandler*>(objects_.at(name));
+
+		if (mh)
+		{
+//			undirected_graph_dock_tab_->remove_map(mh);
+			schnapps_->notify_object_removed(mh);
+
+			objects_.erase(name);
+			delete mh;
+		}
+	}
+}
+
+UndirectedGraphHandler* Plugin_CMapProvider::duplicate_undirected_graph(const QString& name)
+{
+	if (objects_.count(name) > 0ul)
+	{
+		UndirectedGraphHandler* mh = dynamic_cast<UndirectedGraphHandler*>(objects_.at(name));
+		if (mh)
+		{
+			UndirectedGraphHandler* duplicate = add_undirected_graph(QString("copy_") + name);
+			UndirectedGraph::DartMarker dm(*mh->map());
+			duplicate->map()->merge(*mh->map(), dm);
+			return duplicate;
+		}
+		return nullptr;
+	}
+	else
+		return nullptr;
+}
+
+UndirectedGraphHandler* Plugin_CMapProvider::undirected_graph(const QString& name) const
+{
+	if (objects_.count(name) > 0ul)
+		return dynamic_cast<UndirectedGraphHandler*>(objects_.at(name));
+	else
+		return nullptr;
+}
+
 void Plugin_CMapProvider::schnapps_closing()
 {
 

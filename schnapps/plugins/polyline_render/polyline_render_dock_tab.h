@@ -40,6 +40,7 @@ namespace plugin_cmap_provider
 {
 class Plugin_CMapProvider;
 class CMap1Handler;
+class UndirectedGraphHandler;
 }
 
 class SCHNApps;
@@ -51,6 +52,7 @@ namespace plugin_polyline_render
 
 class Plugin_PolylineRender;
 using CMap1Handler = plugin_cmap_provider::CMap1Handler;
+using UndirectedGraphHandler = plugin_cmap_provider::UndirectedGraphHandler;
 
 class SCHNAPPS_PLUGIN_POLYLINE_RENDER_API PolylineRender_DockTab : public QWidget, public Ui::PolylineRender_TabWidget
 {
@@ -68,7 +70,7 @@ private:
 
 	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
-	CMap1Handler* selected_map_;
+	Object* selected_object_;
 
 	bool updating_ui_;
 
@@ -80,7 +82,7 @@ private:
 private slots:
 
 	// slots called from UI signals
-	void selected_map_changed();
+	void selected_object_changed();
 
 	void position_vbo_changed(int index);
 
@@ -100,14 +102,9 @@ private slots:
 	void object_linked(Object* o);
 	void object_unlinked(Object* o);
 
-	// slots called from CMap1Handler signals
-	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
-	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
-
-private:
-
-	void map_linked(CMap1Handler* mh);
-	void map_unlinked(CMap1Handler* mh);
+	// slots called from CMap1Handler or UndirectedGraphHandler signals
+	void selected_object_vbo_added(cgogn::rendering::VBO* vbo);
+	void selected_object_vbo_removed(cgogn::rendering::VBO* vbo);
 
 public:
 
@@ -120,9 +117,8 @@ public:
 	void set_edge_color(const QColor& color);
 	void set_vertex_scale_factor(float sf);
 
-	CMap1Handler* selected_map() { return selected_map_; }
+	Object* selected_object() { return selected_object_; }
 	void refresh_ui();
-
 };
 
 } // namespace plugin_polyline_render
