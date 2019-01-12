@@ -24,8 +24,10 @@
 
 #include "c3t3_import.h"
 #include "cgogn_surface_to_cgal_polyhedron.h"
-#include <cgal/cgal_image.h>
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
+#include <schnapps/plugins/image/cgal/cgal_image.h>
 #include <CGAL/Labeled_image_mesh_domain_3.h>
+#endif
 #include <CGAL/Polyhedral_mesh_domain_3.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
@@ -69,6 +71,7 @@ SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, CMa
 	}
 }
 
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, CMap3Handler* output_volume_map)
 {
 	using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
@@ -115,7 +118,7 @@ SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, con
 		});
 	}
 }
-
+#endif
 } // namespace plugin_meshgen
 
 } // namespace schnapps

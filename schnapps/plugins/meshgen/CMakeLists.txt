@@ -24,6 +24,10 @@ endif(CGAL_FOUND)
 
 add_subdirectory(netgen)
 
+if(APPLE)
+	set (WITH_CGAL_ImageIO "OFF") # too much bugs
+endif()
+
 add_library(${PROJECT_NAME} SHARED "")
 add_library(schnapps::meshgen ALIAS plugin_meshgen)
 
@@ -46,6 +50,7 @@ target_sources(${PROJECT_NAME}
 target_compile_definitions(${PROJECT_NAME}
 	PUBLIC
 		$<$<BOOL:CGAL_FOUND>:PLUGIN_MESHGEN_WITH_CGAL>
+		$<$<BOOL:WITH_CGAL_ImageIO>:PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO>
 		$<$<BOOL:CGAL_FOUND>:BOOST_PARAMETER_MAX_ARITY=12>
 )
 

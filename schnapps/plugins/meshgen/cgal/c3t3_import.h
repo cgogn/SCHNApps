@@ -35,8 +35,11 @@
 #include <CGAL/refine_mesh_3.h>
 #include <CGAL/Mesh_complex_3_in_triangulation_3.h>
 #include <CGAL/Mesh_criteria_3.h>
-#include <CGAL/Image_3.h>
 #include <CGAL/make_mesh_3.h>
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
+#include <CGAL/Image_3.h>
+#endif
+
 
 namespace schnapps
 {
@@ -127,7 +130,10 @@ void import_c3t3(const C3T3& c3t3_in, plugin_cmap_provider::CMap3Handler* map_ou
 }
 
 SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, plugin_cmap_provider::CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, plugin_cmap_provider::CMap3Handler* output_volume_map);
+
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, plugin_cmap_provider::CMap3Handler* output_volume_map);
+#endif
 
 template <typename Domain_>
 void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, plugin_cmap_provider::CMap3Handler* output_volume_map)

@@ -157,14 +157,18 @@ void VolumeMeshFromSurfaceDialog::map_removed(Object* mhg)
 
 void VolumeMeshFromSurfaceDialog::image_added(Object* im)
 {
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 	if (dynamic_cast<plugin_image::Image3D*>(im))
 		export_dialog_->comboBox_images->addItem(im->name());
+#endif
 }
 
 void VolumeMeshFromSurfaceDialog::image_removed(Object* im)
 {
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 	if (dynamic_cast<plugin_image::Image3D*>(im))
 		export_dialog_->comboBox_images->removeItem(export_dialog_->comboBox_images->findText(im->name()));
+#endif
 }
 
 QString VolumeMeshFromSurfaceDialog::get_selected_map() const
@@ -196,6 +200,7 @@ void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 
 void VolumeMeshFromSurfaceDialog::selected_image_changed(QString /*image_name*/)
 {
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 	QSignalBlocker blocker(export_dialog_->comboBox_generator);
 	export_dialog_->comboBoxMapSelection->setCurrentIndex(0);
 	export_dialog_->comboBox_generator->clear();
@@ -205,6 +210,7 @@ void VolumeMeshFromSurfaceDialog::selected_image_changed(QString /*image_name*/)
 		list << "-select-" << "cgal";
 		export_dialog_->comboBox_generator->insertItems(0, list);
 	}
+#endif
 }
 
 void VolumeMeshFromSurfaceDialog::cell_size_changed(double cs)

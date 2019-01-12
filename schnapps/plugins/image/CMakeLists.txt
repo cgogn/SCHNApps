@@ -6,8 +6,6 @@ find_package(cgogn_io REQUIRED)
 find_package(schnapps_core REQUIRED)
 find_package(CGAL QUIET COMPONENTS Core ImageIO)
 
-
-
 if(NOT CGAL_FOUND)
 	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
 endif()
@@ -45,14 +43,18 @@ target_sources(${PROJECT_NAME}
 		$<$<BOOL:CGAL_FOUND>:${CMAKE_CURRENT_LIST_DIR}/cgal/cgal_image.cpp>
 )
 
+set_target_properties(${PROJECT_NAME} PROPERTIES
+			DEBUG_POSTFIX "_d"
+			EXPORT_NAME image)
 
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
+
 target_compile_definitions(${PROJECT_NAME}
 	PRIVATE
 		"-DSCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT"
 		"$<$<BOOL:CGAL_FOUND>:PLUGIN_IMAGE_WITH_CGAL>"
 		"$<$<BOOL:Boost_IOSTREAMS_FOUND>:SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM=1>"
 )
+
 if(CGAL_FOUND AND WIN32)
 	link_directories(${CGAL_LIBRARIES_DIR})
 endif()
@@ -61,12 +63,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
 	$<BUILD_INTERFACE:$<$<BOOL:CGAL_FOUND>:${CGAL_INCLUDE_DIRS}>>
-
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-#target_compile_definitions(${PROJECT_NAME} PUBLIC "-Dcimg_display=0")
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
@@ -78,6 +76,14 @@ target_link_libraries(${PROJECT_NAME}
 	"$<$<BOOL:Boost_FOUND>:${Boost_LIBRARIES}>"
 )
 
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/image
+	FILES_MATCHING PATTERN "*.h"
+)
+
+schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)
 
 #In this section we copy boost's and CGAL's DLLs in schnapp's directory
 if(WIN32)
@@ -102,3 +108,5 @@ if(WIN32)
 		endforeach()
 	endif()
 endif(WIN32)
+
+

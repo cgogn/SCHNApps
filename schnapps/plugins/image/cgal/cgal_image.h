@@ -26,7 +26,7 @@
 #define SCHNAPPS_PLUGIN_IMAGE_CGAL_IMAGE_H_
 
 #include <CGAL/Image_3.h>
-#include "image.h"
+#include <schnapps/plugins/image/image.h>
 
 namespace schnapps
 {

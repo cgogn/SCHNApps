@@ -267,6 +267,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 #endif // PLUGIN_MESHGEN_WITH_CGAL
 }
 
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(const plugin_image::Image3D* im, const CGALParameters& params)
 {
 #ifdef PLUGIN_MESHGEN_WITH_CGAL
@@ -279,6 +280,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 	return nullptr;
 #endif // PLUGIN_MESHGEN_WITH_CGAL
 }
+#endif
 
 void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 {
@@ -296,8 +298,10 @@ void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 			const QString& im_path = dialog_->export_dialog_->comboBox_images->currentText();
 			if (plugin_image_)
 			{
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 				if (plugin_image::Image3D const * im = plugin_image_->image(im_path))
 					generate_cgal(im, generation_parameters_.cgal);
+#endif
 			}
 		}
 	}

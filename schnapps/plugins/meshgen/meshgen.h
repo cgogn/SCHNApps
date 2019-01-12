@@ -163,7 +163,9 @@ public:
 	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const NetgenParameters& params);
 	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args);
 	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const CGALParameters& params);
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const CGALParameters& params);
+#endif
 
 private:
 
