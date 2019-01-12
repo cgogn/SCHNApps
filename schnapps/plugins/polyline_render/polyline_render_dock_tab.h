@@ -36,9 +36,9 @@ namespace cgogn { namespace rendering { class VBO; } }
 namespace schnapps
 {
 
-namespace plugin_cmap1_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap1Provider;
+class Plugin_CMapProvider;
 class CMap1Handler;
 }
 
@@ -50,7 +50,7 @@ namespace plugin_polyline_render
 {
 
 class Plugin_PolylineRender;
-using CMap1Handler = plugin_cmap1_provider::CMap1Handler;
+using CMap1Handler = plugin_cmap_provider::CMap1Handler;
 
 class SCHNAPPS_PLUGIN_POLYLINE_RENDER_API PolylineRender_DockTab : public QWidget, public Ui::PolylineRender_TabWidget
 {
@@ -66,7 +66,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_PolylineRender* plugin_;
 
-	plugin_cmap1_provider::Plugin_CMap1Provider* plugin_cmap1_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	CMap1Handler* selected_map_;
 

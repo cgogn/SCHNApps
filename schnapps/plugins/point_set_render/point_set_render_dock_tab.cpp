@@ -24,7 +24,7 @@
 #include <schnapps/plugins/point_set_render/point_set_render_dock_tab.h>
 #include <schnapps/plugins/point_set_render/point_set_render.h>
 
-#include <schnapps/plugins/cmap0_provider/cmap0_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -38,7 +38,7 @@ namespace plugin_point_set_render
 PointSetRender_DockTab::PointSetRender_DockTab(SCHNApps* s, Plugin_PointSetRender* p) :
 	schnapps_(s),
 	plugin_(p),
-	plugin_cmap0_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false),
 	color_dial_(nullptr),
@@ -64,7 +64,7 @@ PointSetRender_DockTab::PointSetRender_DockTab(SCHNApps* s, Plugin_PointSetRende
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap0_provider_ = reinterpret_cast<plugin_cmap0_provider::Plugin_CMap0Provider*>(schnapps_->enable_plugin(plugin_cmap0_provider::Plugin_CMap0Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 PointSetRender_DockTab::~PointSetRender_DockTab()
@@ -90,7 +90,7 @@ void PointSetRender_DockTab::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap0_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap0(map_name);
 	}
 
 	if (selected_map_)
@@ -182,7 +182,7 @@ void PointSetRender_DockTab::selected_view_changed(View* old, View* cur)
 
 void PointSetRender_DockTab::object_linked(Object* o)
 {
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -196,7 +196,7 @@ void PointSetRender_DockTab::map_linked(CMap0Handler* mh)
 
 void PointSetRender_DockTab::object_unlinked(Object* o)
 {
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }

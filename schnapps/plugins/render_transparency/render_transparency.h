@@ -39,14 +39,17 @@
 namespace schnapps
 {
 
-namespace plugin_cmap2_provider { class CMap2Handler; }
-namespace plugin_cmap3_provider { class CMap3Handler; }
+namespace plugin_cmap_provider
+{
+class CMap2Handler;
+class CMap3Handler;
+}
 
 namespace plugin_render_transparency
 {
 
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 /**
 * @brief Plugin for transparency rendering

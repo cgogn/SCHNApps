@@ -23,8 +23,8 @@
 
 #include <schnapps/plugins/render_transparency/render_transparency.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
 #include <schnapps/core/view.h>
 
@@ -134,7 +134,7 @@ void Plugin_RenderTransparency::view_unlinked(View* view)
 
 void Plugin_RenderTransparency::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	auto it_trdr = transp_drawer_set_.find(view);
 	if (it_trdr != transp_drawer_set_.end())
 	{

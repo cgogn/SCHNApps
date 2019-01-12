@@ -25,7 +25,7 @@
 #include <schnapps/plugins/surface_differential_properties/dialog_compute_normal.h>
 #include <schnapps/plugins/surface_differential_properties/dialog_compute_curvature.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -68,12 +68,12 @@ bool Plugin_SurfaceDifferentialProperties::enable()
 
 	schnapps_->foreach_object([this] (Object* o)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			map_added(mh);
 	});
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
 	return true;
 }
@@ -97,7 +97,7 @@ void Plugin_SurfaceDifferentialProperties::disable()
 
 void Plugin_SurfaceDifferentialProperties::object_added(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_added(mh);
 }
@@ -109,7 +109,7 @@ void Plugin_SurfaceDifferentialProperties::map_added(CMap2Handler* mh)
 
 void Plugin_SurfaceDifferentialProperties::object_removed(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_removed(mh);
 }
@@ -178,7 +178,7 @@ void Plugin_SurfaceDifferentialProperties::compute_normal(
 	bool create_vbo_normal,
 	bool auto_update)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 
@@ -235,7 +235,7 @@ void Plugin_SurfaceDifferentialProperties::compute_curvature(
 	bool create_vbo_kgaussian,
 	bool auto_update)
 {
-	CMap2Handler* mh = plugin_cmap2_provider_->map(map_name);
+	CMap2Handler* mh = plugin_cmap_provider_->cmap2(map_name);
 	if (!mh)
 		return;
 

@@ -23,10 +23,7 @@
 
 #include <schnapps/plugins/import/import.h>
 
-#include <schnapps/plugins/cmap0_provider/cmap0_provider.h>
-#include <schnapps/plugins/cmap1_provider/cmap1_provider.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -79,10 +76,7 @@ bool Plugin_Import::enable()
 	else
 		setting_default_path_ = add_setting("Default path", schnapps_->app_path() ).toString();
 
-	plugin_cmap0_provider_ = reinterpret_cast<plugin_cmap0_provider::Plugin_CMap0Provider*>(schnapps_->enable_plugin(plugin_cmap0_provider::Plugin_CMap0Provider::plugin_name()));
-	plugin_cmap1_provider_ = reinterpret_cast<plugin_cmap1_provider::Plugin_CMap1Provider*>(schnapps_->enable_plugin(plugin_cmap1_provider::Plugin_CMap1Provider::plugin_name()));
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
-	plugin_cmap3_provider_ = reinterpret_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
 	return true;
 }
@@ -105,7 +99,7 @@ CMap0Handler* Plugin_Import::import_point_set_from_file(const QString& filename)
 	QFileInfo fi(filename);
 	if (fi.exists())
 	{
-		CMap0Handler* mh = plugin_cmap0_provider_->add_map(fi.baseName());
+		CMap0Handler* mh = plugin_cmap_provider_->add_cmap0(fi.baseName());
 		if (mh)
 		{
 			CMap0* map = mh->map();
@@ -159,7 +153,7 @@ CMap1Handler* Plugin_Import::import_polyline_from_file(const QString& filename)
 	QFileInfo fi(filename);
 	if (fi.exists())
 	{
-		CMap1Handler* mh = plugin_cmap1_provider_->add_map(fi.baseName());
+		CMap1Handler* mh = plugin_cmap_provider_->add_cmap1(fi.baseName());
 		if (mh)
 		{
 			CMap1* map = mh->map();
@@ -213,7 +207,7 @@ CMap2Handler* Plugin_Import::import_surface_mesh_from_file(const QString& filena
 	QFileInfo fi(filename);
 	if (fi.exists())
 	{
-		CMap2Handler* mh = plugin_cmap2_provider_->add_map(fi.baseName());
+		CMap2Handler* mh = plugin_cmap_provider_->add_cmap2(fi.baseName());
 		if (mh)
 		{
 			CMap2* map = mh->map();
@@ -295,7 +289,7 @@ CMap3Handler* Plugin_Import::import_volume_mesh_from_file(const QString& filenam
 	QFileInfo fi(filename);
 	if (fi.exists())
 	{
-		CMap3Handler* mh = plugin_cmap3_provider_->add_map(fi.baseName());
+		CMap3Handler* mh = plugin_cmap_provider_->add_cmap3(fi.baseName());
 		if (mh)
 		{
 			CMap3* map = mh->map();

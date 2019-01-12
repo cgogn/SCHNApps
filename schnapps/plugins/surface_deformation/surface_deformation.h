@@ -34,13 +34,13 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap2_provider { class CMap2Handler; }
+namespace plugin_cmap_provider { class CMap2Handler; }
 
 namespace plugin_surface_deformation
 {
 
 class SurfaceDeformation_DockTab;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 /**
 * @brief Surface deformation

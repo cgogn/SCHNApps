@@ -24,7 +24,7 @@
 #include <schnapps/plugins/cage_3d_deformation/dialog_cage_3d_deformation.h>
 #include <schnapps/plugins/cage_3d_deformation/cage_3d_deformation.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -59,12 +59,12 @@ Cage3dDeformation_Dialog::Cage3dDeformation_Dialog(SCHNApps* s, Plugin_Cage3dDef
 
 	schnapps_->foreach_object([this] (Object* o)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			map_added(mh);
 	});
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 Cage3dDeformation_Dialog::~Cage3dDeformation_Dialog()
@@ -90,7 +90,7 @@ void Cage3dDeformation_Dialog::selected_deformed_map_changed()
 	{
 		const QString& map_name = currentItems[0]->text();
 
-		selected_deformed_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_deformed_map_ = plugin_cmap_provider_->cmap2(map_name);
 
 		if (selected_deformed_map_)
 		{
@@ -128,7 +128,7 @@ void Cage3dDeformation_Dialog::selected_control_map_changed()
 	{
 		const QString& map_name = currentItems[0]->text();
 
-		selected_control_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_control_map_ = plugin_cmap_provider_->cmap2(map_name);
 		if (!updating_ui_)
 			plugin_->set_control_map(selected_deformed_map_, selected_control_map_, false);
 
@@ -160,7 +160,7 @@ void Cage3dDeformation_Dialog::toggle_control()
 
 void Cage3dDeformation_Dialog::object_added(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_added(mh);
 }
@@ -175,7 +175,7 @@ void Cage3dDeformation_Dialog::map_added(CMap2Handler* mh)
 
 void Cage3dDeformation_Dialog::object_removed(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_removed(mh);
 }

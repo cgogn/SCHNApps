@@ -2,6 +2,9 @@ project(plugin_volume_render
 	LANGUAGES CXX
 )
 
+find_package(schnapps_core REQUIRED)
+find_package(plugin_cmap_provider REQUIRED)
+
 define_property(TARGET PROPERTY USE_TRANSPARENCY BRIEF_DOCS "use transparency or not" FULL_DOCS "use transparency or not")
 
 find_package(cgogn_rendering REQUIRED)
@@ -39,8 +42,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 target_link_libraries(${PROJECT_NAME}
-	schnapps_core
-	schnapps::cmap3_provider
+	schnapps::core
+        schnapps::cmap_provider
 	$<$<BOOL:$<TARGET_PROPERTY:USE_TRANSPARENCY>>:plugin_render_transparency>
 )
 

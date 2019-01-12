@@ -24,7 +24,7 @@
 #include <schnapps/plugins/volume_render/volume_render.h>
 #include <schnapps/plugins/volume_render/volume_render_dock_tab.h>
 
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -105,7 +105,7 @@ bool Plugin_VolumeRender::enable()
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 #ifdef USE_TRANSPARENCY
-	plugin_transparency_ = reinterpret_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
+	plugin_transparency_ = qobject_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
 #endif
 
 	return true;
@@ -121,7 +121,7 @@ void Plugin_VolumeRender::disable()
 
 void Plugin_VolumeRender::draw_object(View* view, Object *o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 	if (mh)
 	{
 		view->makeCurrent();
@@ -237,7 +237,7 @@ void Plugin_VolumeRender::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -254,7 +254,7 @@ void Plugin_VolumeRender::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -263,7 +263,7 @@ void Plugin_VolumeRender::view_unlinked(View* view)
 void Plugin_VolumeRender::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -288,7 +288,7 @@ void Plugin_VolumeRender::add_linked_map(View* view, CMap3Handler* mh)
 void Plugin_VolumeRender::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -312,7 +312,7 @@ void Plugin_VolumeRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap3Handler* mh = dynamic_cast<CMap3Handler*>(sender());
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
@@ -335,7 +335,7 @@ void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap3Handler* mh = dynamic_cast<CMap3Handler*>(sender());
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
@@ -355,7 +355,7 @@ void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_VolumeRender::linked_map_bb_changed()
 {
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(sender());
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
 	const uint32 nbe = mh->map()->nb_cells<CMap3::Edge>();
 
 	for (auto& it : parameter_set_)
@@ -375,7 +375,7 @@ void Plugin_VolumeRender::linked_map_bb_changed()
 
 void Plugin_VolumeRender::linked_map_connectivity_changed()
 {
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(sender());
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
 
 	for (auto& it : parameter_set_)
 	{
@@ -416,7 +416,7 @@ void Plugin_VolumeRender::linked_map_attribute_changed(cgogn::Orbit orbit, const
 
 void Plugin_VolumeRender::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && parameter_set_.count(view) > 0)
 	{
 		auto& view_param_set = parameter_set_[view];

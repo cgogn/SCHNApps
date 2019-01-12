@@ -24,7 +24,7 @@
 #include <schnapps/plugins/volume_render/volume_render_dock_tab.h>
 #include <schnapps/plugins/volume_render/volume_render.h>
 
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -38,7 +38,7 @@ namespace plugin_volume_render
 VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) :
 	schnapps_(s),
 	plugin_(p),
-	plugin_cmap3_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false),
 	color_dial_(nullptr),
@@ -80,7 +80,7 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap3_provider_ = reinterpret_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 VolumeRender_DockTab::~VolumeRender_DockTab()
@@ -106,7 +106,7 @@ void VolumeRender_DockTab::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap3_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap3(map_name);
 	}
 
 	if (selected_map_)
@@ -269,7 +269,7 @@ void VolumeRender_DockTab::selected_view_changed(View* old, View* cur)
 
 void VolumeRender_DockTab::object_linked(Object* o)
 {
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -283,7 +283,7 @@ void VolumeRender_DockTab::map_linked(CMap3Handler *mh)
 
 void VolumeRender_DockTab::object_unlinked(Object* o)
 {
-	CMap3Handler* mh = dynamic_cast<CMap3Handler*>(o);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }

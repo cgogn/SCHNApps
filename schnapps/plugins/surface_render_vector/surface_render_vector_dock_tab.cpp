@@ -24,7 +24,7 @@
 #include <schnapps/plugins/surface_render_vector/surface_render_vector_dock_tab.h>
 #include <schnapps/plugins/surface_render_vector/surface_render_vector.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -38,7 +38,7 @@ namespace plugin_surface_render_vector
 SurfaceRenderVector_DockTab::SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p) :
 	schnapps_(s),
 	plugin_(p),
-	plugin_cmap2_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	selected_map_(nullptr),
 	updating_ui_(false)
 {
@@ -64,7 +64,7 @@ SurfaceRenderVector_DockTab::SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_Sur
 	for (Object* o : v->linked_objects())
 		object_linked(o);
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 SurfaceRenderVector_DockTab::~SurfaceRenderVector_DockTab()
@@ -90,7 +90,7 @@ void SurfaceRenderVector_DockTab::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap2(map_name);
 	}
 
 	if (selected_map_)
@@ -193,7 +193,7 @@ void SurfaceRenderVector_DockTab::selected_view_changed(View* old, View* cur)
 
 void SurfaceRenderVector_DockTab::object_linked(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_linked(mh);
 }
@@ -207,7 +207,7 @@ void SurfaceRenderVector_DockTab::map_linked(CMap2Handler* mh)
 
 void SurfaceRenderVector_DockTab::object_unlinked(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_unlinked(mh);
 }

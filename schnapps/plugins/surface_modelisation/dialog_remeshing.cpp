@@ -24,7 +24,7 @@
 #include <schnapps/plugins/surface_modelisation/dialog_remeshing.h>
 #include <schnapps/plugins/surface_modelisation/surface_modelisation.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -56,12 +56,12 @@ Remeshing_Dialog::Remeshing_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p) :
 
 	schnapps_->foreach_object([this] (Object* o)
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			map_added(mh);
 	});
 
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 Remeshing_Dialog::~Remeshing_Dialog()
@@ -88,7 +88,7 @@ void Remeshing_Dialog::selected_map_changed()
 	if (!currentItems.empty())
 	{
 		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap2_provider_->map(map_name);
+		selected_map_ = plugin_cmap_provider_->cmap2(map_name);
 	}
 
 	if (selected_map_)
@@ -117,7 +117,7 @@ void Remeshing_Dialog::remesh()
 
 void Remeshing_Dialog::object_added(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_added(mh);
 }
@@ -131,7 +131,7 @@ void Remeshing_Dialog::map_added(CMap2Handler *mh)
 
 void Remeshing_Dialog::object_removed(Object* o)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		map_removed(mh);
 }

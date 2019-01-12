@@ -24,7 +24,7 @@
 #include <schnapps/plugins/surface_render_scalar/surface_render_scalar.h>
 #include <schnapps/plugins/surface_render_scalar/surface_render_scalar_dock_tab.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -104,7 +104,7 @@ void Plugin_SurfaceRenderScalar::disable()
 
 void Plugin_SurfaceRenderScalar::draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 	{
 		view->makeCurrent();
@@ -133,7 +133,7 @@ void Plugin_SurfaceRenderScalar::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -150,7 +150,7 @@ void Plugin_SurfaceRenderScalar::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+		CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -159,7 +159,7 @@ void Plugin_SurfaceRenderScalar::view_unlinked(View* view)
 void Plugin_SurfaceRenderScalar::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -177,7 +177,7 @@ void Plugin_SurfaceRenderScalar::add_linked_map(View* view, CMap2Handler* mh)
 void Plugin_SurfaceRenderScalar::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap2Handler* mh = dynamic_cast<CMap2Handler*>(o);
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -266,7 +266,7 @@ void Plugin_SurfaceRenderScalar::linked_map_attribute_changed(cgogn::Orbit orbit
 
 void Plugin_SurfaceRenderScalar::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && (this->parameter_set_.count(view) > 0))
 	{
 		auto& view_param_set = parameter_set_[view];

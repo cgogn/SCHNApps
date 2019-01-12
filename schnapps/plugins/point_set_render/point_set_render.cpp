@@ -24,7 +24,7 @@
 #include <schnapps/plugins/point_set_render/point_set_render.h>
 #include <schnapps/plugins/point_set_render/point_set_render_dock_tab.h>
 
-#include <schnapps/plugins/cmap0_provider/cmap0_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
@@ -115,7 +115,7 @@ void Plugin_PointSetRender::disable()
 
 void Plugin_PointSetRender::draw_object(View* view, Object *o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 	if (mh)
 	{
 		view->makeCurrent();
@@ -125,9 +125,18 @@ void Plugin_PointSetRender::draw_object(View* view, Object *o, const QMatrix4x4&
 		{
 			if (p.position_vbo_)
 			{
-				p.shader_point_sprite_param_->bind(proj, mv);
-				mh->draw(cgogn::rendering::POINTS);
-				p.shader_point_sprite_param_->release();
+				if (p.color_vbo_)
+				{
+					p.shader_point_sprite_color_param_->bind(proj, mv);
+					mh->draw(cgogn::rendering::POINTS);
+					p.shader_point_sprite_color_param_->release();
+				}
+				else
+				{
+					p.shader_point_sprite_param_->bind(proj, mv);
+					mh->draw(cgogn::rendering::POINTS);
+					p.shader_point_sprite_param_->release();
+				}
 			}
 		}
 	}
@@ -144,7 +153,7 @@ void Plugin_PointSetRender::view_linked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+		CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
 	}
@@ -161,7 +170,7 @@ void Plugin_PointSetRender::view_unlinked(View* view)
 
 	for (Object* o : view->linked_objects())
 	{
-		CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+		CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
 	}
@@ -170,7 +179,7 @@ void Plugin_PointSetRender::view_unlinked(View* view)
 void Plugin_PointSetRender::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
 }
@@ -188,7 +197,7 @@ void Plugin_PointSetRender::add_linked_map(View* view, CMap0Handler* mh)
 void Plugin_PointSetRender::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(o);
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
 }
@@ -204,7 +213,7 @@ void Plugin_PointSetRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap0Handler* mh = dynamic_cast<CMap0Handler*>(sender());
+		CMap0Handler* mh = qobject_cast<CMap0Handler*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
@@ -229,7 +238,7 @@ void Plugin_PointSetRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap0Handler* mh = dynamic_cast<CMap0Handler*>(sender());
+		CMap0Handler* mh = qobject_cast<CMap0Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
@@ -251,7 +260,7 @@ void Plugin_PointSetRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void Plugin_PointSetRender::linked_map_bb_changed()
 {
-	CMap0Handler* mh = dynamic_cast<CMap0Handler*>(sender());
+	CMap0Handler* mh = qobject_cast<CMap0Handler*>(sender());
 	const uint32 nbv = mh->map()->nb_cells<CMap0::Vertex>();
 
 	for (auto& it : parameter_set_)
@@ -270,7 +279,7 @@ void Plugin_PointSetRender::linked_map_bb_changed()
 
 void Plugin_PointSetRender::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && parameter_set_.count(view) > 0)
 	{
 		auto& view_param_set = parameter_set_[view];

@@ -26,7 +26,7 @@
 
 #include <schnapps/plugins/cage_3d_deformation/dll.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/types.h>
 
@@ -42,7 +42,7 @@ namespace plugin_cage_3d_deformation
 {
 
 class Plugin_Cage3dDeformation;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 struct MapParameters
 {

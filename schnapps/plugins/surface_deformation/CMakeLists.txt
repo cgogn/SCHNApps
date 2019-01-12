@@ -3,6 +3,7 @@ project(plugin_surface_deformation
 )
 
 find_package(schnapps_core REQUIRED)
+find_package(cgogn_geometry REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED "")
 add_library(schnapps::surface_deformation ALIAS plugin_surface_deformation)
@@ -32,7 +33,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
-	schnapps::cmap2_provider
+        schnapps::cmap_provider
+	cgogn::geometry
 )
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/

@@ -35,9 +35,9 @@ namespace cgogn { namespace rendering { class VBO; } }
 namespace schnapps
 {
 
-namespace plugin_cmap3_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap3Provider;
+class Plugin_CMapProvider;
 class CMap3Handler;
 }
 
@@ -49,7 +49,7 @@ namespace plugin_volume_render
 {
 
 class Plugin_VolumeRender;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 class SCHNAPPS_PLUGIN_VOLUME_RENDER_API VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
 {
@@ -65,7 +65,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_VolumeRender* plugin_;
 
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	CMap3Handler* selected_map_;
 

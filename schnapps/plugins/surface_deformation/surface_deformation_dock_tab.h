@@ -26,7 +26,7 @@
 
 #include <schnapps/plugins/surface_deformation/dll.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/types.h>
 
@@ -35,11 +35,10 @@
 namespace schnapps
 {
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap2Provider;
+class Plugin_CMapProvider;
 class CMap2Handler;
-class CMap2CellsSetGen;
 }
 
 class SCHNApps;
@@ -50,9 +49,10 @@ namespace plugin_surface_deformation
 {
 
 class Plugin_SurfaceDeformation;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-template <typename CELL>
-using CMap2CellsSet = plugin_cmap2_provider::CMap2CellsSet<CELL>;
+
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+template <typename CellType>
+using CMap2CellsSet = CMap2Handler::CMap2CellsSet<CellType>;
 
 class SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_API SurfaceDeformation_DockTab : public QWidget, public Ui::SurfaceDeformation_TabWidget
 {
@@ -68,7 +68,7 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceDeformation* plugin_;
 
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	CMap2Handler* selected_map_;
 

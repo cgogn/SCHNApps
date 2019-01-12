@@ -26,8 +26,8 @@
 
 #include <schnapps/plugins/surface_selection/dll.h>
 
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_cells_set.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/view.h>
@@ -44,10 +44,11 @@ namespace plugin_surface_selection
 {
 
 class Plugin_SurfaceSelection;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-template <typename CELL>
-using CMap2CellsSet = plugin_cmap2_provider::CMap2CellsSet<CELL>;
-using CMap2CellsSetGen = plugin_cmap2_provider::CMap2CellsSetGen;
+
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+using CMapCellsSetGen = plugin_cmap_provider::CMapCellsSetGen;
+template <typename CellType>
+using CMap2CellsSet = CMap2Handler::CMap2CellsSet<CellType>;
 
 enum SelectionMethod: unsigned int
 {
@@ -113,7 +114,7 @@ public:
 	float32 vertex_base_size() const { return vertex_base_size_; }
 	float32 vertex_scale_factor() const { return vertex_scale_factor_; }
 	float32 selection_radius_scale_factor() const { return selection_radius_scale_factor_; }
-	CMap2CellsSetGen* cells_set() const { return cells_set_; }
+	CMapCellsSetGen* cells_set() const { return cells_set_; }
 	SelectionMethod selection_method() const { return selection_method_; }
 
 private:
@@ -152,7 +153,7 @@ private:
 		shader_point_sprite_param_selected_vertices_->size_ = vertex_base_size_ * vertex_scale_factor_;
 	}
 
-	void set_cells_set(CMap2CellsSetGen* cs)
+	void set_cells_set(CMapCellsSetGen* cs)
 	{
 		if (cells_set_)
 			disconnect(cells_set_, SIGNAL(selected_cells_changed()), this, SLOT(update_selected_cells_rendering()));
@@ -299,7 +300,7 @@ private:
 	std::size_t selecting_face_nb_indices_;
 	std::size_t selected_faces_nb_indices_;
 
-	CMap2CellsSetGen* cells_set_;
+	CMapCellsSetGen* cells_set_;
 
 	SelectionMethod selection_method_;
 };
