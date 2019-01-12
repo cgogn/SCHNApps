@@ -25,8 +25,9 @@
 #include <schnapps/plugins/export/export.h>
 
 #include <schnapps/core/schnapps.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
 #include <cgogn/io/io_utils.h>
 
@@ -71,12 +72,12 @@ void ExportDialog::selected_map_changed(const QString& map_name)
 	list_vertexAttributes->clear();
 	list_cellAttributes->clear();
 
-	if (auto m2 = plugin_->map2_provider()->map(map_name))
+	if (auto m2 = plugin_->map_provider()->cmap2(map_name))
 	{
 		selected_map_ = m2;
 		selected_map_changed(m2);
 	} else {
-		if (auto m3 = plugin_->map3_provider()->map(map_name))
+		if (auto m3 = plugin_->map_provider()->cmap3(map_name))
 		{
 			selected_map_ = m3;
 			selected_map_changed(m3);
@@ -84,7 +85,7 @@ void ExportDialog::selected_map_changed(const QString& map_name)
 	}
 }
 
-void ExportDialog::selected_map_changed(const plugin_cmap2_provider::CMap2Handler* h)
+void ExportDialog::selected_map_changed(const plugin_cmap_provider::CMap2Handler* h)
 {
 	if (!h)
 		return;
@@ -106,7 +107,7 @@ void ExportDialog::selected_map_changed(const plugin_cmap2_provider::CMap2Handle
 	}
 }
 
-void ExportDialog::selected_map_changed(const plugin_cmap3_provider::CMap3Handler* h)
+void ExportDialog::selected_map_changed(const plugin_cmap_provider::CMap3Handler* h)
 {
 	if (!h)
 		return;
@@ -169,14 +170,14 @@ void ExportDialog::export_validated()
 			.binary(check_binary->isChecked())
 			.compress(check_compress->isChecked());
 
-		if (auto m2 = dynamic_cast<plugin_cmap2_provider::CMap2Handler*>(selected_map_))
+		if (auto m2 = dynamic_cast<plugin_cmap_provider::CMap2Handler*>(selected_map_))
 			export_map(m2, export_params);
-		if (auto m3 = dynamic_cast<plugin_cmap3_provider::CMap3Handler*>(selected_map_))
+		if (auto m3 = dynamic_cast<plugin_cmap_provider::CMap3Handler*>(selected_map_))
 			export_map(m3, export_params);
 	}
 }
 
-void ExportDialog::export_map(plugin_cmap2_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt)
+void ExportDialog::export_map(plugin_cmap_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt)
 {
 	if (!h)
 		return;
@@ -197,7 +198,7 @@ void ExportDialog::export_map(plugin_cmap2_provider::CMap2Handler* h, cgogn::io:
 	plugin_->export_mesh(h, opt);
 }
 
-void ExportDialog::export_map(plugin_cmap3_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt)
+void ExportDialog::export_map(plugin_cmap_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt)
 {
 	if (!h)
 		return;
@@ -224,13 +225,13 @@ void ExportDialog::export_map(plugin_cmap3_provider::CMap3Handler* h, cgogn::io:
 
 void ExportDialog::map_added(Object* mhg)
 {
-	if (mhg && (dynamic_cast<plugin_cmap2_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap3_provider::CMap3Handler*>(mhg)))
+	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
 		combo_mapSelection->addItem(mhg->name());
 }
 
 void ExportDialog::map_removed(Object* mhg)
 {
-	if (mhg && (dynamic_cast<plugin_cmap2_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap3_provider::CMap3Handler*>(mhg)))
+	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
 	{
 		if (mhg == selected_map_)
 			selected_map_ = nullptr;

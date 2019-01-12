@@ -38,29 +38,15 @@ namespace schnapps
 class Object;
 
 
-namespace plugin_cmap0_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap0Provider;
+class Plugin_CMapProvider;
 class CMap0Handler;
-}
-
-namespace plugin_cmap1_provider
-{
-class Plugin_CMap1Provider;
 class CMap1Handler;
-}
-
-namespace plugin_cmap2_provider
-{
-class Plugin_CMap2Provider;
 class CMap2Handler;
-}
-
-namespace plugin_cmap3_provider
-{
-class Plugin_CMap3Provider;
 class CMap3Handler;
-}
+} // namespace plugin_cmap_provider
+
 
 namespace plugin_export
 {
@@ -78,14 +64,13 @@ class SCHNAPPS_PLUGIN_EXPORT_API Plugin_Export : public PluginProcessing
 
 public:
 
-	using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-	using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+	using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+	using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 	Plugin_Export();
 	inline ~Plugin_Export() override {}
 
-	inline plugin_cmap2_provider::Plugin_CMap2Provider* map2_provider() { return plugin_cmap2_provider_;}
-	inline plugin_cmap3_provider::Plugin_CMap3Provider* map3_provider() { return plugin_cmap3_provider_;}
+	inline plugin_cmap_provider::Plugin_CMapProvider* map_provider() { return plugin_cmap_provider_;}
 
 	static QString plugin_name();
 
@@ -103,8 +88,7 @@ private:
 
 	QAction* export_mesh_action_;
 	ExportDialog* export_dialog_;
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 };
 
 } // namespace plugin_export

@@ -24,8 +24,9 @@
 #include <schnapps/core/schnapps.h>
 #include <schnapps/plugins/export/export.h>
 #include <schnapps/plugins/export/export_dialog.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
 #include <QFileDialog>
 #include <QFileInfo>
@@ -41,8 +42,7 @@ namespace plugin_export
 Plugin_Export::Plugin_Export() :
 	export_mesh_action_(nullptr),
 	export_dialog_(nullptr),
-	plugin_cmap2_provider_(nullptr),
-	plugin_cmap3_provider_(nullptr)
+	plugin_cmap_provider_(nullptr)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
@@ -55,10 +55,9 @@ QString Plugin_Export::plugin_name()
 bool Plugin_Export::enable()
 {
 	delete export_dialog_;
-	plugin_cmap2_provider_ = reinterpret_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
-	plugin_cmap3_provider_ = reinterpret_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
+	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
-	if (!(plugin_cmap2_provider_ && plugin_cmap3_provider_))
+	if (!plugin_cmap_provider_)
 		return false;
 
 	export_dialog_ = new ExportDialog(schnapps_, this);

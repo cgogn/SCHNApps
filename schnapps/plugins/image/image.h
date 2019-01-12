@@ -26,8 +26,8 @@
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_
 
 #include <schnapps/plugins/image/dll.h>
-
-#include <schnapps/core/plugin_processing.h>
+#include <schnapps/core/object.h>
+#include <schnapps/core/plugin_provider.h>
 
 #include <cgogn/core/utils/unique_ptr.h>
 #include <cgogn/core/utils/endian.h>
@@ -53,7 +53,7 @@ namespace plugin_image
 using namespace cgogn::numerics;
 class Image_DockTab;
 
-class SCHNAPPS_PLUGIN_IMAGE_API Image3D
+class SCHNAPPS_PLUGIN_IMAGE_API Image3D : public Object
 {
 public:
 
@@ -72,10 +72,8 @@ public:
 	using value_type = float32;
 #endif // PLUGIN_IMAGE_WITH_CGAL
 
-	Image3D();
+	Image3D(const QString& name, PluginProvider* p);
 	Image3D(const Image3D&) = delete;
-	Image3D(Image3D&& im);
-	Image3D& operator=(Image3D&& im);
 	Image3D& operator=(const Image3D&) = delete;
 
 	void const * data() const { return data_->data(); }
@@ -90,7 +88,7 @@ public:
 	inline DataType get_data_type() const { return data_->data_type(); }
 	inline bool is_empty() const { return data_.get() == nullptr; }
 
-	static Image3D new_image_3d(const QString& image_path);
+	static Image3D* new_image_3d(const QString& image_path, const QString& objectname, PluginProvider* p);
 
 private:
 
@@ -106,9 +104,14 @@ private:
 	std::array<float64, 3> translation_;
 	std::array<float64, 3> rotation_;
 	uint32 nb_components_;
+
+	// Object interface
+private:
+	void view_linked(View* view);
+	void view_unlinked(View* view);
 };
 
-class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProcessing
+class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProvider
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -117,7 +120,7 @@ class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProcessing
 public:
 
 	Plugin_Image();
-	inline ~Plugin_Image() override {}
+	~Plugin_Image() override;
 	static QString plugin_name();
 
 private:
@@ -127,23 +130,17 @@ private:
 
 public:
 
-	void import_image(const QString& image_path);
-	std::list<std::pair<QString, Image3D>> const& get_images() const;
-	const Image3D* get_image(const QString& im_path);
+	void add_image(const QString& image_path);
+	const Image3D* image(const QString& im_name) const;
 
 private slots:
 
 	void import_image_dialog();
 	void image_removed();
 
-signals:
-
-	void image_added(QString im_path);
-	void image_removed(QString im_path);
 
 private:
 
-	std::list<std::pair<QString, Image3D>> images_;
 	QAction* import_image_action_;
 	Image_DockTab*	dock_tab_;
 };

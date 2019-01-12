@@ -26,7 +26,9 @@
 #include <schnapps/core/object.h>
 #include <schnapps/plugins/meshgen/meshgen.h>
 #include <schnapps/plugins/meshgen/meshgen_dialog.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 #include <schnapps/plugins/image/image.h>
 
 namespace schnapps
@@ -100,6 +102,8 @@ VolumeMeshFromSurfaceDialog::VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_Vol
 
 	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(map_added(Object*)));
 	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(map_removed(Object*)));
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(image_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(image_removed(Object*)));
 
 	connect(export_dialog_->comboBox_images, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_image_changed(QString)));
 
@@ -151,14 +155,16 @@ void VolumeMeshFromSurfaceDialog::map_removed(Object* mhg)
 		export_dialog_->comboBoxMapSelection->removeItem(export_dialog_->comboBoxMapSelection->findText(mhg->name()));
 }
 
-void VolumeMeshFromSurfaceDialog::image_added(QString im_path)
+void VolumeMeshFromSurfaceDialog::image_added(Object* im)
 {
-	export_dialog_->comboBox_images->addItem(im_path);
+	if (dynamic_cast<plugin_image::Image3D*>(im))
+		export_dialog_->comboBox_images->addItem(im->name());
 }
 
-void VolumeMeshFromSurfaceDialog::image_removed(QString im_path)
+void VolumeMeshFromSurfaceDialog::image_removed(Object* im)
 {
-	export_dialog_->comboBox_images->removeItem(export_dialog_->comboBox_images->findText(im_path));
+	if (dynamic_cast<plugin_image::Image3D*>(im))
+		export_dialog_->comboBox_images->removeItem(export_dialog_->comboBox_images->findText(im->name()));
 }
 
 QString VolumeMeshFromSurfaceDialog::get_selected_map() const
@@ -168,11 +174,10 @@ QString VolumeMeshFromSurfaceDialog::get_selected_map() const
 
 void VolumeMeshFromSurfaceDialog::selected_map_changed(QString map_name)
 {
-	Object* mhg = plugin_->plugin_cmap2_provider_->map(map_name);
 	QSignalBlocker blocker(export_dialog_->comboBox_generator);
 	export_dialog_->comboBox_generator->clear();
 
-	CMap2Handler* handler = dynamic_cast<CMap2Handler*>(mhg);
+	CMap2Handler* handler =  plugin_->plugin_cmap_provider_->cmap2(map_name);
 	if (handler)
 	{
 		QStringList list;

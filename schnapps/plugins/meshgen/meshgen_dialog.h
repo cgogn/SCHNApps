@@ -42,10 +42,10 @@ namespace schnapps
 class SCHNApps;
 class Object;
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
 class CMap2Handler;
-} // namespace plugin_cmap2_provider
+} // namespace plugin_cmap_provider
 
 namespace plugin_meshgen
 {
@@ -73,7 +73,7 @@ class SCHNAPPS_PLUGIN_MESHGEN_API VolumeMeshFromSurfaceDialog : QObject
 
 public:
 
-	using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+	using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 	VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
 
@@ -118,8 +118,8 @@ private slots:
 	void map_added(Object* mhg);
 	void map_removed(Object* mhg);
 
-	void image_added(QString im_path);
-	void image_removed(QString im_path);
+	void image_added(Object* im);
+	void image_removed(Object* im);
 	void tetgen_args_updated(QString str);
 
 	void netgen_uselocalh_toggled(bool b);

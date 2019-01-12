@@ -29,8 +29,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
 	cgogn::io
-	schnapps::cmap2_provider
-	schnapps::cmap3_provider
+	schnapps::cmap_provider
 	cgogn::core
 	Qt5::Widgets
 	Qt5::Core

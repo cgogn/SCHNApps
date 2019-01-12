@@ -41,15 +41,15 @@ namespace schnapps
 class SCHNApps;
 class Object;
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap2Provider;
+class Plugin_CMapProvider;
 class CMap2Handler;
 }
 
-namespace plugin_cmap3_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap3Provider;
+class Plugin_CMapProvider;
 class CMap3Handler;
 }
 
@@ -80,10 +80,10 @@ private slots:
 
 private:
 
-	void selected_map_changed(const plugin_cmap2_provider::CMap2Handler* h);
-	void selected_map_changed(const plugin_cmap3_provider::CMap3Handler* h);
-	void export_map(plugin_cmap2_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt);
-	void export_map(plugin_cmap3_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt);
+	void selected_map_changed(const plugin_cmap_provider::CMap2Handler* h);
+	void selected_map_changed(const plugin_cmap_provider::CMap3Handler* h);
+	void export_map(plugin_cmap_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt);
+	void export_map(plugin_cmap_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt);
 
 	SCHNApps* schnapps_;
 	Plugin_Export* plugin_;

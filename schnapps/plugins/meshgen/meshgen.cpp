@@ -24,8 +24,9 @@
 
 #include <schnapps/plugins/meshgen/meshgen.h>
 #include <schnapps/plugins/meshgen/tetgen_structure_io.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -109,8 +110,7 @@ MeshGeneratorParameters::MeshGeneratorParameters() :
 Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
 	gen_mesh_action_(nullptr),
 	plugin_image_(nullptr),
-	plugin_cmap2_provider_(nullptr),
-	plugin_cmap3_provider_(nullptr),
+	plugin_cmap_provider_(nullptr),
 	generation_parameters_(),
 	dialog_(nullptr)
 {
@@ -124,11 +124,11 @@ QString Plugin_VolumeMeshFromSurface::plugin_name()
 
 bool Plugin_VolumeMeshFromSurface::enable()
 {
-	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
-	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
-
 	if (!dialog_)
 		dialog_ = cgogn::make_unique<VolumeMeshFromSurfaceDialog>(schnapps_, this);
+
+	while(dialog_->export_dialog_->comboBox_images->count() > 1)
+		dialog_->export_dialog_->comboBox_images->removeItem(dialog_->export_dialog_->comboBox_images->count() -1);
 
 	gen_mesh_action_ = schnapps_->add_menu_action("Export;Tetrahedralize", "Tetrahedralize");
 	connect(gen_mesh_action_, SIGNAL(triggered()), dialog_.get(), SLOT(show_export_dialog()));
@@ -139,14 +139,15 @@ bool Plugin_VolumeMeshFromSurface::enable()
 	});
 
 	plugin_image_ = static_cast<plugin_image::Plugin_Image*>(schnapps_->enable_plugin(plugin_image::Plugin_Image::plugin_name()));
-	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
-	plugin_cmap3_provider_ = static_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
-	if (!(plugin_cmap2_provider_ && plugin_cmap3_provider_))
+	if (!plugin_cmap_provider_)
 		return false;
-	if (plugin_image_)
-		for (const auto& im : plugin_image_->get_images())
-			dialog_->image_added(im.first);
+
+	schnapps_->foreach_object([&](Object* im)
+	{
+			dialog_->image_added(im);
+	});
 
 	return true;
 }
@@ -158,7 +159,7 @@ void Plugin_VolumeMeshFromSurface::disable()
 
 void Plugin_VolumeMeshFromSurface::generate_button_netgen_pressed()
 {
-	MapHandler2* handler_map2 = plugin_cmap2_provider_->map(dialog_->get_selected_map());
+	MapHandler2* handler_map2 = plugin_cmap_provider_->cmap2(dialog_->get_selected_map());
 	if (handler_map2)
 	{
 		Map2* map = handler_map2->map();
@@ -176,7 +177,7 @@ void Plugin_VolumeMeshFromSurface::generate_button_netgen_pressed()
 
 void Plugin_VolumeMeshFromSurface::generate_button_tetgen_pressed()
 {
-	MapHandler2* handler_map2 = plugin_cmap2_provider_->map(dialog_->get_selected_map());
+	MapHandler2* handler_map2 = plugin_cmap_provider_->cmap2(dialog_->get_selected_map());
 	if (handler_map2)
 	{
 		Map2* map = handler_map2->map();
@@ -205,7 +206,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3*Plugin_VolumeMeshFromSurface::generate
 	nglib::Ng_GenerateVolumeMesh (netgen_structure.get(), mp);
 	delete mp;
 
-	MapHandler3* handler_map3 = plugin_cmap3_provider_->add_map("netgen_export");
+	MapHandler3* handler_map3 = plugin_cmap_provider_->add_cmap3("netgen_export");
 	NetgenStructureVolumeImport netgen_import(netgen_structure.get(), *handler_map3->map());
 	netgen_import.create_map();
 
@@ -228,7 +229,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 
 	tetgen::tetrahedralize(tetgen_args.c_str(), tetgen_input.get(), &tetgen_output);
 
-	MapHandler3* handler_map3 = plugin_cmap3_provider_->add_map("tetgen_export");
+	MapHandler3* handler_map3 = plugin_cmap_provider_->add_cmap3("tetgen_export");
 	TetgenStructureVolumeImport tetgen_import(&tetgen_output, *handler_map3->map());
 	tetgen_import.create_map();
 
@@ -258,7 +259,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 		mh2->notify_attribute_change(CMap2::Vertex::ORBIT, QString::fromStdString(position_att.name()));
 	}
 
-	MapHandler3* mh3 = plugin_cmap3_provider_->add_map("cgal_export");
+	MapHandler3* mh3 = plugin_cmap_provider_->add_cmap3("cgal_export");
 	tetrahedralize(params, mh2, position_att, mh3);
 	return mh3;
 #else
@@ -271,7 +272,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 #ifdef PLUGIN_MESHGEN_WITH_CGAL
 	if (!im)
 		return nullptr;
-	MapHandler3* mh3 = plugin_cmap3_provider_->add_map("cgal_image_export");
+	MapHandler3* mh3 = plugin_cmap_provider_->add_cmap3("cgal_image_export");
 	tetrahedralize(params, im, mh3);
 	return mh3;
 #else
@@ -282,7 +283,7 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 {
 #ifdef PLUGIN_MESHGEN_WITH_CGAL
-	MapHandler2* mh2 = plugin_cmap2_provider_->map(dialog_->get_selected_map());
+	MapHandler2* mh2 = plugin_cmap_provider_->cmap2(dialog_->get_selected_map());
 	if (mh2)
 	{
 		const std::string& position_att_name = dialog_->export_dialog_->comboBoxPositionSelection->currentText().toStdString();
@@ -295,47 +296,15 @@ void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 			const QString& im_path = dialog_->export_dialog_->comboBox_images->currentText();
 			if (plugin_image_)
 			{
-				plugin_image::Image3D const * im = plugin_image_->get_image(im_path);
-				if (im)
-				{
+				if (plugin_image::Image3D const * im = plugin_image_->image(im_path))
 					generate_cgal(im, generation_parameters_.cgal);
-				}
 			}
 		}
 	}
 #endif // PLUGIN_MESHGEN_WITH_CGAL
 }
 
-void Plugin_VolumeMeshFromSurface::plugin_enabled(Plugin* plugin)
-{
-	if (!plugin_image_)
-	{
-		plugin_image_ = dynamic_cast<plugin_image::Plugin_Image*>(plugin);
-		if (plugin_image_)
-		{
-				connect(plugin_image_, SIGNAL(image_added(QString)), dialog_.get(), SLOT(image_added(QString)));
-				connect(plugin_image_, SIGNAL(image_removed(QString)), dialog_.get(), SLOT(image_removed(QString)));
-		}
-	}
-}
 
-void Plugin_VolumeMeshFromSurface::plugin_disabled(Plugin* plugin)
-{
-	if (plugin_image_)
-	{
-		if (plugin_image_ == plugin)
-		{
-				disconnect(plugin_image_, SIGNAL(image_added(QString)), dialog_.get(), SLOT(image_added(QString)));
-				disconnect(plugin_image_, SIGNAL(image_removed(QString)), dialog_.get(), SLOT(image_removed(QString)));
-				plugin_image_ = nullptr;
-
-				for(int i = 1, size = dialog_->export_dialog_->comboBox_images->count(); i < size; ++i)
-				{
-					dialog_->export_dialog_->comboBox_images->removeItem(1);
-				}
-		}
-	}
-}
 
 } // namespace plugin_meshgen
 } // namespace schnapps

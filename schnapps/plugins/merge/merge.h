@@ -27,8 +27,9 @@
 #include <schnapps/plugins/merge/dll.h>
 
 #include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <QAction>
 
@@ -76,15 +77,14 @@ public slots:
 	/**
 	 * @brief merge second_map into first_map
 	 */
-	bool merge(plugin_cmap2_provider::CMap2Handler* first_map, const plugin_cmap2_provider::CMap2Handler* second_map);
-	bool merge(plugin_cmap3_provider::CMap3Handler* first_map, const plugin_cmap3_provider::CMap3Handler* second_map);
+	bool merge(plugin_cmap_provider::CMap2Handler* first_map, const plugin_cmap_provider::CMap2Handler* second_map);
+	bool merge(plugin_cmap_provider::CMap3Handler* first_map, const plugin_cmap_provider::CMap3Handler* second_map);
 
 private:
 
 	MergeDialog* merge_dialog_;
 	QAction* merge_action_;
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 };
 
 } // namespace plugin_merge

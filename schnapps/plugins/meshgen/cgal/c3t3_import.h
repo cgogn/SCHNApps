@@ -27,8 +27,8 @@
 
 #include <dll.h>
 #include <meshgen.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 #include <cgogn/io/volume_import.h>
 
 #include <CGAL/Mesh_triangulation_3.h>
@@ -57,8 +57,8 @@ public:
 
 	using Self = C3T3VolumeImport<C3T3>;
 	using Inherit = VolumeImport<CMap3>;
-	using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-	using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+	using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+	using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 	inline C3T3VolumeImport(const C3T3& cpx, CMap3& map) :
 		Inherit(map),
@@ -113,7 +113,7 @@ private:
 };
 
 template<typename C3T3>
-void import_c3t3(const C3T3& c3t3_in, plugin_cmap3_provider::CMap3Handler* map_out)
+void import_c3t3(const C3T3& c3t3_in, plugin_cmap_provider::CMap3Handler* map_out)
 {
 	if (!map_out)
 		return;
@@ -126,11 +126,11 @@ void import_c3t3(const C3T3& c3t3_in, plugin_cmap3_provider::CMap3Handler* map_o
 	map_out->create_vbo("position");
 }
 
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, plugin_cmap2_provider::CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, plugin_cmap3_provider::CMap3Handler* output_volume_map);
-SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, plugin_cmap3_provider::CMap3Handler* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, plugin_cmap_provider::CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, plugin_cmap_provider::CMap3Handler* output_volume_map);
+SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, const plugin_image::Image3D* im, plugin_cmap_provider::CMap3Handler* output_volume_map);
 
 template <typename Domain_>
-void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, plugin_cmap3_provider::CMap3Handler* output_volume_map)
+void tetrahedralize(const CGALParameters& param, Domain_& dom, CGAL::Mesh_criteria_3<typename CGAL::Mesh_triangulation_3<Domain_>::type>& criteria, plugin_cmap_provider::CMap3Handler* output_volume_map)
 {
 	using namespace CGAL::parameters;
 	using Triangulation_ = typename CGAL::Mesh_triangulation_3<Domain_>::type;

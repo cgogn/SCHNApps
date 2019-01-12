@@ -25,8 +25,9 @@
 #include <schnapps/plugins/extract_surface/dll.h>
 #include <schnapps/plugins/extract_surface/extract_surface.h>
 #include <schnapps/plugins/extract_surface/extract_dialog.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 #include <schnapps/core/schnapps.h>
 
 namespace schnapps
@@ -35,8 +36,8 @@ namespace schnapps
 namespace plugin_extract_surface
 {
 
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 ExtractDialog::ExtractDialog(SCHNApps* s, Plugin_ExtractSurface* p)
 {
@@ -74,7 +75,7 @@ void ExtractDialog::selected_map_changed(const QString& map_name)
 {
 	comboBoxPositionAttribute->clear();
 
-	if (CMap3Handler* mhg = plugin_->map3_provider()->map(map_name))
+	if (CMap3Handler* mhg = plugin_->map_provider()->cmap3(map_name))
 	{
 		const auto& vert_att_cont = mhg->map()->attribute_container(CMap3::Vertex::ORBIT);
 		for (const auto& att_name : vert_att_cont.names())
@@ -86,9 +87,9 @@ void ExtractDialog::selected_map_changed(const QString& map_name)
 
 void ExtractDialog::extract_validated()
 {
-	if (CMap3Handler* handler_map3 = plugin_->map3_provider()->map(comboBoxMapSelection->currentText()))
+	if (CMap3Handler* handler_map3 = plugin_->map_provider()->cmap3(comboBoxMapSelection->currentText()))
 	{
-		CMap2Handler* handler_map2 = plugin_->map2_provider()->add_map(handler_map3->name() + "_surface");
+		CMap2Handler* handler_map2 = plugin_->map_provider()->add_cmap2(handler_map3->name() + "_surface");
 		plugin_->extract_surface(handler_map3, handler_map2, "position");
 	}
 }

@@ -27,8 +27,8 @@
 #include <cgal/cgal_image.h>
 #include <CGAL/Labeled_image_mesh_domain_3.h>
 #include <CGAL/Polyhedral_mesh_domain_3.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_handler.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
 namespace schnapps
 {
@@ -36,8 +36,8 @@ namespace schnapps
 namespace plugin_meshgen
 {
 
-using CMap2Handler = plugin_cmap2_provider::CMap2Handler;
-using CMap3Handler = plugin_cmap3_provider::CMap3Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 SCHNAPPS_PLUGIN_MESHGEN_API void tetrahedralize(const CGALParameters& param, CMap2Handler* input_surface_map, const CMap2::VertexAttribute<VEC3>& position_attribute, CMap3Handler* output_volume_map)
 {

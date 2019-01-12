@@ -26,7 +26,7 @@
 #define SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
 
 #include <schnapps/plugins/meshgen/dll.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
 #include <cgogn/io/volume_import.h>
 

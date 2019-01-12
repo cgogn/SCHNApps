@@ -36,8 +36,7 @@ namespace plugin_merge
 Plugin_Merge::Plugin_Merge() :
 	merge_dialog_(nullptr),
 	merge_action_(nullptr),
-	plugin_cmap2_provider_(nullptr),
-	plugin_cmap3_provider_(nullptr)
+	plugin_cmap_provider_(nullptr)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
@@ -55,8 +54,8 @@ bool Plugin_Merge::enable()
 	connect(merge_action_, SIGNAL(triggered()), this, SLOT(merge_dialog()));
 	connect(merge_dialog_->buttonBox,SIGNAL(accepted()), this, SLOT(merge_validated()));
 
-	plugin_cmap2_provider_ = static_cast<plugin_cmap2_provider::Plugin_CMap2Provider*>(schnapps_->enable_plugin(plugin_cmap2_provider::Plugin_CMap2Provider::plugin_name()));
-	plugin_cmap3_provider_ = static_cast<plugin_cmap3_provider::Plugin_CMap3Provider*>(schnapps_->enable_plugin(plugin_cmap3_provider::Plugin_CMap3Provider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
 	return true;
 }
@@ -78,13 +77,13 @@ void Plugin_Merge::merge_dialog()
 	merge_dialog_->show();
 }
 
-bool Plugin_Merge::merge(plugin_cmap2_provider::CMap2Handler* first_map, const plugin_cmap2_provider::CMap2Handler* second_map)
+bool Plugin_Merge::merge(plugin_cmap_provider::CMap2Handler* first_map, const plugin_cmap_provider::CMap2Handler* second_map)
 {
 	CMap2::DartMarker dm(*first_map->map());
 	return first_map->map()->merge(*second_map->map(), dm);
 }
 
-bool Plugin_Merge::merge(plugin_cmap3_provider::CMap3Handler* first_map, const plugin_cmap3_provider::CMap3Handler* second_map)
+bool Plugin_Merge::merge(plugin_cmap_provider::CMap3Handler* first_map, const plugin_cmap_provider::CMap3Handler* second_map)
 {
 	CMap3::DartMarker dm(*first_map->map());
 	return first_map->map()->merge(*second_map->map(), dm);
@@ -92,13 +91,13 @@ bool Plugin_Merge::merge(plugin_cmap3_provider::CMap3Handler* first_map, const p
 
 void Plugin_Merge::merge_validated()
 {
-	plugin_cmap2_provider::CMap2Handler* mha = plugin_cmap2_provider_->map(merge_dialog_->combo_mapSelection->currentText());
-	plugin_cmap2_provider::CMap2Handler* mhb = plugin_cmap2_provider_->map(merge_dialog_->combo_mapSelection_2->currentText());
+	plugin_cmap_provider::CMap2Handler* mha = plugin_cmap_provider_->cmap2(merge_dialog_->combo_mapSelection->currentText());
+	plugin_cmap_provider::CMap2Handler* mhb = plugin_cmap_provider_->cmap2(merge_dialog_->combo_mapSelection_2->currentText());
 
 	if (!mha || !mhb)
 	{
-		plugin_cmap3_provider::CMap3Handler* mh3a = plugin_cmap3_provider_->map(merge_dialog_->combo_mapSelection->currentText());
-		plugin_cmap3_provider::CMap3Handler* mh3b = plugin_cmap3_provider_->map(merge_dialog_->combo_mapSelection_2->currentText());
+		plugin_cmap_provider::CMap3Handler* mh3a = plugin_cmap_provider_->cmap3(merge_dialog_->combo_mapSelection->currentText());
+		plugin_cmap_provider::CMap3Handler* mh3b = plugin_cmap_provider_->cmap3(merge_dialog_->combo_mapSelection_2->currentText());
 		if (mh3a && mh3b)
 			merge(mh3a, mh3b);
 	} else

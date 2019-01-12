@@ -24,7 +24,6 @@
 
 #include <schnapps/plugins/image/image_dock_tab.h>
 #include <schnapps/plugins/image/image.h>
-
 #include <schnapps/core/schnapps.h>
 
 namespace schnapps
@@ -40,8 +39,9 @@ Image_DockTab::Image_DockTab(SCHNApps* s, Plugin_Image* p) :
 {
 	setupUi(this);
 
-	connect(p,&Plugin_Image::image_added, [=](const QString& im_path) {
-		new QListWidgetItem(im_path, this->listWidget_images);
+	connect(s,&SCHNApps::object_added, [=](Object* o) {
+		if (dynamic_cast<Image3D*>(o))
+			new QListWidgetItem(o->name(), this->listWidget_images);
 	});
 
 	connect(this->pushButton_remove, SIGNAL(pressed()), p, SLOT(image_removed()));

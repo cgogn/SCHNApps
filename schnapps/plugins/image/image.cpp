@@ -48,12 +48,14 @@ namespace plugin_image
 {
 
 Plugin_Image::Plugin_Image() :
-	images_(),
 	import_image_action_(nullptr),
 	dock_tab_(nullptr)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
+
+Plugin_Image::~Plugin_Image()
+{}
 
 QString Plugin_Image::plugin_name()
 {
@@ -79,39 +81,49 @@ void Plugin_Image::disable()
 	dock_tab_ = nullptr;
 }
 
-void Plugin_Image::import_image(const QString& image_path)
+void Plugin_Image::add_image(const QString& image_path)
 {
 	QFileInfo fileinfo(image_path);
 	if (fileinfo.exists() && fileinfo.isFile())
 	{
-		images_.push_back({image_path, Image3D::new_image_3d(image_path)});
-		if (!images_.back().second.is_empty())
-			emit(image_added(image_path));
-		else
-			images_.pop_back();
+		const QString name = fileinfo.baseName();
+		QString final_name = name;
+
+		if (objects_.count(name) > 0ul)
+		{
+			int i = 1;
+			do
+			{
+				final_name = name + QString("_") + QString::number(i);
+				++i;
+			} while (objects_.count(final_name) > 0ul);
+		}
+
+		Image3D* im = Image3D::new_image_3d(image_path, final_name, this);
+		if (im->is_empty())
+		{
+			delete im;
+			return;
+		}
+
+		objects_.insert(std::make_pair(im->name(), im));
+		schnapps_->notify_object_added(im);
 	}
 }
 
-const std::list<std::pair<QString, Image3D> >& Plugin_Image::get_images() const
+const Image3D*Plugin_Image::image(const QString& im_name) const
 {
-	return images_;
-}
-
-const Image3D*Plugin_Image::get_image(const QString& im_path)
-{
-	if (images_.empty())
+	if (objects_.count(im_name) > 0ul)
+		return dynamic_cast<Image3D*>(objects_.at(im_name));
+	else
 		return nullptr;
-	for (const auto& it : images_)
-		if (it.first == im_path)
-			return &(it.second);
-	return nullptr;
 }
 
 void Plugin_Image::import_image_dialog()
 {
-	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->get_app_path(),  "3DImages (*.inr *.vtk *.inr.gz *.vtk.gz)");
+	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->app_path(),  "3DImages (*.inr *.vtk *.inr.gz *.vtk.gz)");
 	for (const auto& im : filenames)
-		import_image(im);
+		add_image(im);
 }
 
 void Plugin_Image::image_removed()
@@ -120,17 +132,24 @@ void Plugin_Image::image_removed()
 	if (current_image_id >= 0)
 	{
 		QListWidgetItem* curr_item = dock_tab_->listWidget_images->currentItem();
-		emit(image_removed(curr_item->text()));
-		dock_tab_->listWidget_images->removeItemWidget(curr_item);
-		delete curr_item;
+		const QString name = curr_item->text();
 
-		auto it = images_.begin();
-		std::advance(it, current_image_id);
-		images_.erase(it);
+		if (objects_.count(name) > 0ul)
+		{
+			Image3D* im = dynamic_cast<Image3D*>(objects_.at(name));
+			if (im)
+			{
+				dock_tab_->listWidget_images->removeItemWidget(curr_item);
+				delete curr_item;
+				schnapps_->notify_object_removed(im);
+				objects_.erase(name);
+				delete im;
+			}
+		}
 	}
 }
 
-Image3D::Image3D() :
+Image3D::Image3D(const QString& name, PluginProvider* p) : Object(name, p),
 	data_(nullptr),
 	image_dim_{},
 	origin_(),
@@ -146,36 +165,12 @@ Image3D::Image3D() :
 	voxel_dim_.fill(0);
 }
 
-Image3D::Image3D(Image3D&& im) :
-	data_(std::move(im.data_)),
-	image_dim_(im.image_dim_),
-	origin_(im.origin_),
-	voxel_dim_(im.voxel_dim_),
-	translation_(im.translation_),
-	rotation_(im.rotation_),
-	nb_components_(im.nb_components_)
-{}
 
-Image3D& Image3D::operator=(Image3D&& im)
-{
-	if (this != &im)
-	{
-		data_ = std::move(im.data_);
-		image_dim_ = im.image_dim_;
-		origin_ = im.origin_;
-		voxel_dim_ = im.voxel_dim_;
-		translation_ = im.translation_;
-		rotation_ = im.rotation_;
-		nb_components_ = im.nb_components_;
-	}
-
-	return *this;
-}
-
-Image3D Image3D::new_image_3d(const QString& image_path)
+Image3D* Image3D::new_image_3d(const QString& image_path, const QString& objectname, PluginProvider* p)
 {
 	QFileInfo fileinfo(image_path);
-	Image3D res_img;
+	Image3D* res_img = new Image3D(objectname, p);
+
 	if (fileinfo.exists() && fileinfo.isFile())
 	{
 		cgogn::Scoped_C_Locale locale;
@@ -186,23 +181,23 @@ Image3D Image3D::new_image_3d(const QString& image_path)
 			const QString temp_image_path = uncompress_gz_file(image_path);
 			if (QFileInfo::exists(temp_image_path))
 			{
-				res_img = std::move(Image3D::new_image_3d(temp_image_path));
+				delete res_img;
+				res_img = Image3D::new_image_3d(temp_image_path, objectname, p);
 				QFile::remove(temp_image_path);
 			}
 		}
 		else
 		{
 			if (!QString::compare(complete_suffix, "inr", Qt::CaseInsensitive))
-				res_img.import_inr(in_file);
+				res_img->import_inr(in_file);
 			else
 			{
 				if (!QString::compare(complete_suffix, "vtk", Qt::CaseInsensitive))
-					res_img.import_vtk(in_file);
-				else
-					return res_img;
+					res_img->import_vtk(in_file);
 			}
 		}
 	}
+
 	return res_img;
 }
 
@@ -431,6 +426,16 @@ void Image3D::import_vtk(std::istream& vtk_data)
 				break;
 		}
 	}
+}
+
+void Image3D::view_linked(View* /*view*/)
+{
+
+}
+
+void Image3D::view_unlinked(View* /*view*/)
+{
+
 }
 
 SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)

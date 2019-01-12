@@ -26,8 +26,7 @@
 #define SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
 
 #include <schnapps/plugins/meshgen/dll.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
-
+#include <schnapps/core/types.h>
 #include <cgogn/io/volume_import.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 

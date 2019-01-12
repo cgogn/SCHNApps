@@ -41,17 +41,17 @@ class Plugin_Image;
 class Image3D;
 } // namespace plugin_image
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
 class CMap2Handler;
-class Plugin_CMap2Provider;
-} // namespace plugin_cmap2_provider
+class Plugin_CMapProvider;
+} // namespace plugin_cmap_provider
 
-namespace plugin_cmap3_provider
+namespace plugin_cmap_provider
 {
 class CMap3Handler;
-class Plugin_CMap3Provider;
-} // namespace plugin_cmap3_provider
+class Plugin_CMapProvider;
+} // namespace plugin_cmap_provider
 
 namespace plugin_meshgen
 {
@@ -153,8 +153,8 @@ public:
 
 	using Map2 = schnapps::CMap2;
 	using Map3 = schnapps::CMap3;
-	using MapHandler2 = plugin_cmap2_provider::CMap2Handler;
-	using MapHandler3 = plugin_cmap3_provider::CMap3Handler;
+	using MapHandler2 = plugin_cmap_provider::CMap2Handler;
+	using MapHandler3 = plugin_cmap_provider::CMap3Handler;
 
 	Plugin_VolumeMeshFromSurface();
 	inline ~Plugin_VolumeMeshFromSurface() override {}
@@ -172,8 +172,7 @@ private:
 
 	QAction* gen_mesh_action_;
 	plugin_image::Plugin_Image* plugin_image_;
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 	MeshGeneratorParameters generation_parameters_;
 	std::unique_ptr<VolumeMeshFromSurfaceDialog> dialog_;
 
@@ -181,8 +180,6 @@ public slots:
 	void generate_button_netgen_pressed();
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
-	void plugin_enabled(Plugin*);
-	void plugin_disabled(Plugin*);
 };
 
 } // namespace plugin_meshgen

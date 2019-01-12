@@ -36,17 +36,14 @@ namespace schnapps
 
 class Object;
 
-namespace plugin_cmap2_provider
+namespace plugin_cmap_provider
 {
-class Plugin_CMap2Provider;
+class Plugin_CMapProvider;
 class CMap2Handler;
-}
-
-namespace plugin_cmap3_provider
-{
-class Plugin_CMap3Provider;
 class CMap3Handler;
-}
+} // namespace plugin_cmap_provider
+
+
 
 namespace plugin_extract_surface
 {
@@ -65,10 +62,9 @@ public:
 	inline ~Plugin_ExtractSurface() override {}
 	static QString plugin_name();
 
-	inline plugin_cmap2_provider::Plugin_CMap2Provider* map2_provider() { return plugin_cmap2_provider_; }
-	inline plugin_cmap3_provider::Plugin_CMap3Provider* map3_provider() { return plugin_cmap3_provider_; }
+	inline plugin_cmap_provider::Plugin_CMapProvider* map_provider() { return plugin_cmap_provider_; }
 
-	void extract_surface(plugin_cmap3_provider::CMap3Handler* in_map3, plugin_cmap2_provider::CMap2Handler* out_map2, const QString& pos_att_name);
+	void extract_surface(plugin_cmap_provider::CMap3Handler* in_map3, plugin_cmap_provider::CMap2Handler* out_map2, const QString& pos_att_name);
 
 private:
 
@@ -77,8 +73,7 @@ private:
 
 	QAction* extract_surface_action_;
 	ExtractDialog* extract_dialog_;
-	plugin_cmap2_provider::Plugin_CMap2Provider* plugin_cmap2_provider_;
-	plugin_cmap3_provider::Plugin_CMap3Provider* plugin_cmap3_provider_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	public slots:
 	private slots:

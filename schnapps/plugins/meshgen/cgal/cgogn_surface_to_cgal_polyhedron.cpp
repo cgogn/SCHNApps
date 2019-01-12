@@ -73,7 +73,7 @@ void PolyhedronBuilder::operator()(HalfedgeDS& hds)
 	map_->remove_attribute(id_attribute);
 }
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(plugin_cmap2_provider::CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute)
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(plugin_cmap_provider::CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute)
 {
 	if (!mh || !position_attribute.is_valid())
 		return nullptr;

@@ -24,8 +24,8 @@
 #include <schnapps/plugins/merge/dll.h>
 #include <schnapps/plugins/merge/merge.h>
 #include <schnapps/plugins/merge/merge_dialog.h>
-#include <schnapps/plugins/cmap2_provider/cmap2_provider.h>
-#include <schnapps/plugins/cmap3_provider/cmap3_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 #include <schnapps/core/schnapps.h>
 
 namespace schnapps
@@ -47,12 +47,12 @@ void MergeDialog::update_map_list()
 	combo_mapSelection_2->clear();
 	schnapps_->foreach_object([this] (Object* o)
 	{
-		plugin_cmap2_provider::CMap2Handler* mh2 = dynamic_cast<plugin_cmap2_provider::CMap2Handler*>(o);
+		plugin_cmap_provider::CMap2Handler* mh2 = dynamic_cast<plugin_cmap_provider::CMap2Handler*>(o);
 		if (mh2) {
 			combo_mapSelection->addItem(mh2->name());
 			combo_mapSelection_2->addItem(mh2->name());
 		} else {
-			plugin_cmap3_provider::CMap3Handler* mh3 = dynamic_cast<plugin_cmap3_provider::CMap3Handler*>(o);
+			plugin_cmap_provider::CMap3Handler* mh3 = dynamic_cast<plugin_cmap_provider::CMap3Handler*>(o);
 			if (mh3) {
 				combo_mapSelection->addItem(mh3->name());
 				combo_mapSelection_2->addItem(mh3->name());
