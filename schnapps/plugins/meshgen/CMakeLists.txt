@@ -10,6 +10,11 @@ find_package(cgogn_modeling REQUIRED)
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 find_package(CGAL COMPONENTS Core ImageIO)
 
+if(NOT CGAL_FOUND)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+	find_package(CGAL COMPONENTS Core ImageIO)
+endif()
+
 if(CGAL_FOUND)
 	include(${CGAL_USE_FILE})
 	find_package(MPFR REQUIRED)
