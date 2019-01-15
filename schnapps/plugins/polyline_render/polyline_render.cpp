@@ -46,22 +46,28 @@ QString Plugin_PolylineRender::plugin_name()
 	return SCHNAPPS_PLUGIN_NAME;
 }
 
-MapParameters& Plugin_PolylineRender::parameters(View* view, CMap1Handler* mh)
+MapParameters& Plugin_PolylineRender::parameters(View* view, Object* o)
 {
 	cgogn_message_assert(view, "Try to access parameters for null view");
-	cgogn_message_assert(mh, "Try to access parameters for null map handler");
+	cgogn_message_assert(o, "Try to access parameters for null map handler");
 
 	view->makeCurrent();
 
 	auto& view_param_set = parameter_set_[view];
-	if (view_param_set.count(mh) == 0)
+	if (view_param_set.count(o) == 0)
 	{
-		MapParameters& p = view_param_set[mh];
-		p.set_vertex_base_size(mh->bb_diagonal_size() / (2 * std::sqrt(mh->map()->nb_cells<CMap1::Vertex>())));
+		MapParameters& p = view_param_set[o];
+		CMap1Handler* m1h = qobject_cast<CMap1Handler*>(o);
+		if (m1h)
+			p.set_vertex_base_size(m1h->bb_diagonal_size() / (2 * std::sqrt(m1h->map()->nb_cells<CMap1::Vertex>())));
+		UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
+		if (ugh)
+			p.set_vertex_base_size(ugh->bb_diagonal_size() / (2 * std::sqrt(ugh->map()->nb_cells<UndirectedGraph::Vertex>())));
+
 		return p;
 	}
 	else
-		return view_param_set[mh];
+		return view_param_set[o];
 }
 
 bool Plugin_PolylineRender::check_docktab_activation()
@@ -116,6 +122,8 @@ void Plugin_PolylineRender::disable()
 void Plugin_PolylineRender::draw_object(View* view, Object *o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
 	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
+	UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
+
 	if (mh)
 	{
 		view->makeCurrent();
@@ -141,6 +149,32 @@ void Plugin_PolylineRender::draw_object(View* view, Object *o, const QMatrix4x4&
 			}
 		}
 	}
+
+	if (ugh)
+	{
+		view->makeCurrent();
+		MapParameters& p = parameters(view, ugh);
+
+		if (p.render_edges_)
+		{
+			if (p.position_vbo_)
+			{
+				p.shader_simple_color_param_->bind(proj, mv);
+				ugh->draw(cgogn::rendering::LINES);
+				p.shader_simple_color_param_->release();
+			}
+		}
+
+		if (p.render_vertices_)
+		{
+			if (p.position_vbo_)
+			{
+				p.shader_point_sprite_param_->bind(proj, mv);
+				ugh->draw(cgogn::rendering::POINTS);
+				p.shader_point_sprite_param_->release();
+			}
+		}
+	}
 }
 
 void Plugin_PolylineRender::view_linked(View* view)
@@ -155,8 +189,11 @@ void Plugin_PolylineRender::view_linked(View* view)
 	for (Object* o : view->linked_objects())
 	{
 		CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
+		UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
 		if (mh)
 			add_linked_map(view, mh);
+		if (ugh)
+			add_linked_undirected_graph(view, ugh);
 	}
 }
 
@@ -172,8 +209,11 @@ void Plugin_PolylineRender::view_unlinked(View* view)
 	for (Object* o : view->linked_objects())
 	{
 		CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
+		UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
 		if (mh)
 			remove_linked_map(view, mh);
+		if (ugh)
+			remove_linked_undirected_graph(view, ugh);
 	}
 }
 
@@ -181,8 +221,11 @@ void Plugin_PolylineRender::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
 	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
+	UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
 	if (mh)
 		add_linked_map(view, mh);
+	if (ugh)
+		add_linked_undirected_graph(view, ugh);
 }
 
 void Plugin_PolylineRender::add_linked_map(View* view, CMap1Handler* mh)
@@ -190,87 +233,114 @@ void Plugin_PolylineRender::add_linked_map(View* view, CMap1Handler* mh)
 	set_position_vbo(view, mh, mh->vbo(setting_auto_load_position_attribute_), true);
 	set_color_vbo(view, mh, mh->vbo(setting_auto_load_color_attribute_), true);
 
-	connect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-	connect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-	connect(mh, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
+	connect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(bb_changed()), this, SLOT(linked_object_bb_changed()), Qt::UniqueConnection);
+}
+
+void Plugin_PolylineRender::add_linked_undirected_graph(View* view, UndirectedGraphHandler* ugh)
+{
+	set_position_vbo(view, ugh, ugh->vbo(setting_auto_load_position_attribute_), true);
+	set_color_vbo(view, ugh, ugh->vbo(setting_auto_load_color_attribute_), true);
+
+	connect(ugh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(ugh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(ugh, SIGNAL(bb_changed()), this, SLOT(linked_object_bb_changed()), Qt::UniqueConnection);
 }
 
 void Plugin_PolylineRender::object_unlinked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
 	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
+	UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
 	if (mh)
 		remove_linked_map(view, mh);
+	if (ugh)
+		remove_linked_undirected_graph(view, ugh);
 }
 
 void Plugin_PolylineRender::remove_linked_map(View* view, CMap1Handler* mh)
 {
-	disconnect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
-	disconnect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
-	disconnect(mh, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
+	disconnect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_added(cgogn::rendering::VBO*)));
+	disconnect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_removed(cgogn::rendering::VBO*)));
+	disconnect(mh, SIGNAL(bb_changed()), this, SLOT(linked_object_bb_changed()));
 }
 
-void Plugin_PolylineRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
+void Plugin_PolylineRender::remove_linked_undirected_graph(View* view, UndirectedGraphHandler* ugh)
+{
+	disconnect(ugh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_added(cgogn::rendering::VBO*)));
+	disconnect(ugh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_object_vbo_removed(cgogn::rendering::VBO*)));
+	disconnect(ugh, SIGNAL(bb_changed()), this, SLOT(linked_object_bb_changed()));
+}
+
+void Plugin_PolylineRender::linked_object_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap1Handler* mh = qobject_cast<CMap1Handler*>(sender());
+		Object* o = qobject_cast<Object*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
 		{
-			std::map<CMap1Handler*, MapParameters>& view_param_set = it.second;
-			if (view_param_set.count(mh) > 0ul)
+			std::map<Object*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(o) > 0ul)
 			{
-				MapParameters& p = view_param_set[mh];
+				MapParameters& p = view_param_set[o];
 				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
-					set_position_vbo(it.first, mh, vbo, true);
+					set_position_vbo(it.first, o, vbo, true);
 				if (!p.color_vbo_ && vbo_name == setting_auto_load_color_attribute_)
-					set_color_vbo(it.first, mh, vbo, true);
+					set_color_vbo(it.first, o, vbo, true);
 			}
 		}
 
-		for (View* view : mh->linked_views())
+		for (View* view : o->linked_views())
 			view->update();
 	}
 }
 
-void Plugin_PolylineRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
+void Plugin_PolylineRender::linked_object_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		CMap1Handler* mh = qobject_cast<CMap1Handler*>(sender());
+		Object* o = qobject_cast<Object*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
-			std::map<CMap1Handler*, MapParameters>& view_param_set = it.second;
-			if (view_param_set.count(mh) > 0ul)
+			std::map<Object*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(o) > 0ul)
 			{
-				MapParameters& p = view_param_set[mh];
+				MapParameters& p = view_param_set[o];
 				if (p.position_vbo_ == vbo)
-					set_position_vbo(it.first, mh, nullptr, true);
+					set_position_vbo(it.first, o, nullptr, true);
 				if (p.color_vbo_ == vbo)
-					set_color_vbo(it.first, mh, nullptr, true);
+					set_color_vbo(it.first, o, nullptr, true);
 			}
 		}
 
-		for (View* view : mh->linked_views())
+		for (View* view : o->linked_views())
 			view->update();
 	}
 }
 
-void Plugin_PolylineRender::linked_map_bb_changed()
+void Plugin_PolylineRender::linked_object_bb_changed()
 {
 	CMap1Handler* mh = qobject_cast<CMap1Handler*>(sender());
-	const uint32 nbv = mh->map()->nb_cells<CMap1::Vertex>();
+	UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(sender());
+
+	uint32 nbv;
+	if (mh)
+		nbv = mh->map()->nb_cells<CMap1::Vertex>();
+	if (ugh)
+		nbv = ugh->map()->nb_cells<UndirectedGraph::Vertex>();
 
 	for (auto& it : parameter_set_)
 	{
-		std::map<CMap1Handler*, MapParameters>& view_param_set = it.second;
-		if (view_param_set.count(mh) > 0ul)
+		std::map<Object*, MapParameters>& view_param_set = it.second;
+		Object* o = qobject_cast<Object*>(sender());
+		if (view_param_set.count(o) > 0ul)
 		{
-			MapParameters& p = view_param_set[mh];
-			p.set_vertex_base_size(mh->bb_diagonal_size() / (2 * std::sqrt(nbv)));
+			MapParameters& p = view_param_set[o];
+			p.set_vertex_base_size(o->bb_diagonal_size() / (2 * std::sqrt(nbv)));
 		}
 	}
 
@@ -302,90 +372,89 @@ void Plugin_PolylineRender::enable_on_selected_view(Plugin* p)
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_PolylineRender::set_position_vbo(View* view, CMap1Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+void Plugin_PolylineRender::set_position_vbo(View* view, Object* o, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	if (view && view->is_linked_to_plugin(this) && o && o->is_linked_to_view(view))
 	{
-		MapParameters& p = parameters(view, mh);
+		MapParameters& p = parameters(view, o);
 		p.set_position_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_object() == o)
 			dock_tab_->set_position_vbo(vbo);
 		view->update();
 	}
 }
 
-void Plugin_PolylineRender::set_color_vbo(View* view, CMap1Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+void Plugin_PolylineRender::set_color_vbo(View* view, Object* o, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	if (view && view->is_linked_to_plugin(this) && o && o->is_linked_to_view(view))
 	{
-		MapParameters& p = parameters(view, mh);
+		MapParameters& p = parameters(view, o);
 		p.set_color_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_object() == o)
 			dock_tab_->set_color_vbo(vbo);
 		view->update();
 	}
 }
 
-void Plugin_PolylineRender::set_render_vertices(View* view, CMap1Handler* mh, bool b, bool update_dock_tab)
+void Plugin_PolylineRender::set_render_vertices(View* view, Object* o, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	if (view && view->is_linked_to_plugin(this) && o && o->is_linked_to_view(view))
 	{
-		MapParameters& p = parameters(view, mh);
+		MapParameters& p = parameters(view, o);
 		p.render_vertices_ = b;
-		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_object() == o)
 			dock_tab_->set_render_vertices(b);
 		view->update();
 	}
 }
 
-void Plugin_PolylineRender::set_render_edges(View* view, CMap1Handler* mh, bool b, bool update_dock_tab)
+void Plugin_PolylineRender::set_render_edges(View* view, Object* o, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	if (view && view->is_linked_to_plugin(this) && o && o->is_linked_to_view(view))
 	{
-		MapParameters& p = parameters(view, mh);
+		MapParameters& p = parameters(view, o);
 		p.render_edges_ = b;
-		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_object() == o)
 			dock_tab_->set_render_edges(b);
 		view->update();
 	}
 }
 
-void Plugin_PolylineRender::set_vertex_color(View* view, CMap1Handler* mh, const QColor& color, bool update_dock_tab)
+void Plugin_PolylineRender::set_vertex_color(View* view, Object* o, const QColor& color, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	if (view && view->is_linked_to_plugin(this) && o && o->is_linked_to_view(view))
 	{
-		MapParameters& p = parameters(view, mh);
+		MapParameters& p = parameters(view, o);
 		p.set_vertex_color(color);
-		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_object() == o)
 			dock_tab_->set_vertex_color(color);
 		view->update();
 	}
 }
 
-void Plugin_PolylineRender::set_edge_color(View* view, CMap1Handler* mh, const QColor& color, bool update_dock_tab)
+void Plugin_PolylineRender::set_edge_color(View* view, Object* o, const QColor& color, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	if (view && view->is_linked_to_plugin(this) && o && o->is_linked_to_view(view))
 	{
-		MapParameters& p = parameters(view, mh);
+		MapParameters& p = parameters(view, o);
 		p.set_edge_color(color);
-		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_object() == o)
 			dock_tab_->set_edge_color(color);
 		view->update();
 	}
 }
 
-void Plugin_PolylineRender::set_vertex_scale_factor(View* view, CMap1Handler* mh, float32 sf, bool update_dock_tab)
+void Plugin_PolylineRender::set_vertex_scale_factor(View* view, Object* o, float32 sf, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	if (view && view->is_linked_to_plugin(this) && o && o->is_linked_to_view(view))
 	{
-		MapParameters& p = parameters(view, mh);
+		MapParameters& p = parameters(view, o);
 		p.set_vertex_scale_factor(sf);
-		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_object() == o)
 			dock_tab_->set_vertex_scale_factor(sf);
 		view->update();
 	}
 }
-
 
 } // namespace plugin_polyline_render
 

@@ -53,11 +53,13 @@ bool Plugin_Import::enable()
 	//schnapps_->add_menu("Import");
 	import_point_set_action_ = schnapps_->add_menu_action("Import;Point Set", "import point set");
 	import_polyline_action_ = schnapps_->add_menu_action("Import;Polyline", "import polyline");
+	import_graph_action_ = schnapps_->add_menu_action("Import;Graph", "import graph");
 	import_surface_mesh_action_ = schnapps_->add_menu_action("Import;Surface Mesh", "import surface mesh");
 	import_volume_mesh_action_ = schnapps_->add_menu_action("Import;Volume Mesh", "import volume mesh");
 
 	connect(import_point_set_action_, SIGNAL(triggered()), this, SLOT(import_point_set_from_file_dialog()));
 	connect(import_polyline_action_, SIGNAL(triggered()), this, SLOT(import_polyline_from_file_dialog()));
+	connect(import_graph_action_, SIGNAL(triggered()), this, SLOT(import_graph_from_file_dialog()));
 	connect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 	connect(import_volume_mesh_action_, SIGNAL(triggered()), this, SLOT(import_volume_mesh_from_file_dialog()));
 
@@ -85,11 +87,13 @@ void Plugin_Import::disable()
 {
 	disconnect(import_point_set_action_, SIGNAL(triggered()), this, SLOT(import_point_set_from_file_dialog()));
 	disconnect(import_polyline_action_, SIGNAL(triggered()), this, SLOT(import_polyline_from_file_dialog()));
+	disconnect(import_graph_action_, SIGNAL(triggered()), this, SLOT(import_graph_from_file_dialog()));
 	disconnect(import_surface_mesh_action_, SIGNAL(triggered()), this, SLOT(import_surface_mesh_from_file_dialog()));
 	disconnect(import_volume_mesh_action_, SIGNAL(triggered()), this, SLOT(import_volume_mesh_from_file_dialog()));
 
 	schnapps_->remove_menu_action(import_point_set_action_);
 	schnapps_->remove_menu_action(import_polyline_action_);
+	schnapps_->remove_menu_action(import_graph_action_);
 	schnapps_->remove_menu_action(import_surface_mesh_action_);
 	schnapps_->remove_menu_action(import_volume_mesh_action_);
 }
@@ -198,6 +202,60 @@ void Plugin_Import::import_polyline_from_file_dialog()
 	while (it != filenames.end())
 	{
 		import_polyline_from_file(*it);
+		++it;
+	}
+}
+
+UndirectedGraphHandler* Plugin_Import::import_graph_from_file(const QString& filename)
+{
+	QFileInfo fi(filename);
+	if (fi.exists())
+	{
+		UndirectedGraphHandler* ugh = plugin_cmap_provider_->add_undirected_graph(fi.baseName());
+		if (ugh)
+		{
+			UndirectedGraph* ug = ugh->map();
+
+			cgogn::io::import_graph<VEC3>(*ug, filename.toStdString());
+
+			ugh->notify_connectivity_change();
+
+			if (ug->is_embedded<UndirectedGraph::Vertex>())
+			{
+				const auto& container = ug->attribute_container<UndirectedGraph::Vertex::ORBIT>();
+				const std::vector<std::string>& names = container.names();
+				for (std::size_t i = 0u; i < names.size(); ++i)
+					ugh->notify_attribute_added(UndirectedGraph::Vertex::ORBIT, QString::fromStdString(names[i]));
+			}
+
+			if (ug->nb_cells<UndirectedGraph::Vertex>() > 0)
+			{
+				for (const QString& vbo_name : setting_vbo_names_)
+					ugh->create_vbo(vbo_name);
+
+				ugh->set_bb_vertex_attribute(setting_bbox_name_);
+			}
+		}
+		return ugh;
+	}
+	else
+		return nullptr;
+}
+
+void Plugin_Import::import_graph_from_file_dialog()
+{
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import graph", setting_default_path_, "Graph Files (*.cg *.skel *.cskel *.obj)");
+	QStringList::Iterator it = filenames.begin();
+
+	if  (it != filenames.end())
+	{
+		QFileInfo info(*it);
+		setting_default_path_ = info.path();
+	}
+
+	while (it != filenames.end())
+	{
+		import_graph_from_file(*it);
 		++it;
 	}
 }

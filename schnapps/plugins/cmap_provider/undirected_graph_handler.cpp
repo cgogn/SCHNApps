@@ -21,7 +21,7 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/cmap_provider/cmap1_handler.h>
+#include <schnapps/plugins/cmap_provider/undirected_graph_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
 #include <schnapps/core/view.h>
 
@@ -33,13 +33,13 @@ namespace schnapps
 namespace plugin_cmap_provider
 {
 
-CMap1Handler::CMap1Handler(const QString& name, PluginProvider* p) :
+UndirectedGraphHandler::UndirectedGraphHandler(const QString& name, PluginProvider* p) :
 	Object(name, p)
 {
-	map_ = new CMap1();
+	map_ = new UndirectedGraph();
 }
 
-CMap1Handler::~CMap1Handler()
+UndirectedGraphHandler::~UndirectedGraphHandler()
 {
 	delete map_;
 }
@@ -48,7 +48,7 @@ CMap1Handler::~CMap1Handler()
  * MANAGE DRAWING
  *********************************************************/
 
-void CMap1Handler::draw(cgogn::rendering::DrawingType primitive)
+void UndirectedGraphHandler::draw(cgogn::rendering::DrawingType primitive)
 {
 	if (!render_.is_primitive_uptodate(primitive))
 	{
@@ -59,7 +59,7 @@ void CMap1Handler::draw(cgogn::rendering::DrawingType primitive)
 	render_.draw(primitive);
 }
 
-void CMap1Handler::init_primitives(cgogn::rendering::DrawingType primitive)
+void UndirectedGraphHandler::init_primitives(cgogn::rendering::DrawingType primitive)
 {
 	render_.init_primitives(*map_, primitive);
 }
@@ -68,15 +68,15 @@ void CMap1Handler::init_primitives(cgogn::rendering::DrawingType primitive)
  * MANAGE VBOs
  *********************************************************/
 
-cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
+cgogn::rendering::VBO* UndirectedGraphHandler::create_vbo(const QString& name)
 {
 	cgogn::rendering::VBO* vbo = this->vbo(name);
 	if (!vbo)
 	{
-		if (!map_->has_attribute(CMap1::Vertex::ORBIT, name.toStdString()))
+		if (!map_->has_attribute(UndirectedGraph::Vertex::ORBIT, name.toStdString()))
 			return nullptr;
 
-		const CMap1::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va3f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -86,7 +86,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va3d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -96,7 +96,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (vaf32.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -106,7 +106,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (vaf64.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -116,7 +116,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va4f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -126,7 +126,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va4d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -136,7 +136,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va2f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -146,7 +146,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va2d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -156,7 +156,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-//		const CMap1::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const UndirectedGraph::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 //		if (ava3d.is_valid())
 //		{
 //			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -166,7 +166,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 //			return vbo;
 //		}
 
-//		const CMap1::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const UndirectedGraph::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 //		if (ava3f.is_valid())
 //		{
 //			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -180,12 +180,12 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 	return vbo;
 }
 
-void CMap1Handler::update_vbo(const QString& name)
+void UndirectedGraphHandler::update_vbo(const QString& name)
 {
 	cgogn::rendering::VBO* vbo = this->vbo(name);
 	if (vbo)
 	{
-		const CMap1::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va3f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -193,7 +193,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va3d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -201,7 +201,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (vaf32.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -209,7 +209,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (vaf64.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -217,7 +217,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va4f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -225,7 +225,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va4d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -233,7 +233,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va2f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -241,7 +241,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const UndirectedGraph::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 		if (va2d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -249,7 +249,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-//		const CMap1::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const UndirectedGraph::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 //		if (ava3f.is_valid())
 //		{
 //			vbo = vbos_.at(name).get();
@@ -257,7 +257,7 @@ void CMap1Handler::update_vbo(const QString& name)
 //			return;
 //		}
 
-//		const CMap1::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const UndirectedGraph::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, UndirectedGraph::Vertex::ORBIT>(name.toStdString());
 //		if (ava3d.is_valid())
 //		{
 //			vbo = vbos_.at(name).get();
@@ -267,7 +267,7 @@ void CMap1Handler::update_vbo(const QString& name)
 	}
 }
 
-cgogn::rendering::VBO* CMap1Handler::vbo(const QString& name) const
+cgogn::rendering::VBO* UndirectedGraphHandler::vbo(const QString& name) const
 {
 	if (vbos_.count(name) > 0ul)
 		return vbos_.at(name).get();
@@ -275,7 +275,7 @@ cgogn::rendering::VBO* CMap1Handler::vbo(const QString& name) const
 		return nullptr;
 }
 
-void CMap1Handler::delete_vbo(const QString &name)
+void UndirectedGraphHandler::delete_vbo(const QString &name)
 {
 	if (vbos_.count(name) > 0ul)
 	{
@@ -289,7 +289,7 @@ void CMap1Handler::delete_vbo(const QString &name)
  * MANAGE CELLS SETS                                      *
  *********************************************************/
 
-CMapCellsSetGen* CMap1Handler::add_cells_set(cgogn::Orbit orbit, const QString& name)
+CMapCellsSetGen* UndirectedGraphHandler::add_cells_set(cgogn::Orbit orbit, const QString& name)
 {
 	if (this->cells_sets_[orbit].count(name) > 0ul)
 		return nullptr;
@@ -298,11 +298,11 @@ CMapCellsSetGen* CMap1Handler::add_cells_set(cgogn::Orbit orbit, const QString& 
 
 	switch (orbit)
 	{
-		case CMap1::Vertex::ORBIT:
-			cells_set = new CMap1CellsSet<CMap1::Vertex>(*this, name);
+		case UndirectedGraph::Vertex::ORBIT:
+			cells_set = new UndirectedGraphCellsSet<UndirectedGraph::Vertex>(*this, name);
 			break;
-		case CMap1::Face::ORBIT:
-			cells_set = new CMap1CellsSet<CMap1::Face>(*this, name);
+		case UndirectedGraph::Edge::ORBIT:
+			cells_set = new UndirectedGraphCellsSet<UndirectedGraph::Edge>(*this, name);
 			break;
 		default:
 			break;
@@ -318,7 +318,7 @@ CMapCellsSetGen* CMap1Handler::add_cells_set(cgogn::Orbit orbit, const QString& 
 	return cells_set;
 }
 
-void CMap1Handler::remove_cells_set(cgogn::Orbit orbit, const QString& name)
+void UndirectedGraphHandler::remove_cells_set(cgogn::Orbit orbit, const QString& name)
 {
 	const auto cells_set_it = cells_sets_[orbit].find(name);
 	if (cells_set_it == cells_sets_[orbit].end())
@@ -335,12 +335,12 @@ void CMap1Handler::remove_cells_set(cgogn::Orbit orbit, const QString& name)
  * MANAGE ATTRIBUTES & CONNECTIVITY
  *********************************************************/
 
-void CMap1Handler::notify_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
+void UndirectedGraphHandler::notify_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	emit(attribute_added(orbit, attribute_name));
 }
 
-void CMap1Handler::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
+void UndirectedGraphHandler::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	update_vbo(attribute_name);
 	check_bb_vertex_attribute(orbit, attribute_name);
@@ -351,7 +351,7 @@ void CMap1Handler::notify_attribute_change(cgogn::Orbit orbit, const QString& at
 		view->update();
 }
 
-void CMap1Handler::notify_connectivity_change()
+void UndirectedGraphHandler::notify_connectivity_change()
 {
 	render_.set_primitive_dirty(cgogn::rendering::POINTS);
 	render_.set_primitive_dirty(cgogn::rendering::LINES);

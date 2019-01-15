@@ -52,6 +52,10 @@ struct CMap3Type;
 template <typename MAP_TYPE>
 class CMap3_T;
 
+struct UndirectedGraphType;
+template <typename MAP_TYPE>
+class UndirectedGraph_T;
+
 }
 
 namespace schnapps
@@ -64,6 +68,7 @@ using CMap0 = cgogn::CMap0_T<cgogn::CMap0Type>;
 using CMap1 = cgogn::CMap1_T<cgogn::CMap1Type>;
 using CMap2 = cgogn::CMap2_T<cgogn::CMap2Type>;
 using CMap3 = cgogn::CMap3_T<cgogn::CMap3Type>;
+using UndirectedGraph = cgogn::UndirectedGraph_T<cgogn::UndirectedGraphType>;
 
 using VEC4F = Eigen::Vector4f;
 using VEC4D = Eigen::Vector4d;
