@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP2_HANDLER_H_
 #define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP2_HANDLER_H_
 
-#include <schnapps/plugins/cmap_provider/dll.h>
+#include <schnapps/plugins/cmap_provider/plugin_cmap_provider_export.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/object.h>
@@ -45,7 +45,7 @@ namespace plugin_cmap_provider
 class CMapCellsSetGen;
 template <typename CMapHandler, typename CellType> class CMapCellsSet;
 
-class SCHNAPPS_PLUGIN_CMAP_PROVIDER_API CMap2Handler : public Object
+class PLUGIN_CMAP_PROVIDER_EXPORT CMap2Handler : public Object
 {
 	Q_OBJECT
 

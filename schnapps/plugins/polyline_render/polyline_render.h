@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
 #define SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
 
-#include <schnapps/plugins/polyline_render/dll.h>
+#include <schnapps/plugins/polyline_render/plugin_polyline_render_export.h>
 #include <schnapps/plugins/polyline_render/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -53,7 +53,7 @@ using UndirectedGraphHandler = plugin_cmap_provider::UndirectedGraphHandler;
 /**
 * @brief Plugin for surface rendering
 */
-class SCHNAPPS_PLUGIN_POLYLINE_RENDER_API Plugin_PolylineRender : public PluginInteraction
+class PLUGIN_POLYLINE_RENDER_EXPORT Plugin_PolylineRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_CMAP_PROVIDER_API</exportmacro>
+ <exportmacro> PLUGIN_CMAP_PROVIDER_EXPORT</exportmacro>
  <class>CMap0Provider_TabWidget</class>
  <widget class="QWidget" name="CMap0Provider_TabWidget">
   <property name="geometry">

@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_STATUS_BAR_OUTPUT_H_
 #define SCHNAPPS_CORE_STATUS_BAR_OUTPUT_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <cgogn/core/utils/logger_output.h>
 #include <QObject>
 #include <QStringList>
@@ -34,7 +35,7 @@ class QStatusBar;
 namespace schnapps
 {
 
-class SCHNAPPS_CORE_API StatusBarOutput final : public QObject, public  cgogn::logger::LoggerOutput
+class SCHNAPPS_CORE_EXPORT StatusBarOutput final : public QObject, public  cgogn::logger::LoggerOutput
 {
 	Q_OBJECT
 

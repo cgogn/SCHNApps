@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_H_
 
-#include <schnapps/plugins/surface_render/dll.h>
+#include <schnapps/plugins/surface_render/plugin_surface_render_export.h>
 #include <schnapps/plugins/surface_render/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -52,7 +52,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 /**
 * @brief Plugin for surface rendering
 */
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_API Plugin_SurfaceRender : public PluginInteraction
+class PLUGIN_SURFACE_RENDER_EXPORT Plugin_SurfaceRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

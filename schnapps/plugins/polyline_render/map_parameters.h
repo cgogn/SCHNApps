@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_POLYLINE_RENDER_MAP_PARAMETERS__H_
 #define SCHNAPPS_PLUGIN_POLYLINE_RENDER_MAP_PARAMETERS__H_
 
-#include <schnapps/plugins/polyline_render/dll.h>
+#include <schnapps/plugins/polyline_render/plugin_polyline_render_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -39,7 +39,7 @@ namespace plugin_polyline_render
 
 class Plugin_PolylineRender;
 
-struct SCHNAPPS_PLUGIN_POLYLINE_RENDER_API MapParameters
+struct PLUGIN_POLYLINE_RENDER_EXPORT MapParameters
 {
 	friend class Plugin_PolylineRender;
 

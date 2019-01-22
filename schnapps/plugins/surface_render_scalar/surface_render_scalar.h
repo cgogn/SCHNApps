@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_H_
 
-#include <schnapps/plugins/surface_render_scalar/dll.h>
+#include <schnapps/plugins/surface_render_scalar/plugin_surface_render_scalar_export.h>
 #include <schnapps/plugins/surface_render_scalar/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -45,7 +45,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 /**
 * @brief Plugin that renders color-coded scalar values on surface vertices
 */
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API Plugin_SurfaceRenderScalar : public PluginInteraction
+class PLUGIN_SURFACE_RENDER_SCALAR_EXPORT Plugin_SurfaceRenderScalar : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

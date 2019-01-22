@@ -2,6 +2,10 @@ project(schnapps_core
 	LANGUAGES CXX
 )
 
+# Hide symbols by default
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
+
 find_package(cgogn_core REQUIRED)
 find_package(cgogn_rendering REQUIRED)
 find_package(QOGLViewer REQUIRED)
@@ -11,7 +15,6 @@ add_library(schnapps::core ALIAS schnapps_core)
 
 target_sources(${PROJECT_NAME}
 	PRIVATE
-	    "${CMAKE_CURRENT_LIST_DIR}/dll.h"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window.h"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/schnapps_window_factory.h"
@@ -74,10 +77,13 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 										EXPORT_NAME core)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+	$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
+
+# Write out schnapps_core_export.h to the current binary directory
+generate_export_header(schnapps_core)
 
 target_link_libraries(${PROJECT_NAME}
 	cgogn::core
@@ -96,6 +102,11 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/core
 	FILES_MATCHING PATTERN "*.h"
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/schnapps_core_export.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/core
+	COMPONENT schnapps_core_headers
 )
 
 schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")

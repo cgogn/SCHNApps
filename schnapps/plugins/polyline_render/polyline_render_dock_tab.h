@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_POLYLINE_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_POLYLINE_RENDER_DOCK_TAB_H_
 
-#include <schnapps/plugins/polyline_render/dll.h>
+#include <schnapps/plugins/polyline_render/plugin_polyline_render_export.h>
 #include <schnapps/plugins/polyline_render/map_parameters.h>
 
 #include <ui_polyline_render.h>
@@ -54,7 +54,7 @@ class Plugin_PolylineRender;
 using CMap1Handler = plugin_cmap_provider::CMap1Handler;
 using UndirectedGraphHandler = plugin_cmap_provider::UndirectedGraphHandler;
 
-class SCHNAPPS_PLUGIN_POLYLINE_RENDER_API PolylineRender_DockTab : public QWidget, public Ui::PolylineRender_TabWidget
+class PLUGIN_POLYLINE_RENDER_EXPORT PolylineRender_DockTab : public QWidget, public Ui::PolylineRender_TabWidget
 {
 	Q_OBJECT
 

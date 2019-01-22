@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_IMPORT_H_
 #define SCHNAPPS_PLUGIN_IMPORT_H_
 
-#include <schnapps/plugins/import/dll.h>
+#include <schnapps/plugins/import/plugin_import_export.h>
 
 #include <schnapps/core/plugin_processing.h>
 
@@ -55,7 +55,7 @@ using UndirectedGraphHandler = plugin_cmap_provider::UndirectedGraphHandler;
 /**
 * @brief Plugin for CGoGN mesh import
 */
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
+class PLUGIN_IMPORT_EXPORT Plugin_Import : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

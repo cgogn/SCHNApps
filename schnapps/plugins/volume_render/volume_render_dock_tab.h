@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 
-#include <schnapps/plugins/volume_render/dll.h>
+#include <schnapps/plugins/volume_render/plugin_volume_render_export.h>
 
 #include <ui_volume_render.h>
 
@@ -51,7 +51,7 @@ namespace plugin_volume_render
 class Plugin_VolumeRender;
 using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
-class SCHNAPPS_PLUGIN_VOLUME_RENDER_API VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
+class PLUGIN_VOLUME_RENDER_EXPORT VolumeRender_DockTab : public QWidget, public Ui::VolumeRender_TabWidget
 {
 	Q_OBJECT
 

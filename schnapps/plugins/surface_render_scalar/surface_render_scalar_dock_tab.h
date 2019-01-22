@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_DOCK_TAB_H_
 
-#include <schnapps/plugins/surface_render_scalar/dll.h>
+#include <schnapps/plugins/surface_render_scalar/plugin_surface_render_scalar_export.h>
 
 #include <cgogn/rendering/shaders/shader_scalar_per_vertex.h>
 
@@ -51,7 +51,7 @@ namespace plugin_surface_render_scalar
 class Plugin_SurfaceRenderScalar;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
+class PLUGIN_SURFACE_RENDER_SCALAR_EXPORT SurfaceRenderScalar_DockTab : public QWidget, public Ui::SurfaceRenderScalar_TabWidget
 {
 	Q_OBJECT
 

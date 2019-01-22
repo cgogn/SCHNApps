@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_
 #define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_REMESHING_H_
 
-#include <schnapps/plugins/surface_modelisation/dll.h>
+#include <schnapps/plugins/surface_modelisation/plugin_surface_modelisation_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -50,7 +50,7 @@ namespace plugin_surface_modelisation
 class Plugin_SurfaceModelisation;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Remeshing_Dialog : public QDialog, public Ui::Remeshing_Dialog
+class PLUGIN_SURFACE_MODELISATION_EXPORT Remeshing_Dialog : public QDialog, public Ui::Remeshing_Dialog
 {
 	Q_OBJECT
 

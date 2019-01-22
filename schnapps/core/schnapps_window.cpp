@@ -33,7 +33,7 @@ namespace schnapps
 /**
  * @brief generate a SCHNApps_window (no need of schnapps_window.h !)
  */
-SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(
+SCHNAPPS_CORE_EXPORT std::unique_ptr<QMainWindow> schnapps_window_factory(
 	const QString& app_path,
 	const QString& settings_path,
 	const QString& init_plugin_name

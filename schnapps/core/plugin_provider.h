@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_PLUGIN_PROVIDER_H_
 #define SCHNAPPS_CORE_PLUGIN_PROVIDER_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <schnapps/core/types.h>
 #include <schnapps/core/plugin.h>
 
@@ -33,7 +34,7 @@ namespace schnapps
 
 class Object;
 
-class SCHNAPPS_CORE_API PluginProvider : public Plugin
+class SCHNAPPS_CORE_EXPORT PluginProvider : public Plugin
 {
 	Q_OBJECT
 

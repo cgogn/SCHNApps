@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_DOCK_TAB_H_
 
-#include <schnapps/plugins/surface_render/dll.h>
+#include <schnapps/plugins/surface_render/plugin_surface_render_export.h>
 #include <schnapps/plugins/surface_render/map_parameters.h>
 
 #include <ui_surface_render.h>
@@ -52,7 +52,7 @@ namespace plugin_surface_render
 class Plugin_SurfaceRender;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_API SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
+class PLUGIN_SURFACE_RENDER_EXPORT SurfaceRender_DockTab : public QWidget, public Ui::SurfaceRender_TabWidget
 {
 	Q_OBJECT
 

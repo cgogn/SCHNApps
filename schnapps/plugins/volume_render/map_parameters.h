@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_MAP_PARAMETERS_H_
 
-#include <schnapps/plugins/volume_render/dll.h>
+#include <schnapps/plugins/volume_render/plugin_volume_render_export.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
@@ -49,7 +49,7 @@ namespace plugin_volume_render
 class Plugin_VolumeRender;
 using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
-struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
+struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 {
 	friend class Plugin_VolumeRender;
 

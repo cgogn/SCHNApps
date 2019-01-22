@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_SELECTION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_SELECTION_H_
 
-#include <schnapps/plugins/surface_selection/dll.h>
+#include <schnapps/plugins/surface_selection/plugin_surface_selection_export.h>
 #include <schnapps/plugins/surface_selection/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -47,7 +47,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 /**
 * @brief Plugin for cells selection
 */
-class SCHNAPPS_PLUGIN_SURFACE_SELECTION_API Plugin_SurfaceSelection : public PluginInteraction
+class PLUGIN_SURFACE_SELECTION_EXPORT Plugin_SurfaceSelection : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

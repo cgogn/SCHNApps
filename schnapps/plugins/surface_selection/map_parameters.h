@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_SELECTION_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_SURFACE_SELECTION_MAP_PARAMETERS_H_
 
-#include <schnapps/plugins/surface_selection/dll.h>
+#include <schnapps/plugins/surface_selection/plugin_surface_selection_export.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 #include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
@@ -57,7 +57,7 @@ enum SelectionMethod: unsigned int
 	NormalAngle
 };
 
-struct SCHNAPPS_PLUGIN_SURFACE_SELECTION_API MapParameters : public QObject
+struct PLUGIN_SURFACE_SELECTION_EXPORT MapParameters : public QObject
 {
 	Q_OBJECT
 

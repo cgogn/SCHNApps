@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP2_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP2_DOCK_TAB_H_
 
-#include <schnapps/plugins/cmap_provider/dll.h>
+#include <schnapps/plugins/cmap_provider/plugin_cmap_provider_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -48,7 +48,7 @@ namespace plugin_cmap_provider
 class Plugin_CMapProvider;
 class CMap2Handler;
 
-class SCHNAPPS_PLUGIN_CMAP_PROVIDER_API CMap2Provider_DockTab : public QWidget, public Ui::CMap2Provider_TabWidget
+class PLUGIN_CMAP_PROVIDER_EXPORT CMap2Provider_DockTab : public QWidget, public Ui::CMap2Provider_TabWidget
 {
 	Q_OBJECT
 

@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 
-#include <schnapps/plugins/surface_render_vector/dll.h>
+#include <schnapps/plugins/surface_render_vector/plugin_surface_render_vector_export.h>
 #include <schnapps/plugins/surface_render_vector/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -45,7 +45,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 /**
 * @brief Plugin that renders vectors on surface vertices
 */
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API Plugin_SurfaceRenderVector : public PluginInteraction
+class PLUGIN_SURFACE_RENDER_VECTOR_EXPORT Plugin_SurfaceRenderVector : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
