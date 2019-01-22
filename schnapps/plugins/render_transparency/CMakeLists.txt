@@ -39,6 +39,7 @@ target_link_libraries(${PROJECT_NAME}
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/render_transparency
+	COMPONENT schnapps_plugins_headers
 	FILES_MATCHING PATTERN "*.h"
 )
 

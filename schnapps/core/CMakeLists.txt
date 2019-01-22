@@ -101,6 +101,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 # the trailing slash is IMPORTANT, see https://cmake.org/pipermail/cmake/2009-December/033850.html
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/core
+	COMPONENT schnapps_core_headers
 	FILES_MATCHING PATTERN "*.h"
 )
 

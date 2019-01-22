@@ -51,6 +51,7 @@ generate_export_header(plugin_surface_render)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/surface_render
+	COMPONENT schnapps_plugins_headers
 	FILES_MATCHING PATTERN "*.h"
 )
 
