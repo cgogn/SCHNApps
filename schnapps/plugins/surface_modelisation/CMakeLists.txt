@@ -34,8 +34,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 										DEBUG_POSTFIX "_d"
 										EXPORT_NAME surface_modelisation)
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_SURFACE_MODELISATION_DLL_EXPORT")
-
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>

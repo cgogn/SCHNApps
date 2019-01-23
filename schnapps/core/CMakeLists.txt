@@ -59,8 +59,6 @@ target_sources(${PROJECT_NAME}
 		"${SCHNAPPS_SOURCE_DIR}/schnapps/resources/resources.qrc"
 )
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE "SCHNAPPS_CORE_DLL_EXPORT")
-
 if (SCHNAPPS_ALIGNED_VEC3)
 	target_compile_definitions(${PROJECT_NAME} PUBLIC "SCHNAPPS_USE_ALIGNEDVEC3")
 endif()
