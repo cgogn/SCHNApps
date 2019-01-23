@@ -46,7 +46,7 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	FILES_MATCHING PATTERN "*.h"
 )
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugin_plugin_surface_render_scalar_export.h
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugin_surface_render_scalar_export.h
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/surface_render_scalar
 	COMPONENT schnapps_plugins_headers
 )
