@@ -26,7 +26,8 @@
 
 #include <QColorDialog>
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <schnapps/core/types.h>
 
 #include <schnapps/core/view_dialog_list.h>
@@ -56,7 +57,7 @@ class Object;
 *
 * Python callable slots are tagged with [PYTHON]
 */
-class SCHNAPPS_CORE_API View : public QOGLViewer
+class SCHNAPPS_CORE_EXPORT View : public QOGLViewer
 {
 	Q_OBJECT
 

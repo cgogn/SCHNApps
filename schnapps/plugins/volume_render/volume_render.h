@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
 
-#include <schnapps/plugins/volume_render/dll.h>
+#include <schnapps/plugins/volume_render/plugin_volume_render_export.h>
 #include <schnapps/plugins/volume_render/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -52,7 +52,7 @@ using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 /**
 * @brief Plugin for volume rendering
 */
-class SCHNAPPS_PLUGIN_VOLUME_RENDER_API Plugin_VolumeRender : public PluginInteraction
+class PLUGIN_VOLUME_RENDER_EXPORT Plugin_VolumeRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

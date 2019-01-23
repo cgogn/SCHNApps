@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_MAP_PARAMETERS_H_
 
-#include <schnapps/plugins/surface_render_scalar/dll.h>
+#include <schnapps/plugins/surface_render_scalar/plugin_surface_render_scalar_export.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
@@ -41,7 +41,7 @@ namespace plugin_surface_render_scalar
 class Plugin_SurfaceRenderScalar;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-struct SCHNAPPS_PLUGIN_SURFACE_RENDER_SCALAR_API MapParameters
+struct PLUGIN_SURFACE_RENDER_SCALAR_EXPORT MapParameters
 {
 	friend class Plugin_SurfaceRenderScalar;
 

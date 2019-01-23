@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_VIEW_DIALOG_LIST_H_
 #define SCHNAPPS_CORE_VIEW_DIALOG_LIST_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 
 #include <QDialog>
 #include <QVBoxLayout>
@@ -34,7 +35,7 @@
 namespace schnapps
 {
 
-class SCHNAPPS_CORE_API ViewDialogList : public QDialog
+class SCHNAPPS_CORE_EXPORT ViewDialogList : public QDialog
 {
 	Q_OBJECT
 

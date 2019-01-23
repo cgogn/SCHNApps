@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_H_
 
-#include <schnapps/plugins/surface_deformation/dll.h>
+#include <schnapps/plugins/surface_deformation/plugin_surface_deformation_export.h>
 #include <schnapps/plugins/surface_deformation/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -45,7 +45,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 /**
 * @brief Surface deformation
 */
-class SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_API Plugin_SurfaceDeformation : public PluginInteraction
+class PLUGIN_SURFACE_DEFORMATION_EXPORT Plugin_SurfaceDeformation : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

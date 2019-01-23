@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_SELECTION_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_SELECTION_DOCK_TAB_H_
 
-#include <schnapps/plugins/surface_selection/dll.h>
+#include <schnapps/plugins/surface_selection/plugin_surface_selection_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -55,7 +55,7 @@ class Plugin_SurfaceSelection;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 using CMapCellsSetGen = plugin_cmap_provider::CMapCellsSetGen;
 
-class SCHNAPPS_PLUGIN_SURFACE_SELECTION_API SurfaceSelection_DockTab : public QWidget, public Ui::SurfaceSelection_TabWidget
+class PLUGIN_SURFACE_SELECTION_EXPORT SurfaceSelection_DockTab : public QWidget, public Ui::SurfaceSelection_TabWidget
 {
 	Q_OBJECT
 

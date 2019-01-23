@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_CURVATURE_H_
 
-#include <schnapps/plugins/surface_differential_properties/dll.h>
+#include <schnapps/plugins/surface_differential_properties/plugin_surface_differential_properties_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -50,7 +50,7 @@ namespace plugin_sdp
 class Plugin_SurfaceDifferentialProperties;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_SDP_API ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
+class PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_EXPORT ComputeCurvature_Dialog : public QDialog, public Ui::ComputeCurvature_Dialog
 {
 	Q_OBJECT
 

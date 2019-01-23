@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
 #define SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
 
-#include <schnapps/plugins/point_set_render/dll.h>
+#include <schnapps/plugins/point_set_render/plugin_point_set_render_export.h>
 #include <schnapps/plugins/point_set_render/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -49,7 +49,7 @@ using CMap0Handler = plugin_cmap_provider::CMap0Handler;
 /**
 * @brief Plugin for surface rendering
 */
-class SCHNAPPS_PLUGIN_POINT_SET_RENDER_API Plugin_PointSetRender : public PluginInteraction
+class PLUGIN_POINT_SET_RENDER_EXPORT Plugin_PointSetRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

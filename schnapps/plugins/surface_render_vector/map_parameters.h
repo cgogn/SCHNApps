@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_MAP_PARAMETERS_H_
 
-#include <schnapps/plugins/surface_render_vector/dll.h>
+#include <schnapps/plugins/surface_render_vector/plugin_surface_render_vector_export.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
@@ -41,7 +41,7 @@ namespace plugin_surface_render_vector
 class Plugin_SurfaceRenderVector;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
+struct PLUGIN_SURFACE_RENDER_VECTOR_EXPORT MapParameters
 {
 	friend class Plugin_SurfaceRenderVector;
 

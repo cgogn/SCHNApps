@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_MAP_PARAMETERS__H_
 #define SCHNAPPS_PLUGIN_POINT_SET_RENDER_MAP_PARAMETERS__H_
 
-#include <schnapps/plugins/point_set_render/dll.h>
+#include <schnapps/plugins/point_set_render/plugin_point_set_render_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -38,7 +38,7 @@ namespace plugin_point_set_render
 
 class Plugin_PointSetRender;
 
-struct SCHNAPPS_PLUGIN_POINT_SET_RENDER_API MapParameters
+struct PLUGIN_POINT_SET_RENDER_EXPORT MapParameters
 {
 	friend class Plugin_PointSetRender;
 

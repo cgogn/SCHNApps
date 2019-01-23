@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_
 #define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_H_
 
-#include <schnapps/plugins/cage_3d_deformation/dll.h>
+#include <schnapps/plugins/cage_3d_deformation/plugin_cage_3d_deformation_export.h>
 #include <schnapps/plugins/cage_3d_deformation/map_parameters.h>
 
 #include <schnapps/core/plugin_processing.h>
@@ -52,7 +52,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 /**
 * @brief Cage 3d deformation
 */
-class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Plugin_Cage3dDeformation : public PluginProcessing
+class PLUGIN_CAGE_3D_DEFORMATION_EXPORT Plugin_Cage3dDeformation : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

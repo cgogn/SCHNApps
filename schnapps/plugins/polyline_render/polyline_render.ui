@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_POLYLINE_RENDER_API</exportmacro>
+ <exportmacro>PLUGIN_POLYLINE_RENDER_EXPORT</exportmacro>
  <class>PolylineRender_TabWidget</class>
  <widget class="QWidget" name="PolylineRender_TabWidget">
   <property name="geometry">

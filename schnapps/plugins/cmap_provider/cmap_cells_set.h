@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_
 #define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_
 
-#include <schnapps/plugins/cmap_provider/dll.h>
+#include <schnapps/plugins/cmap_provider/plugin_cmap_provider_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -40,7 +40,7 @@ class Object;
 namespace plugin_cmap_provider
 {
 
-class SCHNAPPS_PLUGIN_CMAP_PROVIDER_API CMapCellsSetGen : public QObject
+class PLUGIN_CMAP_PROVIDER_EXPORT CMapCellsSetGen : public QObject
 {
 	Q_OBJECT
 

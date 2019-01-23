@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_MAP_PARAMETERS__H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_MAP_PARAMETERS__H_
 
-#include <schnapps/plugins/surface_render/dll.h>
+#include <schnapps/plugins/surface_render/plugin_surface_render_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -45,7 +45,7 @@ namespace plugin_surface_render
 
 class Plugin_SurfaceRender;
 
-struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
+struct PLUGIN_SURFACE_RENDER_EXPORT MapParameters
 {
 	friend class Plugin_SurfaceRender;
 

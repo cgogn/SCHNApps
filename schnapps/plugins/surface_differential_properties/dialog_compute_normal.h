@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_DIALOG_COMPUTE_NORMAL_H_
 
-#include <schnapps/plugins/surface_differential_properties/dll.h>
+#include <schnapps/plugins/surface_differential_properties/plugin_surface_differential_properties_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -50,7 +50,7 @@ namespace plugin_sdp
 class Plugin_SurfaceDifferentialProperties;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_SDP_API ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
+class PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_EXPORT ComputeNormal_Dialog : public QDialog, public Ui::ComputeNormal_Dialog
 {
 	Q_OBJECT
 

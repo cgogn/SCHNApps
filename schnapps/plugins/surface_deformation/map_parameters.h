@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_MAP_PARAMETERS_H_
 
-#include <schnapps/plugins/surface_deformation/dll.h>
+#include <schnapps/plugins/surface_deformation/plugin_surface_deformation_export.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 #include <schnapps/plugins/cmap_provider/cmap_cells_set.h>
@@ -47,7 +47,7 @@ using CMapCellsSetGen = plugin_cmap_provider::CMapCellsSetGen;
 template <typename CellType>
 using CMap2CellsSet = CMap2Handler::CMap2CellsSet<CellType>;
 
-struct MapParameters
+struct PLUGIN_SURFACE_DEFORMATION_EXPORT MapParameters
 {
 	friend class Plugin_SurfaceDeformation;
 

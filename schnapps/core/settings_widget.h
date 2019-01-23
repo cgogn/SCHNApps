@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_SETTINGS_WIDGET_H_
 #define SCHNAPPS_CORE_SETTINGS_WIDGET_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <ui_settings_widget.h>
 #include <QWidget>
 
@@ -33,7 +34,7 @@ namespace schnapps
 
 class Settings;
 
-class SCHNAPPS_CORE_API SettingsWidget : public QWidget, public Ui::SettingsWidget
+class SCHNAPPS_CORE_EXPORT SettingsWidget : public QWidget, public Ui::SettingsWidget
 {
 	friend class Settings;
 	Q_OBJECT

@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_OBJECT_H_
 #define SCHNAPPS_CORE_OBJECT_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <schnapps/core/types.h>
 
 #include <cgogn/rendering/drawer.h>
@@ -40,7 +41,7 @@ namespace schnapps
 class View;
 class PluginProvider;
 
-class SCHNAPPS_CORE_API Object : public QObject
+class SCHNAPPS_CORE_EXPORT Object : public QObject
 {
 	Q_OBJECT
 

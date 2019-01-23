@@ -24,8 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DIALOG_H_
 #define SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_DIALOG_H_
 
-#include <schnapps/plugins/cage_3d_deformation/dll.h>
-
+#include <schnapps/plugins/cage_3d_deformation/plugin_cage_3d_deformation_export.h>
 #include <schnapps/core/types.h>
 
 #include <ui_dialog_cage_3d_deformation.h>
@@ -50,7 +49,7 @@ namespace plugin_cage_3d_deformation
 class Plugin_Cage3dDeformation;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_CAGE_3D_DEFORMATION_API Cage3dDeformation_Dialog : public QDialog, public Ui::Cage3dDeformation_Dialog
+class PLUGIN_CAGE_3D_DEFORMATION_EXPORT Cage3dDeformation_Dialog : public QDialog, public Ui::Cage3dDeformation_Dialog
 {
 	Q_OBJECT
 

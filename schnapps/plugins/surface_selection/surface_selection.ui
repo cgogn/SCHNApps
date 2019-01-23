@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_SURFACE_SELECTION_API</exportmacro>
+ <exportmacro>PLUGIN_SURFACE_SELECTION_EXPORT</exportmacro>
  <class>SurfaceSelection_TabWidget</class>
  <widget class="QWidget" name="SurfaceSelection_TabWidget">
   <property name="geometry">

@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_POINT_SET_RENDER_DOCK_TAB_H_
 
-#include <schnapps/plugins/point_set_render/dll.h>
+#include <schnapps/plugins/point_set_render/plugin_point_set_render_export.h>
 #include <schnapps/plugins/point_set_render/map_parameters.h>
 
 #include <ui_point_set_render.h>
@@ -52,7 +52,7 @@ namespace plugin_point_set_render
 class Plugin_PointSetRender;
 using CMap0Handler = plugin_cmap_provider::CMap0Handler;
 
-class SCHNAPPS_PLUGIN_POINT_SET_RENDER_API PointSetRender_DockTab : public QWidget, public Ui::PointSetRender_TabWidget
+class PLUGIN_POINT_SET_RENDER_EXPORT PointSetRender_DockTab : public QWidget, public Ui::PointSetRender_TabWidget
 {
 	Q_OBJECT
 

@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_
 
-#include <schnapps/plugins/surface_differential_properties/dll.h>
+#include <schnapps/plugins/surface_differential_properties/plugin_surface_differential_properties_export.h>
 
 #include <schnapps/core/types.h>
 #include <schnapps/core/plugin_processing.h>
@@ -55,7 +55,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
  * - Normals
  * - Curvatures
  */
-class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties : public PluginProcessing
+class PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_EXPORT Plugin_SurfaceDifferentialProperties : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
