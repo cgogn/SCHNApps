@@ -63,11 +63,10 @@ endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
-	$<BUILD_INTERFACE:$<$<BOOL:${CGAL_FOUND}>:${CGAL_INCLUDE_DIRS}>>
 )
+
 if (CGAL_FOUND)
-	target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CGAL_INCLUDE_DIRS}>)
+	target_include_directories(${PROJECT_NAME}  PUBLIC ${CGAL_INCLUDE_DIRS})
 endif()
 
 target_link_libraries(${PROJECT_NAME}
