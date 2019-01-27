@@ -15,3 +15,5 @@ if(NOT MSVC)
 	target_compile_options(tet PUBLIC "-std=c++11")
 endif(NOT MSVC)
 set_property(TARGET tet PROPERTY POSITION_INDEPENDENT_CODE TRUE)
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "plugins/meshgen")

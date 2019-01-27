@@ -34,3 +34,4 @@ target_link_libraries(${PROJECT_NAME}
 	Qt5::Widgets
 	Qt5::Core
 )
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "plugins")
