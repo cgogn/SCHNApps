@@ -24,10 +24,6 @@ endif(CGAL_FOUND)
 
 add_subdirectory(netgen)
 
-if(APPLE)
-	set (WITH_CGAL_ImageIO "OFF") # too much bugs
-endif()
-
 add_library(${PROJECT_NAME} SHARED "")
 add_library(schnapps::meshgen ALIAS plugin_meshgen)
 
@@ -74,15 +70,33 @@ target_link_libraries(${PROJECT_NAME}
 	${CGAL_LIBRARIES}
 	cgogn::core
 	cgogn::modeling
-	${CGAL_Core_LIBRARY}
 	${Boost_LIBRARIES}
 	${MPFR_LIBRARIES}
 	${GMP_LIBRARIES}
 )
 
-if(CGAL_FOUND AND WIN32)
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-		"${CGAL_INSTALL_PREFIX}/bin"
-		$<TARGET_FILE_DIR:${PROJECT_NAME}>)
-endif()
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "plugins/meshgen")
+
+#In this section we copy boost's and CGAL's DLLs in schnapp's directory
+if(WIN32)
+	if(CGAL_FOUND)
+		foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+			foreach(CGAL_LIB ${CGAL_LIBRARIES})
+				get_target_property(LIB_DEBUG ${CGAL_LIB} IMPORTED_LOCATION_DEBUG)
+				get_target_property(LIB_RELEASE ${CGAL_LIB} IMPORTED_LOCATION_RELEASE)
+				file(COPY ${LIB_DEBUG} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+				file(COPY ${LIB_RELEASE} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+			endforeach()
+		endforeach()
+	endif()
+	if(Boost_FOUND)
+		#BOOST_ALL_DYN_LINK: Forces all libraries that have separate source, 
+		#to be linked as DLL's rather than static libraries on Microsoft Windows
+		target_compile_definitions(${PROJECT_NAME} PRIVATE "-DBOOST_ALL_DYN_LINK")
+		get_filename_component(BOOST_SYSTEM_PATH ${Boost_SYSTEM_LIBRARY_RELEASE} PATH)
+		file(GLOB BOOST_DLLS "${BOOST_SYSTEM_PATH}/*.dll")
+		foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
+			file(COPY ${BOOST_DLLS} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+		endforeach()
+	endif()
+endif(WIN32)

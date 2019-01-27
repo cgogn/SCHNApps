@@ -72,9 +72,13 @@ target_link_libraries(${PROJECT_NAME}
 	cgogn::io
 	Qt5::Widgets
 	cgogn::QOGLViewer
-	"$<$<BOOL:CGAL_FOUND>:${CGAL_LIBRARIES}>"
-	"$<$<BOOL:Boost_FOUND>:${Boost_LIBRARIES}>"
+	$<$<BOOL:CGAL_FOUND>:Boost::system>
+	$<$<BOOL:CGAL_FOUND>:Boost::thread>
+	$<$<BOOL:Boost_IOSTREAMS_FOUND>:Boost::iostreams>
+	$<$<AND:$<BOOL:WIN32>,$<BOOL:Boost_IOSTREAMS_FOUND>>:Boost::zlib>
+	${CGAL_LIBRARIES}
 )
+
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/image
@@ -85,16 +89,19 @@ schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)
 
+
 #In this section we copy boost's and CGAL's DLLs in schnapp's directory
 if(WIN32)
 	if(CGAL_FOUND)
-		file(GLOB CGAL_DLLS "${CGAL_INSTALL_PREFIX}/bin/*.dll")
-		file(GLOB CGAL_AUX_DLLS "${GMP_INCLUDE_DIR}/../lib/*.dll")
 		# # We suppose that the auxiliary DLLS for CGAL are always used from the CGAL package
 		# ## Copy DLLs to the build tree
 		foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
-			file(COPY ${CGAL_DLLS} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
-			file(COPY ${CGAL_AUX_DLLS} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+			foreach(CGAL_LIB ${CGAL_LIBRARIES})
+				get_target_property(LIB_DEBUG ${CGAL_LIB} IMPORTED_LOCATION_DEBUG)
+				get_target_property(LIB_RELEASE ${CGAL_LIB} IMPORTED_LOCATION_RELEASE)
+				file(COPY ${LIB_DEBUG} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+				file(COPY ${LIB_RELEASE} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+			endforeach()
 		endforeach()
 	endif()
 	if(Boost_FOUND)
