@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>PLUGIN_CAGE_3D_DEFORMATION_EXPORT</exportmacro>
  <class>Cage3dDeformation_Dialog</class>
  <widget class="QDialog" name="Cage3dDeformation_Dialog">
   <property name="geometry">

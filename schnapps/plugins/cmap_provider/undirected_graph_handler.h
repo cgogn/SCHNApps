@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP2_HANDLER_H_
-#define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP2_HANDLER_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_UNDIRECTED_GRAPH_HANDLER_H_
+#define SCHNAPPS_PLUGIN_CMAP_PROVIDER_UNDIRECTED_GRAPH_HANDLER_H_
 
 #include <schnapps/plugins/cmap_provider/plugin_cmap_provider_export.h>
 
@@ -30,7 +30,7 @@
 #include <schnapps/core/object.h>
 
 #include <cgogn/geometry/algos/bounding_box.h>
-#include <cgogn/core/cmap/cmap2.h>
+#include <cgogn/core/graph/undirected_graph.h>
 #include <cgogn/rendering/map_render.h>
 
 namespace schnapps
@@ -45,22 +45,22 @@ namespace plugin_cmap_provider
 class CMapCellsSetGen;
 template <typename CMapHandler, typename CellType> class CMapCellsSet;
 
-class PLUGIN_CMAP_PROVIDER_EXPORT CMap2Handler : public Object
+class PLUGIN_CMAP_PROVIDER_EXPORT UndirectedGraphHandler : public Object
 {
 	Q_OBJECT
 
 public:
 
-	using Self = CMap2Handler;
-	using MapType = CMap2;
+	using Self = UndirectedGraphHandler;
+	using MapType = UndirectedGraph;
 
 	template <typename CellType>
-	using CMap2CellsSet = CMapCellsSet<Self, CellType>;
+	using UndirectedGraphCellsSet = CMapCellsSet<Self, CellType>;
 
 	EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-	CMap2Handler(const QString& name, PluginProvider* p);
-	~CMap2Handler();
+	UndirectedGraphHandler(const QString& name, PluginProvider* p);
+	~UndirectedGraphHandler();
 
 public:
 
@@ -68,8 +68,7 @@ public:
 	 * BASIC FUNCTIONS                                        *
 	 *********************************************************/
 
-	inline CMap2* map() { return map_; }
-	inline const CMap2* map() const { return map_; }
+	inline UndirectedGraph* map() const { return map_; }
 
 	void view_linked(View*) {}
 	void view_unlinked(View*) {}
@@ -102,15 +101,15 @@ public:
 	 * MANAGE CELLS SETS                                      *
 	 *********************************************************/
 
-	CMapCellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString &name);
+	CMapCellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name);
 
 	template <typename CellType>
-	CMap2CellsSet<CellType>* add_cells_set(const QString& name)
+	UndirectedGraphCellsSet<CellType>* add_cells_set(const QString& name)
 	{
 		if (cells_sets_[CellType::ORBIT].count(name) > 0ul)
 			return nullptr;
 
-		CMap2CellsSet<CellType>* cells_set = new CMap2CellsSet<CellType>(*this, name);
+		UndirectedGraphCellsSet<CellType>* cells_set = new UndirectedGraphCellsSet<CellType>(*this, name);
 
 		cells_sets_[CellType::ORBIT].insert(std::make_pair(name, cells_set));
 		emit(cells_set_added(CellType::ORBIT, name));
@@ -129,11 +128,11 @@ public:
 	}
 
 	template <typename CellType>
-	CMap2CellsSet<CellType>* cells_set(const QString& name)
+	UndirectedGraphCellsSet<CellType>* cells_set(const QString& name)
 	{
 		static const cgogn::Orbit ORBIT = CellType::ORBIT;
 		if (cells_sets_[ORBIT].count(name) > 0ul)
-			return static_cast<CMap2CellsSet<CellType>*>(cells_sets_[ORBIT].at(name));
+			return static_cast<UndirectedGraphCellsSet<CellType>*>(cells_sets_[ORBIT].at(name));
 		else
 			return nullptr;
 	}
@@ -141,10 +140,10 @@ public:
 	template <typename CellType, typename FUNC>
 	void foreach_cells_set(const FUNC& f) const
 	{
-		static_assert(cgogn::is_func_parameter_same<FUNC, CMap2CellsSet<CellType>*>::value, "Wrong function parameter type");
+		static_assert(cgogn::is_func_parameter_same<FUNC, UndirectedGraphCellsSet<CellType>*>::value, "Wrong function parameter type");
 		static const cgogn::Orbit ORBIT = CellType::ORBIT;
 		for (const auto& cells_set_it : cells_sets_[ORBIT])
-			f(static_cast<CMap2CellsSet<CellType>*>(cells_set_it.second));
+			f(static_cast<UndirectedGraphCellsSet<CellType>*>(cells_set_it.second));
 	}
 
 	template <typename FUNC>
@@ -176,7 +175,7 @@ public:
 
 	void set_bb_vertex_attribute(const QString& attribute_name)
 	{
-		bb_vertex_attribute_ = map_->template get_attribute<VEC3, CMap2::Vertex::ORBIT>(attribute_name.toStdString());
+		bb_vertex_attribute_ = map_->template get_attribute<VEC3, UndirectedGraph::Vertex::ORBIT>(attribute_name.toStdString());
 		if (bb_vertex_attribute_.is_valid())
 		{
 			compute_bb();
@@ -191,7 +190,7 @@ public:
 		if (bb_vertex_attribute_.is_valid())
 		{
 			QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
-			if (orbit == CMap2::Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
+			if (orbit == UndirectedGraph::Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
 			{
 				compute_bb();
 				this->update_bb_drawer();
@@ -281,7 +280,7 @@ signals:
 
 protected:
 
-	CMap2* map_;
+	UndirectedGraph* map_;
 
 	std::mutex topo_access_;
 
@@ -294,11 +293,12 @@ protected:
 	// CellsSets of the map
 	std::array<std::map<QString, CMapCellsSetGen*>, cgogn::NB_ORBITS> cells_sets_;
 
-	CMap2::VertexAttribute<VEC3> bb_vertex_attribute_;
+	UndirectedGraph::VertexAttribute<VEC3> bb_vertex_attribute_;
 };
 
 } // namespace plugin_cmap_provider
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP2_HANDLER_H_
+#endif // SCHNAPPS_PLUGIN_CMAP_PROVIDER_UNDIRECTED_GRAPH_HANDLER_H_
+

@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
 
-#include <schnapps/plugins/surface_render_vector/dll.h>
+#include <schnapps/plugins/surface_render_vector/plugin_surface_render_vector_export.h>
 
 #include <ui_surface_render_vector.h>
 
@@ -49,7 +49,7 @@ namespace plugin_surface_render_vector
 class Plugin_SurfaceRenderVector;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
+class PLUGIN_SURFACE_RENDER_VECTOR_EXPORT SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
 {
 	Q_OBJECT
 

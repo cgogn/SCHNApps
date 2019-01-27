@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_RENDER_TRANSPARENCY_H_
 #define SCHNAPPS_PLUGIN_RENDER_TRANSPARENCY_H_
 
-#include <schnapps/plugins/render_transparency/dll.h>
+#include <schnapps/plugins/render_transparency/plugin_render_transparency_export.h>
 
 #include <schnapps/core/plugin_interaction.h>
 
@@ -54,7 +54,7 @@ using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 /**
 * @brief Plugin for transparency rendering
 */
-class SCHNAPPS_PLUGIN_RENDER_TRANSPARENCY_API Plugin_RenderTransparency : public PluginInteraction
+class PLUGIN_RENDER_TRANSPARENCY_EXPORT Plugin_RenderTransparency : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

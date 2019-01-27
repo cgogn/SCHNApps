@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_IMPORT_H_
 #define SCHNAPPS_PLUGIN_IMPORT_H_
 
-#include <schnapps/plugins/import/dll.h>
+#include <schnapps/plugins/import/plugin_import_export.h>
 
 #include <schnapps/core/plugin_processing.h>
 
@@ -40,6 +40,7 @@ class CMap0Handler;
 class CMap1Handler;
 class CMap2Handler;
 class CMap3Handler;
+class UndirectedGraphHandler;
 }
 
 namespace plugin_import
@@ -49,11 +50,12 @@ using CMap0Handler = plugin_cmap_provider::CMap0Handler;
 using CMap1Handler = plugin_cmap_provider::CMap1Handler;
 using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 using CMap3Handler = plugin_cmap_provider::CMap3Handler;
+using UndirectedGraphHandler = plugin_cmap_provider::UndirectedGraphHandler;
 
 /**
 * @brief Plugin for CGoGN mesh import
 */
-class SCHNAPPS_PLUGIN_IMPORT_API Plugin_Import : public PluginProcessing
+class PLUGIN_IMPORT_EXPORT Plugin_Import : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -74,6 +76,7 @@ private slots:
 
 	void import_point_set_from_file_dialog();
 	void import_polyline_from_file_dialog();
+	void import_graph_from_file_dialog();
 	void import_surface_mesh_from_file_dialog();
 	void import_volume_mesh_from_file_dialog();
 
@@ -81,6 +84,7 @@ public:
 
 	CMap0Handler* import_point_set_from_file(const QString& filename);
 	CMap1Handler* import_polyline_from_file(const QString& filename);
+	UndirectedGraphHandler* import_graph_from_file(const QString& filename);
 	CMap2Handler* import_surface_mesh_from_file(const QString& filename);
 	CMap3Handler* import_volume_mesh_from_file(const QString& filename);
 
@@ -94,6 +98,7 @@ private:
 
 	QAction* import_point_set_action_;
 	QAction* import_polyline_action_;
+	QAction* import_graph_action_;
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
 };

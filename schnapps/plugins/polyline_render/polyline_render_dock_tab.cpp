@@ -39,14 +39,14 @@ PolylineRender_DockTab::PolylineRender_DockTab(SCHNApps* s, Plugin_PolylineRende
 	schnapps_(s),
 	plugin_(p),
 	plugin_cmap_provider_(nullptr),
-	selected_map_(nullptr),
+	selected_object_(nullptr),
 	updating_ui_(false),
 	color_dial_(nullptr),
 	current_color_dial_(0)
 {
 	setupUi(this);
 
-	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
+	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_object_changed()));
 
 	connect(combo_positionVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(position_vbo_changed(int)));
 	connect(combo_colorVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(color_vbo_changed(int)));
@@ -80,27 +80,50 @@ PolylineRender_DockTab::~PolylineRender_DockTab()
 // slots called from UI signals
 /*****************************************************************************/
 
-void PolylineRender_DockTab::selected_map_changed()
+void PolylineRender_DockTab::selected_object_changed()
 {
-	if (selected_map_)
+	if (selected_object_)
 	{
-		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
-		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(selected_object_);
+		UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(selected_object_);
+		if (mh)
+		{
+			disconnect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_added(cgogn::rendering::VBO*)));
+			disconnect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_removed(cgogn::rendering::VBO*)));
+		}
+		if (ugh)
+		{
+			disconnect(ugh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_added(cgogn::rendering::VBO*)));
+			disconnect(ugh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_removed(cgogn::rendering::VBO*)));
+		}
 	}
 
-	selected_map_ = nullptr;
+	selected_object_ = nullptr;
 
 	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
 	if (!currentItems.empty())
 	{
-		const QString& map_name = currentItems[0]->text();
-		selected_map_ = plugin_cmap_provider_->cmap1(map_name);
+		const QString& object_name = currentItems[0]->text();
+		CMap1Handler* mh = plugin_cmap_provider_->cmap1(object_name);
+		UndirectedGraphHandler* ugh = plugin_cmap_provider_->undirected_graph(object_name);
+		if (mh) selected_object_ = mh;
+		if (ugh) selected_object_ = ugh;
 	}
 
-	if (selected_map_)
+	if (selected_object_)
 	{
-		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(selected_object_);
+		UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(selected_object_);
+		if (mh)
+		{
+			connect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+			connect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		}
+		if (ugh)
+		{
+			connect(ugh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+			connect(ugh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		}
 	}
 
 	if (plugin_->check_docktab_activation())
@@ -109,32 +132,46 @@ void PolylineRender_DockTab::selected_map_changed()
 
 void PolylineRender_DockTab::position_vbo_changed(int)
 {
-	if (!updating_ui_ && selected_map_)
-		plugin_->set_position_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_positionVBO->currentText()), false);
+	if (!updating_ui_ && selected_object_)
+	{
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(selected_object_);
+		UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(selected_object_);
+		if (mh)
+			plugin_->set_position_vbo(schnapps_->selected_view(), selected_object_, mh->vbo(combo_positionVBO->currentText()), false);
+		if (ugh)
+			plugin_->set_position_vbo(schnapps_->selected_view(), selected_object_, ugh->vbo(combo_positionVBO->currentText()), false);
+	}
 }
 
 void PolylineRender_DockTab::color_vbo_changed(int)
 {
-	if (!updating_ui_ && selected_map_)
-		plugin_->set_color_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_colorVBO->currentText()), false);
+	if (!updating_ui_ && selected_object_)
+	{
+		CMap1Handler* mh = qobject_cast<CMap1Handler*>(selected_object_);
+		UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(selected_object_);
+		if (mh)
+			plugin_->set_color_vbo(schnapps_->selected_view(), selected_object_, mh->vbo(combo_colorVBO->currentText()), false);
+		if (ugh)
+			plugin_->set_color_vbo(schnapps_->selected_view(), selected_object_, ugh->vbo(combo_colorVBO->currentText()), false);
+	}
 }
 
 void PolylineRender_DockTab::render_vertices_changed(bool b)
 {
-	if (!updating_ui_ && selected_map_)
-		plugin_->set_render_vertices(schnapps_->selected_view(), selected_map_, b, false);
+	if (!updating_ui_ && selected_object_)
+		plugin_->set_render_vertices(schnapps_->selected_view(), selected_object_, b, false);
 }
 
 void PolylineRender_DockTab::vertex_scale_factor_changed(int i)
 {
-	if (!updating_ui_ && selected_map_)
-		plugin_->set_vertex_scale_factor(schnapps_->selected_view(), selected_map_, i / 50.0, false);
+	if (!updating_ui_ && selected_object_)
+		plugin_->set_vertex_scale_factor(schnapps_->selected_view(), selected_object_, i / 50.0, false);
 }
 
 void PolylineRender_DockTab::render_edges_changed(bool b)
 {
-	if (!updating_ui_ && selected_map_)
-		plugin_->set_render_edges(schnapps_->selected_view(), selected_map_, b, false);
+	if (!updating_ui_ && selected_object_)
+		plugin_->set_render_edges(schnapps_->selected_view(), selected_object_, b, false);
 }
 
 void PolylineRender_DockTab::vertex_color_clicked()
@@ -156,20 +193,20 @@ void PolylineRender_DockTab::color_selected()
 	QColor color = color_dial_->currentColor();
 
 	View* view = schnapps_->selected_view();
-	CMap1Handler* mh = selected_map_;
+	Object* o = selected_object_;
 
 	if (current_color_dial_ == 1)
 	{
 		vertex_color_ = color;
 		vertexColorButton->setStyleSheet("QPushButton { background-color:" + color.name() + "}");
-		plugin_->set_vertex_color(view, mh, vertex_color_, false);
+		plugin_->set_vertex_color(view, o, vertex_color_, false);
 	}
 
 	if (current_color_dial_ == 2)
 	{
 		edge_color_ = color;
 		edgeColorButton->setStyleSheet("QPushButton { background-color:" + color.name() + "}");
-		plugin_->set_edge_color(view, mh, edge_color_, false);
+		plugin_->set_edge_color(view, o, edge_color_, false);
 	}
 
 }
@@ -208,39 +245,39 @@ void PolylineRender_DockTab::selected_view_changed(View* old, View* cur)
 void PolylineRender_DockTab::object_linked(Object* o)
 {
 	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
-	if (mh)
-		map_linked(mh);
-}
-
-void PolylineRender_DockTab::map_linked(CMap1Handler* mh)
-{
-	updating_ui_ = true;
-	list_maps->addItem(mh->name());
-	updating_ui_ = false;
+	UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
+	if (mh || ugh)
+		list_maps->addItem(o->name());
 }
 
 void PolylineRender_DockTab::object_unlinked(Object* o)
 {
 	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
-	if (mh)
-		map_unlinked(mh);
-}
-
-void PolylineRender_DockTab::map_unlinked(CMap1Handler* mh)
-{
-	if (selected_map_ == mh)
+	UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
+	if (mh || ugh)
 	{
-		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
-		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
-		selected_map_ = nullptr;
-	}
+		if (selected_object_ == o)
+		{
+			if (mh)
+			{
+				disconnect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_added(cgogn::rendering::VBO*)));
+				disconnect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_removed(cgogn::rendering::VBO*)));
+			}
+			if (ugh)
+			{
+				disconnect(ugh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_added(cgogn::rendering::VBO*)));
+				disconnect(ugh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_object_vbo_removed(cgogn::rendering::VBO*)));
+			}
+			selected_object_ = nullptr;
+		}
 
-	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
-	if (!items.empty())
-	{
-		updating_ui_ = true;
-		delete items[0];
-		updating_ui_ = false;
+		QList<QListWidgetItem*> items = list_maps->findItems(o->name(), Qt::MatchExactly);
+		if (!items.empty())
+		{
+			updating_ui_ = true;
+			delete items[0];
+			updating_ui_ = false;
+		}
 	}
 }
 
@@ -248,7 +285,7 @@ void PolylineRender_DockTab::map_unlinked(CMap1Handler* mh)
 // slots called from CMap1Handler signals
 /*****************************************************************************/
 
-void PolylineRender_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
+void PolylineRender_DockTab::selected_object_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
@@ -260,7 +297,7 @@ void PolylineRender_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 	}
 }
 
-void PolylineRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
+void PolylineRender_DockTab::selected_object_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
@@ -350,13 +387,13 @@ void PolylineRender_DockTab::set_vertex_scale_factor(float sf)
 
 void PolylineRender_DockTab::refresh_ui()
 {
-	CMap1Handler* mh = selected_map_;
+	Object* o = selected_object_;
 	View* view = schnapps_->selected_view();
 
-	if (!mh || !view)
+	if (!o || !view)
 		return;
 
-	const MapParameters& p = plugin_->parameters(view, mh);
+	const MapParameters& p = plugin_->parameters(view, o);
 
 	updating_ui_ = true;
 
@@ -366,8 +403,11 @@ void PolylineRender_DockTab::refresh_ui()
 	combo_colorVBO->clear();
 	combo_colorVBO->addItem("- select VBO -");
 
-	uint32 i = 1;
-	mh->foreach_vbo([&] (cgogn::rendering::VBO* vbo)
+	CMap1Handler* mh = qobject_cast<CMap1Handler*>(o);
+	UndirectedGraphHandler* ugh = qobject_cast<UndirectedGraphHandler*>(o);
+
+	int32 i = 1;
+	auto add_vbo = [&] (cgogn::rendering::VBO* vbo)
 	{
 		if (vbo->vector_dimension() == 3)
 		{
@@ -381,7 +421,12 @@ void PolylineRender_DockTab::refresh_ui()
 
 			++i;
 		}
-	});
+	};
+
+	if (mh)
+		mh->foreach_vbo(add_vbo);
+	if (ugh)
+		ugh->foreach_vbo(add_vbo);
 
 	check_renderVertices->setChecked(p.render_vertices());
 	slider_vertexScaleFactor->setSliderPosition(p.vertex_scale_factor() * 50.0);

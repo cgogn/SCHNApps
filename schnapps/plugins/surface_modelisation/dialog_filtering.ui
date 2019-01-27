@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API</exportmacro>
+ <exportmacro>PLUGIN_SURFACE_MODELISATION_EXPORT</exportmacro>
  <class>Filtering_Dialog</class>
  <widget class="QDialog" name="Filtering_Dialog">
   <property name="geometry">

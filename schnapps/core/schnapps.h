@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_SCHNAPPS_H_
 #define SCHNAPPS_CORE_SCHNAPPS_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <schnapps/core/settings.h>
 #include <schnapps/core/status_bar_output.h>
 #include <schnapps/core/plugin_provider.h>
@@ -52,7 +53,7 @@ class ControlDock_PluginTab;
 /**
  * @brief The SCHNApps central object application
  */
-class SCHNAPPS_CORE_API SCHNApps : public QObject
+class SCHNAPPS_CORE_EXPORT SCHNApps : public QObject
 {
 	Q_OBJECT
 

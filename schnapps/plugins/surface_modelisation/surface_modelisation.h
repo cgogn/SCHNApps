@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
 
-#include <schnapps/plugins/surface_modelisation/dll.h>
+#include <schnapps/plugins/surface_modelisation/plugin_surface_modelisation_export.h>
 #include <schnapps/plugins/surface_modelisation/dialog_decimation.h>
 #include <schnapps/plugins/surface_modelisation/dialog_subdivision.h>
 #include <schnapps/plugins/surface_modelisation/dialog_remeshing.h>
@@ -53,7 +53,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 /**
  * @brief Plugin that exposes some surface modelisation algorithms
  */
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Plugin_SurfaceModelisation : public PluginProcessing
+class PLUGIN_SURFACE_MODELISATION_EXPORT Plugin_SurfaceModelisation : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

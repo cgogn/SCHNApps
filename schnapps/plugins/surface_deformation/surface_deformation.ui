@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
+ <exportmacro>PLUGIN_SURFACE_DEFORMATION_EXPORT</exportmacro>
  <class>SurfaceDeformation_TabWidget</class>
  <widget class="QWidget" name="SurfaceDeformation_TabWidget">
   <property name="geometry">

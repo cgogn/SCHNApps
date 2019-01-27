@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
 #define SCHNAPPS_PLUGIN_POINT_SET_RENDER_H_
 
-#include <schnapps/plugins/polyline_render/dll.h>
+#include <schnapps/plugins/polyline_render/plugin_polyline_render_export.h>
 #include <schnapps/plugins/polyline_render/map_parameters.h>
 
 #include <schnapps/core/types.h>
@@ -37,19 +37,23 @@ namespace schnapps
 {
 
 class View;
-namespace plugin_cmap_provider { class CMap1Handler; }
-
+namespace plugin_cmap_provider
+{
+class CMap1Handler;
+class UndirectedGraphHandler;
+}
 
 namespace plugin_polyline_render
 {
 
 class PolylineRender_DockTab;
 using CMap1Handler = plugin_cmap_provider::CMap1Handler;
+using UndirectedGraphHandler = plugin_cmap_provider::UndirectedGraphHandler;
 
 /**
 * @brief Plugin for surface rendering
 */
-class SCHNAPPS_PLUGIN_POLYLINE_RENDER_API Plugin_PolylineRender : public PluginInteraction
+class PLUGIN_POLYLINE_RENDER_EXPORT Plugin_PolylineRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -61,7 +65,7 @@ public:
 	inline ~Plugin_PolylineRender() override {}
 	static QString plugin_name();
 
-	MapParameters& parameters(View* view, CMap1Handler* mh);
+	MapParameters& parameters(View* view, Object* mh);
 	bool check_docktab_activation();
 
 private:
@@ -95,13 +99,15 @@ private:
 
 	void add_linked_map(View* view, CMap1Handler* mh);
 	void remove_linked_map(View* view, CMap1Handler* mh);
+	void add_linked_undirected_graph(View* view, UndirectedGraphHandler* ugh);
+	void remove_linked_undirected_graph(View* view, UndirectedGraphHandler* ugh);
 
 private slots:
 
 	// slots called from MapHandler signals
-	void linked_map_vbo_added(cgogn::rendering::VBO* vbo);
-	void linked_map_vbo_removed(cgogn::rendering::VBO* vbo);
-	void linked_map_bb_changed();
+	void linked_object_vbo_added(cgogn::rendering::VBO* vbo);
+	void linked_object_vbo_removed(cgogn::rendering::VBO* vbo);
+	void linked_object_bb_changed();
 
 	void viewer_initialized();
 
@@ -109,18 +115,18 @@ private slots:
 
 public:
 
-	void set_position_vbo(View* view, CMap1Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_color_vbo(View* view, CMap1Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_render_vertices(View* view, CMap1Handler* mh, bool b, bool update_dock_tab);
-	void set_render_edges(View* view, CMap1Handler* mh, bool b, bool update_dock_tab);
-	void set_vertex_color(View* view, CMap1Handler* mh, const QColor& color, bool update_dock_tab);
-	void set_edge_color(View* view, CMap1Handler* mh, const QColor& color, bool update_dock_tab);
-	void set_vertex_scale_factor(View* view, CMap1Handler* mh, float32 sf, bool update_dock_tab);
+	void set_position_vbo(View* view, Object* o, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_color_vbo(View* view, Object* o, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_render_vertices(View* view, Object* o, bool b, bool update_dock_tab);
+	void set_render_edges(View* view, Object* o, bool b, bool update_dock_tab);
+	void set_vertex_color(View* view, Object* o, const QColor& color, bool update_dock_tab);
+	void set_edge_color(View* view, Object* o, const QColor& color, bool update_dock_tab);
+	void set_vertex_scale_factor(View* view, Object* o, float32 sf, bool update_dock_tab);
 
 private:
 
 	PolylineRender_DockTab* dock_tab_;
-	std::map<View*, std::map<CMap1Handler*, MapParameters>> parameter_set_;
+	std::map<View*, std::map<Object*, MapParameters>> parameter_set_;
 
 	bool setting_auto_enable_on_selected_view_;
 	QString setting_auto_load_position_attribute_;

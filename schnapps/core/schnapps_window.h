@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_SCHNAPPS_WINDOW_H_
 #define SCHNAPPS_CORE_SCHNAPPS_WINDOW_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 
 #include <ui_schnapps.h>
 
@@ -42,7 +43,7 @@ namespace schnapps
 
 class SCHNApps;
 
-class SCHNAPPS_CORE_API SCHNAppsWindow : public QMainWindow, public Ui::SCHNAppsWindow
+class SCHNAPPS_CORE_EXPORT SCHNAppsWindow : public QMainWindow, public Ui::SCHNAppsWindow
 {
 	Q_OBJECT
 

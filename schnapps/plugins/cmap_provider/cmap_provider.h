@@ -24,12 +24,13 @@
 #ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_H_
 #define SCHNAPPS_PLUGIN_CMAP_PROVIDER_H_
 
-#include <schnapps/plugins/cmap_provider/dll.h>
+#include <schnapps/plugins/cmap_provider/plugin_cmap_provider_export.h>
 
 #include <schnapps/plugins/cmap_provider/cmap0_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap1_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
+#include <schnapps/plugins/cmap_provider/undirected_graph_handler.h>
 
 #include <schnapps/core/plugin_provider.h>
 
@@ -47,7 +48,7 @@ class CMap3Provider_DockTab;
 /**
 * @brief CGoGN CMap2 provider
 */
-class SCHNAPPS_PLUGIN_CMAP_PROVIDER_API Plugin_CMapProvider : public PluginProvider
+class PLUGIN_CMAP_PROVIDER_EXPORT Plugin_CMapProvider : public PluginProvider
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -85,6 +86,11 @@ public:
 	void remove_cmap3(const QString& name);
 	CMap3Handler* duplicate_cmap3(const QString& name);
 	CMap3Handler* cmap3(const QString& name) const;
+
+	UndirectedGraphHandler* add_undirected_graph(const QString& name);
+	void remove_undirected_graph(const QString& name);
+	UndirectedGraphHandler* duplicate_undirected_graph(const QString& name);
+	UndirectedGraphHandler* undirected_graph(const QString& name) const;
 
 private slots:
 

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_POINT_SET_RENDER_API</exportmacro>
+ <exportmacro>PLUGIN_POINT_SET_RENDER_EXPORT</exportmacro>
  <class>PointSetRender_TabWidget</class>
  <widget class="QWidget" name="PointSetRender_TabWidget">
   <property name="geometry">

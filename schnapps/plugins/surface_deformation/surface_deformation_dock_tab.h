@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_DOCK_TAB_H_
 
-#include <schnapps/plugins/surface_deformation/dll.h>
+#include <schnapps/plugins/surface_deformation/plugin_surface_deformation_export.h>
 
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
@@ -54,7 +54,7 @@ using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 template <typename CellType>
 using CMap2CellsSet = CMap2Handler::CMap2CellsSet<CellType>;
 
-class SCHNAPPS_PLUGIN_SURFACE_DEFORMATION_API SurfaceDeformation_DockTab : public QWidget, public Ui::SurfaceDeformation_TabWidget
+class PLUGIN_SURFACE_DEFORMATION_EXPORT SurfaceDeformation_DockTab : public QWidget, public Ui::SurfaceDeformation_TabWidget
 {
 	Q_OBJECT
 
