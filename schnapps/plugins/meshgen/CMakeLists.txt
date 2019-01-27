@@ -38,17 +38,21 @@ target_sources(${PROJECT_NAME}
 		"${CMAKE_CURRENT_LIST_DIR}/meshgen_dialog.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/netgen_export.ui"
 		"${CMAKE_CURRENT_LIST_DIR}/tetgen_export.ui"
-		$<$<BOOL:CGAL_FOUND>:${CMAKE_CURRENT_LIST_DIR}/cgal/cgogn_surface_to_cgal_polyhedron.cpp>
-		$<$<BOOL:CGAL_FOUND>:${CMAKE_CURRENT_LIST_DIR}/cgal/c3t3_import.cpp>
-		$<$<BOOL:CGAL_FOUND>:${CMAKE_CURRENT_LIST_DIR}/cgal_export.ui>
 )
 
-target_compile_definitions(${PROJECT_NAME}
-	PUBLIC
-		$<$<BOOL:CGAL_FOUND>:PLUGIN_MESHGEN_WITH_CGAL>
-		$<$<BOOL:WITH_CGAL_ImageIO>:PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO>
-		$<$<BOOL:CGAL_FOUND>:BOOST_PARAMETER_MAX_ARITY=12>
-)
+if (CGAL_FOUND)
+	target_sources(${PROJECT_NAME}
+		PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/cgal/cgogn_surface_to_cgal_polyhedron.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/cgal/c3t3_import.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/cgal_export.ui"
+		)
+endif()
+
+
+if (CGAL_FOUND)
+	target_compile_definitions(${PROJECT_NAME} PUBLIC PLUGIN_MESHGEN_WITH_CGAL PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO BOOST_PARAMETER_MAX_ARITY=12)
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>

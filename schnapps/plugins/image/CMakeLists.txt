@@ -40,20 +40,22 @@ target_sources(${PROJECT_NAME}
 		"${CMAKE_CURRENT_LIST_DIR}/image_dock_tab.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/image.ui"
 		"${CMAKE_CURRENT_LIST_DIR}/image.h"
-		$<$<BOOL:CGAL_FOUND>:${CMAKE_CURRENT_LIST_DIR}/cgal/cgal_image.cpp>
 )
+if (CGAL_FOUND)
+	target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/cgal/cgal_image.cpp")
+endif()
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-			DEBUG_POSTFIX "_d"
-			EXPORT_NAME image)
+set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d" EXPORT_NAME image)
 
 
-target_compile_definitions(${PROJECT_NAME}
-	PRIVATE
-		"-DSCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT"
-		"$<$<BOOL:CGAL_FOUND>:PLUGIN_IMAGE_WITH_CGAL>"
-		"$<$<BOOL:Boost_IOSTREAMS_FOUND>:SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM=1>"
-)
+target_compile_definitions(${PROJECT_NAME} PRIVATE SCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT)
+if (CGAL_FOUND)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE PLUGIN_IMAGE_WITH_CGAL)
+endif()
+if (Boost_IOSTREAMS_FOUND)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM=1)
+endif()
+
 
 if(CGAL_FOUND AND WIN32)
 	link_directories(${CGAL_LIBRARIES_DIR})
@@ -62,9 +64,11 @@ endif()
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
 	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
-	$<BUILD_INTERFACE:$<$<BOOL:CGAL_FOUND>:${CGAL_INCLUDE_DIRS}>>
+	$<BUILD_INTERFACE:$<$<BOOL:${CGAL_FOUND}>:${CGAL_INCLUDE_DIRS}>>
 )
-
+if (CGAL_FOUND)
+	target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CGAL_INCLUDE_DIRS}>)
+endif()
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
@@ -72,13 +76,18 @@ target_link_libraries(${PROJECT_NAME}
 	cgogn::io
 	Qt5::Widgets
 	cgogn::QOGLViewer
-	$<$<BOOL:CGAL_FOUND>:Boost::system>
-	$<$<BOOL:CGAL_FOUND>:Boost::thread>
-	$<$<BOOL:Boost_IOSTREAMS_FOUND>:Boost::iostreams>
-	$<$<AND:$<BOOL:WIN32>,$<BOOL:Boost_IOSTREAMS_FOUND>>:Boost::zlib>
 	${CGAL_LIBRARIES}
 )
 
+if (CGAL_FOUND)
+	target_link_libraries(${PROJECT_NAME} Boost::system Boost::thread)
+endif()
+if (Boost_IOSTREAMS_FOUND)
+	target_link_libraries(${PROJECT_NAME} Boost::iostreams)
+	if (WIN32)
+		target_link_libraries(${PROJECT_NAME} Boost::zlib)
+	endif()
+endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/image
