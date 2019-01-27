@@ -101,6 +101,8 @@ SCHNApps::SCHNApps(
 
 	connect(first_view_, &View::viewerInitialized, [this, &init_plugin_name] ()
 	{
+		if (init_plugin_name.isEmpty())
+			return;
 		if (enable_plugin("init_" + init_plugin_name))
 			cgogn_log_info("SCHNApps") << "Init Plugin \"" <<  init_plugin_name.toStdString() << "\" successfully loaded.";
 		else
