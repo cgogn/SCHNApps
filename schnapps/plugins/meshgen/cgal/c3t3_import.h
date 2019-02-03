@@ -26,11 +26,14 @@
 #define SCHNAPPS_PLUGIN_MESHGEN_C3T3_IMPORT_H
 
 #include <dll.h>
-#include <meshgen.h>
+#include <schnapps/plugins/meshgen/meshgen.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 #include <cgogn/io/volume_import.h>
 
+#include <iterator>
+#include <cstddef>
+#include <boost/iterator.hpp>
 #include <CGAL/Mesh_triangulation_3.h>
 #include <CGAL/refine_mesh_3.h>
 #include <CGAL/Mesh_complex_3_in_triangulation_3.h>
