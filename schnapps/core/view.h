@@ -292,7 +292,7 @@ protected:
 	std::unique_ptr<cgogn::rendering::DisplayListDrawer::Renderer> frame_drawer_renderer_;
 
 	bool save_snapshots_;
-
+	bool show_bbs_;
 	bool updating_ui_;
 };
 
