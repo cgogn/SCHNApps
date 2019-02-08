@@ -30,6 +30,7 @@
 #include <schnapps/core/types.h>
 #include <cgogn/core/cmap/cmap2.h>
 #include <QAction>
+#include <QMenu>
 
 namespace schnapps
 {
@@ -181,6 +182,9 @@ public slots:
 	void generate_button_netgen_pressed();
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
+
+private slots:
+	void image_context_menu_created(QMenu* menu, const QString& im_name);
 };
 
 } // namespace plugin_meshgen

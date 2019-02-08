@@ -178,6 +178,8 @@ public slots:
 	void image_removed(const QString& name);
 	void export_image_to_point_set(const QString& name);
 
+signals:
+	void context_menu_created(QMenu*, const QString& image_name);
 
 private:
 	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;

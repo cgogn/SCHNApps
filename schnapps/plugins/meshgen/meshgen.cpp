@@ -148,6 +148,9 @@ bool Plugin_VolumeMeshFromSurface::enable()
 	if (!plugin_cmap_provider_)
 		return false;
 
+	if (plugin_image_)
+		connect(plugin_image_, SIGNAL(context_menu_created(QMenu*, QString)), this, SLOT(image_context_menu_created(QMenu*, QString)));
+
 	schnapps_->foreach_object([&](Object* im)
 	{
 		dialog_->image_added(im);
@@ -159,6 +162,17 @@ bool Plugin_VolumeMeshFromSurface::enable()
 void Plugin_VolumeMeshFromSurface::disable()
 {
 	schnapps_->remove_menu_action(gen_mesh_action_);
+}
+
+void Plugin_VolumeMeshFromSurface::image_context_menu_created(QMenu* menu, const QString& im_name)
+{
+	if (!menu)
+		return;
+
+	connect(menu->addAction("Tetrahedralize"), &QAction::triggered, [&]()
+	{
+		this->generate_from_image(im_name);
+	});
 }
 
 void Plugin_VolumeMeshFromSurface::generate_button_netgen_pressed()
