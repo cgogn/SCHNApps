@@ -269,7 +269,7 @@ void Plugin_PointSetRender::linked_map_bb_changed()
 		if (view_param_set.count(mh) > 0ul)
 		{
 			MapParameters& p = view_param_set[mh];
-			p.set_vertex_base_size(mh->bb_diagonal_size() / (2 * std::sqrt(nbv)));
+			p.set_vertex_base_size(1.5f * mh->bb_diagonal_size() / std::sqrt(float(nbv)));
 		}
 	}
 
