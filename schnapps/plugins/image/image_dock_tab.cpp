@@ -62,7 +62,7 @@ void Image_DockTab::showContextMenu(const QPoint& point)
 
 	// Create menu and insert some actions
 	QMenu menu;
-	connect(menu.addAction("Temove"), &QAction::triggered, [&]() {plugin_->image_removed(name);});
+	connect(menu.addAction("Remove"), &QAction::triggered, [&]() {plugin_->image_removed(name);});
 	connect(menu.addAction("Export as point set"), &QAction::triggered, [&]() {plugin_->export_image_to_point_set(name);});
 
 	plugin_meshgen::Plugin_VolumeMeshFromSurface* meshgen  = static_cast<plugin_meshgen::Plugin_VolumeMeshFromSurface*>(schnapps_->plugin(plugin_meshgen::Plugin_VolumeMeshFromSurface::plugin_name()));
