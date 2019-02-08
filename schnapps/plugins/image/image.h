@@ -140,11 +140,11 @@ public:
 	template <typename T>
 	using ChunkArray = typename Inherit::template ChunkArray<T>;
 
-	inline ImagePointSetImport(CMap0& map) : Inherit(map) {}
+	ImagePointSetImport(CMap0& map);
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(ImagePointSetImport);
-	virtual ~ImagePointSetImport() override {}
+	virtual ~ImagePointSetImport() override;
 
-	bool import_image(const Image3D& im);
+	bool import_image(const Image3D& im, double threshold);
 };
 
 
@@ -172,6 +172,7 @@ public:
 
 private slots:
 	void import_image_dialog();
+	void threshold_changed(double t);
 
 public slots:
 	void image_removed(const QString& name);
@@ -182,6 +183,7 @@ private:
 	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 	QAction* import_image_action_;
 	Image_DockTab*	dock_tab_;
+	double export_point_set_threshold_;
 };
 
 /**

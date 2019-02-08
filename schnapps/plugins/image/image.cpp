@@ -58,7 +58,8 @@ Image3D::value_type const& Image3D::operator()(std::size_t i, std::size_t j, std
 Plugin_Image::Plugin_Image() :
 	plugin_cmap_provider_(nullptr),
 	import_image_action_(nullptr),
-	dock_tab_(nullptr)
+	dock_tab_(nullptr),
+	export_point_set_threshold_(0.01)
 {
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
@@ -78,6 +79,9 @@ bool Plugin_Image::enable()
 
 	dock_tab_ = new Image_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Image3D");
+
+	dock_tab_->threshold_spinbox->setValue(export_point_set_threshold_);
+	connect(dock_tab_->threshold_spinbox, SIGNAL(valueChanged(double)), this, SLOT(threshold_changed(double)));
 	return true;
 }
 
@@ -135,6 +139,11 @@ void Plugin_Image::import_image_dialog()
 		add_image(im);
 }
 
+void Plugin_Image::threshold_changed(double t)
+{
+	export_point_set_threshold_ = t;
+}
+
 void Plugin_Image::image_removed(const QString& name)
 {
 	if (objects_.count(name) > 0ul)
@@ -164,12 +173,27 @@ void Plugin_Image::export_image_to_point_set(const QString& name)
 		{
 			if (!plugin_cmap_provider_)
 				plugin_cmap_provider_  = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
-			plugin_cmap_provider::CMap0Handler* mh0 = plugin_cmap_provider_->add_cmap0(im->name());
-			ImagePointSetImport importer(*(mh0->map()));
-			if (importer.import_image(*im))
+			plugin_cmap_provider::CMap0Handler* mh = plugin_cmap_provider_->add_cmap0(im->name());
+			auto* map = mh->map();
+			ImagePointSetImport importer(*map);
+			if (importer.import_image(*im, export_point_set_threshold_))
 			{
 				importer.create_map();
-				mh0->notify_connectivity_change();
+				mh->notify_connectivity_change();
+				if (map->is_embedded<CMap0::Vertex>())
+				{
+					const auto& container = map->attribute_container<CMap0::Vertex::ORBIT>();
+					const std::vector<std::string>& names = container.names();
+					for (std::size_t i = 0u; i < names.size(); ++i)
+						mh->notify_attribute_added(CMap0::Vertex::ORBIT, QString::fromStdString(names[i]));
+				}
+
+
+				if (map->nb_cells<CMap0::Vertex>() > 0)
+				{
+					mh->create_vbo("position");
+					mh->set_bb_vertex_attribute("position");
+				}
 			} else {
 				cgogn_log_warning("Plugin_Image") << "Unable to export the image \"" << im->name().toStdString() << "\" to point set.";
 			}
@@ -499,7 +523,14 @@ SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
 }
 
 
-bool ImagePointSetImport::import_image(const Image3D& im)
+ImagePointSetImport::ImagePointSetImport(CMap0& map) :
+	Inherit(map)
+{}
+
+ImagePointSetImport::~ImagePointSetImport()
+{}
+
+bool ImagePointSetImport::import_image(const Image3D& im, double threshold)
 {
 	ChunkArray<VEC3>* position = this->template add_vertex_attribute<VEC3>("position");
 
@@ -514,7 +545,7 @@ bool ImagePointSetImport::import_image(const Image3D& im)
 		{
 			for (std::size_t k = 0 ; k < nz ; ++k)
 			{
-				if (std::fabs(Scalar(im(i,j,k)) >= Scalar(0.001)))
+				if (std::fabs(double(im(i,j,k)) >= threshold))
 				{
 					++nb_vertices_;
 					const auto p = im.position(i,j,k);

@@ -281,16 +281,18 @@ void Plugin_VolumeMeshFromSurface::generate_from_image(const QString& im_name)
 #endif // PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 }
 
-#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(const plugin_image::Image3D* im, const CGALParameters& params)
 {
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 	if (!im)
 		return nullptr;
 	MapHandler3* mh3 = plugin_cmap_provider_->add_cmap3("cgal_image_export");
 	tetrahedralize(params, im, mh3);
 	return mh3;
+#else
+	return nullptr;
+#endif // SCHNAPPS_PLUGIN_IMAGE_API
 }
-#endif
 
 void Plugin_VolumeMeshFromSurface::generate_button_cgal_pressed()
 {

@@ -39,7 +39,7 @@ namespace plugin_image
 
 class Plugin_Image;
 
-class Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
+class SCHNAPPS_PLUGIN_IMAGE_API Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
 {
 	Q_OBJECT
 
