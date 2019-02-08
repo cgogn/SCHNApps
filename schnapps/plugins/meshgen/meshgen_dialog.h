@@ -26,7 +26,6 @@
 #define SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_
 
 #include <schnapps/plugins/meshgen/dll.h>
-
 #include <schnapps/core/types.h>
 
 #include <ui_cgal_export.h>

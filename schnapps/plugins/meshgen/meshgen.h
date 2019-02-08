@@ -26,11 +26,10 @@
 #define SCHNAPPS_PLUGIN_MESHGEN_H_
 
 #include <schnapps/plugins/meshgen/dll.h>
-#include <schnapps/plugins/meshgen/meshgen_dialog.h>
-
 #include <schnapps/core/plugin_processing.h>
-
+#include <schnapps/core/types.h>
 #include <cgogn/core/cmap/cmap2.h>
+#include <QAction>
 
 namespace schnapps
 {
@@ -56,6 +55,7 @@ class Plugin_CMapProvider;
 namespace plugin_meshgen
 {
 
+class VolumeMeshFromSurfaceDialog;
 class Plugin_VolumeMeshFromSurface;
 
 struct SCHNAPPS_PLUGIN_MESHGEN_API TetgenParameters
@@ -157,12 +157,13 @@ public:
 	using MapHandler3 = plugin_cmap_provider::CMap3Handler;
 
 	Plugin_VolumeMeshFromSurface();
-	inline ~Plugin_VolumeMeshFromSurface() override {}
+	~Plugin_VolumeMeshFromSurface() override;
 	static QString plugin_name();
 
 	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const NetgenParameters& params);
 	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args);
 	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const CGALParameters& params);
+	void generate_from_image(const QString& im_name);
 #ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const CGALParameters& params);
 #endif

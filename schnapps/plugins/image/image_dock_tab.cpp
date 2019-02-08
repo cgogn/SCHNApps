@@ -25,6 +25,7 @@
 #include <schnapps/plugins/image/image_dock_tab.h>
 #include <schnapps/plugins/image/image.h>
 #include <schnapps/core/schnapps.h>
+#include <schnapps/plugins/meshgen/meshgen.h>
 #include <QMenu>
 
 namespace schnapps
@@ -61,8 +62,17 @@ void Image_DockTab::showContextMenu(const QPoint& point)
 
 	// Create menu and insert some actions
 	QMenu menu;
-	connect(menu.addAction("remove"), &QAction::triggered, [&]() {plugin_->image_removed(name);});
-	connect(menu.addAction("export as point set"), &QAction::triggered, [&]() {plugin_->export_image_to_point_set(name);});
+	connect(menu.addAction("Temove"), &QAction::triggered, [&]() {plugin_->image_removed(name);});
+	connect(menu.addAction("Export as point set"), &QAction::triggered, [&]() {plugin_->export_image_to_point_set(name);});
+
+	plugin_meshgen::Plugin_VolumeMeshFromSurface* meshgen  = static_cast<plugin_meshgen::Plugin_VolumeMeshFromSurface*>(schnapps_->plugin(plugin_meshgen::Plugin_VolumeMeshFromSurface::plugin_name()));
+	if (meshgen)
+	{
+		connect(menu.addAction("Tetrahedralize"), &QAction::triggered, [&]()
+		{
+			meshgen->generate_from_image(name);
+		});
+	}
 	menu.exec(global_pos);
 }
 

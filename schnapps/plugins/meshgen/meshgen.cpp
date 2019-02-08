@@ -23,6 +23,7 @@
 *******************************************************************************/
 
 #include <schnapps/plugins/meshgen/meshgen.h>
+#include <schnapps/plugins/meshgen/meshgen_dialog.h>
 #include <schnapps/plugins/meshgen/tetgen_structure_io.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
@@ -117,6 +118,9 @@ Plugin_VolumeMeshFromSurface::Plugin_VolumeMeshFromSurface() :
 	this->name_ = SCHNAPPS_PLUGIN_NAME;
 }
 
+Plugin_VolumeMeshFromSurface::~Plugin_VolumeMeshFromSurface()
+{}
+
 QString Plugin_VolumeMeshFromSurface::plugin_name()
 {
 	return SCHNAPPS_PLUGIN_NAME;
@@ -146,7 +150,7 @@ bool Plugin_VolumeMeshFromSurface::enable()
 
 	schnapps_->foreach_object([&](Object* im)
 	{
-			dialog_->image_added(im);
+		dialog_->image_added(im);
 	});
 
 	return true;
@@ -267,18 +271,24 @@ Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generat
 #endif // PLUGIN_MESHGEN_WITH_CGAL
 }
 
+
+void Plugin_VolumeMeshFromSurface::generate_from_image(const QString& im_name)
+{
+#ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
+	dialog_->show_export_dialog();
+	dialog_->export_dialog_->comboBox_images->setCurrentIndex(dialog_->export_dialog_->comboBox_images->findText(im_name, Qt::MatchExactly));
+	dialog_->export_dialog_->comboBox_generator->setCurrentIndex(dialog_->export_dialog_->comboBox_generator->findText(QString::fromStdString("cgal"), Qt::MatchExactly));
+#endif // PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
+}
+
 #ifdef PLUGIN_MESHGEN_WITH_CGAL_IMAGEIO
 Plugin_VolumeMeshFromSurface::MapHandler3* Plugin_VolumeMeshFromSurface::generate_cgal(const plugin_image::Image3D* im, const CGALParameters& params)
 {
-#ifdef PLUGIN_MESHGEN_WITH_CGAL
 	if (!im)
 		return nullptr;
 	MapHandler3* mh3 = plugin_cmap_provider_->add_cmap3("cgal_image_export");
 	tetrahedralize(params, im, mh3);
 	return mh3;
-#else
-	return nullptr;
-#endif // PLUGIN_MESHGEN_WITH_CGAL
 }
 #endif
 
