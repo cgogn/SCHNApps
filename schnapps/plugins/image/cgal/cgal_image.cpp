@@ -33,8 +33,6 @@ namespace plugin_image
 
 SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const schnapps::plugin_image::Image3D& im)
 {
-	using DataType = cgogn::io::DataType;
-
 	const auto& dims = im.get_image_dimensions();
 	const auto& voxel_dims = im.get_voxel_dimensions();
 

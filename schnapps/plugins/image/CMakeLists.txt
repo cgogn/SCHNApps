@@ -71,6 +71,7 @@ endif()
 
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
+	schnapps::cmap_provider
 	cgogn::core
 	cgogn::io
 	Qt5::Widgets

@@ -24,6 +24,7 @@
 
 #include <schnapps/plugins/image/image.h>
 #include <schnapps/plugins/image/image_dock_tab.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
 
@@ -47,7 +48,15 @@ namespace schnapps
 namespace plugin_image
 {
 
+Image3D::value_type const& Image3D::operator()(std::size_t i, std::size_t j, std::size_t k) const
+{
+	return static_cast<const value_type*>(data_->data())[get_nb_components() * ((k * image_dim_[1] + j) * image_dim_[0] + i)];
+}
+
+
+
 Plugin_Image::Plugin_Image() :
+	plugin_cmap_provider_(nullptr),
 	import_image_action_(nullptr),
 	dock_tab_(nullptr)
 {
@@ -100,7 +109,7 @@ void Plugin_Image::add_image(const QString& image_path)
 		}
 
 		Image3D* im = Image3D::new_image_3d(image_path, final_name, this);
-		if (im->is_empty())
+		if (!im || im->is_empty())
 		{
 			delete im;
 			return;
@@ -126,24 +135,43 @@ void Plugin_Image::import_image_dialog()
 		add_image(im);
 }
 
-void Plugin_Image::image_removed()
+void Plugin_Image::image_removed(const QString& name)
 {
-	const int current_image_id = dock_tab_->listWidget_images->currentRow();
-	if (current_image_id >= 0)
+	if (objects_.count(name) > 0ul)
 	{
-		QListWidgetItem* curr_item = dock_tab_->listWidget_images->currentItem();
-		const QString name = curr_item->text();
-
-		if (objects_.count(name) > 0ul)
+		Image3D* im = dynamic_cast<Image3D*>(objects_.at(name));
+		if (im)
 		{
-			Image3D* im = dynamic_cast<Image3D*>(objects_.at(name));
-			if (im)
+			auto items = dock_tab_->listWidget_images->findItems(name, Qt::MatchExactly);
+			for (QListWidgetItem* item : items)
 			{
-				dock_tab_->listWidget_images->removeItemWidget(curr_item);
-				delete curr_item;
-				schnapps_->notify_object_removed(im);
-				objects_.erase(name);
-				delete im;
+				dock_tab_->listWidget_images->removeItemWidget(item);
+				delete item;
+			}
+			schnapps_->notify_object_removed(im);
+			objects_.erase(name);
+			delete im;
+		}
+	}
+}
+
+void Plugin_Image::export_image_to_point_set(const QString& name)
+{
+	if (objects_.count(name) > 0ul)
+	{
+		Image3D* im = dynamic_cast<Image3D*>(objects_.at(name));
+		if (im)
+		{
+			if (!plugin_cmap_provider_)
+				plugin_cmap_provider_  = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
+			plugin_cmap_provider::CMap0Handler* mh0 = plugin_cmap_provider_->add_cmap0(im->name());
+			ImagePointSetImport importer(*(mh0->map()));
+			if (importer.import_image(*im))
+			{
+				importer.create_map();
+				mh0->notify_connectivity_change();
+			} else {
+				cgogn_log_warning("Plugin_Image") << "Unable to export the image \"" << im->name().toStdString() << "\" to point set.";
 			}
 		}
 	}
@@ -217,8 +245,14 @@ void Image3D::import_inr(std::istream& inr_data)
 
 	std::getline(sstream, line);
 
-	while (!line.empty() && line[0] != '#')
+	while (line != "##}")
 	{
+		if (line.empty())
+		{
+			std::getline(sstream, line);
+			continue;
+		}
+
 		if (line.compare(0,5,"XDIM=") == 0)
 			this->image_dim_[0] = std::stoul(line.substr(5));
 		if (line.compare(0,5,"YDIM=") == 0)
@@ -376,7 +410,7 @@ void Image3D::import_vtk(std::istream& vtk_data)
 				word = to_upper(word);
 				if (word == "SCALARS" || word == "VECTOR")
 				{
-					const bool is_vector = !(word == "SCALARS");
+					const bool is_vector = (word != "SCALARS");
 					std::string att_name;
 					std::string att_type;
 					nb_components_ = is_vector? 3u : 1u;
@@ -462,6 +496,35 @@ SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
 	cgogn_log_warning("schnapps::plugin_image::uncompress_gz_file") << "The plugin need boost_iostreams to uncompress .gz files.";
 	return QString();
 #endif // SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
+}
+
+
+bool ImagePointSetImport::import_image(const Image3D& im)
+{
+	ChunkArray<VEC3>* position = this->template add_vertex_attribute<VEC3>("position");
+
+	// reading number of points
+	const std::size_t nx = im.get_image_dimensions()[0];
+	const std::size_t ny = im.get_image_dimensions()[1];
+	const std::size_t nz = im.get_image_dimensions()[2];
+
+	for (std::size_t i = 0 ; i < nx ; ++i)
+	{
+		for (std::size_t j = 0 ; j < ny  ; ++j)
+		{
+			for (std::size_t k = 0 ; k < nz ; ++k)
+			{
+				if (std::fabs(Scalar(im(i,j,k)) >= Scalar(0.001)))
+				{
+					++nb_vertices_;
+					const auto p = im.position(i,j,k);
+					const uint32 vertex_id = this->insert_line_vertex_container();
+					(*position)[vertex_id] = VEC3(p[0], p[1], p[2]);
+				}
+			}
+		}
+	}
+	return true;
 }
 
 } // namespace plugin_image

@@ -33,6 +33,7 @@
 #include <cgogn/core/utils/endian.h>
 #include <cgogn/core/utils/logger.h>
 #include <cgogn/io/data_io.h>
+#include <cgogn/io/point_set_import.h>
 
 #include <QAction>
 
@@ -47,13 +48,18 @@
 namespace schnapps
 {
 
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+} // namespace plugin_cmap_provider
+
 namespace plugin_image
 {
 
 using namespace cgogn::numerics;
 class Image_DockTab;
 
-class SCHNAPPS_PLUGIN_IMAGE_API Image3D : public Object
+class SCHNAPPS_PLUGIN_IMAGE_API Image3D final : public Object
 {
 public:
 
@@ -77,12 +83,24 @@ public:
 	Image3D& operator=(const Image3D&) = delete;
 
 	void const * data() const { return data_->data(); }
+
+	value_type const& operator()(std::size_t i, std::size_t j, std::size_t k) const;
+
+	inline std::array<float64,3> position(std::size_t i, std::size_t j, std::size_t k) const
+	{
+		// ignoring rotation
+		return {
+			origin_[0] + float64(i)* voxel_dim_[0],
+			origin_[1] + float64(j)* voxel_dim_[1],
+			origin_[2] + float64(k)* voxel_dim_[2]
+		};
+	}
 	inline std::array<uint64, 3> const& get_image_dimensions() const { return image_dim_; }
 	inline std::array<float64, 3> const& get_origin() const { return origin_; }
 	inline std::array<float64, 3> const& get_voxel_dimensions() const { return voxel_dim_; }
 	inline std::array<float64, 3> const& get_translation() const { return translation_; }
 	inline std::array<float64, 3> const& get_rotation() const { return rotation_; }
-	inline uint8 get_nb_components() const { return nb_components_; }
+	inline uint32 get_nb_components() const { return nb_components_; }
 	inline bool is_little_endian() const { return cgogn::internal::cgogn_is_little_endian ; }
 	inline std::size_t get_data_size() const { return data_->data_size();}
 	inline DataType get_data_type() const { return data_->data_type(); }
@@ -111,6 +129,25 @@ private:
 	void view_unlinked(View* view);
 };
 
+
+
+class SCHNAPPS_PLUGIN_IMAGE_API ImagePointSetImport final: public cgogn::io::PointSetImport<CMap0>
+{
+public:
+
+	using Inherit = cgogn::io::PointSetImport<CMap0>;
+	using Scalar = typename cgogn::geometry::vector_traits<VEC3>::Scalar;
+	template <typename T>
+	using ChunkArray = typename Inherit::template ChunkArray<T>;
+
+	inline ImagePointSetImport(CMap0& map) : Inherit(map) {}
+	CGOGN_NOT_COPYABLE_NOR_MOVABLE(ImagePointSetImport);
+	virtual ~ImagePointSetImport() override {}
+
+	bool import_image(const Image3D& im);
+};
+
+
 class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProvider
 {
 	Q_OBJECT
@@ -134,13 +171,15 @@ public:
 	const Image3D* image(const QString& im_name) const;
 
 private slots:
-
 	void import_image_dialog();
-	void image_removed();
+
+public slots:
+	void image_removed(const QString& name);
+	void export_image_to_point_set(const QString& name);
 
 
 private:
-
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 	QAction* import_image_action_;
 	Image_DockTab*	dock_tab_;
 };

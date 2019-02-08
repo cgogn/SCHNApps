@@ -25,6 +25,7 @@
 #include <schnapps/plugins/image/image_dock_tab.h>
 #include <schnapps/plugins/image/image.h>
 #include <schnapps/core/schnapps.h>
+#include <QMenu>
 
 namespace schnapps
 {
@@ -44,7 +45,25 @@ Image_DockTab::Image_DockTab(SCHNApps* s, Plugin_Image* p) :
 			new QListWidgetItem(o->name(), this->listWidget_images);
 	});
 
-	connect(this->pushButton_remove, SIGNAL(pressed()), p, SLOT(image_removed()));
+	listWidget_images->setContextMenuPolicy(Qt::CustomContextMenu);
+	connect(listWidget_images, SIGNAL(customContextMenuRequested(QPoint)), this,SLOT(showContextMenu(QPoint)));
+	//connect(this->pushButton_remove, SIGNAL(pressed()), p, SLOT(image_removed()));
+}
+
+void Image_DockTab::showContextMenu(const QPoint& point)
+{
+	auto* item = listWidget_images->itemAt(point);
+	if (!item)
+		return;
+
+	const QString name = item->text();
+	QPoint global_pos = listWidget_images->mapToGlobal(point);
+
+	// Create menu and insert some actions
+	QMenu menu;
+	connect(menu.addAction("remove"), &QAction::triggered, [&]() {plugin_->image_removed(name);});
+	connect(menu.addAction("export as point set"), &QAction::triggered, [&]() {plugin_->export_image_to_point_set(name);});
+	menu.exec(global_pos);
 }
 
 } // namespace schnapps

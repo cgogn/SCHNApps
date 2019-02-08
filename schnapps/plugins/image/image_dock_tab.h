@@ -48,6 +48,8 @@ class Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
 public:
 	Image_DockTab(SCHNApps* s, Plugin_Image* p);
 
+private slots:
+	void showContextMenu(const QPoint& point);
 private:
 	SCHNApps* schnapps_;
 	Plugin_Image* plugin_;
