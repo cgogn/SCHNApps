@@ -42,9 +42,15 @@ CMap0Handler::CMap0Handler(const QString& name, PluginProvider* p) :
 CMap0Handler::~CMap0Handler()
 {}
 
-CMap0*CMap0Handler::map() { return static_cast<CMap0*>(map_); }
+CMap0*CMap0Handler::map()
+{
+	return static_cast<CMap0*>(map_);
+}
 
-const CMap0*CMap0Handler::map() const { return static_cast<const CMap0*>(map_); }
+const CMap0*CMap0Handler::map() const
+{
+	return static_cast<const CMap0*>(map_);
+}
 
 /*********************************************************
  * MANAGE DRAWING
