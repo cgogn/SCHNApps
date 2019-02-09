@@ -34,15 +34,17 @@ namespace plugin_cmap_provider
 {
 
 CMap0Handler::CMap0Handler(const QString& name, PluginProvider* p) :
-	Object(name, p)
+	CMapHandlerGen(name, p)
 {
 	map_ = new CMap0();
 }
 
 CMap0Handler::~CMap0Handler()
-{
-	delete map_;
-}
+{}
+
+CMap0*CMap0Handler::map() { return static_cast<CMap0*>(map_); }
+
+const CMap0*CMap0Handler::map() const { return static_cast<const CMap0*>(map_); }
 
 /*********************************************************
  * MANAGE DRAWING
@@ -53,7 +55,7 @@ void CMap0Handler::draw(cgogn::rendering::DrawingType primitive)
 	if (!render_.is_primitive_uptodate(primitive))
 	{
 		lock_topo_access();
-		render_.init_primitives(*map_, primitive);
+		render_.init_primitives(*map(), primitive);
 		unlock_topo_access();
 	}
 	render_.draw(primitive);
@@ -61,7 +63,7 @@ void CMap0Handler::draw(cgogn::rendering::DrawingType primitive)
 
 void CMap0Handler::init_primitives(cgogn::rendering::DrawingType primitive)
 {
-	render_.init_primitives(*map_, primitive);
+	render_.init_primitives(*map(), primitive);
 }
 
 /*********************************************************
@@ -73,10 +75,10 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 	cgogn::rendering::VBO* vbo = this->vbo(name);
 	if (!vbo)
 	{
-		if (!map_->has_attribute(CMap0::Vertex::ORBIT, name.toStdString()))
+		if (!map()->has_attribute(CMap0::Vertex::ORBIT, name.toStdString()))
 			return nullptr;
 
-		const CMap0::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC3F> va3f = map()->get_attribute<VEC3F, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va3f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -86,7 +88,7 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap0::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC3D> va3d = map()->get_attribute<VEC3D, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va3d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -96,7 +98,7 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap0::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<float32> vaf32 = map()->get_attribute<float32, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (vaf32.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -106,7 +108,7 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap0::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<float64> vaf64 = map()->get_attribute<float64, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (vaf64.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -116,7 +118,7 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap0::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC4F> va4f = map()->get_attribute<VEC4F, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va4f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -126,7 +128,7 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap0::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC4D> va4d = map()->get_attribute<VEC4D, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va4d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -136,7 +138,7 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap0::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC2F> va2f = map()->get_attribute<VEC2F, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va2f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -146,7 +148,7 @@ cgogn::rendering::VBO* CMap0Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap0::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC2D> va2d = map()->get_attribute<VEC2D, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va2d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -185,7 +187,7 @@ void CMap0Handler::update_vbo(const QString& name)
 	cgogn::rendering::VBO* vbo = this->vbo(name);
 	if (vbo)
 	{
-		const CMap0::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC3F> va3f = map()->get_attribute<VEC3F, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va3f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -193,7 +195,7 @@ void CMap0Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap0::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC3D> va3d = map()->get_attribute<VEC3D, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va3d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -201,7 +203,7 @@ void CMap0Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap0::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<float32> vaf32 = map()->get_attribute<float32, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (vaf32.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -209,7 +211,7 @@ void CMap0Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap0::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<float64> vaf64 = map()->get_attribute<float64, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (vaf64.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -217,7 +219,7 @@ void CMap0Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap0::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC4F> va4f = map()->get_attribute<VEC4F, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va4f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -225,7 +227,7 @@ void CMap0Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap0::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC4D> va4d = map()->get_attribute<VEC4D, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va4d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -233,7 +235,7 @@ void CMap0Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap0::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC2F> va2f = map()->get_attribute<VEC2F, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va2f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -241,7 +243,7 @@ void CMap0Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap0::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, CMap0::Vertex::ORBIT>(name.toStdString());
+		const CMap0::VertexAttribute<VEC2D> va2d = map()->get_attribute<VEC2D, CMap0::Vertex::ORBIT>(name.toStdString());
 		if (va2d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -267,145 +269,31 @@ void CMap0Handler::update_vbo(const QString& name)
 	}
 }
 
-cgogn::rendering::VBO* CMap0Handler::vbo(const QString& name) const
-{
-	if (vbos_.count(name) > 0ul)
-		return vbos_.at(name).get();
-	else
-		return nullptr;
-}
-
-void CMap0Handler::delete_vbo(const QString &name)
-{
-	if (vbos_.count(name) > 0ul)
-	{
-		auto vbo = std::move(vbos_.at(name));
-		vbos_.erase(name);
-		emit(vbo_removed(vbo.get()));
-	}
-}
 
 /**********************************************************
  * MANAGE CELLS SETS                                      *
  *********************************************************/
 
-CMapCellsSetGen* CMap0Handler::add_cells_set(cgogn::Orbit orbit, QString name)
+CMapCellsSetGen* CMap0Handler::new_cell_set(cgogn::Orbit orbit, const QString& name)
 {
-	if (this->cells_sets_.count(name) > 0ul)
+	if (orbit == CMap0::Vertex::ORBIT)
+		return new CMap0CellsSet<CMap0::Vertex>(*this, name);
+	else
 		return nullptr;
-
-	CMapCellsSetGen* cells_set = nullptr;
-
-	switch (orbit)
-	{
-		case CMap0::Vertex::ORBIT:
-			cells_set = new CMap0CellsSet<CMap0::Vertex>(*this, name);
-			break;
-		default:
-			break;
-	}
-
-	if (cells_set)
-	{
-		cells_sets_.insert(std::make_pair(name, cells_set));
-		emit(cells_set_added(orbit, name));
-		connect(this, SIGNAL(connectivity_changed()), cells_set, SLOT(rebuild()));
-	}
-
-	return cells_set;
 }
 
-void CMap0Handler::remove_cells_set(cgogn::Orbit orbit, const QString& name)
-{
-	const auto cells_set_it = cells_sets_.find(name);
-	if (cells_set_it == cells_sets_.end())
-		return;
-
-	disconnect(this, SIGNAL(connectivity_changed()), cells_set_it->second, SLOT(rebuild()));
-
-	emit(cells_set_removed(orbit, name));
-	delete cells_set_it->second;
-	cells_sets_.erase(cells_set_it);
-}
 
 /*********************************************************
  * MANAGE BOUNDING BOX
  *********************************************************/
 
-QString CMap0Handler::bb_vertex_attribute_name() const
+
+std::unique_ptr<cgogn::Attribute_T<VEC3>> CMap0Handler::get_bb_vertex_attribute(const QString& attribute_name) const
 {
-	if (bb_vertex_attribute_.is_valid())
-		return QString::fromStdString(bb_vertex_attribute_.name());
-	else
-		return QString();
+	auto  attribute = map()->template get_attribute<VEC3, CMap0::Vertex::ORBIT>(attribute_name.toStdString());
+	return std::unique_ptr< cgogn::Attribute<VEC3, CMap0::Vertex::ORBIT> >(new cgogn::Attribute<VEC3, CMap0::Vertex::ORBIT> (attribute));
 }
 
-void CMap0Handler::set_bb_vertex_attribute(const QString& attribute_name)
-{
-	bb_vertex_attribute_ = map_->template get_attribute<VEC3, CMap0::Vertex::ORBIT>(attribute_name.toStdString());
-	if (bb_vertex_attribute_.is_valid())
-	{
-		compute_bb();
-		this->update_bb_drawer();
-		emit(bb_vertex_attribute_changed(attribute_name));
-		emit(bb_changed());
-	}
-}
-
-void CMap0Handler::check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name)
-{
-	if (bb_vertex_attribute_.is_valid())
-	{
-		QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
-		if (orbit == CMap0::Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
-		{
-			compute_bb();
-			this->update_bb_drawer();
-			emit(bb_changed());
-		}
-	}
-}
-
-void CMap0Handler::compute_bb()
-{
-	this->bb_diagonal_size_ = .0f;
-	this->bb_.reset();
-
-	if (bb_vertex_attribute_.is_valid())
-		cgogn::geometry::compute_AABB(bb_vertex_attribute_, this->bb_);
-	if (this->bb_.is_initialized())
-		this->bb_diagonal_size_ = cgogn::geometry::diagonal(this->bb_).norm();
-}
-
-/*********************************************************
- * MANAGE ATTRIBUTES & CONNECTIVITY
- *********************************************************/
-
-void CMap0Handler::notify_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
-{
-	emit(attribute_added(orbit, attribute_name));
-}
-
-void CMap0Handler::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
-{
-	update_vbo(attribute_name);
-	check_bb_vertex_attribute(orbit, attribute_name);
-
-	emit(attribute_changed(orbit, attribute_name));
-
-	for (View* view : views_)
-		view->update();
-}
-
-void CMap0Handler::notify_connectivity_change()
-{
-	render_.set_primitive_dirty(cgogn::rendering::POINTS);
-
-	emit(connectivity_changed());
-
-	for (View* view : views_)
-		view->update();
-}
 
 } // namespace plugin_cmap_provider
 
