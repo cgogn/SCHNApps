@@ -218,17 +218,17 @@ public:
 		this->mutually_exclusive_ = b;
 
 		std::vector<Self*> mex;
-		mh_.template foreach_cells_set<CellType>([&] (Self* cs)
+		mh_.foreach_cells_set(orbit(), [&] (Inherit* cs)
 		{
 			if (cs->is_mutually_exclusive())
-				mex.push_back(cs);
+				mex.push_back(static_cast<Self*>(cs));
 		});
-		mh_.template foreach_cells_set<CellType>([&] (Self* cs)
+		mh_.foreach_cells_set(orbit(), [&] (Inherit* cs)
 		{
-			cs->set_mutually_exclusive_sets(mex);
+			static_cast<Self*>(cs)->set_mutually_exclusive_sets(mex);
 		});
 
-		mh_.template notify_cells_set_mutually_exclusive_change<CellType>(this->name_);
+		mh_.notify_cells_set_mutually_exclusive_change(orbit(), this->name_);
 	}
 
 	inline void rebuild() override
