@@ -110,7 +110,7 @@ void SurfaceDeformation_DockTab::free_vertex_set_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 	{
-		CMap2CellsSet<CMap2::Vertex>* cs = selected_map_->cells_set<CMap2::Vertex>(combo_freeVertexSet->currentText());
+		CMap2CellsSet<CMap2::Vertex>* cs = static_cast<CMap2CellsSet<CMap2::Vertex>*>(selected_map_->cells_set(CMap2::Vertex::ORBIT, combo_freeVertexSet->currentText()));
 		plugin_->set_free_vertex_set(selected_map_, cs, false);
 	}
 }
@@ -119,7 +119,7 @@ void SurfaceDeformation_DockTab::handle_vertex_set_changed(int)
 {
 	if (!updating_ui_ && selected_map_)
 	{
-		CMap2CellsSet<CMap2::Vertex>* cs = selected_map_->cells_set<CMap2::Vertex>(combo_handleVertexSet->currentText());
+		CMap2CellsSet<CMap2::Vertex>* cs = static_cast<CMap2CellsSet<CMap2::Vertex>*>(selected_map_->cells_set(CMap2::Vertex::ORBIT, combo_handleVertexSet->currentText()));
 		plugin_->set_handle_vertex_set(selected_map_, cs, false);
 	}
 }
@@ -369,7 +369,7 @@ void SurfaceDeformation_DockTab::refresh_ui()
 	CMap2CellsSet<CMap2::Vertex>* hvs = p.handle_vertex_set();
 
 	i = 1;
-	mh->foreach_cells_set<CMap2::Vertex>([&] (CMap2CellsSet<CMap2::Vertex>* cells_set)
+	mh->foreach_cells_set(CMap2::Vertex::ORBIT, [&] (CMapCellsSetGen* cells_set)
 	{
 		combo_freeVertexSet->addItem(cells_set->name());
 		if (cells_set == fvs)

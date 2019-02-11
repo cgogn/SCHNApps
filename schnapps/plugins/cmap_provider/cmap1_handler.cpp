@@ -42,12 +42,12 @@ CMap1Handler::CMap1Handler(const QString& name, PluginProvider* p) :
 CMap1Handler::~CMap1Handler()
 {}
 
-CMap1*CMap1Handler::map()
+CMap1* CMap1Handler::map()
 {
 	return static_cast<CMap1*>(map_);
 }
 
-const CMap1*CMap1Handler::map() const
+const CMap1* CMap1Handler::map() const
 {
 	return static_cast<const CMap1*>(map_);
 }
