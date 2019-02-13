@@ -216,6 +216,11 @@ void CMapHandlerGen::notify_attribute_added(cgogn::Orbit orbit, const QString& a
 	emit(attribute_added(orbit, attribute_name));
 }
 
+void CMapHandlerGen::notify_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name)
+{
+	emit(attribute_removed(orbit, attribute_name));
+}
+
 void CMapHandlerGen::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	update_vbo(attribute_name);

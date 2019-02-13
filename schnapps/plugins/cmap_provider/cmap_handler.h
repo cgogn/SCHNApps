@@ -38,6 +38,14 @@ namespace plugin_cmap_provider
 
 class CMapCellsSetGen;
 
+enum CMapType
+{
+	CMAP0 = 0,
+	CMAP1,
+	CMAP2,
+	CMAP3,
+	UNDIRECTED_GRAPH
+};
 
 class PLUGIN_CMAP_PROVIDER_EXPORT CMapHandlerGen : public Object
 {
@@ -54,11 +62,20 @@ public:
 	CMapHandlerGen(const QString& name, PluginProvider* p);
 	~CMapHandlerGen() override;
 
+	virtual CMapType type() const = 0;
 	virtual MapBaseData* map();
 	virtual const MapBaseData* map() const;
 
 	void view_linked(View*);
 	void view_unlinked(View*);
+
+	/**************************************************************************
+	 * Generic map traversal                                                  *
+	 * Use these functions only when you don't know the exact type of the map *
+	 * to avoid the extra cost of std::function                               *
+	 *************************************************************************/
+
+	virtual void foreach_cell(cgogn::Orbit orb, const std::function<void(cgogn::Dart)>& func) const = 0;
 
 	/**********************************************************
 	 * MANAGE DRAWING                                         *

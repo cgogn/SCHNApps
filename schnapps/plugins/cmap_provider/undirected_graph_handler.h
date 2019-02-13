@@ -67,9 +67,11 @@ public:
 	 * BASIC FUNCTIONS                                        *
 	 *********************************************************/
 
+	CMapType type() const override;
 	UndirectedGraph* map()  override;
 	const UndirectedGraph* map() const override;
 
+	void foreach_cell(cgogn::Orbit orb, const std::function<void(cgogn::Dart)>& func) const override;
 
 	/**********************************************************
 	 * MANAGE DRAWING                                         *

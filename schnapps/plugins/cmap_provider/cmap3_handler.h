@@ -63,12 +63,13 @@ public:
 	CMap3Handler(const QString& name, PluginProvider* p);
 	~CMap3Handler();
 
-public:
+	void foreach_cell(cgogn::Orbit orb, const std::function<void(cgogn::Dart)>& func) const override;
 
 	/**********************************************************
 	 * BASIC FUNCTIONS                                        *
 	 *********************************************************/
 
+	CMapType type() const override;
 	CMap3*map() override;
 	const CMap3*map() const override;
 

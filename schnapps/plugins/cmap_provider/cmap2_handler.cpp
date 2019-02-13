@@ -53,6 +53,35 @@ const CMap2* CMap2Handler::map() const
 	return static_cast<const CMap2*>(map_);
 }
 
+void CMap2Handler::foreach_cell(cgogn::Orbit orb, const std::function<void (cgogn::Dart)>& func) const
+{
+	switch(orb)
+	{
+		case cgogn::Orbit::DART:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::DART> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI2:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI2> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI21:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI21> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1_PHI2:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1_PHI2> d) { func(d.dart); });
+			break;
+		default:
+			cgogn_log_warning("CMap2Handler::foreach_cell") << "The orbit \"" << cgogn::orbit_name(orb) << "\" is not valid for this map type.";
+			break;
+	}
+}
+
+CMapType CMap2Handler::type() const
+{
+	return CMapType::CMAP2;
+}
 
 /*********************************************************
  * MANAGE DRAWING

@@ -63,15 +63,16 @@ public:
 	CMap0Handler(const QString& name, PluginProvider* p);
 	~CMap0Handler();
 
-public:
 
 	/**********************************************************
 	 * BASIC FUNCTIONS                                        *
 	 *********************************************************/
 
+	CMapType type() const override;
 	CMap0* map() override;
 	const CMap0* map() const override;
 
+	void foreach_cell(cgogn::Orbit orb, const std::function<void(cgogn::Dart)>& func) const override;
 
 	/**********************************************************
 	 * MANAGE DRAWING                                         *

@@ -42,6 +42,27 @@ CMap1Handler::CMap1Handler(const QString& name, PluginProvider* p) :
 CMap1Handler::~CMap1Handler()
 {}
 
+void CMap1Handler::foreach_cell(cgogn::Orbit orb, const std::function<void (cgogn::Dart)>& func) const
+{
+	switch(orb)
+	{
+		case cgogn::Orbit::DART:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::DART> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1> d) { func(d.dart); });
+			break;
+		default:
+			cgogn_log_warning("CMap1Handler::foreach_cell") << "The orbit \"" << cgogn::orbit_name(orb) << "\" is not valid for this map type.";
+			break;
+	}
+}
+
+CMapType CMap1Handler::type() const
+{
+	return CMapType::CMAP1;
+}
+
 CMap1* CMap1Handler::map()
 {
 	return static_cast<CMap1*>(map_);

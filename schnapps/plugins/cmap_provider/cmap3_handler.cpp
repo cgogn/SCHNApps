@@ -54,7 +54,47 @@ const CMap3* CMap3Handler::map() const
 	return static_cast<const CMap3*>(map_);
 }
 
+void CMap3Handler::foreach_cell(cgogn::Orbit orb, const std::function<void (cgogn::Dart)>& func) const
+{
+	switch(orb)
+	{
+		case cgogn::Orbit::DART:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::DART> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI2:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI2> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI21:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI21> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1_PHI2:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1_PHI2> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1_PHI3:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1_PHI3> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI2_PHI3:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI2_PHI3> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI21_PHI31:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI21_PHI31> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1_PHI2_PHI3:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1_PHI2_PHI3> d) { func(d.dart); });
+			break;
+		default:
+			cgogn_log_warning("CMap3Handler::foreach_cell") << "The orbit \"" << cgogn::orbit_name(orb) << "\" is not valid for this map type.";
+			break;
+	}
+}
 
+CMapType CMap3Handler::type() const
+{
+	return CMapType::CMAP3;
+}
 
 /*********************************************************
  * MANAGE DRAWING

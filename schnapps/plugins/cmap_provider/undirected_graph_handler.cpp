@@ -42,14 +42,42 @@ UndirectedGraphHandler::UndirectedGraphHandler(const QString& name, PluginProvid
 UndirectedGraphHandler::~UndirectedGraphHandler()
 {}
 
+CMapType UndirectedGraphHandler::type() const
+{
+	return CMapType::UNDIRECTED_GRAPH;
+}
+
 const UndirectedGraph* UndirectedGraphHandler::map() const
 {
 	return static_cast<const UndirectedGraph*>(map_);
 }
 
+
 UndirectedGraph* UndirectedGraphHandler::map()
 {
 	return static_cast<UndirectedGraph*>(map_);
+}
+
+void UndirectedGraphHandler::foreach_cell(cgogn::Orbit orb, const std::function<void (cgogn::Dart)>& func) const
+{
+	switch(orb)
+	{
+		case cgogn::Orbit::DART:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::DART> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI2:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI2> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI21:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI21> d) { func(d.dart); });
+			break;
+		default:
+			cgogn_log_warning("UndirectedGraphHandler::foreach_cell") << "The orbit \"" << cgogn::orbit_name(orb) << "\" is not valid for this map type.";
+			break;
+	}
 }
 
 /*********************************************************
