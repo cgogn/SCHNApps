@@ -440,8 +440,15 @@ void View::draw()
 			plugin->draw_object(this, o, pm, o_mm);
 	}
 
+	PluginInteraction* tr_charged = nullptr;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->draw(this, pm, mm);
+		if(plugin->name() != QString("render_transparency"))
+			plugin->draw(this, pm, mm);
+		else
+			tr_charged = plugin;
+
+	if(tr_charged != nullptr)
+		tr_charged->draw(this, pm, mm);
 }
 
 void View::postDraw()
