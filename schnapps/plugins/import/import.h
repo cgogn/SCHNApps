@@ -101,6 +101,13 @@ private:
 	QAction* import_graph_action_;
 	QAction* import_surface_mesh_action_;
 	QAction* import_volume_mesh_action_;
+
+	QString point_set_filter_;
+	QString polyline_filter_;
+	QString graph_filter_;
+	QString surface_filter_;
+	QString volume_filter_;
+
 };
 
 } // namespace plugin_import
