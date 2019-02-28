@@ -61,6 +61,7 @@ View::View(const QString& name, SCHNApps* s) :
 	frame_drawer_(nullptr),
 	frame_drawer_renderer_(nullptr),
 	save_snapshots_(false),
+	show_bbs_(true),
 	updating_ui_(false)
 {
 	++view_count_;
@@ -432,14 +433,22 @@ void View::draw()
 		QMatrix4x4 o_mm = mm * o->frame_matrix() * o->transformation_matrix();
 
 //		if (o->show_bb())
+		if(show_bbs_)
 			o->draw_bb(this, pm, o_mm);
 
 		for (PluginInteraction* plugin : plugins_)
 			plugin->draw_object(this, o, pm, o_mm);
 	}
 
+	PluginInteraction* tr_charged = nullptr;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->draw(this, pm, mm);
+		if(plugin->name() != QString("render_transparency"))
+			plugin->draw(this, pm, mm);
+		else
+			tr_charged = plugin;
+
+	if(tr_charged != nullptr)
+		tr_charged->draw(this, pm, mm);
 }
 
 void View::postDraw()
@@ -489,6 +498,10 @@ void View::keyPressEvent(QKeyEvent* event)
 	{
 		case Qt::Key_V:
 			schnapps_->cycle_selected_view();
+			break;
+
+		case Qt::Key_B:
+			show_bbs_ = !show_bbs_;
 			break;
 
 		case Qt::Key_F: {
