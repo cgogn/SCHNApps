@@ -496,7 +496,7 @@ void Image3D::view_unlinked(View* /*view*/)
 
 }
 
-SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
+PLUGIN_IMAGE_EXPORT QString uncompress_gz_file(const QString& filename_in)
 {
 #ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 	if (!QFileInfo::exists(filename_in))

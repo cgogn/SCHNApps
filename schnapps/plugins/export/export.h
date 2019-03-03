@@ -24,10 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_EXPORT_H_
 #define SCHNAPPS_PLUGIN_EXPORT_H_
 
+#include <schnapps/plugins/export/plugin_export_export.h>
 #include <schnapps/core/plugin_processing.h>
-#include <schnapps/plugins/export/dll.h>
-
-
 #include <cgogn/io/map_export.h>
 
 class QAction;
@@ -56,7 +54,7 @@ class ExportDialog;
 /**
 * @brief Plugin for CGoGN mesh export
 */
-class SCHNAPPS_PLUGIN_EXPORT_API Plugin_Export : public PluginProcessing
+class PLUGIN_EXPORT_EXPORT Plugin_Export : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

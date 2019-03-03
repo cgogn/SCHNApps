@@ -5,6 +5,7 @@ project(plugin_extract_surface
 
 find_package(schnapps_core REQUIRED)
 find_package(cgogn_io REQUIRED)
+find_package(plugin_cmap_provider REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED "")
 add_library(schnapps::extract_surface ALIAS plugin_extract_surface)
@@ -17,7 +18,6 @@ target_sources(${PROJECT_NAME}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_EXTRACT_SURFACE_DLL_EXPORT")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
@@ -26,12 +26,23 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
+generate_export_header(plugin_extract_surface)
+
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
 	cgogn::io
 	schnapps::cmap_provider
-	cgogn::core
-	Qt5::Widgets
-	Qt5::Core
 )
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/extract_surface
+	COMPONENT schnapps_plugins_headers
+	FILES_MATCHING PATTERN "*.h"
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugin_extract_surface_export.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/extract_surface
+	COMPONENT schnapps_plugins_headers
+)
+
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "plugins")

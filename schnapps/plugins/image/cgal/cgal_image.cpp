@@ -31,7 +31,7 @@ namespace schnapps
 namespace plugin_image
 {
 
-SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const schnapps::plugin_image::Image3D& im)
+PLUGIN_IMAGE_EXPORT CGAL::Image_3 export_to_cgal_image(const schnapps::plugin_image::Image3D& im)
 {
 	const auto& dims = im.get_image_dimensions();
 	const auto& voxel_dims = im.get_voxel_dimensions();
@@ -67,7 +67,7 @@ SCHNAPPS_PLUGIN_IMAGE_API CGAL::Image_3 export_to_cgal_image(const schnapps::plu
 	return CGAL::Image_3(image);
 }
 
-SCHNAPPS_PLUGIN_IMAGE_API WORD_KIND get_cgal_word_kind(cgogn::io::DataType data_type)
+PLUGIN_IMAGE_EXPORT WORD_KIND get_cgal_word_kind(cgogn::io::DataType data_type)
 {
 	using DataType = cgogn::io::DataType;
 
@@ -77,7 +77,7 @@ SCHNAPPS_PLUGIN_IMAGE_API WORD_KIND get_cgal_word_kind(cgogn::io::DataType data_
 		return WK_FIXED;
 }
 
-SCHNAPPS_PLUGIN_IMAGE_API SIGN get_cgal_sign(cgogn::io::DataType data_type)
+PLUGIN_IMAGE_EXPORT SIGN get_cgal_sign(cgogn::io::DataType data_type)
 {
 	using DataType = cgogn::io::DataType;
 

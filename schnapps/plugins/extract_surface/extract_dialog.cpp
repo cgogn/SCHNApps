@@ -22,7 +22,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/extract_surface/dll.h>
 #include <schnapps/plugins/extract_surface/extract_surface.h>
 #include <schnapps/plugins/extract_surface/extract_dialog.h>
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>

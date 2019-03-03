@@ -25,8 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 
-#include <schnapps/plugins/image/dll.h>
-
+#include <schnapps/plugins/image/plugin_image_export.h>
 #include <ui_image.h>
 
 namespace schnapps
@@ -39,7 +38,7 @@ namespace plugin_image
 
 class Plugin_Image;
 
-class SCHNAPPS_PLUGIN_IMAGE_API Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
+class PLUGIN_IMAGE_EXPORT Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
 {
 	Q_OBJECT
 

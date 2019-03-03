@@ -21,7 +21,6 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <schnapps/plugins/merge/dll.h>
 #include <schnapps/plugins/merge/merge.h>
 #include <schnapps/plugins/merge/merge_dialog.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>

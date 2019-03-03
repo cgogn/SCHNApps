@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 #define SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 
-#include <schnapps/plugins/export/dll.h>
+#include <schnapps/plugins/export/plugin_export_export.h>
 #include <ui_export_dialog.h>
 
 namespace cgogn
@@ -58,7 +58,7 @@ namespace plugin_export
 
 class Plugin_Export;
 
-class SCHNAPPS_PLUGIN_EXPORT_API ExportDialog : public QDialog, public Ui::ExportDialog
+class PLUGIN_EXPORT_EXPORT ExportDialog : public QDialog, public Ui::ExportDialog
 {
 	Q_OBJECT
 

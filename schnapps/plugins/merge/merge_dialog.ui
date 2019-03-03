@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_MERGE_PLUGIN_API</exportmacro>
+ <exportmacro>PLUGIN_MERGE_EXPORT</exportmacro>
  <class>MergeDialog</class>
  <widget class="QDialog" name="MergeDialog">
   <property name="geometry">
