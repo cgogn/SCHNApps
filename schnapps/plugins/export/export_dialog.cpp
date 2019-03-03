@@ -72,12 +72,14 @@ void ExportDialog::selected_map_changed(const QString& map_name)
 	list_vertexAttributes->clear();
 	list_cellAttributes->clear();
 
-	if (auto m2 = plugin_->map_provider()->cmap2(map_name))
+	auto m2 = plugin_->map_provider()->cmap2(map_name);
+	auto m3 = plugin_->map_provider()->cmap3(map_name);
+	if (m2)
 	{
 		selected_map_ = m2;
 		selected_map_changed(m2);
 	} else {
-		if (auto m3 = plugin_->map_provider()->cmap3(map_name))
+		if (m3)
 		{
 			selected_map_ = m3;
 			selected_map_changed(m3);
@@ -152,7 +154,25 @@ void ExportDialog::position_attribute_changed(const QString& pos_name)
 
 void ExportDialog::choose_file()
 {
-	QString filename = QFileDialog::getSaveFileName(nullptr, "file name", schnapps_->app_path(), "Surface Mesh Files (*.ply *.off *.stl *.vtk *.vtp *.obj);; Volume Mesh Files (*.vtk *.vtu *.tet *.nas)");
+	if (!selected_map_)
+	{
+		cgogn_log_warning("plugin_export") << "Unable to chose a filename when no map is selected";
+		return;
+	}
+
+	QString extensions;
+	if (dynamic_cast<plugin_cmap_provider::CMap0Handler*>(selected_map_))
+		extensions = "Point set mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::point_set_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::CMap1Handler*>(selected_map_))
+		extensions = "Polyline mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::polyline_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::CMap2Handler*>(selected_map_))
+		extensions = "Surface mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::surface_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::CMap3Handler*>(selected_map_))
+		extensions = "Volume mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::volume_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::UndirectedGraphHandler*>(selected_map_))
+		extensions = "Graph Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::graph_file_type_map, " ")) +")";
+
+	QString filename = QFileDialog::getSaveFileName(nullptr, "Filename", schnapps_->app_path(), extensions);
 	if (!filename.isEmpty())
 		lineEdit_output->setText(filename);
 	else
