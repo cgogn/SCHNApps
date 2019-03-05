@@ -25,8 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
 
-#include <schnapps/plugins/attribute_editor/dll.h>
-
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
 #include <ui_add_attribute_dialog.h>
 
 namespace schnapps
@@ -40,7 +39,7 @@ namespace plugin_attribute_editor
 
 class AttributeEditorPlugin;
 
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AddAttributeDialog : public QDialog, public Ui::AddAttribute
+class PLUGIN_ATTRIBUTE_EDITOR_EXPORT AddAttributeDialog : public QDialog, public Ui::AddAttribute
 {
 	Q_OBJECT
 	friend class AttributeEditorPlugin;

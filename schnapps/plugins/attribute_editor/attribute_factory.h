@@ -25,7 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_FACTORY_H_
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_FACTORY_H_
 
-#include <schnapps/plugins/attribute_editor/dll.h>
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
 #include <cgogn/core/cmap/attribute.h>
 #include <string>

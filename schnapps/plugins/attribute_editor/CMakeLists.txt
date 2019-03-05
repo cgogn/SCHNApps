@@ -10,7 +10,6 @@ add_library(schnapps::attribute_editor ALIAS plugin_attribute_editor)
 
 target_sources(${PROJECT_NAME}
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/dll.h"
 		"${CMAKE_CURRENT_LIST_DIR}/attribute_editor.h"
 		"${CMAKE_CURRENT_LIST_DIR}/attribute_editor.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/add_attribute_dialog.h"
@@ -31,6 +30,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+generate_export_header(plugin_attribute_editor)
+
+
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
 	schnapps::cmap_provider
@@ -39,6 +41,10 @@ target_link_libraries(${PROJECT_NAME}
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/attribute_editor
 	FILES_MATCHING PATTERN "*.h"
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugin_attribute_editor_export.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/attribute_editor
+	COMPONENT schnapps_plugins_headers
 )
 
 schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")

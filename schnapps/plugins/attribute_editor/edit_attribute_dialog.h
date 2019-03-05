@@ -22,10 +22,10 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H
-#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H
+#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_
+#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_
 
-#include <schnapps/plugins/attribute_editor/dll.h>
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
 #include <schnapps/core/types.h>
 #include <ui_edit_attribute_dialog.h>
 #include <cgogn/core/basic/cell.h>
@@ -41,7 +41,7 @@ namespace plugin_attribute_editor
 
 class AttributeEditorPlugin;
 
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API EditAttributeDialog : public QDialog, public Ui::EditAttribute
+class PLUGIN_ATTRIBUTE_EDITOR_EXPORT EditAttributeDialog : public QDialog, public Ui::EditAttribute
 {
 	Q_OBJECT
 	friend class AttributeEditorPlugin;
@@ -71,4 +71,4 @@ private:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H
+#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_

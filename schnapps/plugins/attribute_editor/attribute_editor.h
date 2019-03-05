@@ -25,7 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
 
-#include <schnapps/plugins/attribute_editor/dll.h>
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/types.h>
 #include <cgogn/core/basic/cell.h>
@@ -47,11 +47,11 @@ namespace plugin_attribute_editor
 class AddAttributeDialog;
 class EditAttributeDialog;
 
-cgogn::Orbit SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API orbit_from_string(const QString& str);
-QStringList SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API get_attribute_names(const plugin_cmap_provider::CMapHandlerGen* mhg, cgogn::Orbit orb);
-const std::vector<cgogn::Orbit> SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API available_orbits(const plugin_cmap_provider::CMapHandlerGen* mhg);
+cgogn::Orbit PLUGIN_ATTRIBUTE_EDITOR_EXPORT orbit_from_string(const QString& str);
+QStringList PLUGIN_ATTRIBUTE_EDITOR_EXPORT get_attribute_names(const plugin_cmap_provider::CMapHandlerGen* mhg, cgogn::Orbit orb);
+const std::vector<cgogn::Orbit> PLUGIN_ATTRIBUTE_EDITOR_EXPORT available_orbits(const plugin_cmap_provider::CMapHandlerGen* mhg);
 
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AttributeEditorPlugin : public PluginProcessing
+class PLUGIN_ATTRIBUTE_EDITOR_EXPORT AttributeEditorPlugin : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API</exportmacro>
+ <exportmacro>PLUGIN_ATTRIBUTE_EDITOR_EXPORT</exportmacro>
  <class>EditAttribute</class>
  <widget class="QDialog" name="EditAttribute">
   <property name="geometry">
