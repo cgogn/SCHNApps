@@ -68,7 +68,8 @@ public:
 	 * BASIC FUNCTIONS                                        *
 	 *********************************************************/
 
-	inline CMap0* map() const { return map_; }
+	inline CMap0* map() { return map_; }
+	inline const CMap0* map() const { return map_; }
 
 	void view_linked(View*) {}
 	void view_unlinked(View*) {}
@@ -165,54 +166,15 @@ public:
 	 * MANAGE BOUNDING BOX
 	 *********************************************************/
 
-	QString bb_vertex_attribute_name() const
-	{
-		if (bb_vertex_attribute_.is_valid())
-			return QString::fromStdString(bb_vertex_attribute_.name());
-		else
-			return QString();
-	}
+	QString bb_vertex_attribute_name() const;
 
-	void set_bb_vertex_attribute(const QString& attribute_name)
-	{
-		bb_vertex_attribute_ = map_->template get_attribute<VEC3, CMap0::Vertex::ORBIT>(attribute_name.toStdString());
-		if (bb_vertex_attribute_.is_valid())
-		{
-			compute_bb();
-			this->update_bb_drawer();
-			emit(bb_vertex_attribute_changed(attribute_name));
-			emit(bb_changed());
-		}
-	}
+	void set_bb_vertex_attribute(const QString& attribute_name);
 
-	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name)
-	{
-		if (bb_vertex_attribute_.is_valid())
-		{
-			QString bb_vertex_attribute_name = QString::fromStdString(bb_vertex_attribute_.name());
-			if (orbit == CMap0::Vertex::ORBIT && attribute_name == bb_vertex_attribute_name)
-			{
-				compute_bb();
-				this->update_bb_drawer();
-				emit(bb_changed());
-			}
-		}
-	}
+	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name);
 
 private:
 
-	void compute_bb()
-	{
-		this->bb_.reset();
-
-		if (bb_vertex_attribute_.is_valid())
-			cgogn::geometry::compute_AABB(bb_vertex_attribute_, this->bb_);
-
-		if (this->bb_.is_initialized())
-			this->bb_diagonal_size_ = cgogn::geometry::diagonal(this->bb_).norm();
-		else
-			this->bb_diagonal_size_ = .0f;
-	}
+	void compute_bb();
 
 	/**********************************************************
 	 * MANAGE ATTRIBUTES & CONNECTIVITY                       *

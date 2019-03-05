@@ -13,6 +13,7 @@ addons:
     apt:
       sources:
         - ubuntu-toolchain-r-test
+        - sourceline: "ppa:samuel-bachmann/boost"
         - sourceline: "ppa:beineri/opt-qt58-trusty"
         - sourceline: "ppa:corentinjabot/cmake-backport" #cmake 3.7.2
         # for cmake 3.12 use ppa:dluxen/cmake-backports
@@ -25,22 +26,46 @@ addons:
         - cmake
         - libeigen3-dev
         - libtinyxml2-dev/trusty-backports
+        - libboost-system1.60-dev
+        - libboost-iostreams1.60-dev
+        - libboost-thread1.60-dev
+        - libboost-program-options1.60-dev
+        - libgmp-dev
+        - libmpfr-dev
+        - zlib1g-dev
     homebrew:
       packages:
         - qt5
         - eigen
         - tinyxml2
-
-script:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-        source /opt/qt58/bin/qt58-env.sh ;
-      fi
+        - boost
 
 branches:
     only:
       - develop
 
 install:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then (brew update || true) && brew uninstall --ignore-dependencies cgal;  fi
+    # Build CGAL from source
+    - wget https://github.com/CGAL/cgal/releases/download/releases/CGAL-4.11.1/CGAL-4.11.1.zip
+    - unzip CGAL-4.11.1.zip
+    - cd CGAL-4.11.1
+    - mkdir build
+    - cd build
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then  
+        cmake .. -DWITH_CGAL_Qt5=OFF -DWITH_demos=OFF -DWITH_examples=OFF -DWITH_CGAL_ImageIO=TRUE -DCMAKE_CXX_COMPILER=g++-5 -DCMAKE_C_COMPILER=gcc-5 ;
+      fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+        cmake .. -DWITH_CGAL_Qt5=OFF -DWITH_demos=OFF -DWITH_examples=OFF -DWITH_CGAL_ImageIO=TRUE -DCMAKE_PREFIX_PATH=$(brew --prefix qt) ;
+      fi
+    - make
+    - sudo make install
+    - cd ../../
+
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+        source /opt/qt58/bin/qt58-env.sh ;
+      fi
+
     - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2
     - cd CGoGN_2
     - mkdir build

@@ -8,6 +8,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
 
 find_package(schnapps_core REQUIRED)
 find_package(cgogn_io REQUIRED)
+find_package(plugin_cmap_provider REQUIRED)
 
 add_library(${PROJECT_NAME} SHARED "")
 add_library(schnapps::import ALIAS plugin_import)
@@ -18,9 +19,7 @@ target_sources(${PROJECT_NAME}
 		"${CMAKE_CURRENT_LIST_DIR}/import.cpp"
 )
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
-										DEBUG_POSTFIX "_d"
-										EXPORT_NAME import)
+set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d" EXPORT_NAME import)
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>

@@ -27,10 +27,11 @@ image:
 
 configuration:
   - Release
-  - Debug
 
 environment:
   CMAKE_TOOLCHAIN_FILE: -DCMAKE_TOOLCHAIN_FILE="C:\tools\vcpkg\scripts\buildsystems\vcpkg.cmake"
+  BOOST_ROOT: C:\Libraries\boost_1_67_0
+  CGAL_DIR: C:\CGAL\build
   matrix:
     - arch: x64
 
@@ -55,7 +56,24 @@ install:
         zlib
         eigen3
         tinyxml2
+        mpir
+        mpfr
         --triplet %arch%-windows
+  - appveyor DownloadFile https://github.com/CGAL/cgal/releases/download/releases/CGAL-4.13/CGAL-4.13.zip -FileName CGAL.zip
+  - 7z x CGAL.zip > nul
+  - move c:\projects\myproject\CGAL-4.13 c:\CGAL
+  - cd c:\CGAL
+  - md build
+  - cd build
+  - cmake -Wno-dev -Wno-deprecated -G %GENERATOR% .. %CMAKE_TOOLCHAIN_FILE% 
+        -DWITH_CGAL_Qt5=OFF
+        -DWITH_demos=OFF
+        -DWITH_examples=OFF
+        -DWITH_CGAL_ImageIO=TRUE
+        -DQt5_DIR=%QT_DIR%
+  - cmake --build . --config "%CONFIGURATION%" -- /verbosity:minimal
+  - set PATH=%PATH%;%CGAL_DIR%\bin\%CONFIGURATION%
+  - cd c:\projects\myproject
 
 build_script:
   - git clone -b develop --depth=1  https://github.com/cgogn/CGoGN_2

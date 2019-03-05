@@ -101,6 +101,8 @@ SCHNApps::SCHNApps(
 
 	connect(first_view_, &View::viewerInitialized, [this, &init_plugin_name] ()
 	{
+		if (init_plugin_name.isEmpty())
+			return;
 		if (enable_plugin("init_" + init_plugin_name))
 			cgogn_log_info("SCHNApps") << "Init Plugin \"" <<  init_plugin_name.toStdString() << "\" successfully loaded.";
 		else
@@ -405,7 +407,10 @@ void SCHNApps::register_plugins_directory(const QString& path)
 Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 {
 	if (plugins_.count(plugin_name) > 0ul)
+	{
+		cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" already loaded.")).toStdString();
 		return plugins_.at(plugin_name).get();
+	}
 
 	if (available_plugins_.count(plugin_name) > 0ul)
 	{
@@ -437,6 +442,7 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 			}
 			else
 			{
+				cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" loading failed.")).toStdString();
 				delete plugin;
 				return nullptr;
 			}
@@ -448,7 +454,10 @@ Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
 		}
 	}
 	else
+	{
+		cgogn_log_warning("SCHNApps::enable_plugin") << (plugin_name + QString(" plugin is not available.")).toStdString();
 		return nullptr;
+	}
 }
 
 void SCHNApps::disable_plugin(const QString& plugin_name)

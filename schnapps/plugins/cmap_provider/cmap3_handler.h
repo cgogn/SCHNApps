@@ -68,7 +68,8 @@ public:
 	 * BASIC FUNCTIONS                                        *
 	 *********************************************************/
 
-	inline CMap3* map() const { return map_; }
+	inline CMap3* map() { return map_; }
+	inline const CMap3* map() const { return map_; }
 
 	void view_linked(View*) {}
 	void view_unlinked(View*) {}
