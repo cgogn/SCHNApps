@@ -24,13 +24,11 @@
 #ifndef SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
 #define SCHNAPPS_PLUGIN_MERGE_PLUGIN_H_
 
-#include <schnapps/plugins/merge/dll.h>
-
+#include <schnapps/plugins/merge/plugin_merge_export.h>
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
-
 #include <QAction>
 
 namespace schnapps
@@ -44,7 +42,7 @@ class MergeDialog;
 /**
 * @brief Merge plugin
 */
-class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API Plugin_Merge : public PluginProcessing
+class PLUGIN_MERGE_EXPORT Plugin_Merge : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")

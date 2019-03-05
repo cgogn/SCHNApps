@@ -50,7 +50,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${CGOGN_SOURCE_DIR}>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
 generate_export_header(plugin_cmap_provider)

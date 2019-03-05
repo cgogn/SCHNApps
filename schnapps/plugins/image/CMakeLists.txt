@@ -4,6 +4,7 @@ project(plugin_image
 
 find_package(cgogn_io REQUIRED)
 find_package(schnapps_core REQUIRED)
+find_package(plugin_cmap_provider REQUIRED)
 find_package(CGAL QUIET COMPONENTS Core ImageIO)
 
 if(NOT CGAL_FOUND)
@@ -35,7 +36,6 @@ endif()
 
 target_sources(${PROJECT_NAME}
 	PRIVATE
-		"${CMAKE_CURRENT_LIST_DIR}/dll.h"
 		"${CMAKE_CURRENT_LIST_DIR}/image.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/image_dock_tab.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/image.ui"
@@ -48,7 +48,6 @@ endif()
 set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d" EXPORT_NAME image)
 
 
-target_compile_definitions(${PROJECT_NAME} PRIVATE SCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT)
 if (CGAL_FOUND)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE PLUGIN_IMAGE_WITH_CGAL)
 endif()
@@ -69,13 +68,12 @@ if (CGAL_FOUND)
 	target_include_directories(${PROJECT_NAME}  PUBLIC ${CGAL_INCLUDE_DIRS})
 endif()
 
+generate_export_header(plugin_image)
+
 target_link_libraries(${PROJECT_NAME}
 	schnapps::core
 	schnapps::cmap_provider
-	cgogn::core
 	cgogn::io
-	Qt5::Widgets
-	cgogn::QOGLViewer
 	${CGAL_LIBRARIES}
 )
 
@@ -92,6 +90,10 @@ endif()
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
 	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/image
 	FILES_MATCHING PATTERN "*.h"
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugin_image_export.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/image
+	COMPONENT schnapps_plugins_headers
 )
 
 schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")

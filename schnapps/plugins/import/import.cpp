@@ -50,7 +50,6 @@ QString Plugin_Import::plugin_name()
 
 bool Plugin_Import::enable()
 {
-	//schnapps_->add_menu("Import");
 	import_point_set_action_ = schnapps_->add_menu_action("Import;Point Set", "import point set");
 	import_polyline_action_ = schnapps_->add_menu_action("Import;Polyline", "import polyline");
 	import_graph_action_ = schnapps_->add_menu_action("Import;Graph", "import graph");
@@ -80,8 +79,17 @@ bool Plugin_Import::enable()
 
 	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 
+
+	point_set_filter_ = QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::point_set_file_type_map, " "));
+	polyline_filter_ = QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::polyline_file_type_map,  " "));
+	graph_filter_ = QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::graph_file_type_map, " "));
+	surface_filter_ = QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::surface_file_type_map, " "));
+	volume_filter_ = QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::volume_file_type_map, " "));
+
 	return true;
 }
+
+
 
 void Plugin_Import::disable()
 {
@@ -136,7 +144,7 @@ CMap0Handler* Plugin_Import::import_point_set_from_file(const QString& filename)
 
 void Plugin_Import::import_point_set_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import point sets", setting_default_path_, "Point set Files (*.plo)");
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import point sets", setting_default_path_, "Point set Files ("+point_set_filter_+")");
 	QStringList::Iterator it = filenames.begin();
 
 	if  (it != filenames.end())
@@ -190,7 +198,7 @@ CMap1Handler* Plugin_Import::import_polyline_from_file(const QString& filename)
 
 void Plugin_Import::import_polyline_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import polyline meshes", setting_default_path_, "Polyline mesh Files (*.lin *.off)");
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import polyline meshes", setting_default_path_, "Polyline mesh Files ("+polyline_filter_+")");
 	QStringList::Iterator it = filenames.begin();
 
 	if  (it != filenames.end())
@@ -244,7 +252,7 @@ UndirectedGraphHandler* Plugin_Import::import_graph_from_file(const QString& fil
 
 void Plugin_Import::import_graph_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import graph", setting_default_path_, "Graph Files (*.cg *.skel *.cskel *.obj)");
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import graph", setting_default_path_, "Graph Files ("+graph_filter_+")");
 	QStringList::Iterator it = filenames.begin();
 
 	if  (it != filenames.end())
@@ -326,7 +334,10 @@ CMap2Handler* Plugin_Import::import_surface_mesh_from_file(const QString& filena
 
 void Plugin_Import::import_surface_mesh_from_file_dialog()
 {
-    QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", setting_default_path_, "Surface mesh Files (*.ply *.off *.stl *.trian *.vtk *.vtp *.vtu *.obj *.2dm *.msh *.mesh *.meshb)");
+
+	qDebug() << surface_filter_;
+
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import surface meshes", setting_default_path_, "Surface mesh Files ("+surface_filter_+")");
 	QStringList::Iterator it = filenames.begin();
 
 	if  (it != filenames.end())
@@ -408,7 +419,7 @@ CMap3Handler* Plugin_Import::import_volume_mesh_from_file(const QString& filenam
 
 void Plugin_Import::import_volume_mesh_from_file_dialog()
 {
-	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", setting_default_path_, "Volume mesh Files (*.msh *.vtu *.vtk *.nas *.bdf *.ele *.tetmesh *.node *.mesh *.meshb *.tet)");
+	QStringList filenames = QFileDialog::getOpenFileNames(nullptr, "Import volume meshes", setting_default_path_, "Volume mesh Files ("+volume_filter_+")");
 	QStringList::Iterator it = filenames.begin();
 
 	if  (it != filenames.end())

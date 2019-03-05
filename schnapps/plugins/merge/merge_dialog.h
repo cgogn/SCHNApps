@@ -24,8 +24,7 @@
 #ifndef SCHNAPPS_MERGE_PLUGIN_MERGE_DIALOG_H
 #define SCHNAPPS_MERGE_PLUGIN_MERGE_DIALOG_H
 
-#include <schnapps/plugins/merge/dll.h>
-
+#include <schnapps/plugins/merge/plugin_merge_export.h>
 #include <ui_merge_dialog.h>
 
 namespace schnapps
@@ -38,7 +37,7 @@ namespace plugin_merge
 
 class Plugin_Merge;
 
-class SCHNAPPS_PLUGIN_MERGE_PLUGIN_API MergeDialog : public QDialog, public Ui::MergeDialog
+class PLUGIN_MERGE_EXPORT MergeDialog : public QDialog, public Ui::MergeDialog
 {
 	Q_OBJECT
 

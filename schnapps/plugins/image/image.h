@@ -25,7 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_H_
 
-#include <schnapps/plugins/image/dll.h>
+#include <schnapps/plugins/image/plugin_image_export.h>
 #include <schnapps/core/object.h>
 #include <schnapps/core/plugin_provider.h>
 
@@ -59,7 +59,7 @@ namespace plugin_image
 using namespace cgogn::numerics;
 class Image_DockTab;
 
-class SCHNAPPS_PLUGIN_IMAGE_API Image3D final : public Object
+class PLUGIN_IMAGE_EXPORT Image3D final : public Object
 {
 public:
 
@@ -131,7 +131,7 @@ private:
 
 
 
-class SCHNAPPS_PLUGIN_IMAGE_API ImagePointSetImport final: public cgogn::io::PointSetImport<CMap0>
+class PLUGIN_IMAGE_EXPORT ImagePointSetImport final: public cgogn::io::PointSetImport<CMap0>
 {
 public:
 
@@ -148,7 +148,7 @@ public:
 };
 
 
-class SCHNAPPS_PLUGIN_IMAGE_API Plugin_Image : public PluginProvider
+class PLUGIN_IMAGE_EXPORT Plugin_Image : public PluginProvider
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -193,7 +193,7 @@ private:
  * @param filename, path of the fil to uncompress
  * @return the path of the extracted file (usually in the temporary folder), an empty QString if unsuccessfull
  */
-SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename);
+PLUGIN_IMAGE_EXPORT QString uncompress_gz_file(const QString& filename);
 
 } // namespace plugin_image
 

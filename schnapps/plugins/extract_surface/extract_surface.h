@@ -22,11 +22,10 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
-#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
+#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H_
+#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H_
 
-#include <schnapps/plugins/extract_surface/dll.h>
-
+#include <schnapps/plugins/extract_surface/plugin_extract_surface_export.h>
 #include <schnapps/core/plugin_processing.h>
 
 #include <QAction>
@@ -50,7 +49,7 @@ namespace plugin_extract_surface
 
 class ExtractDialog;
 
-class SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API Plugin_ExtractSurface : public PluginProcessing
+class PLUGIN_EXTRACT_SURFACE_EXPORT Plugin_ExtractSurface : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -84,4 +83,4 @@ private:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
+#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H_
