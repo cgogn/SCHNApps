@@ -92,8 +92,6 @@ public:
 	 * MANAGE CELLS SETS                                      *
 	 *********************************************************/
 
-	CMapCellsSetGen* add_cells_set(cgogn::Orbit orbit, const QString& name);
-	void remove_cells_set(cgogn::Orbit orbit, const QString& name);
 protected:
 	virtual CMapCellsSetGen* new_cell_set(cgogn::Orbit orbit, const QString& name) override;
 
