@@ -79,6 +79,18 @@ void Plugin_CMapProvider::disable()
 }
 
 /*********************************************************
+ * CMAP GEN
+ *********************************************************/
+
+CMapHandlerGen*Plugin_CMapProvider::cmap(const QString& name) const
+{
+	if (objects_.count(name) > 0ul)
+		return dynamic_cast<CMapHandlerGen*>(objects_.at(name));
+	else
+		return nullptr;
+}
+
+/*********************************************************
  * CMAP0
  *********************************************************/
 

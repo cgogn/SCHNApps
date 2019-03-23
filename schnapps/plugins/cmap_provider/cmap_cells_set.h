@@ -62,7 +62,7 @@ public:
 	inline bool is_mutually_exclusive() { return mutually_exclusive_; }
 	virtual void set_mutually_exclusive(bool b) = 0;
 
-//	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
+	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const = 0;
 
 	virtual void select(cgogn::Dart d, bool emit_signal = true) = 0;
 	virtual void select(const std::vector<cgogn::Dart>& cells) = 0;
@@ -218,17 +218,17 @@ public:
 		this->mutually_exclusive_ = b;
 
 		std::vector<Self*> mex;
-		mh_.template foreach_cells_set<CellType>([&] (Self* cs)
+		mh_.foreach_cells_set(orbit(), [&] (Inherit* cs)
 		{
 			if (cs->is_mutually_exclusive())
-				mex.push_back(cs);
+				mex.push_back(static_cast<Self*>(cs));
 		});
-		mh_.template foreach_cells_set<CellType>([&] (Self* cs)
+		mh_.foreach_cells_set(orbit(), [&] (Inherit* cs)
 		{
-			cs->set_mutually_exclusive_sets(mex);
+			static_cast<Self*>(cs)->set_mutually_exclusive_sets(mex);
 		});
 
-		mh_.template notify_cells_set_mutually_exclusive_change<CellType>(this->name_);
+		mh_.notify_cells_set_mutually_exclusive_change(orbit(), this->name_);
 	}
 
 	inline void rebuild() override
@@ -243,18 +243,18 @@ public:
 	}
 
 	template <typename FUNC>
-	inline void foreach_cell(const FUNC& f)
+	inline void foreach_cell(const FUNC& f) const
 	{
 		static_assert(cgogn::is_func_parameter_same<FUNC, CellType>::value, "Wrong function parameter type");
 		for (const auto& cell : cells_)
 			f(cell.second);
 	}
 
-//	virtual void foreach_cell(const std::function<void(cgogn::Dart)>& func) const override
-//	{
-//		for (const auto& cell : cells_)
-//			func(cell.second.dart);
-//	}
+	void foreach_cell(const std::function<void(cgogn::Dart)>& func) const override
+	{
+		for (const auto& cell : cells_)
+			func(cell.second.dart);
+	}
 
 	virtual void select(cgogn::Dart d, bool emit_signal) override
 	{

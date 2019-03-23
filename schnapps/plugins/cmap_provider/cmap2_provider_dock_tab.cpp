@@ -388,37 +388,31 @@ void CMap2Provider_DockTab::selected_map_cells_set_added(cgogn::Orbit orbit, con
 	updating_ui_ = true;
 
 	QListWidgetItem* item = nullptr;
-	CMapCellsSetGen* cs = nullptr;
-	switch (orbit)
+	CMapCellsSetGen* cs = selected_map_->cells_set(orbit, name);
+	if (cs)
 	{
-		case CMap2::CDart::ORBIT:
-			cs = selected_map_->cells_set<CMap2::CDart>(name);
-			if (cs)
+		switch (orbit)
+		{
+			case CMap2::CDart::ORBIT:
 				item = new QListWidgetItem(name, list_dartCellsSets);
-			break;
-		case CMap2::Vertex::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Vertex>(name);
-			if (cs)
+				break;
+			case CMap2::Vertex::ORBIT:
 				item = new QListWidgetItem(name, list_vertexCellsSets);
-			break;
-		case CMap2::Edge::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Edge>(name);
-			if (cs)
+				break;
+			case CMap2::Edge::ORBIT:
 				item = new QListWidgetItem(name, list_edgeCellsSets);
-			break;
-		case CMap2::Face::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Face>(name);
-			if (cs)
+				break;
+			case CMap2::Face::ORBIT:
 				item = new QListWidgetItem(name, list_faceCellsSets);
-			break;
-		case CMap2::Volume::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Volume>(name);
-			if (cs)
+				break;
+			case CMap2::Volume::ORBIT:
 				item = new QListWidgetItem(name, list_volumeCellsSets);
-			break;
-		default:
-			break;
+				break;
+			default:
+				break;
+		}
 	}
+
 	if (item)
 	{
 		item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -466,28 +460,23 @@ void CMap2Provider_DockTab::selected_map_cells_set_mutually_exclusive_changed(cg
 {
 	updating_ui_ = true;
 
-	CMapCellsSetGen* cs = nullptr;
+	CMapCellsSetGen* cs = selected_map_->cells_set(orbit, name);;
 	QList<QListWidgetItem*> items;
 	switch (orbit)
 	{
 		case CMap2::CDart::ORBIT:
-			cs = selected_map_->cells_set<CMap2::CDart>(name);
 			items = list_dartCellsSets->findItems(name, Qt::MatchExactly);
 			break;
 		case CMap2::Vertex::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Vertex>(name);
 			items = list_vertexCellsSets->findItems(name, Qt::MatchExactly);
 			break;
 		case CMap2::Edge::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Edge>(name);
 			items = list_edgeCellsSets->findItems(name, Qt::MatchExactly);
 			break;
 		case CMap2::Face::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Face>(name);
 			items = list_faceCellsSets->findItems(name, Qt::MatchExactly);
 			break;
 		case CMap2::Volume::ORBIT:
-			cs = selected_map_->cells_set<CMap2::Volume>(name);
 			items = list_volumeCellsSets->findItems(name, Qt::MatchExactly);
 			break;
 		default:
@@ -587,7 +576,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::CDart>([&] (CMap2Handler::CMap2CellsSet<CMap2::CDart>* cells_set)
+		selected_map_->foreach_cells_set(CMap2::CDart::ORBIT, [&] (CMapCellsSetGen* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_dartCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -625,7 +614,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Vertex>([&] (CMap2Handler::CMap2CellsSet<CMap2::Vertex>* cells_set)
+		selected_map_->foreach_cells_set(CMap2::Vertex::ORBIT, [&] (CMapCellsSetGen* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_vertexCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -651,7 +640,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Edge>([&] (CMap2Handler::CMap2CellsSet<CMap2::Edge>* cells_set)
+		selected_map_->foreach_cells_set(CMap2::Edge::ORBIT, [&] (CMapCellsSetGen* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_edgeCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -677,7 +666,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Face>([&] (CMap2Handler::CMap2CellsSet<CMap2::Face>* cells_set)
+		selected_map_->foreach_cells_set(CMap2::Face::ORBIT, [&] (CMapCellsSetGen* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_faceCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
@@ -703,7 +692,7 @@ void CMap2Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap2::Volume>([&] (CMap2Handler::CMap2CellsSet<CMap2::Volume>* cells_set)
+		selected_map_->foreach_cells_set(CMap2::Volume::ORBIT, [&] (CMapCellsSetGen* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_volumeCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);

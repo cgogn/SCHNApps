@@ -34,14 +34,43 @@ namespace plugin_cmap_provider
 {
 
 CMap1Handler::CMap1Handler(const QString& name, PluginProvider* p) :
-	Object(name, p)
+	CMapHandlerGen(name, p)
 {
 	map_ = new CMap1();
 }
 
 CMap1Handler::~CMap1Handler()
+{}
+
+void CMap1Handler::foreach_cell(cgogn::Orbit orb, const std::function<void (cgogn::Dart)>& func) const
 {
-	delete map_;
+	switch(orb)
+	{
+		case cgogn::Orbit::DART:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::DART> d) { func(d.dart); });
+			break;
+		case cgogn::Orbit::PHI1:
+			map()->foreach_cell([&] (cgogn::Cell<cgogn::Orbit::PHI1> d) { func(d.dart); });
+			break;
+		default:
+			cgogn_log_warning("CMap1Handler::foreach_cell") << "The orbit \"" << cgogn::orbit_name(orb) << "\" is not valid for this map type.";
+			break;
+	}
+}
+
+CMapType CMap1Handler::type() const
+{
+	return CMapType::CMAP1;
+}
+
+CMap1* CMap1Handler::map()
+{
+	return static_cast<CMap1*>(map_);
+}
+
+const CMap1* CMap1Handler::map() const
+{
+	return static_cast<const CMap1*>(map_);
 }
 
 /*********************************************************
@@ -53,7 +82,7 @@ void CMap1Handler::draw(cgogn::rendering::DrawingType primitive)
 	if (!render_.is_primitive_uptodate(primitive))
 	{
 		lock_topo_access();
-		render_.init_primitives(*map_, primitive);
+		render_.init_primitives(*map(), primitive);
 		unlock_topo_access();
 	}
 	render_.draw(primitive);
@@ -61,7 +90,7 @@ void CMap1Handler::draw(cgogn::rendering::DrawingType primitive)
 
 void CMap1Handler::init_primitives(cgogn::rendering::DrawingType primitive)
 {
-	render_.init_primitives(*map_, primitive);
+	render_.init_primitives(*map(), primitive);
 }
 
 /*********************************************************
@@ -76,7 +105,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 		if (!map_->has_attribute(CMap1::Vertex::ORBIT, name.toStdString()))
 			return nullptr;
 
-		const CMap1::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC3F> va3f = map()->get_attribute<VEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va3f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -86,7 +115,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC3D> va3d = map()->get_attribute<VEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va3d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -96,7 +125,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<float32> vaf32 = map()->get_attribute<float32, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (vaf32.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -106,7 +135,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<float64> vaf64 = map()->get_attribute<float64, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (vaf64.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(1)));
@@ -116,7 +145,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC4F> va4f = map()->get_attribute<VEC4F, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va4f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -126,7 +155,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC4D> va4d = map()->get_attribute<VEC4D, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va4d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(4)));
@@ -136,7 +165,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC2F> va2f = map()->get_attribute<VEC2F, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va2f.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -146,7 +175,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-		const CMap1::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC2D> va2d = map()->get_attribute<VEC2D, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va2d.is_valid())
 		{
 			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(2)));
@@ -156,7 +185,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 			return vbo;
 		}
 
-//		const CMap1::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const CMap1::VertexAttribute<AVEC3D> ava3d = map()->get_attribute<AVEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
 //		if (ava3d.is_valid())
 //		{
 //			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -166,7 +195,7 @@ cgogn::rendering::VBO* CMap1Handler::create_vbo(const QString& name)
 //			return vbo;
 //		}
 
-//		const CMap1::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const CMap1::VertexAttribute<AVEC3F> ava3f = map()->get_attribute<AVEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
 //		if (ava3f.is_valid())
 //		{
 //			vbos_.insert(std::make_pair(name, cgogn::make_unique<cgogn::rendering::VBO>(3)));
@@ -185,7 +214,7 @@ void CMap1Handler::update_vbo(const QString& name)
 	cgogn::rendering::VBO* vbo = this->vbo(name);
 	if (vbo)
 	{
-		const CMap1::VertexAttribute<VEC3F> va3f = map_->get_attribute<VEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC3F> va3f = map()->get_attribute<VEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va3f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -193,7 +222,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC3D> va3d = map_->get_attribute<VEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC3D> va3d = map()->get_attribute<VEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va3d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -201,7 +230,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<float32> vaf32 = map_->get_attribute<float32, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<float32> vaf32 = map()->get_attribute<float32, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (vaf32.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -209,7 +238,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<float64> vaf64 = map_->get_attribute<float64, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<float64> vaf64 = map()->get_attribute<float64, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (vaf64.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -217,7 +246,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC4F> va4f = map_->get_attribute<VEC4F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC4F> va4f = map()->get_attribute<VEC4F, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va4f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -225,7 +254,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC4D> va4d = map_->get_attribute<VEC4D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC4D> va4d = map()->get_attribute<VEC4D, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va4d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -233,7 +262,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC2F> va2f = map_->get_attribute<VEC2F, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC2F> va2f = map()->get_attribute<VEC2F, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va2f.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -241,7 +270,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-		const CMap1::VertexAttribute<VEC2D> va2d = map_->get_attribute<VEC2D, CMap1::Vertex::ORBIT>(name.toStdString());
+		const CMap1::VertexAttribute<VEC2D> va2d = map()->get_attribute<VEC2D, CMap1::Vertex::ORBIT>(name.toStdString());
 		if (va2d.is_valid())
 		{
 			vbo = vbos_.at(name).get();
@@ -249,7 +278,7 @@ void CMap1Handler::update_vbo(const QString& name)
 			return;
 		}
 
-//		const CMap1::VertexAttribute<AVEC3F> ava3f = map_->get_attribute<AVEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const CMap1::VertexAttribute<AVEC3F> ava3f = map()->get_attribute<AVEC3F, CMap1::Vertex::ORBIT>(name.toStdString());
 //		if (ava3f.is_valid())
 //		{
 //			vbo = vbos_.at(name).get();
@@ -257,7 +286,7 @@ void CMap1Handler::update_vbo(const QString& name)
 //			return;
 //		}
 
-//		const CMap1::VertexAttribute<AVEC3D> ava3d = map_->get_attribute<AVEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
+//		const CMap1::VertexAttribute<AVEC3D> ava3d = map()->get_attribute<AVEC3D, CMap1::Vertex::ORBIT>(name.toStdString());
 //		if (ava3d.is_valid())
 //		{
 //			vbo = vbos_.at(name).get();
@@ -267,99 +296,31 @@ void CMap1Handler::update_vbo(const QString& name)
 	}
 }
 
-cgogn::rendering::VBO* CMap1Handler::vbo(const QString& name) const
-{
-	if (vbos_.count(name) > 0ul)
-		return vbos_.at(name).get();
-	else
-		return nullptr;
-}
 
-void CMap1Handler::delete_vbo(const QString &name)
-{
-	if (vbos_.count(name) > 0ul)
-	{
-		auto vbo = std::move(vbos_.at(name));
-		vbos_.erase(name);
-		emit(vbo_removed(vbo.get()));
-	}
-}
 
 /**********************************************************
  * MANAGE CELLS SETS                                      *
  *********************************************************/
 
-CMapCellsSetGen* CMap1Handler::add_cells_set(cgogn::Orbit orbit, const QString& name)
+
+CMapCellsSetGen*CMap1Handler::new_cell_set(cgogn::Orbit orbit, const QString& name)
 {
-	if (this->cells_sets_[orbit].count(name) > 0ul)
-		return nullptr;
-
-	CMapCellsSetGen* cells_set = nullptr;
-
 	switch (orbit)
 	{
 		case CMap1::Vertex::ORBIT:
-			cells_set = new CMap1CellsSet<CMap1::Vertex>(*this, name);
-			break;
+			return new CMap1CellsSet<CMap1::Vertex>(*this, name);
 		case CMap1::Face::ORBIT:
-			cells_set = new CMap1CellsSet<CMap1::Face>(*this, name);
-			break;
+			return new CMap1CellsSet<CMap1::Face>(*this, name);
 		default:
 			break;
 	}
-
-	if (cells_set)
-	{
-		cells_sets_[orbit].insert(std::make_pair(name, cells_set));
-		emit(cells_set_added(orbit, name));
-		connect(this, SIGNAL(connectivity_changed()), cells_set, SLOT(rebuild()));
-	}
-
-	return cells_set;
+	return nullptr;
 }
 
-void CMap1Handler::remove_cells_set(cgogn::Orbit orbit, const QString& name)
+std::unique_ptr<cgogn::Attribute_T<VEC3> > CMap1Handler::get_bb_vertex_attribute(const QString& attribute_name) const
 {
-	const auto cells_set_it = cells_sets_[orbit].find(name);
-	if (cells_set_it == cells_sets_[orbit].end())
-		return;
-
-	disconnect(this, SIGNAL(connectivity_changed()), cells_set_it->second, SLOT(rebuild()));
-
-	emit(cells_set_removed(orbit, name));
-	delete cells_set_it->second;
-	cells_sets_[orbit].erase(cells_set_it);
-}
-
-/*********************************************************
- * MANAGE ATTRIBUTES & CONNECTIVITY
- *********************************************************/
-
-void CMap1Handler::notify_attribute_added(cgogn::Orbit orbit, const QString& attribute_name)
-{
-	emit(attribute_added(orbit, attribute_name));
-}
-
-void CMap1Handler::notify_attribute_change(cgogn::Orbit orbit, const QString& attribute_name)
-{
-	update_vbo(attribute_name);
-	check_bb_vertex_attribute(orbit, attribute_name);
-
-	emit(attribute_changed(orbit, attribute_name));
-
-	for (View* view : views_)
-		view->update();
-}
-
-void CMap1Handler::notify_connectivity_change()
-{
-	render_.set_primitive_dirty(cgogn::rendering::POINTS);
-	render_.set_primitive_dirty(cgogn::rendering::LINES);
-
-	emit(connectivity_changed());
-
-	for (View* view : views_)
-		view->update();
+	auto  attribute = map()->template get_attribute<VEC3, CMap1::Vertex::ORBIT>(attribute_name.toStdString());
+	return std::unique_ptr< cgogn::Attribute<VEC3, CMap1::Vertex::ORBIT> >(new cgogn::Attribute<VEC3, CMap1::Vertex::ORBIT> (attribute));
 }
 
 

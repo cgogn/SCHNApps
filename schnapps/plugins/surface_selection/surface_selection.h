@@ -103,6 +103,7 @@ private slots:
 	void linked_map_attribute_removed(cgogn::Orbit orbit, const QString& name);
 	void linked_map_cells_set_removed(cgogn::Orbit orbit, const QString& name);
 	void linked_map_bb_changed();
+	void enable_on_selected_view(Plugin* p);
 
 	void viewer_initialized();
 
@@ -120,6 +121,7 @@ private:
 	SurfaceSelection_DockTab* dock_tab_;
 	std::map<View*, std::map<CMap2Handler*, MapParameters>> parameter_set_;
 
+	bool setting_auto_enable_on_selected_view_;
 	QString setting_auto_load_position_attribute_;
 };
 

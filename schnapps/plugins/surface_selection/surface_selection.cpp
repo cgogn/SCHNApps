@@ -81,6 +81,11 @@ bool Plugin_SurfaceSelection::check_docktab_activation()
 
 bool Plugin_SurfaceSelection::enable()
 {
+	if (setting("Auto enable on selected view").isValid())
+		setting_auto_enable_on_selected_view_ = setting("Auto enable on selected view").toBool();
+	else
+		setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true).toBool();
+
 	if (setting("Auto load position attribute").isValid())
 		setting_auto_load_position_attribute_ = setting("Auto load position attribute").toString();
 	else
@@ -89,13 +94,23 @@ bool Plugin_SurfaceSelection::enable()
 	dock_tab_ = new SurfaceSelection_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Surface Selection");
 
+
+	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
+
 	return true;
+}
+
+void Plugin_SurfaceSelection::enable_on_selected_view(Plugin* p)
+{
+	if ((this == p) && schnapps_->selected_view() && setting_auto_enable_on_selected_view_)
+		schnapps_->selected_view()->link_plugin(this);
 }
 
 void Plugin_SurfaceSelection::disable()
 {
 	schnapps_->remove_plugin_dock_tab(this, dock_tab_);
 	delete dock_tab_;
+	disconnect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 }
 
 void Plugin_SurfaceSelection::draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv)

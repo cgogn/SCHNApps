@@ -67,6 +67,8 @@ private:
 
 public:
 
+	CMapHandlerGen* cmap(const QString& name) const;
+
 	CMap0Handler* add_cmap0(const QString& name);
 	void remove_cmap0(const QString& name);
 	CMap0Handler* duplicate_cmap0(const QString& name);

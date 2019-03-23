@@ -25,24 +25,23 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_
 
-#include <schnapps/plugins/attribute_editor/dll.h>
-
-#include <ui_edit_attribute_dialog.h>
-
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
 #include <schnapps/core/types.h>
+#include <ui_edit_attribute_dialog.h>
+#include <cgogn/core/basic/cell.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
+class Object;
 
 namespace plugin_attribute_editor
 {
 
 class AttributeEditorPlugin;
 
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API EditAttributeDialog : public QDialog, public Ui::EditAttribute
+class PLUGIN_ATTRIBUTE_EDITOR_EXPORT EditAttributeDialog : public QDialog, public Ui::EditAttribute
 {
 	Q_OBJECT
 	friend class AttributeEditorPlugin;
@@ -51,8 +50,8 @@ public:
 	EditAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p);
 
 private slots:
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
+	void map_added(Object*);
+	void map_removed(Object*);
 	void selected_map_changed(const QString&);
 	void orbit_changed(const QString&);
 	void cells_set_changed(const QString&);
@@ -60,8 +59,8 @@ private slots:
 	void edit_attribute_validated();
 
 private:
-	void update_cells_sets(MapHandlerGen*, CellType ct);
-	void update_attribute_list(MapHandlerGen*, CellType ct);
+	void update_cells_sets(Object*,  cgogn::Orbit orb);
+	void update_attribute_list(Object*o, cgogn::Orbit orb);
 private:
 	SCHNApps* schnapps_;
 	AttributeEditorPlugin* plugin_;

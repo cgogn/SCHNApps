@@ -13,6 +13,8 @@ add_library(schnapps::cmap_provider ALIAS plugin_cmap_provider)
 
 target_sources(${PROJECT_NAME}
 	PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/cmap_handler.h"
+		"${CMAKE_CURRENT_LIST_DIR}/cmap_handler.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/cmap_provider.h"
 		"${CMAKE_CURRENT_LIST_DIR}/cmap_provider.cpp"
 		"${CMAKE_CURRENT_LIST_DIR}/cmap_cells_set.h"

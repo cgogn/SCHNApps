@@ -336,7 +336,7 @@ void CMap1Provider_DockTab::selected_map_cells_set_added(cgogn::Orbit orbit, con
 	switch (orbit)
 	{
 		case CMap1::Vertex::ORBIT:
-			cs = selected_map_->cells_set<CMap1::Vertex>(name);
+			cs = selected_map_->cells_set(CMap1::Vertex::ORBIT, name);
 			if (cs)
 				item = new QListWidgetItem(name, list_vertexCellsSets);
 			break;
@@ -383,7 +383,7 @@ void CMap1Provider_DockTab::selected_map_cells_set_mutually_exclusive_changed(cg
 	switch (orbit)
 	{
 		case CMap1::Vertex::ORBIT:
-			cs = selected_map_->cells_set<CMap1::Vertex>(name);
+			cs = selected_map_->cells_set(CMap1::Vertex::ORBIT, name);
 			items = list_vertexCellsSets->findItems(name, Qt::MatchExactly);
 			break;
 		default:
@@ -492,7 +492,7 @@ void CMap1Provider_DockTab::refresh_ui()
 			}
 		}
 
-		selected_map_->foreach_cells_set<CMap1::Vertex>([&] (CMap1Handler::CMap1CellsSet<CMap1::Vertex>* cells_set)
+		selected_map_->foreach_cells_set(CMap1::Vertex::ORBIT, [&] (CMapCellsSetGen* cells_set)
 		{
 			QListWidgetItem* item = new QListWidgetItem(cells_set->name(), list_vertexCellsSets);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);

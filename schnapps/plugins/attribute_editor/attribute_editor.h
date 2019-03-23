@@ -1,7 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2016, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin ExtractSurface                                                        *
+* Plugin Attribute Editor                                                      *
 * Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
@@ -22,54 +22,69 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_
-#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_
+#ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
+#define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
 
-#include <schnapps/plugins/attribute_editor/dll.h>
-
-#include <ui_edit_attribute_dialog.h>
-
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
+#include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/types.h>
+#include <cgogn/core/basic/cell.h>
+
+class QAction;
 
 namespace schnapps
 {
 
-class SCHNApps;
-class MapHandlerGen;
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMapHandlerGen;
+} // namespace plugin_cmap_provider
 
 namespace plugin_attribute_editor
 {
 
-class AttributeEditorPlugin;
+class AddAttributeDialog;
+class EditAttributeDialog;
 
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API EditAttributeDialog : public QDialog, public Ui::EditAttribute
+cgogn::Orbit PLUGIN_ATTRIBUTE_EDITOR_EXPORT orbit_from_string(const QString& str);
+QStringList PLUGIN_ATTRIBUTE_EDITOR_EXPORT get_attribute_names(const plugin_cmap_provider::CMapHandlerGen* mhg, cgogn::Orbit orb);
+const std::vector<cgogn::Orbit> PLUGIN_ATTRIBUTE_EDITOR_EXPORT available_orbits(const plugin_cmap_provider::CMapHandlerGen* mhg);
+
+class PLUGIN_ATTRIBUTE_EDITOR_EXPORT AttributeEditorPlugin : public PluginProcessing
 {
 	Q_OBJECT
-	friend class AttributeEditorPlugin;
+	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
+	Q_INTERFACES(schnapps::Plugin)
 
 public:
-	EditAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p);
 
-private slots:
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
-	void selected_map_changed(const QString&);
-	void orbit_changed(const QString&);
-	void cells_set_changed(const QString&);
-	void attribute_changed(const QString&);
-	void edit_attribute_validated();
+	AttributeEditorPlugin();
+	inline ~AttributeEditorPlugin() override {}
+	static QString plugin_name();
+	const plugin_cmap_provider::Plugin_CMapProvider* cmap_provider() const;
 
 private:
-	void update_cells_sets(MapHandlerGen*, CellType ct);
-	void update_attribute_list(MapHandlerGen*, CellType ct);
+
+	bool enable() override;
+	void disable() override;
+
+	public slots:
+	private slots:
+	void add_attribute_dialog();
+	void edit_attribute_dialog();
+
 private:
-	SCHNApps* schnapps_;
-	AttributeEditorPlugin* plugin_;
-	bool updating_ui_;
+
+	QAction* add_attribute_action_;
+	QAction* edit_attribute_action_;
+	AddAttributeDialog* add_attribute_dialog_;
+	EditAttributeDialog* edit_attribute_dialog_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 };
 
 } // namespace plugin_attribute_editor
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_EDIT_ATTRIBUTE_DIALOG_H_
+#endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
