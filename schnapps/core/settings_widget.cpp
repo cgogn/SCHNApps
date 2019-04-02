@@ -35,14 +35,21 @@
 #include <QVBoxLayout>
 #include <QDoubleSpinBox>
 #include <QPushButton>
+#include <QFileDialog>
 
 namespace schnapps
 {
 
-SettingsWidget::SettingsWidget(QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f),
-	settings_(nullptr)
+SettingsWidget::SettingsWidget(const QString& settings_path, QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f),
+	settings_(nullptr),
+	settings_path_(settings_path),
+	export_at_exit_(false)
 {
 	setupUi(this);
+
+	connect(cb_save_at_exit, SIGNAL(stateChanged()), this, SLOT(save_mode_changed()));
+	connect(pb_export, SIGNAL(clicked()), this, SLOT(export_settings()));
+	connect(pb_close, SIGNAL(clicked()), this, SLOT(close()));
 }
 
 SettingsWidget::~SettingsWidget()
@@ -54,6 +61,31 @@ void SettingsWidget::display_setting_widget()
 {
 	fill_widget();
 	show();
+}
+
+QString SettingsWidget::settings_export_path()
+{
+	return settings_path_;
+}
+
+bool SettingsWidget::export_at_exit()
+{
+	return export_at_exit_;
+}
+
+void SettingsWidget::save_mode_changed(int stateChanged)
+{
+	if(stateChanged == Qt::CheckState::Checked)
+		export_at_exit_ = true;
+	else
+		export_at_exit_ = false;
+}
+
+void SettingsWidget::export_settings()
+{
+	QString filename = QFileDialog::getSaveFileName(Q_NULLPTR, "Export", settings_path_, "Settings Files (*.json)");
+	if (!filename.isEmpty())
+		settings_->to_file(filename);
 }
 
 QHBoxLayout* SettingsWidget::add_option_to_widget(QWidget* widget, const QString& option_name, const QVariant& var)

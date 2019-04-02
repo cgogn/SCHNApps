@@ -30,6 +30,7 @@
 
 #include <schnapps/core/control_dock_camera_tab.h>
 #include <schnapps/core/control_dock_plugin_tab.h>
+#include <schnapps/core/settings_widget.h>
 
 #include <QVBoxLayout>
 #include <QSplitter>
@@ -51,14 +52,11 @@
 namespace schnapps
 {
 
-SCHNApps::SCHNApps(
-	const QString& app_path,
-	const QString& settings_path,
+SCHNApps::SCHNApps(const QString& app_path,
 	const QString& init_plugin_name,
 	SCHNAppsWindow* window
 ) :
 	app_path_(app_path),
-	settings_path_(settings_path),
 	first_view_(nullptr),
 	selected_view_(nullptr),
 	window_(window)
@@ -92,8 +90,8 @@ SCHNApps::SCHNApps(
 	register_plugins_directory(app_path_ + QString("/../lib"));
 #endif
 
-	settings_ = Settings::from_file(settings_path_);
-	settings_->set_widget(window->settings_widget_.get());
+	settings_ = Settings::from_file(window_->settings_widget_->settings_export_path());
+	settings_->set_widget(window_->settings_widget_.get());
 	for (const QVariant& plugin_dir_v : core_setting("Plugins paths").toList())
 		register_plugins_directory(plugin_dir_v.toString());
 	for (const QVariant& plugin_v : core_setting("Load modules").toList())
@@ -113,11 +111,15 @@ SCHNApps::SCHNApps(
 SCHNApps::~SCHNApps()
 {
 	// make a copy of overwrite settings
-	QFile old(settings_path_);
-	QString copy_name = settings_path_.left(settings_path_.length()-5) + ".back.json";
-	old.copy(copy_name);
+	if(window_->settings_widget_->export_at_exit())
+	{
+		QString settings_path = window_->settings_widget_->settings_export_path();
+		QFile old(settings_path);
+		QString copy_name = settings_path.left(settings_path.length()-5) + ".back.json";
+		old.copy(copy_name);
 
-	settings_->to_file(settings_path_);
+		settings_->to_file(settings_path);
+	}
 
 	// first safely unload every plugins (this has to be done before the views get deleted)
 	std::list<QString> plugins_ordered;
@@ -622,17 +624,6 @@ void SCHNApps::status_bar_message(const QString& msg, int msec)
 void SCHNApps::set_window_size(int w, int h)
 {
 	window_->resize(w, h);
-}
-
-/*********************************************************
- * EXPORT SETTINGS
- *********************************************************/
-
-void SCHNApps::export_settings()
-{
-	QString filename = QFileDialog::getSaveFileName(nullptr, "Export", settings_path_, "Settings Files (*.json)");
-	if (! filename.isEmpty())
-		settings_->to_file(filename);
 }
 
 } // namespace schnapps

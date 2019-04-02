@@ -97,16 +97,17 @@ SCHNAppsWindow::SCHNAppsWindow(
 	connect(action_AboutSCHNApps, SIGNAL(triggered()), this, SLOT(about_SCHNApps()));
 	connect(action_AboutCGoGN, SIGNAL(triggered()), this, SLOT(about_CGoGN()));
 
-	settings_widget_ = cgogn::make_unique<SettingsWidget>();
+	settings_widget_ = cgogn::make_unique<SettingsWidget>(settings_path);
 	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
-	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, init_plugin_name, this);
-
-	connect(action_ExportSettings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
+	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, init_plugin_name, this);
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()
-{}
+{
+	schnapps_.reset();
+	settings_widget_.reset();
+}
 
 QAction* SCHNAppsWindow::add_menu_action(const QString& menu_path, const QString& action_text)
 {
