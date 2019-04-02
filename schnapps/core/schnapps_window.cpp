@@ -116,8 +116,7 @@ QAction* SCHNAppsWindow::add_menu_action(const QString& menu_path, const QString
 	if (!menu_path.isEmpty())
 	{
 		// extracting all the substring separated by ';'
-		QStringList step_names = menu_path.split(";");
-		step_names.removeAll("");
+		QStringList step_names = menu_path.split(";", QString::SkipEmptyParts);
 		unsigned int nb_steps = step_names.count();
 
 		// if only one substring: error + failure
