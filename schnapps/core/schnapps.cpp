@@ -66,11 +66,9 @@ SCHNApps::SCHNApps(const QString& app_path,
 
 	// create & setup control dock
 	control_camera_tab_ = new ControlDock_CameraTab(this);
-	window_->control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
+	connect(window_->action_Camera, SIGNAL(triggered()), control_camera_tab_, SLOT(display_camera_widget()));
 	control_plugin_tab_ = new ControlDock_PluginTab(this);
-	window_->control_dock_tab_widget_->addTab(control_plugin_tab_, control_plugin_tab_->title());
-
-	window_->control_dock_tab_widget_->setCurrentIndex(window_->control_dock_tab_widget_->indexOf(control_plugin_tab_));
+	connect(window_->action_Plugins, SIGNAL(triggered()), control_plugin_tab_, SLOT(display_plugins_widget()));
 
 	// create & setup central widget (views)
 

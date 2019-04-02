@@ -29,7 +29,7 @@
 
 #include <ui_control_dock_plugin_tab_widget.h>
 
-#include <QWidget>
+#include <QDialog>
 #include <QString>
 
 namespace schnapps
@@ -38,7 +38,7 @@ namespace schnapps
 class SCHNApps;
 class Plugin;
 
-class SCHNAPPS_CORE_EXPORT ControlDock_PluginTab : public QWidget, public Ui::ControlDock_PluginTabWidget
+class SCHNAPPS_CORE_EXPORT ControlDock_PluginTab : public QDialog, public Ui::ControlDock_PluginTabWidget
 {
 	Q_OBJECT
 
@@ -48,7 +48,7 @@ public:
 	QString title() { return QString("Plugins"); }
 
 private slots:
-
+	void display_plugins_widget();
 	// slots called from UI actions
 	void add_plugin_directory_clicked();
 	void enable_selected_plugins_clicked();

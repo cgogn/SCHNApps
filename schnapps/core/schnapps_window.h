@@ -57,26 +57,11 @@ public:
 
 private slots:
 
-	void about_SCHNApps()
-	{
-		QString str("SCHNApps:\nS... CGoGN Holder for Nice Applications\n"
-					"Web site: http://cgogn.unistra.fr \n"
-					"Contact information: cgogn@unistra.fr");
-		QMessageBox::about(this, "About SCHNApps", str);
-	}
+	void about_SCHNApps();
+	void about_CGoGN();
 
-	void about_CGoGN()
-	{
-		QString str("CGoGN:\nCombinatorial and Geometric modeling\n"
-					"with Generic N-dimensional Maps\n"
-					"Web site: http://cgogn.unistra.fr \n"
-					"Contact information: cgogn@unistra.fr");
-		QMessageBox::about(this, "About CGoGN", str);
-	}
-
-	void toggle_control_dock() { control_dock_->setVisible(control_dock_->isHidden()); }
-
-	void toggle_plugin_dock() { plugin_dock_->setVisible(plugin_dock_->isHidden()); }
+	void toggle_control_dock();
+	void toggle_plugin_dock();
 
 	/*********************************************************
 	 * MANAGE MENU ACTIONS

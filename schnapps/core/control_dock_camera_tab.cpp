@@ -54,6 +54,11 @@ ControlDock_CameraTab::ControlDock_CameraTab(SCHNApps* s) :
 	check_drawCameraPath->setDisabled(true);
 }
 
+void ControlDock_CameraTab::display_camera_widget()
+{
+	show();
+}
+
 void ControlDock_CameraTab::add_camera_button_clicked()
 {
 	if (!updating_ui_)

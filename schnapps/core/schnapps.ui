@@ -53,6 +53,8 @@
     </property>
     <addaction name="separator"/>
     <addaction name="action_Settings"/>
+    <addaction name="action_Plugins"/>
+    <addaction name="action_Camera"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
@@ -92,6 +94,16 @@
   <action name="action_ExportSettings">
    <property name="text">
     <string>Export settings</string>
+   </property>
+  </action>
+  <action name="action_Plugins">
+   <property name="text">
+    <string>Plugins</string>
+   </property>
+  </action>
+  <action name="action_Camera">
+   <property name="text">
+    <string>Camera</string>
    </property>
   </action>
  </widget>
