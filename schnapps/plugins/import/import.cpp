@@ -50,11 +50,11 @@ QString Plugin_Import::plugin_name()
 
 bool Plugin_Import::enable()
 {
-	import_point_set_action_ = schnapps_->add_menu_action("Import;Point Set", "import point set");
-	import_polyline_action_ = schnapps_->add_menu_action("Import;Polyline", "import polyline");
-	import_graph_action_ = schnapps_->add_menu_action("Import;Graph", "import graph");
-	import_surface_mesh_action_ = schnapps_->add_menu_action("Import;Surface Mesh", "import surface mesh");
-	import_volume_mesh_action_ = schnapps_->add_menu_action("Import;Volume Mesh", "import volume mesh");
+	import_point_set_action_ = schnapps_->add_menu_action("File;Import;Point Set", "import point set");
+	import_polyline_action_ = schnapps_->add_menu_action("File;Import;Polyline", "import polyline");
+	import_graph_action_ = schnapps_->add_menu_action("File;Import;Graph", "import graph");
+	import_surface_mesh_action_ = schnapps_->add_menu_action("File;Import;Surface Mesh", "import surface mesh");
+	import_volume_mesh_action_ = schnapps_->add_menu_action("File;Import;Volume Mesh", "import volume mesh");
 
 	connect(import_point_set_action_, SIGNAL(triggered()), this, SLOT(import_point_set_from_file_dialog()));
 	connect(import_polyline_action_, SIGNAL(triggered()), this, SLOT(import_polyline_from_file_dialog()));
