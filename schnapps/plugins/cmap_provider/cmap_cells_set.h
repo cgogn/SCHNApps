@@ -21,8 +21,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_
-#define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_
+#ifndef SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CELLS_SET_H_
+#define SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CELLS_SET_H_
 
 #include <schnapps/plugins/cmap_provider/plugin_cmap_provider_export.h>
 
@@ -293,4 +293,4 @@ protected:
 
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CellTypeS_SET_H_
+#endif // SCHNAPPS_PLUGIN_CMAP_PROVIDER_CMAP_CELLS_SET_H_
