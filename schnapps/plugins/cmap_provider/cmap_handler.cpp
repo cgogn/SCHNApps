@@ -205,17 +205,6 @@ void CMapHandlerGen::check_bb_vertex_attribute(cgogn::Orbit orbit, const QString
 	}
 }
 
-void CMapHandlerGen::compute_bb()
-{
-	this->bb_diagonal_size_ = .0f;
-	this->bb_.reset();
-
-	if (bb_vertex_attribute_ && bb_vertex_attribute_->is_valid())
-		cgogn::geometry::compute_AABB(*bb_vertex_attribute_, this->bb_);
-	if (this->bb_.is_initialized())
-		this->bb_diagonal_size_ = cgogn::geometry::diagonal(this->bb_).norm();
-}
-
 bool CMapHandlerGen::remove_attribute(cgogn::Orbit orbit, const QString& att_name)
 {
 	const bool res = map()->remove_attribute(orbit, att_name.toStdString());

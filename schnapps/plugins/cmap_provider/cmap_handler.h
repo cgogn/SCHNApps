@@ -127,7 +127,7 @@ public:
 	QString bb_vertex_attribute_name() const;
 	void set_bb_vertex_attribute(const QString& attribute_name);
 	void check_bb_vertex_attribute(cgogn::Orbit orbit, const QString& attribute_name);
-	void compute_bb();
+	virtual void compute_bb() = 0;
 
 protected:
 	virtual std::unique_ptr<cgogn::Attribute_T<VEC3>> get_bb_vertex_attribute(const QString& attribute_name) const = 0;
