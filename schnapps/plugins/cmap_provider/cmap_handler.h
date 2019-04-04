@@ -28,6 +28,7 @@
 #include <schnapps/core/types.h>
 #include <schnapps/core/object.h>
 #include <cgogn/rendering/map_render.h>
+#include <cgogn/core/utils/masks.h>
 #include <functional>
 
 namespace schnapps
@@ -37,6 +38,7 @@ namespace plugin_cmap_provider
 {
 
 class CMapCellsSetGen;
+class CMapFilters;
 
 enum CMapType
 {
@@ -103,6 +105,15 @@ public:
 	CMapCellsSetGen* cells_set(cgogn::Orbit orbit, const QString& name);
 	void foreach_cells_set(cgogn::Orbit orbit, const std::function<void(CMapCellsSetGen*)>& f) const;
 	void notify_cells_set_mutually_exclusive_change(cgogn::Orbit orb, const QString& name) const;
+
+	/**********************************************************
+	 * MANAGE CELLS FILTERS                                   *
+	 *********************************************************/
+	cgogn::CellFilters* init_filter();
+	cgogn::CellFilters* filter();
+	void delete_filter();
+	bool filtered();
+
 
 protected:
 	virtual CMapCellsSetGen* new_cell_set(cgogn::Orbit orbit, const QString& name) = 0;
@@ -182,6 +193,9 @@ protected:
 
 	// CellsSets of the map
 	std::array<std::map<QString, CMapCellsSetGen*>, cgogn::NB_ORBITS> cells_sets_;
+
+	// Filter to apply on the map
+	cgogn::CellFilters* filter_{nullptr};
 
 	std::unique_ptr<cgogn::Attribute_T<VEC3>> bb_vertex_attribute_;
 };

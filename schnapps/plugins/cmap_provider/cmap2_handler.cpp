@@ -92,7 +92,10 @@ void CMap2Handler::draw(cgogn::rendering::DrawingType primitive)
 	if (!render_.is_primitive_uptodate(primitive))
 	{
 		lock_topo_access();
-		render_.init_primitives(*map(), primitive);
+		if(this->filtered())
+			render_.init_primitives(*map(),*(this->filter_), primitive);
+		else
+			render_.init_primitives(*map(), primitive);
 		unlock_topo_access();
 	}
 	render_.draw(primitive);
@@ -100,7 +103,10 @@ void CMap2Handler::draw(cgogn::rendering::DrawingType primitive)
 
 void CMap2Handler::init_primitives(cgogn::rendering::DrawingType primitive)
 {
-	render_.init_primitives(*map(), primitive);
+	if(this->filtered())
+		render_.init_primitives(*map(),*(this->filter_), primitive);
+	else
+		render_.init_primitives(*map(), primitive);
 }
 
 /*********************************************************

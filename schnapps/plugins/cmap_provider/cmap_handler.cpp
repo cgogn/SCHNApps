@@ -26,6 +26,7 @@
 
 #include <schnapps/core/view.h>
 
+#include <cgogn/core/utils/masks.h>
 
 namespace schnapps
 {
@@ -45,6 +46,8 @@ CMapHandlerGen::CMapHandlerGen(const QString& name, PluginProvider* p) :
 
 CMapHandlerGen::~CMapHandlerGen()
 {
+	if(filtered())
+		delete_filter();
 	bb_vertex_attribute_.reset();
 	delete map_;
 }
@@ -140,6 +143,30 @@ void CMapHandlerGen::notify_cells_set_mutually_exclusive_change(cgogn::Orbit orb
 	emit(cells_set_mutually_exclusive_changed(orb, name));
 }
 
+/**********************************************************
+ * MANAGE CELLS FILTERS                                   *
+ *********************************************************/
+cgogn::CellFilters* CMapHandlerGen::init_filter()
+{
+	filter_ = new cgogn::CellFilters();
+	return filter_;
+}
+
+cgogn::CellFilters* CMapHandlerGen::filter()
+{
+	return filter_;
+}
+
+void CMapHandlerGen::delete_filter()
+{
+	delete filter_;
+	filter_ = nullptr;
+}
+
+bool CMapHandlerGen::filtered()
+{
+	return filter_ != nullptr;
+}
 
 /*********************************************************
  * MANAGE BOUNDING BOX
