@@ -324,6 +324,23 @@ CMapCellsSetGen* UndirectedGraphHandler::new_cell_set(cgogn::Orbit orbit, const 
 }
 
 
+void UndirectedGraphHandler::compute_bb()
+{
+	this->bb_diagonal_size_ = .0f;
+	this->bb_.reset();
+
+	if (bb_vertex_attribute_ && bb_vertex_attribute_->is_valid())
+		if(filtered())
+		{
+			auto* attr = dynamic_cast<cgogn::Attribute<VEC3, UndirectedGraph::Vertex::ORBIT>*>(bb_vertex_attribute_.get());
+			cgogn::geometry::compute_AABB(*attr, *this->map(), *this->filter_, this->bb_);
+		}
+		else
+			cgogn::geometry::compute_AABB(*bb_vertex_attribute_, this->bb_);
+	if (this->bb_.is_initialized())
+		this->bb_diagonal_size_ = cgogn::geometry::diagonal(this->bb_).norm();
+}
+
 std::unique_ptr<cgogn::Attribute_T<VEC3> > UndirectedGraphHandler::get_bb_vertex_attribute(const QString& attribute_name) const
 {
 	auto  attribute = map()->template get_attribute<VEC3, UndirectedGraph::Vertex::ORBIT>(attribute_name.toStdString());

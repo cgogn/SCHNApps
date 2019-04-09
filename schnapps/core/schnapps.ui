@@ -22,20 +22,16 @@
      <x>0</x>
      <y>0</y>
      <width>1106</width>
-     <height>19</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="action_ToggleControlDock"/>
-    <addaction name="action_TogglePluginDock"/>
-    <addaction name="separator"/>
-    <addaction name="action_Settings"/>
-    <addaction name="action_ExportSettings"/>
     <addaction name="separator"/>
     <addaction name="action_Quit"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -44,7 +40,25 @@
     <addaction name="action_AboutCGoGN"/>
     <addaction name="action_AboutSCHNApps"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="action_ToggleControlDock"/>
+    <addaction name="action_TogglePluginDock"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="separator"/>
+    <addaction name="action_Settings"/>
+    <addaction name="action_Plugins"/>
+    <addaction name="action_Camera"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuAbout"/>
   </widget>
   <action name="action_Quit">
@@ -80,6 +94,16 @@
   <action name="action_ExportSettings">
    <property name="text">
     <string>Export settings</string>
+   </property>
+  </action>
+  <action name="action_Plugins">
+   <property name="text">
+    <string>Plugins</string>
+   </property>
+  </action>
+  <action name="action_Camera">
+   <property name="text">
+    <string>Camera</string>
    </property>
   </action>
  </widget>

@@ -73,8 +73,7 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 		vertex_base_size_(1),
 		volume_explode_factor_(0.8f),
 		use_transparency_(false),
-		transparency_factor_(127),
-		filter_(nullptr)
+		transparency_factor_(127)
 	{
 		initialize_gl();
 	}
@@ -104,12 +103,6 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 #endif
 
 private:
-
-	void set_filter(cgogn::CellFilters* f)
-	{
-		filter_ = f;
-	}
-
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
@@ -278,15 +271,15 @@ private:
 				return;
 			}
 
-			if(filter_ == nullptr)
+			if(mh_->filtered())
 			{
-				volume_drawer_->update_edge(*mh_->map(), pos_attr);
-				volume_drawer_->update_face(*mh_->map(), pos_attr);
+				volume_drawer_->update_edge(*mh_->map(), *mh_->filter(), pos_attr);
+				volume_drawer_->update_face(*mh_->map(), *mh_->filter(), pos_attr);
 			}
 			else
 			{
-				volume_drawer_->update_edge(*mh_->map(), *filter_, pos_attr);
-				volume_drawer_->update_face(*mh_->map(), *filter_, pos_attr);
+				volume_drawer_->update_edge(*mh_->map(), pos_attr);
+				volume_drawer_->update_face(*mh_->map(), pos_attr);
 			}
 
 #ifdef USE_TRANSPARENCY
@@ -361,7 +354,6 @@ private:
 	float32 volume_explode_factor_;
 	bool use_transparency_;
 	int32 transparency_factor_;
-	cgogn::CellFilters* filter_;
 };
 
 } // namespace plugin_volume_render

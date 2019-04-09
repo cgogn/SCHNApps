@@ -98,8 +98,10 @@ protected:
 	/*********************************************************
 	 * MANAGE BOUNDING BOX
 	 *********************************************************/
-
 	std::unique_ptr<cgogn::Attribute_T<VEC3> > get_bb_vertex_attribute(const QString& attribute_name) const override;
+
+public:
+	void compute_bb() override;
 
 	/**********************************************************
 	 * MANAGE ATTRIBUTES & CONNECTIVITY                       *

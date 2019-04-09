@@ -56,9 +56,10 @@ ControlDock_PluginTab::ControlDock_PluginTab(SCHNApps* s) :
 	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
 }
 
-
-
-
+void ControlDock_PluginTab::display_plugins_widget()
+{
+	show();
+}
 
 void ControlDock_PluginTab::add_plugin_directory_clicked()
 {

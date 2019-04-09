@@ -92,7 +92,10 @@ void CMap2Handler::draw(cgogn::rendering::DrawingType primitive)
 	if (!render_.is_primitive_uptodate(primitive))
 	{
 		lock_topo_access();
-		render_.init_primitives(*map(), primitive);
+		if(this->filtered())
+			render_.init_primitives(*map(),*(this->filter_), primitive);
+		else
+			render_.init_primitives(*map(), primitive);
 		unlock_topo_access();
 	}
 	render_.draw(primitive);
@@ -100,7 +103,10 @@ void CMap2Handler::draw(cgogn::rendering::DrawingType primitive)
 
 void CMap2Handler::init_primitives(cgogn::rendering::DrawingType primitive)
 {
-	render_.init_primitives(*map(), primitive);
+	if(this->filtered())
+		render_.init_primitives(*map(),*(this->filter_), primitive);
+	else
+		render_.init_primitives(*map(), primitive);
 }
 
 /*********************************************************
@@ -304,6 +310,23 @@ void CMap2Handler::update_vbo(const QString& name)
 //			return;
 //		}
 	}
+}
+
+void CMap2Handler::compute_bb()
+{
+	this->bb_diagonal_size_ = .0f;
+	this->bb_.reset();
+
+	if (bb_vertex_attribute_ && bb_vertex_attribute_->is_valid())
+		if(filtered())
+		{
+			auto* attr = dynamic_cast<cgogn::Attribute<VEC3, CMap2::Vertex::ORBIT>*>(bb_vertex_attribute_.get());
+			cgogn::geometry::compute_AABB(*attr, *this->map(), *this->filter_, this->bb_);
+		}
+		else
+			cgogn::geometry::compute_AABB(*bb_vertex_attribute_, this->bb_);
+	if (this->bb_.is_initialized())
+		this->bb_diagonal_size_ = cgogn::geometry::diagonal(this->bb_).norm();
 }
 
 std::unique_ptr<cgogn::Attribute_T<VEC3> > CMap2Handler::get_bb_vertex_attribute(const QString& attribute_name) const

@@ -49,6 +49,7 @@ public:
 	QString title() { return QString("Cameras"); }
 
 private slots:
+	void display_camera_widget();
 
 	// slots called from UI actions
 	void add_camera_button_clicked();

@@ -105,9 +105,9 @@ void Settings::to_file(const QString& filename)
 		cgogn_log_info("Settings::to_file()") << "Unable to write in the file \"" << filename.toStdString() << "\".";
 }
 
-void Settings::set_widget(QWidget* widget)
+void Settings::set_widget(SettingsWidget* widget)
 {
-	settings_widget_ = qobject_cast<SettingsWidget*>(widget);
+	settings_widget_ = widget;
 	if (settings_widget_)
 		settings_widget_->settings_ = this;
 }

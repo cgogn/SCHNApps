@@ -26,6 +26,7 @@
 
 #include <schnapps/core/view.h>
 
+#include <cgogn/core/utils/masks.h>
 
 namespace schnapps
 {
@@ -45,6 +46,8 @@ CMapHandlerGen::CMapHandlerGen(const QString& name, PluginProvider* p) :
 
 CMapHandlerGen::~CMapHandlerGen()
 {
+	if(filtered())
+		delete_filter();
 	bb_vertex_attribute_.reset();
 	delete map_;
 }
@@ -140,6 +143,30 @@ void CMapHandlerGen::notify_cells_set_mutually_exclusive_change(cgogn::Orbit orb
 	emit(cells_set_mutually_exclusive_changed(orb, name));
 }
 
+/**********************************************************
+ * MANAGE CELLS FILTERS                                   *
+ *********************************************************/
+cgogn::CellFilters* CMapHandlerGen::init_filter()
+{
+	filter_ = new cgogn::CellFilters();
+	return filter_;
+}
+
+cgogn::CellFilters* CMapHandlerGen::filter()
+{
+	return filter_;
+}
+
+void CMapHandlerGen::delete_filter()
+{
+	delete filter_;
+	filter_ = nullptr;
+}
+
+bool CMapHandlerGen::filtered()
+{
+	return filter_ != nullptr;
+}
 
 /*********************************************************
  * MANAGE BOUNDING BOX
@@ -176,17 +203,6 @@ void CMapHandlerGen::check_bb_vertex_attribute(cgogn::Orbit orbit, const QString
 			emit(bb_changed());
 		}
 	}
-}
-
-void CMapHandlerGen::compute_bb()
-{
-	this->bb_diagonal_size_ = .0f;
-	this->bb_.reset();
-
-	if (bb_vertex_attribute_ && bb_vertex_attribute_->is_valid())
-		cgogn::geometry::compute_AABB(*bb_vertex_attribute_, this->bb_);
-	if (this->bb_.is_initialized())
-		this->bb_diagonal_size_ = cgogn::geometry::diagonal(this->bb_).norm();
 }
 
 bool CMapHandlerGen::remove_attribute(cgogn::Orbit orbit, const QString& att_name)

@@ -622,16 +622,6 @@ void Plugin_VolumeRender::set_transparency_factor(View* view, CMap3Handler* mh, 
 	}
 }
 
-void Plugin_VolumeRender::set_filter(CMap3Handler* mh, cgogn::CellFilters* mask)
-{
-	for (auto& it : parameter_set_)
-	{
-		MapParameters& p = parameters(it.first, mh);
-		p.set_filter(mask);
-	}
-}
-
-
 } // namespace plugin_volume_render
 
 } // namespace schnapps

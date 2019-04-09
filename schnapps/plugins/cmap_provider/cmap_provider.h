@@ -95,6 +95,7 @@ public:
 	UndirectedGraphHandler* undirected_graph(const QString& name) const;
 
 private slots:
+	void display_explorer_widget();
 
 	// slots called from SCHNApps signals
 	void schnapps_closing();
@@ -105,6 +106,10 @@ private:
 	CMap1Provider_DockTab* cmap1_dock_tab_;
 	CMap2Provider_DockTab* cmap2_dock_tab_;
 	CMap3Provider_DockTab* cmap3_dock_tab_;
+
+	QAction* action_cmap_provider_{Q_NULLPTR};
+	QDialog* cmap_explorer_{Q_NULLPTR};
+	QTabWidget* cmap_explorer_dock_tab_widget_{Q_NULLPTR};
 };
 
 } // namespace plugin_cmap_provider

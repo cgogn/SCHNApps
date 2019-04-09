@@ -29,6 +29,9 @@
 #include <schnapps/plugins/cmap_provider/cmap3_provider_dock_tab.h>
 
 #include <schnapps/core/schnapps.h>
+#include <QDialog>
+#include <QTabWidget>
+#include <QAction>
 
 namespace schnapps
 {
@@ -48,34 +51,54 @@ QString Plugin_CMapProvider::plugin_name()
 
 bool Plugin_CMapProvider::enable()
 {
+	action_cmap_provider_  = schnapps_->add_menu_action("Tools;CMap Explorer", "Open CMap Explorer Dialog");
+	connect(action_cmap_provider_, SIGNAL(triggered()), this, SLOT(display_explorer_widget()));
+
+	cmap_explorer_ = new QDialog(Q_NULLPTR);
+
+	cmap_explorer_dock_tab_widget_ = new QTabWidget(cmap_explorer_);
+	cmap_explorer_dock_tab_widget_->setObjectName("ControlDockTabWidget");
+	cmap_explorer_dock_tab_widget_->setLayoutDirection(Qt::LeftToRight);
+	cmap_explorer_dock_tab_widget_->setTabPosition(QTabWidget::North);
+	cmap_explorer_dock_tab_widget_->setMovable(true);
+	cmap_explorer_dock_tab_widget_->setUsesScrollButtons(true);
+
+	QVBoxLayout* layout = new QVBoxLayout;
+	layout->addWidget(cmap_explorer_dock_tab_widget_);
+
+	cmap_explorer_->setLayout(layout);
+
 	cmap0_dock_tab_ = new CMap0Provider_DockTab(this->schnapps_, this);
-	schnapps_->add_control_dock_tab(this, cmap0_dock_tab_, "CMap0");
+	cmap_explorer_dock_tab_widget_->addTab(cmap0_dock_tab_, "CMap0");
 
 	cmap1_dock_tab_ = new CMap1Provider_DockTab(this->schnapps_, this);
-	schnapps_->add_control_dock_tab(this, cmap1_dock_tab_, "CMap1");
+	cmap_explorer_dock_tab_widget_->addTab(cmap1_dock_tab_, "CMap1");
 
 	cmap2_dock_tab_ = new CMap2Provider_DockTab(this->schnapps_, this);
-	schnapps_->add_control_dock_tab(this, cmap2_dock_tab_, "CMap2");
+	cmap_explorer_dock_tab_widget_->addTab(cmap2_dock_tab_, "CMap2");
 
 	cmap3_dock_tab_ = new CMap3Provider_DockTab(this->schnapps_, this);
-	schnapps_->add_control_dock_tab(this, cmap3_dock_tab_, "CMap3");
+	cmap_explorer_dock_tab_widget_->addTab(cmap3_dock_tab_, "CMap3");
 
 	return true;
 }
 
+void Plugin_CMapProvider::display_explorer_widget()
+{
+	cmap_explorer_->show();
+}
+
 void Plugin_CMapProvider::disable()
 {
-	schnapps_->remove_control_dock_tab(this, cmap0_dock_tab_);
+	schnapps_->remove_menu_action(action_cmap_provider_);
+
 	delete cmap0_dock_tab_;
-
-	schnapps_->remove_control_dock_tab(this, cmap1_dock_tab_);
 	delete cmap1_dock_tab_;
-
-	schnapps_->remove_control_dock_tab(this, cmap2_dock_tab_);
 	delete cmap2_dock_tab_;
-
-	schnapps_->remove_control_dock_tab(this, cmap3_dock_tab_);
 	delete cmap3_dock_tab_;
+
+	delete cmap_explorer_dock_tab_widget_;
+	delete cmap_explorer_;
 }
 
 /*********************************************************

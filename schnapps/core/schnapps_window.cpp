@@ -26,6 +26,7 @@
 #include <schnapps/core/settings_widget.h>
 #include<QKeyEvent>
 
+#include <schnapps/core/control_dock_plugin_tab.h>
 
 namespace schnapps
 {
@@ -66,7 +67,7 @@ SCHNAppsWindow::SCHNAppsWindow(
 	control_dock_tab_widget_->setUsesScrollButtons(true);
 
 	addDockWidget(Qt::LeftDockWidgetArea, control_dock_);
-	control_dock_->setVisible(true);
+	control_dock_->setVisible(false);
 	control_dock_->setWidget(control_dock_tab_widget_);
 
 	connect(action_ToggleControlDock, SIGNAL(triggered()), this, SLOT(toggle_control_dock()));
@@ -97,16 +98,44 @@ SCHNAppsWindow::SCHNAppsWindow(
 	connect(action_AboutSCHNApps, SIGNAL(triggered()), this, SLOT(about_SCHNApps()));
 	connect(action_AboutCGoGN, SIGNAL(triggered()), this, SLOT(about_CGoGN()));
 
-	settings_widget_ = cgogn::make_unique<SettingsWidget>();
+	settings_widget_ = cgogn::make_unique<SettingsWidget>(settings_path);
 	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
-	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, init_plugin_name, this);
-
-	connect(action_ExportSettings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
+	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, init_plugin_name, this);
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()
-{}
+{
+	schnapps_.reset();
+	settings_widget_.reset();
+}
+
+void SCHNAppsWindow::about_SCHNApps()
+{
+	QString str("SCHNApps:\nS... CGoGN Holder for Nice Applications\n"
+				"Web site: http://cgogn.unistra.fr \n"
+				"Contact information: cgogn@unistra.fr");
+	QMessageBox::about(this, "About SCHNApps", str);
+}
+
+void SCHNAppsWindow::about_CGoGN()
+{
+	QString str("CGoGN:\nCombinatorial and Geometric modeling\n"
+				"with Generic N-dimensional Maps\n"
+				"Web site: http://cgogn.unistra.fr \n"
+				"Contact information: cgogn@unistra.fr");
+	QMessageBox::about(this, "About CGoGN", str);
+}
+
+void SCHNAppsWindow::toggle_control_dock()
+{
+	control_dock_->setVisible(control_dock_->isHidden());
+}
+
+void SCHNAppsWindow::toggle_plugin_dock()
+{
+	plugin_dock_->setVisible(plugin_dock_->isHidden());
+}
 
 QAction* SCHNAppsWindow::add_menu_action(const QString& menu_path, const QString& action_text)
 {
@@ -115,8 +144,7 @@ QAction* SCHNAppsWindow::add_menu_action(const QString& menu_path, const QString
 	if (!menu_path.isEmpty())
 	{
 		// extracting all the substring separated by ';'
-		QStringList step_names = menu_path.split(";");
-		step_names.removeAll("");
+		QStringList step_names = menu_path.split(";", QString::SkipEmptyParts);
 		unsigned int nb_steps = step_names.count();
 
 		// if only one substring: error + failure

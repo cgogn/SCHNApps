@@ -67,7 +67,7 @@ public:
 	void to_file(const QString& filename);
 	static std::unique_ptr<Settings> from_file(const QString& setting_filename);
 
-	void set_widget(QWidget* widget);
+	void set_widget(SettingsWidget* widget);
 
 private slots:
 
