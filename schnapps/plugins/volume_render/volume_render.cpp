@@ -162,11 +162,21 @@ void Plugin_VolumeRender::draw_object(View* view, Object *o, const QMatrix4x4& p
 		{
 			if (p.position_vbo_)
 			{
-				if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
-					p.set_volume_explode_factor(0.995f);
-				if (!p.use_transparency_ && p.volume_drawer_rend_)
-					p.volume_drawer_rend_->draw_faces(proj, mv);
-			}
+                if(p.render_color_per_volumes_)
+                {
+                    if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
+                        p.set_volume_explode_factor(0.995f);
+                    if (!p.use_transparency_ && p.volume_drawer_rend_)
+                        p.volume_drawer_color_rend_->draw_faces(proj, mv);
+                }
+                else
+                {
+                    if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
+                        p.set_volume_explode_factor(0.995f);
+                    if (!p.use_transparency_ && p.volume_drawer_rend_)
+                        p.volume_drawer_rend_->draw_faces(proj, mv);
+                 }
+             }
 		}
 	}
 }
@@ -446,6 +456,42 @@ void Plugin_VolumeRender::enable_on_selected_view(Plugin* p)
 /******************************************************************************/
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
+
+void Plugin_VolumeRender::set_color_per_volume(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
+{
+    if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+    {
+        MapParameters& p = parameters(view, mh);
+        p.set_render_color_per_volume(b);
+//        if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+//            dock_tab_->set_color_per_volume(b);
+        view->update();
+    }
+}
+
+void Plugin_VolumeRender::set_volume_attribute(View* view, CMap3Handler* mh, const QString& attrib, bool update_dock_tab)
+{
+    if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+    {
+        MapParameters& p = parameters(view, mh);
+        p.set_volume_attribute(attrib);
+//        if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+//            dock_tab_->set_color_per_volume(b);
+        view->update();
+    }
+}
+
+void Plugin_VolumeRender::set_color_map(View* view, CMap3Handler* mh, const QString& color_map, bool update_dock_tab)
+{
+    if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+    {
+        MapParameters& p = parameters(view, mh);
+        p.set_color_map(color_map);
+//        if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+//            dock_tab_->set_color_per_volume(b);
+        view->update();
+    }
+}
 
 void Plugin_VolumeRender::set_position_vbo(View* view, CMap3Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab)
 {

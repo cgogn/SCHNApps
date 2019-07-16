@@ -25,12 +25,15 @@
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_DOCK_TAB_H_
 
 #include <schnapps/plugins/volume_render/plugin_volume_render_export.h>
-
+#include <schnapps/core/types.h>
 #include <ui_volume_render.h>
 
 #include <QColorDialog>
 
-namespace cgogn { namespace rendering { class VBO; } }
+namespace cgogn {
+    enum Orbit: numerics::uint32;
+    namespace rendering { class VBO; }
+}
 
 namespace schnapps
 {
@@ -77,6 +80,8 @@ private:
 	QColor edge_color_;
 	QColor face_color_;
 
+    QString previousSelection_;
+
 private slots:
 
 	// slots called from UI signals
@@ -93,6 +98,8 @@ private slots:
 	void transparency_enabled_changed(bool b);
 	void transparency_factor_changed(int n);
 
+    void selected_volume_scalar_changed();
+    void color_map_changed(int i);
 	void vertex_color_clicked();
 	void edge_color_clicked();
 	void face_color_clicked();
@@ -108,6 +115,8 @@ private slots:
 	// slots called from MapHandlerGen signals
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
+    void selected_map_attribute_added(cgogn::Orbit o, QString name);
+    void selected_map_attribute_removed(cgogn::Orbit o, const QString& name);
 
 private:
 
