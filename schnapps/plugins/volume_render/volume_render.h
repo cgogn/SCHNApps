@@ -113,7 +113,10 @@ private slots:
 
 public slots:
 
-	void set_position_vbo(View* view, CMap3Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+    void set_color_per_volume(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+    void set_volume_attribute(View* view, CMap3Handler* mh, const QString& attrib, bool update_dock_tab);
+    void set_color_map(View* view, CMap3Handler* mh, const QString& color_map, bool update_dock_tab);
+    void set_position_vbo(View* view, CMap3Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
 	void set_render_vertices(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
 	void set_render_edges(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
 	void set_render_faces(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
