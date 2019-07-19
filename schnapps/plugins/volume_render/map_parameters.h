@@ -418,8 +418,6 @@ private:
                     else
                         cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
 
-                    std::cout << vaf32[i] <<  " :(" << r << "," << g << "," << b << ")" << std::endl;
-
                     color_attr[i] = VEC3(r, g, b);
                 }
             }
@@ -460,8 +458,6 @@ private:
                 else
                     cgogn::color_map(color_map_, float64((-min_z + val) / denom), r, g, b);
 
-                //std::cout << vaf64[i] <<  " :(" << r << "," << g << "," << b << ")" << std::endl;
-
                 color_attr[i] = VEC3(r, g, b);
             }
 
@@ -491,8 +487,6 @@ private:
                 max_z = -1;
             }
 
-            std::cout << "min_z: " << min_z << " , max_z: " << max_z << std::endl;
-
             float32 denom = (max_z - min_z);
             denom = (denom == 0.f) ? 1 : denom;
 
@@ -507,8 +501,6 @@ private:
                         cgogn::color_map(color_map_, 0.f, r, g, b);
                     else
                         cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
-
-                    //std::cout << vai32[i] <<  " :(" << r << "," << g << "," << b << ")" << std::endl;
 
                     color_attr[i] = VEC3(r, g, b);
                 }
@@ -539,8 +531,6 @@ private:
                 min_z = 0;
                 max_z = -1;
             }
-
-            std::cout << "min_z: " << min_z << " , max_z: " << max_z << std::endl;
 
             float32 denom = (max_z - min_z);
             denom = (denom == 0.f) ? 1 : denom;
@@ -583,8 +573,6 @@ private:
                         cgogn::color_map(color_map_, 0.f, r, g, b);
                     else
                         cgogn::color_map(color_map_, val, r, g, b);
-
-                    std::cout << vabool[i] <<  " :(" << r << "," << g << "," << b << ")" << std::endl;
 
                     color_attr[i] = VEC3(r, g, b);
 //                }
