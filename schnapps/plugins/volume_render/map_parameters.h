@@ -380,7 +380,7 @@ private:
         if(!color_attr.is_valid())
             color_attr = mh_->map()->add_attribute<VEC3, CMap3::Volume::ORBIT>(color_attribute.toStdString());
 
-        auto is_enabled = mh_->map()->get_attribute<bool, CMap3::Volume::ORBIT>("enabled");
+        //auto is_enabled = mh_->map()->get_attribute<bool, CMap3::Volume::ORBIT>("enabled");
 
         const auto vaf32 = mh_->map()->get_attribute<float32, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
         if(vaf32.is_valid())
@@ -391,7 +391,7 @@ private:
             if(normalize)
                 for(uint32 i = 0 ; i < vaf32.size() ; ++i)
                 {
-                    if(is_enabled[i])
+                    //if(is_enabled[i])
                         if(vaf32[i] < min_z)
                             min_z = vaf32[i];
                         if(vaf32[i] > max_z)
@@ -408,7 +408,7 @@ private:
 
             for(uint32 i = 0 ; i < vaf32.size() ; ++i)
             {
-                if(is_enabled[i])
+                //if(is_enabled[i])
                 {
                     float32 val = vaf32[i];
 
@@ -473,7 +473,7 @@ private:
             if(normalize)
                 for(uint32 i = 0 ; i < vai32.size() ; ++i)
                 {
-                    if(is_enabled[i])
+                    //if(is_enabled[i])
                     {
                         if(vai32[i] < min_z)
                             min_z = vai32[i];
@@ -492,7 +492,7 @@ private:
 
             for(uint32 i = 0 ; i < vai32.size() ; ++i)
             {
-                if(is_enabled[i])
+                //if(is_enabled[i])
                 {
                     float32 val = vai32[i];
 
@@ -501,6 +501,53 @@ private:
                         cgogn::color_map(color_map_, 0.f, r, g, b);
                     else
                         cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
+
+                    color_attr[i] = VEC3(r, g, b);
+                }
+            }
+
+            update_volume_color_drawer();
+        }
+
+        const auto vaui32 = mh_->map()->get_attribute<uint32, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
+        if(vaui32.is_valid())
+        {
+            float32 min_z = std::numeric_limits<float32>::max();
+            float32 max_z = std::numeric_limits<float32>::lowest();
+
+            if(normalize)
+                for(uint32 i = 0 ; i < vaui32.size() ; ++i)
+                {
+                    //if(is_enabled[i])
+                    {
+                        if(vaui32[i] < min_z)
+                            min_z = vaui32[i];
+                        if(vaui32[i] > max_z)
+                            max_z = vaui32[i];
+                    }
+                }
+            else
+            {
+                min_z = 0;
+                max_z = -1;
+            }
+
+            float32 denom = (max_z - min_z);
+            denom = (denom == 0.f) ? 1 : denom;
+
+            for(uint32 i = 0 ; i < vaui32.size() ; ++i)
+            {
+                //if(is_enabled[i])
+                {
+                    float32 val = vaui32[i];
+
+                    float32 r, g, b;
+                    if(std::isnan(val))
+                        cgogn::color_map(color_map_, 0.f, r, g, b);
+                    else
+                        cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
+
+                    //std::cout << vaui64[i] <<  " :(" << r << "," << g << "," << b << ")" << std::endl;
 
                     color_attr[i] = VEC3(r, g, b);
                 }
@@ -518,7 +565,7 @@ private:
             if(normalize)
                 for(uint32 i = 0 ; i < vaui64.size() ; ++i)
                 {
-                    if(is_enabled[i])
+                    //if(is_enabled[i])
                     {
                         if(vaui64[i] < min_z)
                             min_z = vaui64[i];
@@ -537,7 +584,7 @@ private:
 
             for(uint32 i = 0 ; i < vaui64.size() ; ++i)
             {
-                if(is_enabled[i])
+                //if(is_enabled[i])
                 {
                     float32 val = vaui64[i];
 
