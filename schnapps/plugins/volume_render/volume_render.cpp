@@ -65,6 +65,7 @@ MapParameters& Plugin_VolumeRender::parameters(View* view, CMap3Handler* mh)
 		MapParameters& p = view_param_set[mh];
 		p.mh_ = mh;
 		p.set_vertex_base_size(mh->bb_diagonal_size() / (2.0f * std::sqrt(mh->map()->nb_cells<CMap3::Edge>())));
+
 		return p;
 	}
 	else
@@ -165,16 +166,21 @@ void Plugin_VolumeRender::draw_object(View* view, Object *o, const QMatrix4x4& p
                 if(p.render_color_per_volumes_)
                 {
                     if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
-                        p.set_volume_explode_factor(0.995f);
-                    if (!p.use_transparency_ && p.volume_drawer_rend_)
-                        p.volume_drawer_color_rend_->draw_faces(proj, mv);
+						p.set_volume_explode_factor(0.995f);
+					if(p.apply_grid_clipping_plane_)
+						p.hexa_drawer_rend_->draw_faces(proj, mv);
+					else if (!p.use_transparency_ && p.volume_drawer_rend_)
+						p.volume_drawer_color_rend_->draw_faces(proj, mv);
                 }
                 else
                 {
                     if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
                         p.set_volume_explode_factor(0.995f);
-                    if (!p.use_transparency_ && p.volume_drawer_rend_)
-                        p.volume_drawer_rend_->draw_faces(proj, mv);
+
+					if(p.apply_grid_clipping_plane_)
+						p.hexa_drawer_rend_->draw_faces(proj, mv);
+					else if (!p.use_transparency_ && p.volume_drawer_rend_)
+						p.volume_drawer_rend_->draw_faces(proj, mv);
                  }
              }
 		}
@@ -574,6 +580,18 @@ void Plugin_VolumeRender::set_apply_clipping_plane(View* view, CMap3Handler* mh,
 	}
 }
 
+void Plugin_VolumeRender::set_apply_grid_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	{
+		MapParameters& p = parameters(view, mh);
+		p.set_apply_grid_clipping_plane(b);
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+			dock_tab_->set_apply_grid_clipping_plane(b);
+		view->update();
+	}
+}
+
 void Plugin_VolumeRender::set_vertex_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab)
 {
 	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
@@ -664,6 +682,18 @@ void Plugin_VolumeRender::set_transparency_factor(View* view, CMap3Handler* mh, 
 		p.set_transparency_factor(tf);
 		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_transparency_factor(tf);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_grid_clipping_plane(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	{
+		MapParameters& p = parameters(view, mh);
+		p.set_clipping_plane(x,y,z);
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+			dock_tab_->set_grid_clipping_plane(x,y,z);
 		view->update();
 	}
 }

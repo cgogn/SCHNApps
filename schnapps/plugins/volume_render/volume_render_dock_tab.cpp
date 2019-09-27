@@ -54,6 +54,7 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(render_faces_changed(bool)));
 	connect(check_renderTopology, SIGNAL(toggled(bool)), this, SLOT(render_topology_changed(bool)));
 	connect(check_clippingPlane, SIGNAL(toggled(bool)), this, SLOT(apply_clipping_plane_changed(bool)));
+	connect(check_gridClippingPlane, SIGNAL(toggled(bool)), this, SLOT(apply_grid_clipping_plane_changed(bool)));
 	connect(slider_vertexScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertex_scale_factor_changed(int)));
 	connect(slider_volumeExplodeFactor, SIGNAL(valueChanged(int)), this, SLOT(volume_explode_factor_changed(int)));
 
@@ -64,6 +65,10 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
+
+	connect(slider_clippingPlaneX, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_x_changed(int)));
+	connect(slider_clippingPlaneY, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_y_changed(int)));
+	connect(slider_clippingPlaneZ, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_z_changed(int)));
 
 	check_useTransparency->setChecked(false);
 	slider_transparency->setDisabled(true);
@@ -169,6 +174,12 @@ void VolumeRender_DockTab::apply_clipping_plane_changed(bool b)
 		plugin_->set_apply_clipping_plane(schnapps_->selected_view(), selected_map_, b, false);
 }
 
+void VolumeRender_DockTab::apply_grid_clipping_plane_changed(bool b)
+{
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_apply_grid_clipping_plane(schnapps_->selected_view(), selected_map_, b, false);
+}
+
 void VolumeRender_DockTab::vertex_scale_factor_changed(int i)
 {
 	if (!updating_ui_)
@@ -198,6 +209,33 @@ void VolumeRender_DockTab::transparency_factor_changed(int n)
 	if (!updating_ui_ && selected_map_)
 		plugin_->set_transparency_factor(schnapps_->selected_view(), selected_map_, n, false);
 #endif
+}
+
+void VolumeRender_DockTab::clipping_plane_x_changed(int i)
+{
+	if (!updating_ui_)
+		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
+										 i,
+										 slider_clippingPlaneY->value(),
+										 slider_clippingPlaneZ->value(), false);
+}
+
+void VolumeRender_DockTab::clipping_plane_y_changed(int i)
+{
+	if (!updating_ui_)
+		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
+										 slider_clippingPlaneX->value(),
+										 i,
+										 slider_clippingPlaneZ->value(), false);
+}
+
+void VolumeRender_DockTab::clipping_plane_z_changed(int i)
+{
+	if (!updating_ui_)
+		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
+										 slider_clippingPlaneX->value(),
+										 slider_clippingPlaneY->value(),
+										 i, false);
 }
 
 void VolumeRender_DockTab::selected_volume_scalar_changed()
@@ -377,7 +415,6 @@ void VolumeRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 void VolumeRender_DockTab::selected_map_attribute_added(cgogn::Orbit o, QString name)
 {
     updating_ui_ = true;
-    std::cout << name.toStdString() << std::endl;
 //    if (o == CMap3::Vertex::ORBIT)
 //           combo_positionAttribute->addItem(name);
     if (o == CMap3::Volume::ORBIT)
@@ -455,6 +492,13 @@ void VolumeRender_DockTab::set_apply_clipping_plane(bool b)
 	updating_ui_ = false;
 }
 
+void VolumeRender_DockTab::set_apply_grid_clipping_plane(bool b)
+{
+	updating_ui_ = true;
+	check_gridClippingPlane->setChecked(b);
+	updating_ui_ = false;
+}
+
 void VolumeRender_DockTab::set_vertex_color(const QColor& color)
 {
 	updating_ui_ = true;
@@ -505,6 +549,15 @@ void VolumeRender_DockTab::set_transparency_factor(int tf)
 {
 	updating_ui_ = true;
 	slider_transparency->setValue(tf);
+	updating_ui_ = false;
+}
+
+void VolumeRender_DockTab::set_grid_clipping_plane(int x, int y, int z)
+{
+	updating_ui_ = true;
+	slider_clippingPlaneX->setValue(x);
+	slider_clippingPlaneY->setValue(y);
+	slider_clippingPlaneZ->setValue(z);
 	updating_ui_ = false;
 }
 
@@ -578,7 +631,43 @@ void VolumeRender_DockTab::refresh_ui()
 #endif
 
 	check_clippingPlane->setChecked(p.apply_clipping_plane());
+	check_clippingPlane->setChecked(p.apply_grid_clipping_plane());
 
+	auto i_ = mh->map()->get_attribute<uint32, CMap3::Volume>("i");
+	auto j_ = mh->map()->get_attribute<uint32, CMap3::Volume>("j");
+	auto k_ = mh->map()->get_attribute<uint32, CMap3::Volume>("k");
+
+	slider_clippingPlaneX->setValue(0);
+	slider_clippingPlaneY->setValue(0);
+	slider_clippingPlaneZ->setValue(0);
+
+	uint32 mx;
+	if(i_.is_valid())
+	{
+		slider_clippingPlaneX->setEnabled(true);
+		mx = std::numeric_limits<uint32>::lowest();
+		for(auto el : i_)
+			mx = std::max(mx, el);
+		slider_clippingPlaneX->setRange(0, mx);
+	}
+
+	if(j_.is_valid())
+	{
+		slider_clippingPlaneY->setEnabled(true);
+		mx = std::numeric_limits<uint32>::lowest();
+		for(auto el : j_)
+			mx = std::max(mx, el);
+		slider_clippingPlaneY->setRange(0, mx);
+	}
+
+	if(k_.is_valid())
+	{
+		slider_clippingPlaneZ->setEnabled(true);
+		mx = std::numeric_limits<uint32>::lowest();
+		for(auto el : k_)
+			mx = std::max(mx, el);
+		slider_clippingPlaneZ->setRange(0, mx);
+	}
 	updating_ui_ = false;
 }
 

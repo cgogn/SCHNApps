@@ -122,6 +122,7 @@ public slots:
 	void set_render_faces(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
 	void set_render_topology(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
 	void set_apply_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_apply_grid_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
 	void set_vertex_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
 	void set_edge_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
 	void set_face_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
@@ -129,6 +130,8 @@ public slots:
 	void set_volume_explode_factor(View* view, CMap3Handler* mh, float32 vef, bool update_dock_tab);
 	void set_transparency_enabled(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
 	void set_transparency_factor(View* view, CMap3Handler* mh, int32 tf, bool update_dock_tab);
+
+	void set_grid_clipping_plane(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab);
 
 private:
 

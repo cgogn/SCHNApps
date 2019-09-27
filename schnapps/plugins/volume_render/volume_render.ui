@@ -8,50 +8,19 @@
     <x>0</x>
     <y>0</y>
     <width>330</width>
-    <height>916</height>
+    <height>1047</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="23" column="0" colspan="3">
-    <widget class="Line" name="line_3">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+   <item row="15" column="0" rowspan="2">
+    <widget class="QCheckBox" name="check_useTransparency">
+     <property name="text">
+      <string>use transparency</string>
      </property>
     </widget>
-   </item>
-   <item row="13" column="0" colspan="3">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="Line" name="line_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_7">
-       <property name="text">
-        <string>Min</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spin_min"/>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_6">
-       <property name="text">
-        <string>Max</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="spin_max"/>
-     </item>
-    </layout>
    </item>
    <item row="1" column="1" colspan="2">
     <widget class="QComboBox" name="combo_positionVBO">
@@ -68,50 +37,99 @@
      </item>
     </widget>
    </item>
-   <item row="12" column="0">
-    <widget class="QCheckBox" name="check_autoUpdateMinMax">
+   <item row="18" column="0">
+    <widget class="QCheckBox" name="check_clippingPlane">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="text">
-      <string>auto update min/max</string>
+      <string>clipping plane</string>
+     </property>
+     <property name="checked">
+      <bool>false</bool>
+     </property>
+     <property name="autoExclusive">
+      <bool>false</bool>
      </property>
     </widget>
    </item>
-   <item row="5" column="2">
-    <widget class="QPushButton" name="edgeColorButton">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="4" column="0">
+    <widget class="QCheckBox" name="check_renderVertices">
+     <property name="text">
+      <string>render vertices</string>
      </property>
-     <property name="maximumSize">
+    </widget>
+   </item>
+   <item row="11" column="0" colspan="3">
+    <widget class="Line" name="line_5">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="22" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Z direction:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="slider_clippingPlaneZ">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QListWidget" name="list_maps"/>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_2">
+     <property name="minimumSize">
       <size>
-       <width>16777215</width>
-       <height>32</height>
+       <width>96</width>
+       <height>0</height>
       </size>
      </property>
      <property name="text">
-      <string>Color</string>
+      <string>Position :</string>
      </property>
     </widget>
    </item>
-   <item row="9" column="2">
-    <widget class="QComboBox" name="combo_colorMap">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="21" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <item>
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>Y direction:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="slider_clippingPlaneY">
+       <property name="maximum">
+        <number>1000</number>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>Scalar:</string>
      </property>
     </widget>
    </item>
-   <item row="8" column="0" colspan="3">
-    <widget class="QListWidget" name="list_scalarAttribute">
-     <property name="selectionMode">
-      <enum>QAbstractItemView::SingleSelection</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="2">
+   <item row="3" column="2" rowspan="2">
     <widget class="QPushButton" name="vertexColorButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -130,33 +148,45 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_2">
-     <property name="minimumSize">
-      <size>
-       <width>96</width>
-       <height>0</height>
-      </size>
-     </property>
+   <item row="7" column="0">
+    <widget class="QCheckBox" name="check_renderFaces">
      <property name="text">
-      <string>Position :</string>
+      <string>render faces</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
-   <item row="22" column="1" colspan="2">
-    <widget class="QSlider" name="slider_transparency">
-     <property name="maximum">
-      <number>254</number>
-     </property>
-     <property name="value">
-      <number>127</number>
-     </property>
+   <item row="2" column="0" rowspan="2" colspan="3">
+    <widget class="Line" name="line"/>
+   </item>
+   <item row="14" column="0" colspan="3">
+    <widget class="Line" name="line_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item row="4" column="0">
+   <item row="20" column="0" colspan="3">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>X direction:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSlider" name="slider_clippingPlaneX">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="5" column="0">
     <widget class="QSlider" name="slider_vertexScaleFactor">
      <property name="value">
       <number>50</number>
@@ -166,17 +196,50 @@
      </property>
     </widget>
    </item>
-   <item row="5" column="0">
+   <item row="17" column="0" colspan="3">
+    <widget class="Line" name="line_3">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2">
+    <widget class="QComboBox" name="combo_colorMap">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="2">
+    <widget class="QPushButton" name="faceColorButton">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Color</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
     <widget class="QCheckBox" name="check_renderEdges">
      <property name="text">
       <string>render edges</string>
      </property>
     </widget>
    </item>
-   <item row="2" column="0" colspan="3">
-    <widget class="Line" name="line"/>
-   </item>
-   <item row="19" column="0" colspan="3">
+   <item row="13" column="0" colspan="3">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="labelExplodVolumes">
@@ -209,15 +272,8 @@
      </item>
     </layout>
    </item>
-   <item row="21" column="0" rowspan="2">
-    <widget class="QCheckBox" name="check_useTransparency">
-     <property name="text">
-      <string>use transparency</string>
-     </property>
-    </widget>
-   </item>
    <item row="6" column="2">
-    <widget class="QPushButton" name="faceColorButton">
+    <widget class="QPushButton" name="edgeColorButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
        <horstretch>0</horstretch>
@@ -235,91 +291,47 @@
      </property>
     </widget>
    </item>
-   <item row="24" column="0">
-    <widget class="QCheckBox" name="check_clippingPlane">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>clipping plane</string>
-     </property>
-     <property name="checked">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="10" column="2">
-    <widget class="QSlider" name="slider_expansion">
-     <property name="maximum">
-      <number>10</number>
-     </property>
-     <property name="pageStep">
-      <number>1</number>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0">
-    <widget class="QCheckBox" name="check_renderFaces">
-     <property name="text">
-      <string>render faces</string>
-     </property>
-     <property name="checked">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="0">
-    <widget class="QCheckBox" name="check_renderVertices">
-     <property name="text">
-      <string>render vertices</string>
-     </property>
-    </widget>
-   </item>
-   <item row="0" column="0" colspan="3">
-    <widget class="QListWidget" name="list_maps"/>
-   </item>
-   <item row="20" column="0" colspan="3">
-    <widget class="Line" name="line_2">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-    </widget>
-   </item>
    <item row="10" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Expansion:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="18" column="0">
-    <widget class="QCheckBox" name="check_renderTopology">
-     <property name="text">
-      <string>render topology</string>
-     </property>
-    </widget>
-   </item>
-   <item row="7" column="0">
-    <widget class="QLabel" name="label_3">
-     <property name="text">
-      <string>Scalar:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="9" column="0">
     <widget class="QLabel" name="label_4">
      <property name="text">
       <string>Colormap:</string>
      </property>
     </widget>
    </item>
-   <item row="17" column="0" colspan="3">
-    <widget class="Line" name="line_5">
+   <item row="16" column="1" colspan="2">
+    <widget class="QSlider" name="slider_transparency">
+     <property name="maximum">
+      <number>254</number>
+     </property>
+     <property name="value">
+      <number>127</number>
+     </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="0" colspan="3">
+    <widget class="QListWidget" name="list_scalarAttribute">
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SingleSelection</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="12" column="0">
+    <widget class="QCheckBox" name="check_renderTopology">
+     <property name="text">
+      <string>render topology</string>
+     </property>
+    </widget>
+   </item>
+   <item row="19" column="0">
+    <widget class="QCheckBox" name="check_gridClippingPlane">
+     <property name="text">
+      <string>grid clipping plane</string>
+     </property>
+     <property name="autoExclusive">
+      <bool>false</bool>
      </property>
     </widget>
    </item>

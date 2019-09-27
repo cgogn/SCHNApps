@@ -93,10 +93,15 @@ private slots:
 	void render_faces_changed(bool b);
 	void render_topology_changed(bool b);
 	void apply_clipping_plane_changed(bool b);
+	void apply_grid_clipping_plane_changed(bool b);
 	void vertex_scale_factor_changed(int i);
 	void volume_explode_factor_changed(int i);
 	void transparency_enabled_changed(bool b);
 	void transparency_factor_changed(int n);
+
+	void clipping_plane_x_changed(int i);
+	void clipping_plane_y_changed(int i);
+	void clipping_plane_z_changed(int i);
 
     void selected_volume_scalar_changed();
     void color_map_changed(int i);
@@ -132,6 +137,7 @@ public:
 	void set_render_faces(bool b);
 	void set_render_topology(bool b);
 	void set_apply_clipping_plane(bool b);
+	void set_apply_grid_clipping_plane(bool b);
 	void set_vertex_color(const QColor& color);
 	void set_edge_color(const QColor& color);
 	void set_face_color(const QColor& color);
@@ -139,6 +145,8 @@ public:
 	void set_volume_explode_factor(float vef);
 	void set_transparency_enabled(bool b);
 	void set_transparency_factor(int tf);
+
+	void set_grid_clipping_plane(int x, int y, int z);
 
 	CMap3Handler* selected_map() { return selected_map_; }
 	void refresh_ui();
