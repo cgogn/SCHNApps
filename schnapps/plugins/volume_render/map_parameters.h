@@ -34,6 +34,7 @@
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/volume_drawer.h>
+#include <cgogn/rendering/hexagrid_drawer.h>
 #include <cgogn/rendering/frame_manipulator.h>
 #include <cgogn/rendering/topo_drawer.h>
 #ifdef USE_TRANSPARENCY
@@ -68,6 +69,7 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 		render_topology_(false),
         render_color_per_volumes_(false),
 		apply_clipping_plane_(false),
+		apply_grid_clipping_plane_(false),
 		clipping_plane_initialized_(false),
 		vertex_color_(190, 85, 168),
 		edge_color_(0, 0, 0),
@@ -77,6 +79,9 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 		volume_explode_factor_(0.8f),
 		use_transparency_(false),
         transparency_factor_(127),
+		clipping_x_(0),
+		clipping_y_(0),
+		clipping_z_(0),
         color_map_(cgogn::ColorMapType::INFERNO)
 	{
 		initialize_gl();
@@ -91,6 +96,7 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 	inline bool render_topology() const { return render_topology_; }
     inline bool render_color_per_volume() const { return render_color_per_volumes_; }
 	inline bool apply_clipping_plane() const { return apply_clipping_plane_; }
+	inline bool apply_grid_clipping_plane() const { return apply_grid_clipping_plane_; }
 	inline const QColor& vertex_color() const { return vertex_color_; }
 	inline const QColor& edge_color() const { return edge_color_; }
 	inline const QColor& face_color() const { return face_color_; }
@@ -118,6 +124,9 @@ private:
 			update_volume_drawer();
             if(render_topology_)
                 update_topo_drawer();
+
+			if(apply_grid_clipping_plane_)
+				update_hexa_drawer();
 		}
 		else
 			position_vbo_ = nullptr;
@@ -172,9 +181,6 @@ private:
         color_map_ = cgogn::color_map_type(color_map.toStdString());
         render_color_per_volumes_ = true;
 
-
-        std::cout << std::boolalpha << recompute << std::endl;
-
         if(recompute)
             update_volume_color_attribute(true);
     }
@@ -203,6 +209,10 @@ private:
 		topo_drawer_->set_explode_volume(vef);
 		if (render_topology_)
 			update_topo_drawer();
+
+		hexa_drawer_rend_->set_explode_volume(volume_explode_factor_);
+		if(apply_grid_clipping_plane_)
+			update_hexa_drawer();
 	}
 
 	void set_transparency_enabled(bool b)
@@ -246,6 +256,7 @@ private:
 #ifdef USE_TRANSPARENCY
 			volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 #endif
+			hexa_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 		}
 	}
 
@@ -271,6 +282,57 @@ private:
 #ifdef USE_TRANSPARENCY
 		volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
 #endif
+		hexa_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
+	}
+
+	void set_apply_grid_clipping_plane(bool b)
+	{
+		apply_grid_clipping_plane_ = b;
+		if(apply_grid_clipping_plane_)
+			update_hexa_drawer();
+	}
+
+	void set_clipping_plane(int x, int y, int z)
+	{
+		clipping_x_ = x;
+		clipping_y_ = y;
+		clipping_z_ = z;
+
+		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_, clipping_y_, clipping_z_));
+	}
+
+	void update_hexa_drawer()
+	{
+		if (position_vbo_)
+		{
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
+			if (!pos_attr.is_valid())
+			{
+				cgogn_log_warning("plugin_volume_render|MapParameters::update_topo_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
+				position_vbo_ = nullptr;
+				return;
+			}
+
+			auto i_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("i");
+			auto j_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("j");
+			auto k_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("k");
+
+			if(volume_attribute_.isEmpty())
+			{
+				qreal r, g, b;
+				face_color_.getRgbF(&r, &g, &b);
+				cgogn::rendering::FakeAttribute<CMap3::Volume::ORBIT, VEC3> fake_color(VEC3(r, g, b));
+				hexa_drawer_->update_face(*mh_->map(),pos_attr, fake_color, i_, j_, k_);
+				hexa_drawer_->update_edge(*mh_->map(),pos_attr,i_, j_, k_);
+			}
+			else
+			{
+				QString color_attribute = volume_attribute_ + "_color";
+				const CMap3::VolumeAttribute<VEC3>& color_attr = mh_->map()->get_attribute<VEC3, CMap3::Volume::ORBIT>(color_attribute.toStdString());
+				hexa_drawer_->update_face(*mh_->map(), pos_attr, color_attr, i_, j_, k_);
+				hexa_drawer_->update_edge(*mh_->map(), pos_attr, i_, j_, k_);
+			}
+		}
 	}
 
 	void update_topo_drawer()
@@ -342,16 +404,23 @@ private:
             }
 
 
-            if(mh_->filtered())
-            {
-                //volume_drawer_color_->update_edge(*mh_->map(), *mh_->filter(), pos_attr);
-                volume_drawer_color_->update_face(*mh_->map(), *mh_->filter(), pos_attr, color_attr);
-            }
-            else
-            {
-                //volume_drawer_color_->update_edge(*mh_->map(), pos_attr);
-                volume_drawer_color_->update_face(*mh_->map(), pos_attr, color_attr);
-            }
+			if(apply_grid_clipping_plane_)
+			{
+				update_hexa_drawer();
+			}
+			else
+			{
+				if(mh_->filtered())
+				{
+					//volume_drawer_color_->update_edge(*mh_->map(), *mh_->filter(), pos_attr);
+					volume_drawer_color_->update_face(*mh_->map(), *mh_->filter(), pos_attr, color_attr);
+				}
+				else
+				{
+					//volume_drawer_color_->update_edge(*mh_->map(), pos_attr);
+					volume_drawer_color_->update_face(*mh_->map(), pos_attr, color_attr);
+				}
+			}
         }
     }
 
@@ -371,9 +440,6 @@ private:
     void update_volume_color_attribute(bool normalize)
     {
         QString color_attribute = volume_attribute_ + "_color";
-
-
-        std::cout << volume_attribute_.toStdString() << std::endl;
 
         auto color_attr = mh_->map()->get_attribute<VEC3, CMap3::Volume::ORBIT>(color_attribute.toStdString());
 
@@ -656,6 +722,12 @@ private:
 
 		frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
 
+		hexa_drawer_ = cgogn::make_unique<cgogn::rendering::HexaGridDrawer>();
+		hexa_drawer_rend_ = hexa_drawer_->generate_renderer();
+
+		hexa_drawer_rend_->set_explode_volume(volume_explode_factor_);
+		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_, clipping_y_, clipping_z_));
+
 		set_position_vbo(position_vbo_);
 		set_vertex_color(vertex_color_);
 		set_edge_color(edge_color_);
@@ -686,6 +758,9 @@ private:
     std::unique_ptr<cgogn::rendering::VolumeDrawerColor> volume_drawer_color_;
     std::unique_ptr<cgogn::rendering::VolumeDrawerColor::Renderer> volume_drawer_color_rend_;
 
+	std::unique_ptr<cgogn::rendering::HexaGridDrawer> hexa_drawer_;
+	std::unique_ptr<cgogn::rendering::HexaGridDrawer::Renderer> hexa_drawer_rend_;
+
 	cgogn::rendering::VBO* position_vbo_;
 	bool render_vertices_;
 	bool render_edges_;
@@ -693,6 +768,7 @@ private:
 	bool render_topology_;
     bool render_color_per_volumes_;
 	bool apply_clipping_plane_;
+	bool apply_grid_clipping_plane_;
 	bool clipping_plane_initialized_;
 	QColor vertex_color_;
 	QColor edge_color_;
@@ -702,6 +778,10 @@ private:
 	float32 volume_explode_factor_;
 	bool use_transparency_;
 	int32 transparency_factor_;
+
+	int32 clipping_x_;
+	int32 clipping_y_;
+	int32 clipping_z_;
 
     QString volume_attribute_;
     cgogn::ColorMapType color_map_;
