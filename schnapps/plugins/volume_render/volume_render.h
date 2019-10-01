@@ -132,6 +132,7 @@ public slots:
 	void set_transparency_factor(View* view, CMap3Handler* mh, int32 tf, bool update_dock_tab);
 
 	void set_grid_clipping_plane(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab);
+	void set_grid_clipping_plane2(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab);
 
 private:
 

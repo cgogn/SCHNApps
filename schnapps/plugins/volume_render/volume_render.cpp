@@ -698,6 +698,18 @@ void Plugin_VolumeRender::set_grid_clipping_plane(View* view, CMap3Handler* mh, 
 	}
 }
 
+void Plugin_VolumeRender::set_grid_clipping_plane2(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	{
+		MapParameters& p = parameters(view, mh);
+		p.set_clipping_plane2(x,y,z);
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+			dock_tab_->set_grid_clipping_plane2(x,y,z);
+		view->update();
+	}
+}
+
 } // namespace plugin_volume_render
 
 } // namespace schnapps

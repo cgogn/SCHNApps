@@ -82,6 +82,9 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 		clipping_x_(0),
 		clipping_y_(0),
 		clipping_z_(0),
+		clipping_x_2_(0),
+		clipping_y_2_(0),
+		clipping_z_2_(0),
         color_map_(cgogn::ColorMapType::INFERNO)
 	{
 		initialize_gl();
@@ -299,6 +302,15 @@ private:
 		clipping_z_ = z;
 
 		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_, clipping_y_, clipping_z_));
+	}
+
+	void set_clipping_plane2(int x, int y, int z)
+	{
+		clipping_x_2_ = x;
+		clipping_y_2_ = y;
+		clipping_z_2_ = z;
+
+		hexa_drawer_rend_->set_clipping_plane_topo2(QVector3D(clipping_x_2_, clipping_y_2_, clipping_z_2_));
 	}
 
 	void update_hexa_drawer()
@@ -727,6 +739,7 @@ private:
 
 		hexa_drawer_rend_->set_explode_volume(volume_explode_factor_);
 		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_, clipping_y_, clipping_z_));
+		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_2_, clipping_y_2_, clipping_z_2_));
 
 		set_position_vbo(position_vbo_);
 		set_vertex_color(vertex_color_);
@@ -782,6 +795,10 @@ private:
 	int32 clipping_x_;
 	int32 clipping_y_;
 	int32 clipping_z_;
+
+	int32 clipping_x_2_;
+	int32 clipping_y_2_;
+	int32 clipping_z_2_;
 
     QString volume_attribute_;
     cgogn::ColorMapType color_map_;
