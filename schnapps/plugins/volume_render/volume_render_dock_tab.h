@@ -99,9 +99,13 @@ private slots:
 	void transparency_enabled_changed(bool b);
 	void transparency_factor_changed(int n);
 
-	void clipping_plane_x_changed(int i);
-	void clipping_plane_y_changed(int i);
-	void clipping_plane_z_changed(int i);
+	void clipping_plane_i_changed(int i);
+	void clipping_plane_j_changed(int i);
+	void clipping_plane_k_changed(int i);
+
+	void clipping_plane_i_changed_2(int i);
+	void clipping_plane_j_changed_2(int i);
+	void clipping_plane_k_changed_2(int i);
 
     void selected_volume_scalar_changed();
     void color_map_changed(int i);
@@ -147,6 +151,7 @@ public:
 	void set_transparency_factor(int tf);
 
 	void set_grid_clipping_plane(int x, int y, int z);
+	void set_grid_clipping_plane2(int x, int y, int z);
 
 	CMap3Handler* selected_map() { return selected_map_; }
 	void refresh_ui();

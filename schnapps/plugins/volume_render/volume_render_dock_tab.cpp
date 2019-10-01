@@ -66,9 +66,13 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
 
-	connect(slider_clippingPlaneX, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_x_changed(int)));
-	connect(slider_clippingPlaneY, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_y_changed(int)));
-	connect(slider_clippingPlaneZ, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_z_changed(int)));
+	connect(slider_clippingPlaneI, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_i_changed(int)));
+	connect(slider_clippingPlaneJ, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_j_changed(int)));
+	connect(slider_clippingPlaneK, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_k_changed(int)));
+
+	connect(slider_clippingPlaneI_2, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_i_changed_2(int)));
+	connect(slider_clippingPlaneJ_2, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_j_changed_2(int)));
+	connect(slider_clippingPlaneK_2, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_k_changed_2(int)));
 
 	check_useTransparency->setChecked(false);
 	slider_transparency->setDisabled(true);
@@ -211,31 +215,76 @@ void VolumeRender_DockTab::transparency_factor_changed(int n)
 #endif
 }
 
-void VolumeRender_DockTab::clipping_plane_x_changed(int i)
+void VolumeRender_DockTab::clipping_plane_i_changed(int i)
 {
 	if (!updating_ui_)
+	{
 		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
 										 i,
-										 slider_clippingPlaneY->value(),
-										 slider_clippingPlaneZ->value(), false);
+										 slider_clippingPlaneJ->value(),
+										 slider_clippingPlaneK->value(), false);
+		label_clippingPlaneI->setText(QString::number(i));
+	}
 }
 
-void VolumeRender_DockTab::clipping_plane_y_changed(int i)
+void VolumeRender_DockTab::clipping_plane_j_changed(int i)
 {
 	if (!updating_ui_)
+	{
 		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
-										 slider_clippingPlaneX->value(),
+										 slider_clippingPlaneI->value(),
 										 i,
-										 slider_clippingPlaneZ->value(), false);
+										 slider_clippingPlaneK->value(), false);
+		label_clippingPlaneJ->setText(QString::number(i));
+	}
 }
 
-void VolumeRender_DockTab::clipping_plane_z_changed(int i)
+void VolumeRender_DockTab::clipping_plane_k_changed(int i)
 {
 	if (!updating_ui_)
+	{
 		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
-										 slider_clippingPlaneX->value(),
-										 slider_clippingPlaneY->value(),
+										 slider_clippingPlaneI->value(),
+										 slider_clippingPlaneJ->value(),
 										 i, false);
+		label_clippingPlaneK->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_i_changed_2(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
+										 i,
+										 slider_clippingPlaneJ_2->value(),
+										 slider_clippingPlaneK_2->value(), false);
+		label_clippingPlaneI_2->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_j_changed_2(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
+										 slider_clippingPlaneI_2->value(),
+										 i,
+										 slider_clippingPlaneK_2->value(), false);
+		label_clippingPlaneJ_2->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_k_changed_2(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
+										 slider_clippingPlaneI_2->value(),
+										 slider_clippingPlaneJ_2->value(),
+										 i, false);
+		label_clippingPlaneK_2->setText(QString::number(i));
+	}
 }
 
 void VolumeRender_DockTab::selected_volume_scalar_changed()
@@ -555,9 +604,18 @@ void VolumeRender_DockTab::set_transparency_factor(int tf)
 void VolumeRender_DockTab::set_grid_clipping_plane(int x, int y, int z)
 {
 	updating_ui_ = true;
-	slider_clippingPlaneX->setValue(x);
-	slider_clippingPlaneY->setValue(y);
-	slider_clippingPlaneZ->setValue(z);
+	slider_clippingPlaneI->setValue(x);
+	slider_clippingPlaneJ->setValue(y);
+	slider_clippingPlaneK->setValue(z);
+	updating_ui_ = false;
+}
+
+void VolumeRender_DockTab::set_grid_clipping_plane2(int x, int y, int z)
+{
+	updating_ui_ = true;
+	slider_clippingPlaneI_2->setValue(x);
+	slider_clippingPlaneJ_2->setValue(y);
+	slider_clippingPlaneK_2->setValue(z);
 	updating_ui_ = false;
 }
 
@@ -637,36 +695,53 @@ void VolumeRender_DockTab::refresh_ui()
 	auto j_ = mh->map()->get_attribute<uint32, CMap3::Volume>("j");
 	auto k_ = mh->map()->get_attribute<uint32, CMap3::Volume>("k");
 
-	slider_clippingPlaneX->setValue(0);
-	slider_clippingPlaneY->setValue(0);
-	slider_clippingPlaneZ->setValue(0);
-
 	uint32 mx;
 	if(i_.is_valid())
 	{
-		slider_clippingPlaneX->setEnabled(true);
+		slider_clippingPlaneI->setEnabled(true);
+		slider_clippingPlaneI_2->setEnabled(true);
 		mx = std::numeric_limits<uint32>::lowest();
 		for(auto el : i_)
 			mx = std::max(mx, el);
-		slider_clippingPlaneX->setRange(0, mx);
+		slider_clippingPlaneI->setRange(0, mx);
+		slider_clippingPlaneI_2->setRange(0, mx);
+
+		slider_clippingPlaneI->setValue(0);
+		label_clippingPlaneI->setText(QString::number(0));
+		slider_clippingPlaneI_2->setValue(mx);
+		label_clippingPlaneI_2->setText(QString::number(mx));
 	}
 
 	if(j_.is_valid())
 	{
-		slider_clippingPlaneY->setEnabled(true);
+		slider_clippingPlaneJ->setEnabled(true);
+		slider_clippingPlaneJ_2->setEnabled(true);
 		mx = std::numeric_limits<uint32>::lowest();
 		for(auto el : j_)
 			mx = std::max(mx, el);
-		slider_clippingPlaneY->setRange(0, mx);
+		slider_clippingPlaneJ->setRange(0, mx);
+		slider_clippingPlaneJ_2->setRange(0, mx);
+
+		slider_clippingPlaneJ->setValue(0);
+		label_clippingPlaneJ->setText(QString::number(0));
+		slider_clippingPlaneJ_2->setValue(mx);
+		label_clippingPlaneJ_2->setText(QString::number(mx));
 	}
 
 	if(k_.is_valid())
 	{
-		slider_clippingPlaneZ->setEnabled(true);
+		slider_clippingPlaneK->setEnabled(true);
+		slider_clippingPlaneK_2->setEnabled(true);
 		mx = std::numeric_limits<uint32>::lowest();
 		for(auto el : k_)
 			mx = std::max(mx, el);
-		slider_clippingPlaneZ->setRange(0, mx);
+		slider_clippingPlaneK->setRange(0, mx);
+		slider_clippingPlaneK_2->setRange(0, mx);
+
+		slider_clippingPlaneK->setValue(0);
+		label_clippingPlaneK->setText(QString::number(0));
+		slider_clippingPlaneK_2->setValue(mx);
+		label_clippingPlaneK_2->setText(QString::number(mx));
 	}
 	updating_ui_ = false;
 }
