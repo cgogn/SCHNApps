@@ -58,8 +58,8 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(slider_vertexScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertex_scale_factor_changed(int)));
 	connect(slider_volumeExplodeFactor, SIGNAL(valueChanged(int)), this, SLOT(volume_explode_factor_changed(int)));
 
-    connect(list_scalarAttribute, SIGNAL(itemSelectionChanged()), this, SLOT(selected_volume_scalar_changed()));
-    connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
+	connect(list_scalarAttribute, SIGNAL(itemSelectionChanged()), this, SLOT(selected_volume_scalar_changed()));
+	connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
 	color_dial_ = new QColorDialog(face_color_, nullptr);
 	connect(vertexColorButton, SIGNAL(clicked()), this, SLOT(vertex_color_clicked()));
 	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
@@ -110,9 +110,9 @@ void VolumeRender_DockTab::selected_map_changed()
 		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 
-        disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)));
-        disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
-    }
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+	}
 
 	selected_map_ = nullptr;
 
@@ -128,8 +128,8 @@ void VolumeRender_DockTab::selected_map_changed()
 		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
 
-        connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)), Qt::UniqueConnection);
-        connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
+		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)), Qt::UniqueConnection);
+		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
 	}
 
 	if (plugin_->check_docktab_activation())
@@ -144,8 +144,8 @@ void VolumeRender_DockTab::position_vbo_changed(int)
 
 void VolumeRender_DockTab::color_map_changed(int)
 {
-    if (!updating_ui_ && selected_map_)
-        plugin_->set_color_map(schnapps_->selected_view(), selected_map_, combo_colorMap->currentText(), false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_color_map(schnapps_->selected_view(), selected_map_, combo_colorMap->currentText(), false);
 }
 
 void VolumeRender_DockTab::render_vertices_changed(bool b)
@@ -256,9 +256,9 @@ void VolumeRender_DockTab::clipping_plane_i_changed_2(int i)
 	if (!updating_ui_)
 	{
 		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
-										 i,
-										 slider_clippingPlaneJ_2->value(),
-										 slider_clippingPlaneK_2->value(), false);
+										  i,
+										  slider_clippingPlaneJ_2->value(),
+										  slider_clippingPlaneK_2->value(), false);
 		label_clippingPlaneI_2->setText(QString::number(i));
 	}
 }
@@ -268,9 +268,9 @@ void VolumeRender_DockTab::clipping_plane_j_changed_2(int i)
 	if (!updating_ui_)
 	{
 		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
-										 slider_clippingPlaneI_2->value(),
-										 i,
-										 slider_clippingPlaneK_2->value(), false);
+										  slider_clippingPlaneI_2->value(),
+										  i,
+										  slider_clippingPlaneK_2->value(), false);
 		label_clippingPlaneJ_2->setText(QString::number(i));
 	}
 }
@@ -280,31 +280,31 @@ void VolumeRender_DockTab::clipping_plane_k_changed_2(int i)
 	if (!updating_ui_)
 	{
 		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
-										 slider_clippingPlaneI_2->value(),
-										 slider_clippingPlaneJ_2->value(),
-										 i, false);
+										  slider_clippingPlaneI_2->value(),
+										  slider_clippingPlaneJ_2->value(),
+										  i, false);
 		label_clippingPlaneK_2->setText(QString::number(i));
 	}
 }
 
 void VolumeRender_DockTab::selected_volume_scalar_changed()
 {
-    QList<QListWidgetItem*> currentItems = list_scalarAttribute->selectedItems();
-    if (currentItems.empty() || currentItems[0]->text() == previousSelection_)
-    {
-//        if ( item->text().operator==( previousSelection->text() ) ) {
-//            previousSelection = NULL;
-            list_scalarAttribute->clearSelection();
-            list_scalarAttribute->clearFocus();
-            previousSelection_.clear();
-            plugin_->set_color_per_volume(schnapps_->selected_view(), selected_map_, false, false);
-//        }
-    }
-    else if (!currentItems.empty())
-    {
-        previousSelection_ = currentItems[0]->text();
-        plugin_->set_volume_attribute(schnapps_->selected_view(), selected_map_, previousSelection_, false);
-    }
+	QList<QListWidgetItem*> currentItems = list_scalarAttribute->selectedItems();
+	if (currentItems.empty() || currentItems[0]->text() == previousSelection_)
+	{
+		//        if ( item->text().operator==( previousSelection->text() ) ) {
+		//            previousSelection = NULL;
+		list_scalarAttribute->clearSelection();
+		list_scalarAttribute->clearFocus();
+		previousSelection_.clear();
+		plugin_->set_color_per_volume(schnapps_->selected_view(), selected_map_, false, false);
+		//        }
+	}
+	else if (!currentItems.empty())
+	{
+		previousSelection_ = currentItems[0]->text();
+		plugin_->set_volume_attribute(schnapps_->selected_view(), selected_map_, previousSelection_, false);
+	}
 }
 
 void VolumeRender_DockTab::vertex_color_clicked()
@@ -354,7 +354,7 @@ void VolumeRender_DockTab::color_selected()
 		face_color_ = col;
 		faceColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
 		plugin_->set_face_color(view, mh, face_color_, false);
-        list_scalarAttribute->selectionModel()->clear();
+		list_scalarAttribute->selectionModel()->clear();
 	}
 }
 
@@ -416,10 +416,10 @@ void VolumeRender_DockTab::map_unlinked(CMap3Handler *mh)
 	{
 		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
-        disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)));
-        disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 
-        selected_map_ = nullptr;
+		selected_map_ = nullptr;
 	}
 
 	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
@@ -430,7 +430,7 @@ void VolumeRender_DockTab::map_unlinked(CMap3Handler *mh)
 		updating_ui_ = false;
 	}
 
-    list_scalarAttribute->clear();
+	list_scalarAttribute->clear();
 }
 
 /*****************************************************************************/
@@ -463,29 +463,29 @@ void VolumeRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 
 void VolumeRender_DockTab::selected_map_attribute_added(cgogn::Orbit o, QString name)
 {
-    updating_ui_ = true;
-//    if (o == CMap3::Vertex::ORBIT)
-//           combo_positionAttribute->addItem(name);
-    if (o == CMap3::Volume::ORBIT)
-        list_scalarAttribute->addItem(name);
-    updating_ui_ = false;
+	updating_ui_ = true;
+	//    if (o == CMap3::Vertex::ORBIT)
+	//           combo_positionAttribute->addItem(name);
+	if (o == CMap3::Volume::ORBIT)
+		list_scalarAttribute->addItem(name);
+	updating_ui_ = false;
 }
 
 void VolumeRender_DockTab::selected_map_attribute_removed(cgogn::Orbit o, const QString& name)
 {
-    /*if (o == CMap2::Vertex::ORBIT)
-    {
-        int index = combo_positionAttribute->findText(name);
-        if (index > 0)
-            combo_positionAttribute->removeItem(index);
-    }
-    else */
-    if (o == CMap3::Volume::ORBIT)
-    {
-        QList<QListWidgetItem*> items = list_scalarAttribute->findItems(name, Qt::MatchExactly);
-        if (!items.empty())
-            delete items[0];
-    }
+	/*if (o == CMap2::Vertex::ORBIT)
+	{
+		int index = combo_positionAttribute->findText(name);
+		if (index > 0)
+			combo_positionAttribute->removeItem(index);
+	}
+	else */
+	if (o == CMap3::Volume::ORBIT)
+	{
+		QList<QListWidgetItem*> items = list_scalarAttribute->findItems(name, Qt::MatchExactly);
+		if (!items.empty())
+			delete items[0];
+	}
 }
 
 /*****************************************************************************/
@@ -647,24 +647,24 @@ void VolumeRender_DockTab::refresh_ui()
 		}
 	});
 
-    list_scalarAttribute->clear();
-    list_scalarAttribute->selectionModel()->clear();
-    uint32 j = 0;
-    const auto& cacF = mh->map()->attribute_container<CMap3::Volume::ORBIT>();
+	list_scalarAttribute->clear();
+	list_scalarAttribute->selectionModel()->clear();
+	uint32 j = 0;
+	const auto& cacF = mh->map()->attribute_container<CMap3::Volume::ORBIT>();
 
-    for (auto* ptr: cacF.chunk_arrays())
-    {
-        if(ptr->nb_components() == 1)
-            list_scalarAttribute->addItem(QString::fromStdString(ptr->name()));
-            ++j;
-    }
+	for (auto* ptr: cacF.chunk_arrays())
+	{
+		if(ptr->nb_components() == 1)
+			list_scalarAttribute->addItem(QString::fromStdString(ptr->name()));
+		++j;
+	}
 
-    combo_colorMap->clear();
-    for(int i=0; i!=cgogn::ColorMapType::NB_COLOR_MAP_TYPES; ++i)
-    {
-        combo_colorMap->addItem(QString::fromStdString(cgogn::color_map_name(cgogn::ColorMapType(i))));
-    }
-    combo_colorMap->setEnabled(true);
+	combo_colorMap->clear();
+	for(int i=0; i!=cgogn::ColorMapType::NB_COLOR_MAP_TYPES; ++i)
+	{
+		combo_colorMap->addItem(QString::fromStdString(cgogn::color_map_name(cgogn::ColorMapType(i))));
+	}
+	combo_colorMap->setEnabled(true);
 
 	check_renderVertices->setChecked(p.render_vertices());
 	slider_vertexScaleFactor->setSliderPosition(p.vertex_scale_factor() * 50.0);
@@ -689,60 +689,39 @@ void VolumeRender_DockTab::refresh_ui()
 #endif
 
 	check_clippingPlane->setChecked(p.apply_clipping_plane());
-	check_clippingPlane->setChecked(p.apply_grid_clipping_plane());
+	check_gridClippingPlane->setChecked(p.apply_grid_clipping_plane());
 
-	auto i_ = mh->map()->get_attribute<uint32, CMap3::Volume>("i");
-	auto j_ = mh->map()->get_attribute<uint32, CMap3::Volume>("j");
-	auto k_ = mh->map()->get_attribute<uint32, CMap3::Volume>("k");
 
-	uint32 mx;
-	if(i_.is_valid())
-	{
-		slider_clippingPlaneI->setEnabled(true);
-		slider_clippingPlaneI_2->setEnabled(true);
-		mx = std::numeric_limits<uint32>::lowest();
-		for(auto el : i_)
-			mx = std::max(mx, el);
-		slider_clippingPlaneI->setRange(0, mx);
-		slider_clippingPlaneI_2->setRange(0, mx);
+	slider_clippingPlaneI->setEnabled(true);
+	slider_clippingPlaneI->setRange(0, p.clipping_x_2_);
+	slider_clippingPlaneI->setValue(0);
+	label_clippingPlaneI->setText(QString::number(0));
 
-		slider_clippingPlaneI->setValue(0);
-		label_clippingPlaneI->setText(QString::number(0));
-		slider_clippingPlaneI_2->setValue(mx);
-		label_clippingPlaneI_2->setText(QString::number(mx));
-	}
+	slider_clippingPlaneI_2->setEnabled(true);
+	slider_clippingPlaneI_2->setRange(0, p.clipping_x_2_);
+	slider_clippingPlaneI_2->setValue(p.clipping_x_2_);
+	label_clippingPlaneI_2->setText(QString::number(p.clipping_x_2_));
 
-	if(j_.is_valid())
-	{
-		slider_clippingPlaneJ->setEnabled(true);
-		slider_clippingPlaneJ_2->setEnabled(true);
-		mx = std::numeric_limits<uint32>::lowest();
-		for(auto el : j_)
-			mx = std::max(mx, el);
-		slider_clippingPlaneJ->setRange(0, mx);
-		slider_clippingPlaneJ_2->setRange(0, mx);
+	slider_clippingPlaneJ->setEnabled(true);
+	slider_clippingPlaneJ->setRange(0, p.clipping_y_2_);
+	slider_clippingPlaneJ->setValue(0);
+	label_clippingPlaneJ->setText(QString::number(0));
 
-		slider_clippingPlaneJ->setValue(0);
-		label_clippingPlaneJ->setText(QString::number(0));
-		slider_clippingPlaneJ_2->setValue(mx);
-		label_clippingPlaneJ_2->setText(QString::number(mx));
-	}
+	slider_clippingPlaneJ_2->setEnabled(true);
+	slider_clippingPlaneJ_2->setRange(0, p.clipping_y_2_);
+	slider_clippingPlaneJ_2->setValue(p.clipping_y_2_);
+	label_clippingPlaneJ_2->setText(QString::number(p.clipping_y_2_));
 
-	if(k_.is_valid())
-	{
-		slider_clippingPlaneK->setEnabled(true);
-		slider_clippingPlaneK_2->setEnabled(true);
-		mx = std::numeric_limits<uint32>::lowest();
-		for(auto el : k_)
-			mx = std::max(mx, el);
-		slider_clippingPlaneK->setRange(0, mx);
-		slider_clippingPlaneK_2->setRange(0, mx);
+	slider_clippingPlaneK->setEnabled(true);
+	slider_clippingPlaneK->setRange(0, p.clipping_z_2_);
+	slider_clippingPlaneK->setValue(0);
+	label_clippingPlaneK->setText(QString::number(0));
 
-		slider_clippingPlaneK->setValue(0);
-		label_clippingPlaneK->setText(QString::number(0));
-		slider_clippingPlaneK_2->setValue(mx);
-		label_clippingPlaneK_2->setText(QString::number(mx));
-	}
+	slider_clippingPlaneK_2->setEnabled(true);
+	slider_clippingPlaneK_2->setRange(0, p.clipping_z_2_);
+	slider_clippingPlaneK_2->setValue(p.clipping_z_2_);
+	label_clippingPlaneK_2->setText(QString::number(p.clipping_z_2_));
+
 	updating_ui_ = false;
 }
 

@@ -79,12 +79,6 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 		volume_explode_factor_(0.8f),
 		use_transparency_(false),
         transparency_factor_(127),
-		clipping_x_(0),
-		clipping_y_(0),
-		clipping_z_(0),
-		clipping_x_2_(0),
-		clipping_y_2_(0),
-		clipping_z_2_(0),
         color_map_(cgogn::ColorMapType::INFERNO)
 	{
 		initialize_gl();
@@ -115,6 +109,52 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 		return volume_transparency_drawer_rend_.get();
 	}
 #endif
+
+	void set_cmap(CMap3Handler* map)
+	{
+		mh_ = map;
+
+		clipping_x_ = 0;
+		clipping_y_ = 0;
+		clipping_z_ = 0;
+
+		auto i_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("i");
+		auto j_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("j");
+		auto k_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("k");
+
+		uint32 mx;
+
+		if(i_.is_valid())
+		{
+			mx = std::numeric_limits<uint32>::lowest();
+			for(auto el : i_)
+				mx = std::max(mx, el);
+			clipping_x_2_ = mx;
+		}
+		else
+			clipping_x_2_ = 0;
+
+		if(j_.is_valid())
+		{
+			mx = std::numeric_limits<uint32>::lowest();
+			for(auto el : j_)
+				mx = std::max(mx, el);
+			clipping_y_2_ = mx;
+		}
+		else
+			clipping_y_2_ = 0;
+
+		if(k_.is_valid())
+		{
+			mx = std::numeric_limits<uint32>::lowest();
+			for(auto el : k_)
+				mx = std::max(mx, el);
+			clipping_z_2_ = mx;
+
+		}
+		else
+			clipping_z_2_ = 0;
+	}
 
 private:
 	void set_position_vbo(cgogn::rendering::VBO* v)
@@ -751,6 +791,7 @@ private:
 		set_transparency_factor(transparency_factor_);
 	}
 
+public:
 	CMap3Handler* mh_;
 
 	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_;

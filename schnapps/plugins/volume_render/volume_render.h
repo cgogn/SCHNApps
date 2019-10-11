@@ -134,6 +134,9 @@ public slots:
 	void set_grid_clipping_plane(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab);
 	void set_grid_clipping_plane2(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab);
 
+	std::tuple<int, int, int> get_current_grid_clipping_plane(CMap3Handler* map);
+	std::tuple<int, int, int> get_current_grid_clipping_plane2(CMap3Handler* map);
+
 private:
 
 	VolumeRender_DockTab* dock_tab_;
