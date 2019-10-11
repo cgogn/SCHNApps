@@ -63,14 +63,28 @@ MapParameters& Plugin_VolumeRender::parameters(View* view, CMap3Handler* mh)
 	if (view_param_set.count(mh) == 0)
 	{
 		MapParameters& p = view_param_set[mh];
-		p.mh_ = mh;
+		p.set_cmap(mh);
 		p.set_vertex_base_size(mh->bb_diagonal_size() / (2.0f * std::sqrt(mh->map()->nb_cells<CMap3::Edge>())));
-
 		return p;
 	}
 	else
 		return view_param_set[mh];
 }
+
+std::tuple<int, int, int> Plugin_VolumeRender::get_current_grid_clipping_plane(CMap3Handler* map)
+{
+	View* view = schnapps_->selected_view();
+	MapParameters& rend_param = parameters(view, map);
+	return std::make_tuple(rend_param.clipping_x_, rend_param.clipping_y_, rend_param.clipping_z_);
+}
+
+std::tuple<int, int, int> Plugin_VolumeRender::get_current_grid_clipping_plane2(CMap3Handler* map)
+{
+	View* view = schnapps_->selected_view();
+	MapParameters& rend_param = parameters(view, map);
+	return std::make_tuple(rend_param.clipping_x_2_, rend_param.clipping_y_2_, rend_param.clipping_z_2_);
+}
+
 
 bool Plugin_VolumeRender::check_docktab_activation()
 {
