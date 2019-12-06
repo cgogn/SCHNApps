@@ -63,7 +63,7 @@ MapParameters& Plugin_VolumeRender::parameters(View* view, CMap3Handler* mh)
 	if (view_param_set.count(mh) == 0)
 	{
 		MapParameters& p = view_param_set[mh];
-		p.set_cmap(mh);
+		p.mh_ = mh;
 		p.set_vertex_base_size(mh->bb_diagonal_size() / (2.0f * std::sqrt(mh->map()->nb_cells<CMap3::Edge>())));
 		return p;
 	}
@@ -519,6 +519,7 @@ void Plugin_VolumeRender::set_position_vbo(View* view, CMap3Handler* mh, cgogn::
 	{
 		MapParameters& p = parameters(view, mh);
 		p.set_position_vbo(vbo);
+		p.init_topo_clipping();
 		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_position_vbo(vbo);
 		view->update();
