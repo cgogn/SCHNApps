@@ -110,10 +110,8 @@ struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 	}
 #endif
 
-	void set_cmap(CMap3Handler* map)
+	void init_topo_clipping()
 	{
-		mh_ = map;
-
 		clipping_x_ = 0;
 		clipping_y_ = 0;
 		clipping_z_ = 0;
