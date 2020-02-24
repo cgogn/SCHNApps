@@ -25,6 +25,7 @@
 #include <schnapps/plugins/export/export.h>
 #include <schnapps/plugins/export/export_dialog.h>
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap0_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
@@ -62,7 +63,7 @@ bool Plugin_Export::enable()
 
 	export_dialog_ = new ExportDialog(schnapps_, this);
 
-	export_mesh_action_ = schnapps_->add_menu_action("File;Export Mesh", "export surface/volume mesh");
+	export_mesh_action_ = schnapps_->add_menu_action("File;Export Mesh", "export point set/surface/volume mesh");
 	connect(export_mesh_action_, SIGNAL(triggered()), this, SLOT(export_mesh_from_file_dialog()));
 
 	return true;
@@ -82,7 +83,12 @@ void Plugin_Export::export_mesh(Object* mhg, cgogn::io::ExportOptions export_par
 {
 	if (mhg)
 	{
-		if (CMap2Handler* m2h = dynamic_cast<CMap2Handler*>(mhg))
+		if(CMap0Handler* m0h = dynamic_cast<CMap0Handler*>(mhg))
+		{
+			CMap0& cmap0 = *m0h->map();
+			cgogn::io::export_point_set(cmap0, export_params);
+		}
+		else if (CMap2Handler* m2h = dynamic_cast<CMap2Handler*>(mhg))
 		{
 			CMap2& cmap2 = *m2h->map();
 			cgogn::io::export_surface(cmap2, export_params);
