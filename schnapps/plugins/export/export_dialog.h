@@ -44,6 +44,12 @@ class Object;
 namespace plugin_cmap_provider
 {
 class Plugin_CMapProvider;
+class CMap0Handler;
+}
+
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
 class CMap2Handler;
 }
 
@@ -79,9 +85,10 @@ private slots:
 	void map_removed(Object*);
 
 private:
-
+	void selected_map_changed(const plugin_cmap_provider::CMap0Handler* h);
 	void selected_map_changed(const plugin_cmap_provider::CMap2Handler* h);
 	void selected_map_changed(const plugin_cmap_provider::CMap3Handler* h);
+	void export_map(plugin_cmap_provider::CMap0Handler* h, cgogn::io::ExportOptions& opt);
 	void export_map(plugin_cmap_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt);
 	void export_map(plugin_cmap_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt);
 

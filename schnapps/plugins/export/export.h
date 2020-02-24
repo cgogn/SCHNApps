@@ -61,7 +61,7 @@ class PLUGIN_EXPORT_EXPORT Plugin_Export : public PluginProcessing
 	Q_INTERFACES(schnapps::Plugin)
 
 public:
-
+	using CMap0Handler = plugin_cmap_provider::CMap0Handler;
 	using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 	using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 

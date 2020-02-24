@@ -26,6 +26,7 @@
 
 #include <schnapps/core/schnapps.h>
 #include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap0_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
@@ -72,9 +73,17 @@ void ExportDialog::selected_map_changed(const QString& map_name)
 	list_vertexAttributes->clear();
 	list_cellAttributes->clear();
 
+
+	auto m0 = plugin_->map_provider()->cmap0(map_name);
 	auto m2 = plugin_->map_provider()->cmap2(map_name);
 	auto m3 = plugin_->map_provider()->cmap3(map_name);
-	if (m2)
+
+	if(m0)
+	{
+		selected_map_ = m0;
+		selected_map_changed(m0);
+	}
+	else if (m2)
 	{
 		selected_map_ = m2;
 		selected_map_changed(m2);
@@ -85,6 +94,22 @@ void ExportDialog::selected_map_changed(const QString& map_name)
 			selected_map_changed(m3);
 		}
 	}
+}
+
+void ExportDialog::selected_map_changed(const plugin_cmap_provider::CMap0Handler* h)
+{
+	if (!h)
+		return;
+
+	const CMap0& m = *h->map();
+	const auto& vert_att_cont = m.attribute_container<CMap0::Vertex::ORBIT>();
+	for (const auto& att_name : vert_att_cont.names())
+	{
+		combo_positionSelection->addItem(QString::fromStdString(att_name));
+		QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), list_vertexAttributes);
+		item->setCheckState(Qt::Unchecked);
+	}
+
 }
 
 void ExportDialog::selected_map_changed(const plugin_cmap_provider::CMap2Handler* h)
@@ -190,11 +215,29 @@ void ExportDialog::export_validated()
 			.binary(check_binary->isChecked())
 			.compress(check_compress->isChecked());
 
+		if (auto m0 = dynamic_cast<plugin_cmap_provider::CMap0Handler*>(selected_map_))
+			export_map(m0, export_params);
 		if (auto m2 = dynamic_cast<plugin_cmap_provider::CMap2Handler*>(selected_map_))
 			export_map(m2, export_params);
 		if (auto m3 = dynamic_cast<plugin_cmap_provider::CMap3Handler*>(selected_map_))
 			export_map(m3, export_params);
 	}
+}
+
+void ExportDialog::export_map(plugin_cmap_provider::CMap0Handler* h, cgogn::io::ExportOptions& opt)
+{
+	if (!h)
+		return;
+
+	opt.position_attribute(CMap0::Vertex::ORBIT, combo_positionSelection->currentText().toStdString());
+	for (int32 i = 0; i < list_vertexAttributes->count(); ++i)
+	{
+		QListWidgetItem* item = list_vertexAttributes->item(i);
+		if (item->flags() & Qt::ItemIsEnabled)
+			opt.add_attribute(CMap0::Vertex::ORBIT, item->text().toStdString());
+	}
+
+	plugin_->export_mesh(h, opt);
 }
 
 void ExportDialog::export_map(plugin_cmap_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt)
@@ -245,13 +288,13 @@ void ExportDialog::export_map(plugin_cmap_provider::CMap3Handler* h, cgogn::io::
 
 void ExportDialog::map_added(Object* mhg)
 {
-	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
+	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap0Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
 		combo_mapSelection->addItem(mhg->name());
 }
 
 void ExportDialog::map_removed(Object* mhg)
 {
-	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
+	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap0Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
 	{
 		if (mhg == selected_map_)
 			selected_map_ = nullptr;
