@@ -21,12 +21,17 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_render.h>
+#include <schnapps/plugins/volume_render/volume_render.h>
+#include <schnapps/plugins/volume_render/volume_render_dock_tab.h>
 
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+
+#include <schnapps/core/schnapps.h>
 #include <schnapps/core/view.h>
 #include <schnapps/core/camera.h>
+
 #ifdef USE_TRANSPARENCY
-#include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
+#include <schnapps/plugins/render_transparency/render_transparency.h>
 #endif
 
 #include <cgogn/geometry/algos/selection.h>
@@ -37,32 +42,55 @@ namespace schnapps
 namespace plugin_volume_render
 {
 
-MapParameters& Plugin_VolumeRender::get_parameters(View* view, MapHandlerGen* map)
+Plugin_VolumeRender::Plugin_VolumeRender()
+{
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_VolumeRender::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
+}
+
+MapParameters& Plugin_VolumeRender::parameters(View* view, CMap3Handler* mh)
 {
 	cgogn_message_assert(view, "Try to access parameters for null view");
-	cgogn_message_assert(map, "Try to access parameters for null map");
-	cgogn_message_assert(map->dimension() == 3, "Try to access parameters for map with dimension other than 3");
+	cgogn_message_assert(mh, "Try to access parameters for null map");
 
 	view->makeCurrent();
 
 	auto& view_param_set = parameter_set_[view];
-	if (view_param_set.count(map) == 0)
+	if (view_param_set.count(mh) == 0)
 	{
-		MapParameters& p = view_param_set[map];
-		p.map_ = static_cast<MapHandler<CMap3>*>(map);
-		p.set_vertex_base_size(map->get_bb_diagonal_size() / (2.0f * std::sqrt(float32(map->nb_cells(Edge_Cell)))));
+		MapParameters& p = view_param_set[mh];
+		p.mh_ = mh;
+		p.set_vertex_base_size(mh->bb_diagonal_size() / (2.0f * std::sqrt(mh->map()->nb_cells<CMap3::Edge>())));
 		return p;
 	}
 	else
-		return view_param_set[map];
+		return view_param_set[mh];
 }
+
+std::tuple<int, int, int> Plugin_VolumeRender::get_current_grid_clipping_plane(CMap3Handler* map)
+{
+	View* view = schnapps_->selected_view();
+	MapParameters& rend_param = parameters(view, map);
+	return std::make_tuple(rend_param.clipping_x_, rend_param.clipping_y_, rend_param.clipping_z_);
+}
+
+std::tuple<int, int, int> Plugin_VolumeRender::get_current_grid_clipping_plane2(CMap3Handler* map)
+{
+	View* view = schnapps_->selected_view();
+	MapParameters& rend_param = parameters(view, map);
+	return std::make_tuple(rend_param.clipping_x_2_, rend_param.clipping_y_2_, rend_param.clipping_z_2_);
+}
+
 
 bool Plugin_VolumeRender::check_docktab_activation()
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
+	View* view = schnapps_->selected_view();
 
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this))
 	{
 		schnapps_->enable_plugin_tab_widgets(this);
 		return true;
@@ -76,13 +104,13 @@ bool Plugin_VolumeRender::check_docktab_activation()
 
 bool Plugin_VolumeRender::enable()
 {
-	if (get_setting("Auto enable on selected view").isValid())
-		setting_auto_enable_on_selected_view_ = get_setting("Auto enable on selected view").toBool();
+	if (setting("Auto enable on selected view").isValid())
+		setting_auto_enable_on_selected_view_ = setting("Auto enable on selected view").toBool();
 	else
 		setting_auto_enable_on_selected_view_ = add_setting("Auto enable on selected view", true).toBool();
 
-	if (get_setting("Auto load position attribute").isValid())
-		setting_auto_load_position_attribute_ = get_setting("Auto load position attribute").toString();
+	if (setting("Auto load position attribute").isValid())
+		setting_auto_load_position_attribute_ = setting("Auto load position attribute").toString();
 	else
 		setting_auto_load_position_attribute_ = add_setting("Auto load position attribute", "position").toString();
 
@@ -92,7 +120,7 @@ bool Plugin_VolumeRender::enable()
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 
 #ifdef USE_TRANSPARENCY
-	plugin_transparency_ = reinterpret_cast<PluginInteraction*>(schnapps_->enable_plugin("surface_render_transp"));
+	plugin_transparency_ = qobject_cast<plugin_render_transparency::Plugin_RenderTransparency*>(schnapps_->enable_plugin(plugin_render_transparency::Plugin_RenderTransparency::plugin_name()));
 #endif
 
 	return true;
@@ -106,25 +134,26 @@ void Plugin_VolumeRender::disable()
 	disconnect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(enable_on_selected_view(Plugin*)));
 }
 
-void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
+void Plugin_VolumeRender::draw_object(View* view, Object *o, const QMatrix4x4& proj, const QMatrix4x4& mv)
 {
-	if (map->dimension() == 3)
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
+	if (mh)
 	{
 		view->makeCurrent();
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 
-		if (map->is_selected_map() && p.apply_clipping_plane_)
-			p.frame_manip_->draw(true, true, proj, mv, view);
+		if (mh == dock_tab_->selected_map() && p.apply_clipping_plane_)
+			p.frame_manip_->draw(true, true, proj, mv);
 
 		if (p.render_topology_ && p.topo_drawer_rend_)
-			p.topo_drawer_rend_->draw(proj, mv, view);
+			p.topo_drawer_rend_->draw(proj, mv);
 
 		if (p.render_vertices_)
 		{
 			if (p.position_vbo_)
 			{
 				p.shader_point_sprite_param_->bind(proj, mv);
-				map->draw(cgogn::rendering::POINTS);
+				mh->draw(cgogn::rendering::POINTS);
 				p.shader_point_sprite_param_->release();
 			}
 		}
@@ -134,11 +163,11 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 			if (p.position_vbo_)
 			{
 				if (p.volume_drawer_rend_)
-					p.volume_drawer_rend_->draw_edges(proj, mv, view);
+					p.volume_drawer_rend_->draw_edges(proj, mv);
 				else
 				{
 					p.shader_simple_color_param_->bind(proj, mv);
-					map->draw(cgogn::rendering::LINES);
+					mh->draw(cgogn::rendering::LINES);
 					p.shader_simple_color_param_->release();
 				}
 			}
@@ -148,53 +177,70 @@ void Plugin_VolumeRender::draw_map(View* view, MapHandlerGen* map, const QMatrix
 		{
 			if (p.position_vbo_)
 			{
-				if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
-					p.set_volume_explode_factor(0.995f);
-				if (!p.use_transparency_ && p.volume_drawer_rend_)
-					p.volume_drawer_rend_->draw_faces(proj, mv, view);
-			}
+                if(p.render_color_per_volumes_)
+                {
+                    if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
+						p.set_volume_explode_factor(0.995f);
+					if(p.apply_grid_clipping_plane_)
+						p.hexa_drawer_rend_->draw_faces(proj, mv);
+					else if (!p.use_transparency_ && p.volume_drawer_rend_)
+						p.volume_drawer_color_rend_->draw_faces(proj, mv);
+                }
+                else
+                {
+                    if (p.render_edges_ && p.volume_explode_factor_ > 0.995f)
+                        p.set_volume_explode_factor(0.995f);
+
+					if(p.apply_grid_clipping_plane_)
+						p.hexa_drawer_rend_->draw_faces(proj, mv);
+					else if (!p.use_transparency_ && p.volume_drawer_rend_)
+						p.volume_drawer_rend_->draw_faces(proj, mv);
+                 }
+             }
 		}
 	}
 }
 
-void Plugin_VolumeRender::mousePress(View* view, QMouseEvent* event)
+bool Plugin_VolumeRender::mousePress(View* view, QMouseEvent* event)
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
+	CMap3Handler* mh = dock_tab_->selected_map();
+	if (mh && mh->is_linked_to_view(view))
 	{
-		const MapParameters& p = get_parameters(view, map);
+		const MapParameters& p = parameters(view, mh);
 		if (p.apply_clipping_plane_ && event->modifiers() & Qt::ShiftModifier)
 		{
-			qoglviewer::Vec P = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 0.0), &map->get_frame());
-			qoglviewer::Vec Q = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 1.0), &map->get_frame());
+			qoglviewer::Vec P = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 0.0), &mh->frame());
+			qoglviewer::Vec Q = view->camera()->unprojectedCoordinatesOf(qoglviewer::Vec(event->x(), event->y(), 1.0), &mh->frame());
 			VEC3D A(P.x, P.y, P.z);
 			VEC3D B(Q.x, Q.y, Q.z);
 			p.frame_manip_->pick(event->x(), event->y(), A, B);
 			view->update();
 		}
 	}
+	return true;
 }
 
-void Plugin_VolumeRender::mouseRelease(View* view, QMouseEvent* event)
+bool Plugin_VolumeRender::mouseRelease(View* view, QMouseEvent* event)
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
+	CMap3Handler* mh = dock_tab_->selected_map();
+	if (mh && mh->is_linked_to_view(view))
 	{
-		const MapParameters& p = get_parameters(view, map);
+		const MapParameters& p = parameters(view, mh);
 		if (p.apply_clipping_plane_ && event->modifiers() & Qt::ShiftModifier)
 		{
 			p.frame_manip_->release();
 			view->update();
 		}
 	}
+	return true;
 }
 
-void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
+bool Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	if (map && map->is_linked_to_view(view) && map->dimension() == 3)
+	CMap3Handler* mh = dock_tab_->selected_map();
+	if (mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		if (p.apply_clipping_plane_ && event->modifiers() & Qt::ShiftModifier)
 		{
 			bool local_manip = event->buttons() & Qt::LeftButton;
@@ -203,6 +249,7 @@ void Plugin_VolumeRender::mouseMove(View* view, QMouseEvent* event)
 			view->update();
 		}
 	}
+	return true;
 }
 
 void Plugin_VolumeRender::view_linked(View* view)
@@ -214,11 +261,16 @@ void Plugin_VolumeRender::view_linked(View* view)
 	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
-	connect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	connect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	connect(view, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(view, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
 	connect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { add_linked_map(view, map); }
+	for (Object* o : view->linked_objects())
+	{
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
+		if (mh)
+			add_linked_map(view, mh);
+	}
 }
 
 void Plugin_VolumeRender::view_unlinked(View* view)
@@ -226,88 +278,85 @@ void Plugin_VolumeRender::view_unlinked(View* view)
 	if (check_docktab_activation())
 		dock_tab_->refresh_ui();
 
-	disconnect(view, SIGNAL(map_linked(MapHandlerGen*)), this, SLOT(map_linked(MapHandlerGen*)));
-	disconnect(view, SIGNAL(map_unlinked(MapHandlerGen*)), this, SLOT(map_unlinked(MapHandlerGen*)));
+	disconnect(view, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	disconnect(view, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
 	disconnect(view, SIGNAL(viewerInitialized()), this, SLOT(viewer_initialized()));
 
-	for (MapHandlerGen* map : view->get_linked_maps()) { remove_linked_map(view, map); }
-}
-
-void Plugin_VolumeRender::map_linked(MapHandlerGen *map)
-{
-	View* view = static_cast<View*>(sender());
-	add_linked_map(view, map);
-}
-
-void Plugin_VolumeRender::add_linked_map(View* view, MapHandlerGen* map)
-{
-	if (map->dimension() == 3)
+	for (Object* o : view->linked_objects())
 	{
-		set_position_vbo(view, map, map->get_vbo(setting_auto_load_position_attribute_), true);
-
-#ifdef USE_TRANSPARENCY
-		MapParameters& p = get_parameters(view, map);
-		if (p.use_transparency_)
-			plugin_surface_render_transp::add_tr_vol(plugin_transparency_, view, map, p.get_transp_drawer_rend());
-#endif
-
-		connect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-		connect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
-		connect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()), Qt::UniqueConnection);
-		connect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
-
-		if (check_docktab_activation())
-			dock_tab_->refresh_ui();
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
+		if (mh)
+			remove_linked_map(view, mh);
 	}
 }
 
-void Plugin_VolumeRender::map_unlinked(MapHandlerGen *map)
+void Plugin_VolumeRender::object_linked(Object* o)
 {
 	View* view = static_cast<View*>(sender());
-	remove_linked_map(view, map);
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
+	if (mh)
+		add_linked_map(view, mh);
 }
 
-void Plugin_VolumeRender::remove_linked_map(View* view, MapHandlerGen* map)
+void Plugin_VolumeRender::add_linked_map(View* view, CMap3Handler* mh)
 {
-	if (map->dimension() == 3)
-	{
-		disconnect(map, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
-		disconnect(map, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
-		disconnect(map, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
-		disconnect(map, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()));
-		disconnect(map, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)));
+	set_position_vbo(view, mh, mh->vbo(setting_auto_load_position_attribute_), true);
 
 #ifdef USE_TRANSPARENCY
-		MapParameters& p = get_parameters(view, map);
-		if (p.use_transparency_)
-			plugin_surface_render_transp::remove_tr_vol(plugin_transparency_, view, map, p.get_transp_drawer_rend());
+	MapParameters& p = parameters(view, mh);
+	if (p.use_transparency_)
+		plugin_transparency_->add_tr_vol(view, mh, p.transp_drawer_rend());
 #endif
 
-		if (check_docktab_activation())
-			dock_tab_->refresh_ui();
-	}
+	connect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	connect(mh, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()), Qt::UniqueConnection);
+	connect(mh, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()), Qt::UniqueConnection);
+	connect(mh, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
+}
+
+void Plugin_VolumeRender::object_unlinked(Object* o)
+{
+	View* view = static_cast<View*>(sender());
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
+	if (mh)
+		remove_linked_map(view, mh);
+}
+
+void Plugin_VolumeRender::remove_linked_map(View* view, CMap3Handler* mh)
+{
+	disconnect(mh, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_added(cgogn::rendering::VBO*)));
+	disconnect(mh, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(linked_map_vbo_removed(cgogn::rendering::VBO*)));
+	disconnect(mh, SIGNAL(bb_changed()), this, SLOT(linked_map_bb_changed()));
+	disconnect(mh, SIGNAL(connectivity_changed()), this, SLOT(linked_map_connectivity_changed()));
+	disconnect(mh, SIGNAL(attribute_changed(cgogn::Orbit, const QString&)), this, SLOT(linked_map_attribute_changed(cgogn::Orbit, const QString&)));
+
+#ifdef USE_TRANSPARENCY
+	MapParameters& p = parameters(view, mh);
+	if (p.use_transparency_)
+		plugin_transparency_->remove_tr_vol(view, mh, p.transp_drawer_rend());
+#endif
 }
 
 void Plugin_VolumeRender::linked_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
 
 		const QString vbo_name = QString::fromStdString(vbo->name());
 		for (auto& it : parameter_set_)
 		{
-			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-			if (view_param_set.count(map) > 0ul)
+			std::map<CMap3Handler*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(mh) > 0ul)
 			{
-				MapParameters& p = view_param_set[map];
+				MapParameters& p = view_param_set[mh];
 				if (!p.position_vbo_ && vbo_name == setting_auto_load_position_attribute_)
-					set_position_vbo(it.first, map, vbo, true);
+					set_position_vbo(it.first, mh, vbo, true);
 			}
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
@@ -316,97 +365,103 @@ void Plugin_VolumeRender::linked_map_vbo_removed(cgogn::rendering::VBO* vbo)
 {
 	if (vbo->vector_dimension() == 3)
 	{
-		MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+		CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
-			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-			if (view_param_set.count(map) > 0ul)
+			std::map<CMap3Handler*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(mh) > 0ul)
 			{
-				MapParameters& p = view_param_set[map];
+				MapParameters& p = view_param_set[mh];
 				if (p.position_vbo_ == vbo)
-					set_position_vbo(it.first, map, nullptr, true);
+					set_position_vbo(it.first, mh, nullptr, true);
 			}
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
 
 void Plugin_VolumeRender::linked_map_bb_changed()
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
+	const uint32 nbe = mh->map()->nb_cells<CMap3::Edge>();
 
-	const uint32 nbe = map->nb_cells(Edge_Cell);
 	for (auto& it : parameter_set_)
 	{
-		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-		if (view_param_set.count(map) > 0ul)
+		std::map<CMap3Handler*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(mh) > 0ul)
 		{
-			MapParameters& p = view_param_set[map];
-			p.set_vertex_base_size(map->get_bb_diagonal_size() / (2 * std::sqrt(nbe)));
-			p.frame_manip_->set_size(map->get_bb_diagonal_size() / 12.0f);
+			MapParameters& p = view_param_set[mh];
+			p.set_vertex_base_size(mh->bb_diagonal_size() / (2 * std::sqrt(nbe)));
+			p.frame_manip_->set_size(mh->bb_diagonal_size() / 12.0f);
 		}
 	}
+
+	for (View* view : mh->linked_views())
+		view->update();
 }
 
 void Plugin_VolumeRender::linked_map_connectivity_changed()
 {
-	MapHandlerGen* map = dynamic_cast<MapHandlerGen*>(sender());
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(sender());
 
 	for (auto& it : parameter_set_)
 	{
-		std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-		if (view_param_set.count(map) > 0ul)
+		std::map<CMap3Handler*, MapParameters>& view_param_set = it.second;
+		if (view_param_set.count(mh) > 0ul)
 		{
-			MapParameters& p = view_param_set[map];
+			MapParameters& p = view_param_set[mh];
 			if (p.position_vbo_)
 				p.update_volume_drawer();
 		}
 	}
+
+	for (View* view : mh->linked_views())
+		view->update();
 }
 
 void Plugin_VolumeRender::linked_map_attribute_changed(cgogn::Orbit orbit, const QString& attribute_name)
 {
 	if (orbit == CMap3::Vertex::ORBIT)
 	{
-		MapHandlerGen* map = static_cast<MapHandlerGen*>(sender());
+		CMap3Handler* mh = static_cast<CMap3Handler*>(sender());
 
 		for (auto& it : parameter_set_)
 		{
-			std::map<MapHandlerGen*, MapParameters>& view_param_set = it.second;
-			if (view_param_set.count(map) > 0ul)
+			std::map<CMap3Handler*, MapParameters>& view_param_set = it.second;
+			if (view_param_set.count(mh) > 0ul)
 			{
-				MapParameters& p = view_param_set[map];
+				MapParameters& p = view_param_set[mh];
 				if (p.position_vbo_ && QString::fromStdString(p.position_vbo_->name()) == attribute_name)
 					p.update_volume_drawer();
 			}
 		}
 
-		for (View* view : map->get_linked_views())
+		for (View* view : mh->linked_views())
 			view->update();
 	}
 }
 
 void Plugin_VolumeRender::viewer_initialized()
 {
-	View* view = dynamic_cast<View*>(sender());
+	View* view = qobject_cast<View*>(sender());
 	if (view && parameter_set_.count(view) > 0)
 	{
 		auto& view_param_set = parameter_set_[view];
 		for (auto & p : view_param_set)
 		{
-			MapHandlerGen* map = p.first;
+			CMap3Handler* mh = p.first;
 			MapParameters& mp = p.second;
 #ifdef USE_TRANSPARENCY
 			if (mp.use_transparency_)
-				plugin_surface_render_transp::remove_tr_vol(plugin_transparency_, view, map, mp.get_transp_drawer_rend());
+				plugin_transparency_->remove_tr_vol(view, mh, mp.transp_drawer_rend());
 #endif
 			mp.initialize_gl();
 #ifdef USE_TRANSPARENCY
 			if (mp.use_transparency_)
-				plugin_surface_render_transp::add_tr_vol(plugin_transparency_, view, map, mp.get_transp_drawer_rend());
+				plugin_transparency_->add_tr_vol(view, mh, mp.transp_drawer_rend());
 #endif
 		}
 	}
@@ -414,185 +469,258 @@ void Plugin_VolumeRender::viewer_initialized()
 
 void Plugin_VolumeRender::enable_on_selected_view(Plugin* p)
 {
-	if ((this == p) && schnapps_->get_selected_view() && setting_auto_enable_on_selected_view_)
-		schnapps_->get_selected_view()->link_plugin(this);
+	if ((this == p) && schnapps_->selected_view() && setting_auto_enable_on_selected_view_)
+		schnapps_->selected_view()->link_plugin(this);
 }
 
 /******************************************************************************/
 /*                             PUBLIC INTERFACE                               */
 /******************************************************************************/
 
-void Plugin_VolumeRender::set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+void Plugin_VolumeRender::set_color_per_volume(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+    if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+    {
+        MapParameters& p = parameters(view, mh);
+        p.set_render_color_per_volume(b);
+//        if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+//            dock_tab_->set_color_per_volume(b);
+        view->update();
+    }
+}
+
+void Plugin_VolumeRender::set_volume_attribute(View* view, CMap3Handler* mh, const QString& attrib, bool update_dock_tab)
+{
+    if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+    {
+        MapParameters& p = parameters(view, mh);
+        p.set_volume_attribute(attrib);
+//        if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+//            dock_tab_->set_color_per_volume(b);
+        view->update();
+    }
+}
+
+void Plugin_VolumeRender::set_color_map(View* view, CMap3Handler* mh, const QString& color_map, bool update_dock_tab)
+{
+    if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+    {
+        MapParameters& p = parameters(view, mh);
+        p.set_color_map(color_map);
+//        if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+//            dock_tab_->set_color_per_volume(b);
+        view->update();
+    }
+}
+
+void Plugin_VolumeRender::set_position_vbo(View* view, CMap3Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_position_vbo(vbo);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		p.init_topo_clipping();
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_position_vbo(vbo);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
+void Plugin_VolumeRender::set_render_vertices(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.render_vertices_ = b;
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_render_vertices(b);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_render_edges(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
+void Plugin_VolumeRender::set_render_edges(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.render_edges_ = b;
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_render_edges(b);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_render_faces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
+void Plugin_VolumeRender::set_render_faces(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.render_faces_ = b;
 #ifdef USE_TRANSPARENCY
 		if (p.use_transparency_)
 		{
 			if (b)
-				plugin_surface_render_transp::add_tr_vol(plugin_transparency_, view, map, p.get_transp_drawer_rend());
+				plugin_transparency_->add_tr_vol(view, mh, p.transp_drawer_rend());
 			else
-				plugin_surface_render_transp::remove_tr_vol(plugin_transparency_, view, map, p.get_transp_drawer_rend());
+				plugin_transparency_->remove_tr_vol(view, mh, p.transp_drawer_rend());
 		}
 #endif
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_render_faces(b);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_render_topology(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
+void Plugin_VolumeRender::set_render_topology(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_render_topology(b);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_render_topology(b);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_apply_clipping_plane(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
+void Plugin_VolumeRender::set_apply_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_apply_clipping_plane(b);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_apply_clipping_plane(b);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_vertex_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab)
+void Plugin_VolumeRender::set_apply_grid_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
+		p.set_apply_grid_clipping_plane(b);
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+			dock_tab_->set_apply_grid_clipping_plane(b);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_vertex_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	{
+		MapParameters& p = parameters(view, mh);
 		p.set_vertex_color(color);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_vertex_color(color);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_edge_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab)
+void Plugin_VolumeRender::set_edge_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_edge_color(color);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_edge_color(color);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_face_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab)
+void Plugin_VolumeRender::set_face_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_face_color(color);
-		p.set_transparency_factor(p.get_transparency_factor());
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		p.set_transparency_factor(p.transparency_factor());
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_face_color(color);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf, bool update_dock_tab)
+void Plugin_VolumeRender::set_vertex_scale_factor(View* view, CMap3Handler* mh, float32 sf, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_vertex_scale_factor(sf);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_vertex_scale_factor(sf);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_volume_explode_factor(View* view, MapHandlerGen* map, float32 vef, bool update_dock_tab)
+void Plugin_VolumeRender::set_volume_explode_factor(View* view, CMap3Handler* mh, float32 vef, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_volume_explode_factor(vef);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_volume_explode_factor(vef);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_transparency_enabled(View* view, MapHandlerGen* map, bool b, bool update_dock_tab)
+void Plugin_VolumeRender::set_transparency_enabled(View* view, CMap3Handler* mh, bool b, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_transparency_enabled(b);
 #ifdef USE_TRANSPARENCY
 		if (p.render_faces_)
 		{
 			if (b)
-				plugin_surface_render_transp::add_tr_vol(plugin_transparency_, view, map, p.get_transp_drawer_rend());
+				plugin_transparency_->add_tr_vol(view, mh, p.transp_drawer_rend());
 			else
-				plugin_surface_render_transp::remove_tr_vol(plugin_transparency_, view, map, p.get_transp_drawer_rend());
+				plugin_transparency_->remove_tr_vol(view, mh, p.transp_drawer_rend());
 		}
 #endif
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_transparency_enabled(b);
 		view->update();
 	}
 }
 
-void Plugin_VolumeRender::set_transparency_factor(View* view, MapHandlerGen* map, int32 tf, bool update_dock_tab)
+void Plugin_VolumeRender::set_transparency_factor(View* view, CMap3Handler* mh, int32 tf, bool update_dock_tab)
 {
-	if (view && view->is_linked_to_plugin(this) && map && map->is_linked_to_view(view) && map->dimension() == 3)
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
 	{
-		MapParameters& p = get_parameters(view, map);
+		MapParameters& p = parameters(view, mh);
 		p.set_transparency_factor(tf);
-		if (update_dock_tab && view->is_selected_view() && map->is_selected_map())
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
 			dock_tab_->set_transparency_factor(tf);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_grid_clipping_plane(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	{
+		MapParameters& p = parameters(view, mh);
+		p.set_clipping_plane(x,y,z);
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+			dock_tab_->set_grid_clipping_plane(x,y,z);
+		view->update();
+	}
+}
+
+void Plugin_VolumeRender::set_grid_clipping_plane2(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab)
+{
+	if (view && view->is_linked_to_plugin(this) && mh && mh->is_linked_to_view(view))
+	{
+		MapParameters& p = parameters(view, mh);
+		p.set_clipping_plane2(x,y,z);
+		if (update_dock_tab && view->is_selected_view() && dock_tab_->selected_map() == mh)
+			dock_tab_->set_grid_clipping_plane2(x,y,z);
 		view->update();
 	}
 }

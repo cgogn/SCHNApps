@@ -24,10 +24,11 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_MAP_PARAMETERS_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render_vector/plugin_surface_render_vector_export.h>
+
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/rendering/shaders/shader_vector_per_vertex.h>
 
@@ -38,13 +39,14 @@ namespace plugin_surface_render_vector
 {
 
 class Plugin_SurfaceRenderVector;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
+struct PLUGIN_SURFACE_RENDER_VECTOR_EXPORT MapParameters
 {
 	friend class Plugin_SurfaceRenderVector;
 
 	MapParameters() :
-		map_(nullptr),
+		mh_(nullptr),
 		position_vbo_(nullptr)
 	{
 		initialize_gl();
@@ -52,26 +54,26 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API MapParameters
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	inline const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& get_shader_params() const
+	inline const std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>>& shader_params() const
 	{
 		return shader_vector_per_vertex_param_list_;
 	}
 
-	inline cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	inline cgogn::rendering::VBO* get_vector_vbo(uint32 index) const
+	inline cgogn::rendering::VBO* position_vbo() const { return position_vbo_; }
+	inline cgogn::rendering::VBO* vector_vbo(uint32 index) const
 	{
 		if (index < vector_vbo_list_.size())
 			return vector_vbo_list_[index];
 		else
 			return nullptr;
 	}
-	inline uint32 get_vector_vbo_index(cgogn::rendering::VBO* v) const
+	inline uint32 vector_vbo_index(cgogn::rendering::VBO* v) const
 	{
 		const uint32 index = std::find(vector_vbo_list_.begin(), vector_vbo_list_.end(), v) - vector_vbo_list_.begin();
 		return index >= vector_vbo_list_.size() ? UINT32_MAX : index;
 	}
-	inline float32 get_vector_scale_factor(uint32 i) const { return vector_scale_factor_list_[i]; }
-	inline const QColor& get_vector_color(uint32 i) const { return vector_color_list_[i]; }
+	inline float32 vector_scale_factor(uint32 i) const { return vector_scale_factor_list_[i]; }
+	inline const QColor& vector_color(uint32 i) const { return vector_color_list_[i]; }
 
 private:
 
@@ -98,7 +100,7 @@ private:
 			if (position_vbo_)
 				p->set_position_vbo(position_vbo_);
 			p->set_vector_vbo(vector_vbo_list_.back());
-			p->length_ = map_->get_bb_diagonal_size() / 100.0f * vector_scale_factor_list_.back();
+			p->length_ = mh_->bb_diagonal_size() / 100.0f * vector_scale_factor_list_.back();
 			p->color_ = vector_color_list_.back();
 			shader_vector_per_vertex_param_list_.push_back(std::move(p));
 		}
@@ -106,7 +108,7 @@ private:
 
 	void remove_vector_vbo(cgogn::rendering::VBO* v)
 	{
-		const uint32 idx = get_vector_vbo_index(v);
+		const uint32 idx = vector_vbo_index(v);
 		if (idx != UINT32_MAX)
 		{
 			vector_vbo_list_[idx] = vector_vbo_list_.back();
@@ -123,7 +125,7 @@ private:
 	void set_vector_scale_factor(uint32 i, float32 sf)
 	{
 		vector_scale_factor_list_[i] = sf;
-		shader_vector_per_vertex_param_list_[i]->length_ = map_->get_bb_diagonal_size() / 100.0f * vector_scale_factor_list_[i];
+		shader_vector_per_vertex_param_list_[i]->length_ = mh_->bb_diagonal_size() / 100.0f * vector_scale_factor_list_[i];
 	}
 
 	void set_vector_color(uint32 i, const QColor& c)
@@ -151,7 +153,7 @@ private:
 		}
 	}
 
-	CMap2Handler* map_;
+	CMap2Handler* mh_;
 
 	std::vector<std::unique_ptr<cgogn::rendering::ShaderVectorPerVertex::Param>> shader_vector_per_vertex_param_list_;
 

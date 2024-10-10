@@ -22,15 +22,19 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "image.h"
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QDir>
-#include <image_dock_tab.h>
+#include <schnapps/plugins/image/image.h>
+#include <schnapps/plugins/image/image_dock_tab.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+
 #include <schnapps/core/schnapps.h>
+
 #include <cgogn/io/c_locale.h>
 #include <cgogn/io/formats/vtk.h>
 #include <cgogn/core/utils/string.h>
+
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QDir>
 
 #ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 #include <boost/iostreams/filtering_streambuf.hpp>
@@ -44,25 +48,28 @@ namespace schnapps
 namespace plugin_image
 {
 
-Plugin_Image::Plugin_Image() :
-	images_(),
-	import_image_action_(nullptr),
-	dock_tab_(nullptr)
-{}
-
-const std::list<std::pair<QString, Image3D> >& Plugin_Image::get_images() const
+Image3D::value_type const& Image3D::operator()(std::size_t i, std::size_t j, std::size_t k) const
 {
-	return images_;
+	return static_cast<const value_type*>(data_->data())[get_nb_components() * ((k * image_dim_[1] + j) * image_dim_[0] + i)];
 }
 
-const Image3D*Plugin_Image::get_image(const QString& im_path)
+
+
+Plugin_Image::Plugin_Image() :
+	plugin_cmap_provider_(nullptr),
+	import_image_action_(nullptr),
+	dock_tab_(nullptr),
+	export_point_set_threshold_(0.01)
 {
-	if (images_.empty())
-		return nullptr;
-	for (const auto& it : images_)
-		if (it.first == im_path)
-			return &(it.second);
-	return nullptr;
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+Plugin_Image::~Plugin_Image()
+{}
+
+QString Plugin_Image::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_Image::enable()
@@ -72,6 +79,9 @@ bool Plugin_Image::enable()
 
 	dock_tab_ = new Image_DockTab(this->schnapps_, this);
 	schnapps_->add_plugin_dock_tab(this, dock_tab_, "Image3D");
+
+	dock_tab_->threshold_spinbox->setValue(export_point_set_threshold_);
+	connect(dock_tab_->threshold_spinbox, SIGNAL(valueChanged(double)), this, SLOT(threshold_changed(double)));
 	return true;
 }
 
@@ -84,77 +94,114 @@ void Plugin_Image::disable()
 	dock_tab_ = nullptr;
 }
 
-void Plugin_Image::draw(schnapps::View* view, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{}
-
-void Plugin_Image::draw_map(schnapps::View* view, schnapps::MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv)
-{}
-
-void Plugin_Image::keyPress(schnapps::View* view, QKeyEvent* event)
-{}
-
-void Plugin_Image::keyRelease(schnapps::View* view, QKeyEvent* event)
-{}
-
-void Plugin_Image::mousePress(schnapps::View* view, QMouseEvent* event)
-{}
-
-void Plugin_Image::mouseRelease(schnapps::View* view, QMouseEvent* event)
-{}
-
-void Plugin_Image::mouseMove(schnapps::View* view, QMouseEvent* event)
-{}
-
-void Plugin_Image::wheelEvent(schnapps::View* view, QWheelEvent* event)
-{}
-
-void Plugin_Image::view_linked(schnapps::View* view)
-{}
-
-void Plugin_Image::view_unlinked(schnapps::View* view)
-{}
-
-void Plugin_Image::resizeGL(View* /*view*/, int /*width*/, int /*height*/)
-{}
-
-void Plugin_Image::import_image(const QString& image_path)
+void Plugin_Image::add_image(const QString& image_path)
 {
 	QFileInfo fileinfo(image_path);
 	if (fileinfo.exists() && fileinfo.isFile())
 	{
-		images_.push_back({image_path, Image3D::new_image_3d(image_path)});
-		if (!images_.back().second.is_empty())
-			emit(image_added(image_path));
-		else
-			images_.pop_back();
-	}
+		const QString name = fileinfo.baseName();
+		QString final_name = name;
 
+		if (objects_.count(name) > 0ul)
+		{
+			int i = 1;
+			do
+			{
+				final_name = name + QString("_") + QString::number(i);
+				++i;
+			} while (objects_.count(final_name) > 0ul);
+		}
+
+		Image3D* im = Image3D::new_image_3d(image_path, final_name, this);
+		if (!im || im->is_empty())
+		{
+			delete im;
+			return;
+		}
+
+		objects_.insert(std::make_pair(im->name(), im));
+		schnapps_->notify_object_added(im);
+	}
+}
+
+const Image3D*Plugin_Image::image(const QString& im_name) const
+{
+	if (objects_.count(im_name) > 0ul)
+		return dynamic_cast<Image3D*>(objects_.at(im_name));
+	else
+		return nullptr;
 }
 
 void Plugin_Image::import_image_dialog()
 {
-	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->get_app_path(),  "3DImages (*.inr *.vtk *.inr.gz *.vtk.gz)");
+	auto filenames = QFileDialog::getOpenFileNames(nullptr, "Import 3D images", schnapps_->app_path(),  "3DImages (*.inr *.vtk *.inr.gz *.vtk.gz)");
 	for (const auto& im : filenames)
-		import_image(im);
+		add_image(im);
 }
 
-void Plugin_Image::image_removed()
+void Plugin_Image::threshold_changed(double t)
 {
-	const int current_image_id = dock_tab_->listWidget_images->currentRow();
-	if (current_image_id >= 0)
-	{
-		QListWidgetItem* curr_item = dock_tab_->listWidget_images->currentItem();
-		emit(image_removed(curr_item->text()));
-		dock_tab_->listWidget_images->removeItemWidget(curr_item);
-		delete curr_item;
+	export_point_set_threshold_ = t;
+}
 
-		auto it = images_.begin();
-		std::advance(it, current_image_id);
-		images_.erase(it);
+void Plugin_Image::image_removed(const QString& name)
+{
+	if (objects_.count(name) > 0ul)
+	{
+		Image3D* im = dynamic_cast<Image3D*>(objects_.at(name));
+		if (im)
+		{
+			auto items = dock_tab_->listWidget_images->findItems(name, Qt::MatchExactly);
+			for (QListWidgetItem* item : items)
+			{
+				dock_tab_->listWidget_images->removeItemWidget(item);
+				delete item;
+			}
+			schnapps_->notify_object_removed(im);
+			objects_.erase(name);
+			delete im;
+		}
 	}
 }
 
-Image3D::Image3D() :
+void Plugin_Image::export_image_to_point_set(const QString& name)
+{
+	if (objects_.count(name) > 0ul)
+	{
+		Image3D* im = dynamic_cast<Image3D*>(objects_.at(name));
+		if (im)
+		{
+			if (!plugin_cmap_provider_)
+				plugin_cmap_provider_  = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
+			plugin_cmap_provider::CMap0Handler* mh = plugin_cmap_provider_->add_cmap0(im->name());
+			auto* map = mh->map();
+			ImagePointSetImport importer(*map);
+			if (importer.import_image(*im, export_point_set_threshold_))
+			{
+				importer.create_map();
+				mh->notify_connectivity_change();
+				if (map->is_embedded<CMap0::Vertex>())
+				{
+					const auto& container = map->attribute_container<CMap0::Vertex::ORBIT>();
+					const std::vector<std::string>& names = container.names();
+					for (std::size_t i = 0u; i < names.size(); ++i)
+						mh->notify_attribute_added(CMap0::Vertex::ORBIT, QString::fromStdString(names[i]));
+				}
+
+
+				if (map->nb_cells<CMap0::Vertex>() > 0)
+				{
+					mh->create_vbo("position");
+					mh->set_bb_vertex_attribute("position");
+				}
+			} else {
+				cgogn_log_warning("Plugin_Image") << "Unable to export the image \"" << im->name().toStdString() << "\" to point set.";
+			}
+		}
+	}
+}
+
+Image3D::Image3D(const QString& name, PluginProvider* p) : Object(name, p),
 	data_(nullptr),
 	image_dim_{},
 	origin_(),
@@ -170,37 +217,12 @@ Image3D::Image3D() :
 	voxel_dim_.fill(0);
 }
 
-Image3D::Image3D(Image3D&& im) :
-	data_(std::move(im.data_)),
-	image_dim_(im.image_dim_),
-	origin_(im.origin_),
-	voxel_dim_(im.voxel_dim_),
-	translation_(im.translation_),
-	rotation_(im.rotation_),
-	nb_components_(im.nb_components_)
-{}
 
-
-Image3D& Image3D::operator=(Image3D&& im)
-{
-	if (this != &im)
-	{
-		data_ = std::move(im.data_);
-		image_dim_ = im.image_dim_;
-		origin_ = im.origin_;
-		voxel_dim_ = im.voxel_dim_;
-		translation_ = im.translation_;
-		rotation_ = im.rotation_;
-		nb_components_ = im.nb_components_;
-	}
-
-	return *this;
-}
-
-Image3D Image3D::new_image_3d(const QString& image_path)
+Image3D* Image3D::new_image_3d(const QString& image_path, const QString& objectname, PluginProvider* p)
 {
 	QFileInfo fileinfo(image_path);
-	Image3D res_img;
+	Image3D* res_img = new Image3D(objectname, p);
+
 	if (fileinfo.exists() && fileinfo.isFile())
 	{
 		cgogn::Scoped_C_Locale locale;
@@ -211,21 +233,23 @@ Image3D Image3D::new_image_3d(const QString& image_path)
 			const QString temp_image_path = uncompress_gz_file(image_path);
 			if (QFileInfo::exists(temp_image_path))
 			{
-				res_img = std::move(Image3D::new_image_3d(temp_image_path));
+				delete res_img;
+				res_img = Image3D::new_image_3d(temp_image_path, objectname, p);
 				QFile::remove(temp_image_path);
 			}
-		} else {
+		}
+		else
+		{
 			if (!QString::compare(complete_suffix, "inr", Qt::CaseInsensitive))
-				res_img.import_inr(in_file);
+				res_img->import_inr(in_file);
 			else
 			{
 				if (!QString::compare(complete_suffix, "vtk", Qt::CaseInsensitive))
-					res_img.import_vtk(in_file);
-				else
-					return res_img;
+					res_img->import_vtk(in_file);
 			}
 		}
 	}
+
 	return res_img;
 }
 
@@ -245,8 +269,14 @@ void Image3D::import_inr(std::istream& inr_data)
 
 	std::getline(sstream, line);
 
-	while (!line.empty() && line[0] != '#')
+	while (line != "##}")
 	{
+		if (line.empty())
+		{
+			std::getline(sstream, line);
+			continue;
+		}
+
 		if (line.compare(0,5,"XDIM=") == 0)
 			this->image_dim_[0] = std::stoul(line.substr(5));
 		if (line.compare(0,5,"YDIM=") == 0)
@@ -302,37 +332,43 @@ void Image3D::import_inr(std::istream& inr_data)
 
 	const bool little_endian = (cpu == "decm" || cpu == "pc" || cpu == "alpha");
 
-
 	if (type == "unsigned fixed")
-		switch (data_size) {
-		case 1: data_ = cgogn::make_unique<DataInput<uint8, value_type>>(); break;
-		case 2: data_ = cgogn::make_unique<DataInput<uint16, value_type>>(); break;
-		case 4: data_ = cgogn::make_unique<DataInput<uint32, value_type>>(); break;
-		case 8: data_ = cgogn::make_unique<DataInput<uint64, value_type>>(); break;
+	{
+		switch (data_size)
+		{
+			case 1: data_ = cgogn::make_unique<DataInput<uint8, value_type>>(); break;
+			case 2: data_ = cgogn::make_unique<DataInput<uint16, value_type>>(); break;
+			case 4: data_ = cgogn::make_unique<DataInput<uint32, value_type>>(); break;
+			case 8: data_ = cgogn::make_unique<DataInput<uint64, value_type>>(); break;
 			default: break;
-		} else {
-		if (type == "signed fixed")
-			switch (data_size) {
+		}
+	}
+	else if (type == "signed fixed")
+	{
+		switch (data_size)
+		{
 			case 1: data_ = cgogn::make_unique<DataInput<int8, value_type>>(); break;
 			case 2: data_ = cgogn::make_unique<DataInput<int16, value_type>>(); break;
 			case 4: data_ = cgogn::make_unique<DataInput<int32, value_type>>(); break;
 			case 8: data_ = cgogn::make_unique<DataInput<int64, value_type>>(); break;
-				default: break;
-			} else {
-			if (type == "float")
-				switch (data_size) {
-				case 4: data_ = cgogn::make_unique<DataInput<float32, value_type>>(); break;
-				case 8: data_ = cgogn::make_unique<DataInput<float64, value_type>>(); break;
-					default: break;
-				}
+			default: break;
 		}
 	}
+	else if (type == "float")
+	{
+		switch (data_size)
+		{
+			case 4: data_ = cgogn::make_unique<DataInput<float32, value_type>>(); break;
+			case 8: data_ = cgogn::make_unique<DataInput<float64, value_type>>(); break;
+			default: break;
+		}
+	}
+
 	if (data_)
 	{
 		data_->read_n(inr_data, image_dim_[0] * image_dim_[1] * image_dim_[2] * nb_components_ , true, !little_endian);
 		data_ = data_->simplify();
 	}
-
 }
 
 void Image3D::import_vtk(std::istream& vtk_data)
@@ -364,14 +400,13 @@ void Image3D::import_vtk(std::istream& vtk_data)
 
 	origin_.fill(0);
 
-	while(!vtk_data.eof())
+	while (!vtk_data.eof())
 	{
 		std::getline(vtk_data,line);
 		word.clear();
 		std::istringstream sstream(line);
 		sstream >> word;
 		word = to_upper(word);
-
 
 		if (word == "DIMENSIONS")
 			sstream >> image_dim_[0] >> image_dim_[1] >> image_dim_[2];
@@ -380,10 +415,7 @@ void Image3D::import_vtk(std::istream& vtk_data)
 			sstream >> voxel_dim_[0] >> voxel_dim_[1] >> voxel_dim_[2];
 
 		if (word == "ORIGIN")
-		{
 			sstream >> origin_[0] >> origin_[1] >> origin_[2];
-		}
-
 
 		if (word == "POINT_DATA")
 		{
@@ -391,7 +423,8 @@ void Image3D::import_vtk(std::istream& vtk_data)
 			sstream >> nb_data;
 
 			std::ifstream::pos_type previous_pos;
-			do {
+			do
+			{
 				previous_pos = vtk_data.tellg();
 				std::getline(vtk_data, line);
 				sstream.str(line);
@@ -401,7 +434,7 @@ void Image3D::import_vtk(std::istream& vtk_data)
 				word = to_upper(word);
 				if (word == "SCALARS" || word == "VECTOR")
 				{
-					const bool is_vector = !(word == "SCALARS");
+					const bool is_vector = (word != "SCALARS");
 					std::string att_name;
 					std::string att_type;
 					nb_components_ = is_vector? 3u : 1u;
@@ -453,9 +486,17 @@ void Image3D::import_vtk(std::istream& vtk_data)
 	}
 }
 
+void Image3D::view_linked(View* /*view*/)
+{
 
+}
 
-SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
+void Image3D::view_unlinked(View* /*view*/)
+{
+
+}
+
+PLUGIN_IMAGE_EXPORT QString uncompress_gz_file(const QString& filename_in)
 {
 #ifdef SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 	if (!QFileInfo::exists(filename_in))
@@ -481,5 +522,42 @@ SCHNAPPS_PLUGIN_IMAGE_API QString uncompress_gz_file(const QString& filename_in)
 #endif // SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM
 }
 
+
+ImagePointSetImport::ImagePointSetImport(CMap0& map) :
+	Inherit(map)
+{}
+
+ImagePointSetImport::~ImagePointSetImport()
+{}
+
+bool ImagePointSetImport::import_image(const Image3D& im, double threshold)
+{
+	ChunkArray<VEC3>* position = this->template add_vertex_attribute<VEC3>("position");
+
+	// reading number of points
+	const std::size_t nx = im.get_image_dimensions()[0];
+	const std::size_t ny = im.get_image_dimensions()[1];
+	const std::size_t nz = im.get_image_dimensions()[2];
+
+	for (std::size_t i = 0 ; i < nx ; ++i)
+	{
+		for (std::size_t j = 0 ; j < ny  ; ++j)
+		{
+			for (std::size_t k = 0 ; k < nz ; ++k)
+			{
+				if (std::fabs(double(im(i,j,k)) >= threshold))
+				{
+					++nb_vertices_;
+					const auto p = im.position(i,j,k);
+					const uint32 vertex_id = this->insert_line_vertex_container();
+					(*position)[vertex_id] = VEC3(p[0], p[1], p[2]);
+				}
+			}
+		}
+	}
+	return true;
+}
+
 } // namespace plugin_image
+
 } // namespace schnapps

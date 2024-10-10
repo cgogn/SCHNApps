@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API</exportmacro>
+ <exportmacro>PLUGIN_EXTRACT_SURFACE_EXPORT</exportmacro>
  <class>ExtractSurface</class>
  <widget class="QDialog" name="ExtractSurface">
   <property name="geometry">

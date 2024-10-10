@@ -2,54 +2,65 @@ project(plugin_volume_render
 	LANGUAGES CXX
 )
 
-find_package(cgogn_core REQUIRED)
+# Hide symbols by default
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN YES)
+
+find_package(schnapps_core REQUIRED)
+find_package(plugin_cmap_provider REQUIRED)
+
+define_property(TARGET PROPERTY USE_TRANSPARENCY BRIEF_DOCS "use transparency or not" FULL_DOCS "use transparency or not")
+
 find_package(cgogn_rendering REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(QOGLViewer REQUIRED)
 
-set(HEADER_FILES
-	dll.h
-	map_parameters.h
-	volume_render.h
-	volume_render_dock_tab.h
-)
+add_library(${PROJECT_NAME} SHARED "")
+add_library(schnapps::volume_render ALIAS plugin_volume_render)
 
-set(SOURCE_FILES
-	volume_render.cpp
-	volume_render_dock_tab.cpp
-)
-
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_VOLUME_RENDER_DLL_EXPORT")
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-	${QOGLViewer_INCLUDE_DIRS}
-	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
+target_sources(${PROJECT_NAME}
+	PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/map_parameters.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render.ui"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render_dock_tab.h"
+		"${CMAKE_CURRENT_LIST_DIR}/volume_render_dock_tab.cpp"
 )
 
 if (USE_TRANSPARENCY)
-	target_link_libraries(${PROJECT_NAME}
-		schnapps_core
-		plugin_surface_render_transp
-		${cgogn_core_LIBRARIES}
-		${cgogn_rendering_LIBRARIES}
-		${Qt5Widgets_LIBRARIES}
-		${QOGLViewer_LIBRARIES})
+	set_target_properties(${PROJECT_NAME} PROPERTIES USE_TRANSPARENCY "ON")
 else()
-	target_link_libraries(${PROJECT_NAME}
-		schnapps_core
-		${cgogn_core_LIBRARIES}
-		${cgogn_rendering_LIBRARIES}
-		${Qt5Widgets_LIBRARIES}
-		${QOGLViewer_LIBRARIES})
+	set_target_properties(${PROJECT_NAME} PROPERTIES USE_TRANSPARENCY "OFF")
 endif()
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+										DEBUG_POSTFIX "_d"
+										EXPORT_NAME volume_render)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
+target_link_libraries(${PROJECT_NAME}
+	schnapps::core
+	schnapps::cmap_provider
+	$<$<BOOL:$<TARGET_PROPERTY:USE_TRANSPARENCY>>:plugin_render_transparency>
+)
+
+generate_export_header(plugin_volume_render)
+
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/volume_render
+	COMPONENT schnapps_plugins_headers
+	FILES_MATCHING PATTERN "*.h"
+)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugin_volume_render_export.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/volume_render
+	COMPONENT schnapps_plugins_headers
+)
+
+schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")
 
 set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)

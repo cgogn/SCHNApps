@@ -25,14 +25,21 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_
 
-#include "dll.h"
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
 #include <schnapps/core/plugin_processing.h>
 #include <schnapps/core/types.h>
-class QAction;
+#include <cgogn/core/basic/cell.h>
 
+class QAction;
 
 namespace schnapps
 {
+
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMapHandlerGen;
+} // namespace plugin_cmap_provider
 
 namespace plugin_attribute_editor
 {
@@ -40,7 +47,11 @@ namespace plugin_attribute_editor
 class AddAttributeDialog;
 class EditAttributeDialog;
 
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AttributeEditorPlugin : public PluginProcessing
+cgogn::Orbit PLUGIN_ATTRIBUTE_EDITOR_EXPORT orbit_from_string(const QString& str);
+QStringList PLUGIN_ATTRIBUTE_EDITOR_EXPORT get_attribute_names(const plugin_cmap_provider::CMapHandlerGen* mhg, cgogn::Orbit orb);
+const std::vector<cgogn::Orbit> PLUGIN_ATTRIBUTE_EDITOR_EXPORT available_orbits(const plugin_cmap_provider::CMapHandlerGen* mhg);
+
+class PLUGIN_ATTRIBUTE_EDITOR_EXPORT AttributeEditorPlugin : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -49,9 +60,9 @@ class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AttributeEditorPlugin : public Plugin
 public:
 
 	AttributeEditorPlugin();
-	~AttributeEditorPlugin() override;
-
-	static CellType get_cell_type();
+	inline ~AttributeEditorPlugin() override {}
+	static QString plugin_name();
+	const plugin_cmap_provider::Plugin_CMapProvider* cmap_provider() const;
 
 private:
 
@@ -64,13 +75,16 @@ private:
 	void edit_attribute_dialog();
 
 private:
+
 	QAction* add_attribute_action_;
 	QAction* edit_attribute_action_;
 	AddAttributeDialog* add_attribute_dialog_;
 	EditAttributeDialog* edit_attribute_dialog_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 };
 
 } // namespace plugin_attribute_editor
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ATTRIBUTE_EDITOR_H_

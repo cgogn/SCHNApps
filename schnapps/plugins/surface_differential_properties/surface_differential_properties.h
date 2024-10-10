@@ -24,28 +24,38 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_
 #define SCHNAPPS_PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_H_
 
+#include <schnapps/plugins/surface_differential_properties/plugin_surface_differential_properties_export.h>
+
+#include <schnapps/core/types.h>
 #include <schnapps/core/plugin_processing.h>
 
-#include "dll.h"
-#include <dialog_compute_normal.h>
-#include <dialog_compute_curvature.h>
-
 #include <QAction>
+
+namespace cgogn { enum Orbit: numerics::uint32; }
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap2Handler;
+}
 
 namespace plugin_sdp
 {
+
+class ComputeNormal_Dialog;
+class ComputeCurvature_Dialog;
+
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 /**
  * @brief Plugin that manages the computation of differential properties
  * - Normals
  * - Curvatures
  */
-class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties : public PluginProcessing
+class PLUGIN_SURFACE_DIFFERENTIAL_PROPERTIES_EXPORT Plugin_SurfaceDifferentialProperties : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -53,9 +63,9 @@ class SCHNAPPS_PLUGIN_SDP_API Plugin_SurfaceDifferentialProperties : public Plug
 
 public:
 
-	Plugin_SurfaceDifferentialProperties() {}
-
-	~Plugin_SurfaceDifferentialProperties() override {}
+	Plugin_SurfaceDifferentialProperties();
+	inline ~Plugin_SurfaceDifferentialProperties() override {}
+	static QString plugin_name();
 
 private:
 
@@ -65,18 +75,23 @@ private:
 private slots:
 
 	// slots called from SCHNApps signals
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
+	void object_added(Object* o);
+	void object_removed(Object* o);
 	void schnapps_closing();
 
-	// slots called from MapHandler signals
+	// slots called from CMap2Handler signals
 	void attribute_changed(cgogn::Orbit orbit, const QString& attribute_name);
 
 	// slots called from action signals
 	void open_compute_normal_dialog();
 	void open_compute_curvature_dialog();
 
-public slots:
+private:
+
+	void map_added(CMap2Handler* mh);
+	void map_removed(CMap2Handler* mh);
+
+public:
 
 	/**
 	 * @brief compute the normals of a mesh
@@ -140,8 +155,6 @@ public slots:
 		bool auto_update
 	);
 
-public:
-
 	struct ComputeNormalParameters
 	{
 		ComputeNormalParameters() {}
@@ -159,14 +172,14 @@ public:
 		bool auto_update_;
 	};
 
-	bool has_compute_normal_last_parameters(const QString& map_name)
+	bool has_compute_normal_last_parameters(CMap2Handler* map)
 	{
-		return compute_normal_last_parameters_.count(map_name) > 0;
+		return compute_normal_last_parameters_.count(map) > 0;
 	}
-	const ComputeNormalParameters& get_compute_normal_last_parameters(const QString& map_name)
+	const ComputeNormalParameters& get_compute_normal_last_parameters(CMap2Handler* map)
 	{
-		cgogn_message_assert(has_compute_normal_last_parameters(map_name), "Getting inexistant parameters");
-		return compute_normal_last_parameters_[map_name];
+		cgogn_message_assert(has_compute_normal_last_parameters(map), "Getting inexistant parameters");
+		return compute_normal_last_parameters_[map];
 	}
 
 	struct ComputeCurvatureParameters
@@ -213,14 +226,14 @@ public:
 		bool auto_update_;
 	};
 
-	bool has_compute_curvature_last_parameters(const QString& map_name)
+	bool has_compute_curvature_last_parameters(CMap2Handler* map)
 	{
-		return compute_curvature_last_parameters_.count(map_name) > 0;
+		return compute_curvature_last_parameters_.count(map) > 0;
 	}
-	const ComputeCurvatureParameters& get_compute_curvature_last_parameters(const QString& map_name)
+	const ComputeCurvatureParameters& get_compute_curvature_last_parameters(CMap2Handler* map)
 	{
-		cgogn_message_assert(has_compute_curvature_last_parameters(map_name), "Getting inexistant parameters");
-		return compute_curvature_last_parameters_[map_name];
+		cgogn_message_assert(has_compute_curvature_last_parameters(map), "Getting inexistant parameters");
+		return compute_curvature_last_parameters_[map];
 	}
 
 private:
@@ -231,8 +244,10 @@ private:
 	QAction* compute_normal_action_;
 	QAction* compute_curvature_action_;
 
-	std::map<QString, ComputeNormalParameters> compute_normal_last_parameters_;
-	std::map<QString, ComputeCurvatureParameters> compute_curvature_last_parameters_;
+	std::map<CMap2Handler*, ComputeNormalParameters> compute_normal_last_parameters_;
+	std::map<CMap2Handler*, ComputeCurvatureParameters> compute_curvature_last_parameters_;
+
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 };
 
 } // namespace plugin_sdp

@@ -21,11 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <surface_render_vector_dock_tab.h>
-#include <surface_render_vector.h>
+#include <schnapps/plugins/surface_render_vector/surface_render_vector_dock_tab.h>
+#include <schnapps/plugins/surface_render_vector/surface_render_vector.h>
+
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 #include <schnapps/core/view.h>
 
 namespace schnapps
@@ -37,9 +38,13 @@ namespace plugin_surface_render_vector
 SurfaceRenderVector_DockTab::SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_SurfaceRenderVector* p) :
 	schnapps_(s),
 	plugin_(p),
+	plugin_cmap_provider_(nullptr),
+	selected_map_(nullptr),
 	updating_ui_(false)
 {
 	setupUi(this);
+
+	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
 	list_vectorVBO->setSelectionMode(QAbstractItemView::SingleSelection);
 	slider_vectorScaleFactor->setDisabled(true);
@@ -51,38 +56,60 @@ SurfaceRenderVector_DockTab::SurfaceRenderVector_DockTab(SCHNApps* s, Plugin_Sur
 	connect(slider_vectorScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vector_scale_factor_changed(int)));
 	connect(combo_vectorColor, SIGNAL(currentIndexChanged(int)), this, SLOT(vector_color_changed(int)));
 
-	selected_map_ = schnapps_->get_selected_map();
-	if (selected_map_)
-	{
-		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
-		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
-	}
+	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));;
 
-	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
-	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
+	View* v = schnapps_->selected_view();
+	connect(v, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(v, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	for (Object* o : v->linked_objects())
+		object_linked(o);
+
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 SurfaceRenderVector_DockTab::~SurfaceRenderVector_DockTab()
 {
 	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
 }
 
 /*****************************************************************************/
 // slots called from UI signals
 /*****************************************************************************/
 
-void SurfaceRenderVector_DockTab::position_vbo_changed(int index)
+void SurfaceRenderVector_DockTab::selected_map_changed()
 {
-	if (!updating_ui_)
+	if (selected_map_)
 	{
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
-			plugin_->set_position_vbo(schnapps_->get_selected_view(), map, map->get_vbo(combo_positionVBO->currentText()), false);
+		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
 	}
+
+	selected_map_ = nullptr;
+
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		selected_map_ = plugin_cmap_provider_->cmap2(map_name);
+	}
+
+	if (selected_map_)
+	{
+		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	}
+
+	if (plugin_->check_docktab_activation())
+		refresh_ui();
 }
 
-void SurfaceRenderVector_DockTab::selected_vector_vbo_changed(QListWidgetItem* item, QListWidgetItem* old)
+void SurfaceRenderVector_DockTab::position_vbo_changed(int)
+{
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_position_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_positionVBO->currentText()), false);
+}
+
+void SurfaceRenderVector_DockTab::selected_vector_vbo_changed(QListWidgetItem*, QListWidgetItem*)
 {
 	if (!updating_ui_)
 		update_after_vector_vbo_changed();
@@ -90,16 +117,12 @@ void SurfaceRenderVector_DockTab::selected_vector_vbo_changed(QListWidgetItem* i
 
 void SurfaceRenderVector_DockTab::vector_vbo_checked(QListWidgetItem* item)
 {
-	if (!updating_ui_)
+	if (!updating_ui_ && selected_map_)
 	{
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
-		{
-			if (item->checkState() == Qt::Checked)
-				plugin_->add_vector_vbo(schnapps_->get_selected_view(), map, map->get_vbo(item->text()), true);
-			else
-				plugin_->remove_vector_vbo(schnapps_->get_selected_view(), map, map->get_vbo(item->text()), true);
-		}
+		if (item->checkState() == Qt::Checked)
+			plugin_->add_vector_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(item->text()), true);
+		else
+			plugin_->remove_vector_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(item->text()), true);
 	}
 }
 
@@ -110,30 +133,28 @@ void SurfaceRenderVector_DockTab::vector_scale_factor_changed(int i)
 		QListWidgetItem* item = list_vectorVBO->currentItem();
 		if (item && item->checkState() == Qt::Checked)
 		{
-			View* view = schnapps_->get_selected_view();
-			MapHandlerGen* map = schnapps_->get_selected_map();
-			if (view && map)
+			View* view = schnapps_->selected_view();
+			if (view && selected_map_)
 			{
-				cgogn::rendering::VBO* vbo = map->get_vbo(item->text());
-				plugin_->set_vector_scale_factor(view, map, vbo, float32(i) / 50.0f, false);
+				cgogn::rendering::VBO* vbo = selected_map_->vbo(item->text());
+				plugin_->set_vector_scale_factor(view, selected_map_, vbo, float32(i) / 50.0f, false);
 			}
 		}
 	}
 }
 
-void SurfaceRenderVector_DockTab::vector_color_changed(int i)
+void SurfaceRenderVector_DockTab::vector_color_changed(int)
 {
 	if (!updating_ui_)
 	{
 		QListWidgetItem* item = list_vectorVBO->currentItem();
 		if (item && item->checkState() == Qt::Checked)
 		{
-			View* view = schnapps_->get_selected_view();
-			MapHandlerGen* map = schnapps_->get_selected_map();
-			if (view && map)
+			View* view = schnapps_->selected_view();
+			if (view && selected_map_)
 			{
-				cgogn::rendering::VBO* vbo = map->get_vbo(item->text());
-				plugin_->set_vector_color(view, map, vbo, combo_vectorColor->color(), false);
+				cgogn::rendering::VBO* vbo = selected_map_->vbo(item->text());
+				plugin_->set_vector_color(view, selected_map_, vbo, combo_vectorColor->color(), false);
 			}
 		}
 	}
@@ -145,31 +166,77 @@ void SurfaceRenderVector_DockTab::vector_color_changed(int i)
 
 void SurfaceRenderVector_DockTab::selected_view_changed(View* old, View* cur)
 {
-	if (plugin_->check_docktab_activation())
-		refresh_ui();
-}
+	updating_ui_ = true;
+	list_maps->clear();
+	updating_ui_ = false;
 
-void SurfaceRenderVector_DockTab::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
-{
-	if (selected_map_)
+	if (old)
 	{
-		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
-		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
+		disconnect(old, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		disconnect(old, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
 	}
-	selected_map_ = cur;
-	connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-	connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+	if (cur)
+	{
+		connect(cur, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		connect(cur, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+		for (Object* o : cur->linked_objects())
+			object_linked(o);
+	}
 
 	if (plugin_->check_docktab_activation())
 		refresh_ui();
 }
 
 /*****************************************************************************/
-// slots called from MapHandlerGen signals
+// slots called from View signals
+/*****************************************************************************/
+
+void SurfaceRenderVector_DockTab::object_linked(Object* o)
+{
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
+	if (mh)
+		map_linked(mh);
+}
+
+void SurfaceRenderVector_DockTab::map_linked(CMap2Handler* mh)
+{
+	updating_ui_ = true;
+	list_maps->addItem(mh->name());
+	updating_ui_ = false;
+}
+
+void SurfaceRenderVector_DockTab::object_unlinked(Object* o)
+{
+	CMap2Handler* mh = qobject_cast<CMap2Handler*>(o);
+	if (mh)
+		map_unlinked(mh);
+}
+
+void SurfaceRenderVector_DockTab::map_unlinked(CMap2Handler* mh)
+{
+	if (selected_map_ == mh)
+	{
+		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
+		selected_map_ = nullptr;
+	}
+
+	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
+	if (!items.empty())
+	{
+		updating_ui_ = true;
+		delete items[0];
+		updating_ui_ = false;
+	}
+}
+
+/*****************************************************************************/
+// slots called from CMap2Handler signals
 /*****************************************************************************/
 
 void SurfaceRenderVector_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
+	updating_ui_ = true;
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 	{
@@ -179,6 +246,7 @@ void SurfaceRenderVector_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* 
 		item->setFlags(item->flags() | Qt::ItemIsEditable);
 		item->setCheckState(Qt::Unchecked);
 	}
+	updating_ui_ = false;
 }
 
 void SurfaceRenderVector_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
@@ -281,13 +349,13 @@ void SurfaceRenderVector_DockTab::set_vector_color(cgogn::rendering::VBO* vbo, Q
 
 void SurfaceRenderVector_DockTab::refresh_ui()
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
+	CMap2Handler* mh = selected_map_;
+	View* view = schnapps_->selected_view();
 
-	if (!map || !view)
+	if (!mh || !view)
 		return;
 
-	const MapParameters& p = plugin_->get_parameters(view, map);
+	const MapParameters& p = plugin_->parameters(view, mh);
 
 	updating_ui_ = true;
 
@@ -297,25 +365,24 @@ void SurfaceRenderVector_DockTab::refresh_ui()
 	list_vectorVBO->clear();
 
 	unsigned int i = 1;
-	for(auto& vbo_it : map->get_vbo_set())
+	mh->foreach_vbo([&] (cgogn::rendering::VBO* vbo)
 	{
-		auto& vbo = vbo_it.second;
 		if (vbo->vector_dimension() == 3)
 		{
 			combo_positionVBO->addItem(QString::fromStdString(vbo->name()));
-			if (vbo.get() == p.get_position_vbo())
+			if (vbo == p.position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 
 			list_vectorVBO->addItem(QString::fromStdString(vbo->name()));
 			QListWidgetItem* item = list_vectorVBO->item(list_vectorVBO->count() - 1);
 			item->setFlags(item->flags() | Qt::ItemIsEditable);
 			item->setCheckState(Qt::Unchecked);
-			if (p.get_vector_vbo_index(vbo.get()) != UINT32_MAX)
+			if (p.vector_vbo_index(vbo) != UINT32_MAX)
 				item->setCheckState(Qt::Checked);
 
 			++i;
 		}
-	}
+	});
 
 	slider_vectorScaleFactor->setDisabled(true);
 	combo_vectorColor->setDisabled(true);
@@ -330,22 +397,22 @@ void SurfaceRenderVector_DockTab::refresh_ui()
 void SurfaceRenderVector_DockTab::update_after_vector_vbo_changed()
 {
 	updating_ui_ = true;
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
+	CMap2Handler* mh = selected_map_;
+	View* view = schnapps_->selected_view();
 
-	const MapParameters& p = plugin_->get_parameters(view, map);
+	const MapParameters& p = plugin_->parameters(view, mh);
 
 	QListWidgetItem* item = list_vectorVBO->currentItem();
 	if (item && item->checkState() == Qt::Checked)
 	{
-		cgogn::rendering::VBO* vbo = map->get_vbo(item->text());
-		uint32 vboindex = p.get_vector_vbo_index(vbo);
+		cgogn::rendering::VBO* vbo = mh->vbo(item->text());
+		uint32 vboindex = p.vector_vbo_index(vbo);
 		if (vboindex != UINT32_MAX)
 		{
 			slider_vectorScaleFactor->setEnabled(true);
-			slider_vectorScaleFactor->setSliderPosition(p.get_vector_scale_factor(vboindex) * 50.0f);
+			slider_vectorScaleFactor->setSliderPosition(p.vector_scale_factor(vboindex) * 50.0f);
 			combo_vectorColor->setEnabled(true);
-			combo_vectorColor->setColor(p.get_vector_color(vboindex));
+			combo_vectorColor->setColor(p.vector_color(vboindex));
 		}
 		else
 		{

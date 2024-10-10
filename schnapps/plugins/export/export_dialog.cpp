@@ -1,8 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Export                                                                *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -22,12 +21,17 @@
 *                                                                              *
 *******************************************************************************/
 
-#include "export_dialog.h"
-#include "export.h"
+#include <schnapps/plugins/export/export_dialog.h>
+#include <schnapps/plugins/export/export.h>
+
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap0_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 
 #include <cgogn/io/io_utils.h>
+
 #include <QFileDialog>
 
 namespace schnapps
@@ -39,188 +43,265 @@ namespace plugin_export
 ExportDialog::ExportDialog(SCHNApps* s, Plugin_Export* p) :
 	schnapps_(s),
 	plugin_(p),
-	updating_ui_(false)
+	selected_map_(nullptr)
 {
 	setupUi(this);
-	schnapps_->foreach_map([&](MapHandlerGen* mhg)
+
+	connect(combo_mapSelection, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(selected_map_changed(const QString&)));
+	connect(combo_positionSelection, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(position_attribute_changed(const QString&)));
+	connect(button_outputSelection, SIGNAL(pressed()),this, SLOT(choose_file()));
+	connect(buttonBox,SIGNAL(accepted()), this, SLOT(export_validated()));
+
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(map_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(map_removed(Object*)));
+
+	schnapps_->foreach_object([&] (Object* mhg)
 	{
-		this->comboBoxMapSelection->addItem(mhg->get_name());
+		map_added(mhg);
 	});
-
-	connect(this->comboBoxMapSelection, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_map_changed(QString)));
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
-	connect(this->comboBoxPositionSelection, SIGNAL(currentIndexChanged(QString)), this, SLOT(position_att_changed(QString)));
-	connect(this->pushButtonOutputSelection, SIGNAL(pressed()),this, SLOT(choose_file()));
-	connect(this->checkBoxBinary, SIGNAL(toggled(bool)), this, SLOT(binary_option_changed(bool)));
-	connect(this->checkBoxCompress, SIGNAL(toggled(bool)), this, SLOT(compress_option_changed(bool)));
-	connect(this->lineEditOutput, SIGNAL(textEdited(QString)), this, SLOT(output_file_changed(QString)));
-	connect(this->buttonBox,SIGNAL(rejected()), this, SLOT(reinit()));
-	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(export_validated()));
-
-	connect(this->listWidgetCellAttributes,SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(cell_attribute_changed(QListWidgetItem*)));
-	connect(this->listWidgetVertexAttributes, SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(vertex_attribute_changed(QListWidgetItem*)));
-
-	this->checkBoxBinary->setChecked(p->export_params_->binary_);
-	this->checkBoxCompress->setChecked(p->export_params_->compress_);
-
 }
 
-void ExportDialog::selected_map_changed(QString map_name)
+/*****************************************************************************/
+// slots called from UI signals
+/*****************************************************************************/
+
+void ExportDialog::selected_map_changed(const QString& map_name)
 {
-	this->comboBoxPositionSelection->clear();
-	this->comboBoxPositionSelection->addItem("-select attribute-");
-	this->listWidgetVertexAttributes->clear();
-	this->listWidgetCellAttributes->clear();
+	selected_map_ = nullptr;
+	combo_positionSelection->clear();
+	combo_positionSelection->addItem("- select attribute -");
+	list_vertexAttributes->clear();
+	list_cellAttributes->clear();
 
-	if (MapHandlerGen* mhg = schnapps_->get_map(map_name))
+
+	auto m0 = plugin_->map_provider()->cmap0(map_name);
+	auto m2 = plugin_->map_provider()->cmap2(map_name);
+	auto m3 = plugin_->map_provider()->cmap3(map_name);
+
+	if(m0)
 	{
-		plugin_->map_name_ = map_name;
-		const auto* vert_att_cont = mhg->attribute_container(CellType::Vertex_Cell);
-		for (const auto& att_name : vert_att_cont->names())
-		{
-			this->comboBoxPositionSelection->addItem(QString::fromStdString(att_name));
-			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), this->listWidgetVertexAttributes);
-			item->setCheckState(Qt::Unchecked);
-		}
-
-		const CellType cell_type = mhg->dimension() == 2u ? CellType::Face_Cell : CellType::Volume_Cell;
-		const auto* cell_att_cont = mhg->attribute_container(cell_type);
-		for (const auto& att_name : cell_att_cont->names())
-		{
-			QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), this->listWidgetCellAttributes);
-			item->setCheckState(Qt::Unchecked);
-		}
+		selected_map_ = m0;
+		selected_map_changed(m0);
 	}
-	else
+	else if (m2)
 	{
-		this->comboBoxPositionSelection->clear();
-		this->comboBoxPositionSelection->addItem("-select attribute-");
-		plugin_->map_name_.clear();
+		selected_map_ = m2;
+		selected_map_changed(m2);
+	} else {
+		if (m3)
+		{
+			selected_map_ = m3;
+			selected_map_changed(m3);
+		}
 	}
 }
 
-void ExportDialog::position_att_changed(QString pos_name)
+void ExportDialog::selected_map_changed(const plugin_cmap_provider::CMap0Handler* h)
+{
+	if (!h)
+		return;
+
+	const CMap0& m = *h->map();
+	const auto& vert_att_cont = m.attribute_container<CMap0::Vertex::ORBIT>();
+	for (const auto& att_name : vert_att_cont.names())
+	{
+		combo_positionSelection->addItem(QString::fromStdString(att_name));
+		QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), list_vertexAttributes);
+		item->setCheckState(Qt::Unchecked);
+	}
+
+}
+
+void ExportDialog::selected_map_changed(const plugin_cmap_provider::CMap2Handler* h)
+{
+	if (!h)
+		return;
+
+	const CMap2& m = *h->map();
+	const auto& vert_att_cont = m.attribute_container<CMap2::Vertex::ORBIT>();
+	for (const auto& att_name : vert_att_cont.names())
+	{
+		combo_positionSelection->addItem(QString::fromStdString(att_name));
+		QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), list_vertexAttributes);
+		item->setCheckState(Qt::Unchecked);
+	}
+
+	const auto& cell_att_cont = m.attribute_container<CMap2::Face::ORBIT>();
+	for (const auto& att_name : cell_att_cont.names())
+	{
+		QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), list_cellAttributes);
+		item->setCheckState(Qt::Unchecked);
+	}
+}
+
+void ExportDialog::selected_map_changed(const plugin_cmap_provider::CMap3Handler* h)
+{
+	if (!h)
+		return;
+
+	const CMap3& m = *h->map();
+	const auto& vert_att_cont = m.attribute_container<CMap3::Vertex::ORBIT>();
+	for (const auto& att_name : vert_att_cont.names())
+	{
+		combo_positionSelection->addItem(QString::fromStdString(att_name));
+		QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), list_vertexAttributes);
+		item->setCheckState(Qt::Unchecked);
+	}
+
+	const auto& cell_att_cont = m.attribute_container<CMap3::Volume::ORBIT>();
+	for (const auto& att_name : cell_att_cont.names())
+	{
+		QListWidgetItem* item = new QListWidgetItem(QString::fromStdString(att_name), list_cellAttributes);
+		item->setCheckState(Qt::Unchecked);
+	}
+}
+
+void ExportDialog::position_attribute_changed(const QString& pos_name)
 {
 	if (!pos_name.isEmpty())
 	{
-		MapHandlerGen* mhg = schnapps_->get_map(plugin_->map_name_);
-		if (mhg)
+		if (selected_map_)
 		{
-			cgogn::Orbit vorbit = mhg->orbit(CellType::Vertex_Cell);
-			plugin_->export_params_->position_attributes_[vorbit] = pos_name.toStdString();
-			for (int i = 0; i < this->listWidgetVertexAttributes->count(); ++i)
+			for (int32 i = 0; i < list_vertexAttributes->count(); ++i)
 			{
-				QListWidgetItem* item = this->listWidgetVertexAttributes->item(i);
+				QListWidgetItem* item = this->list_vertexAttributes->item(i);
 				if (item->text() == pos_name)
 				{
 					item->setCheckState(Qt::Unchecked);
-					item->setHidden(true);
+					item->setFlags(item->flags() & ~Qt::ItemIsEnabled);
 				}
 				else
-					item->setHidden(false);
+					item->setFlags(item->flags() | Qt::ItemIsEnabled);
 			}
 		}
 	}
 }
 
-void ExportDialog::output_file_changed(QString output)
-{
-		plugin_->export_params_->filename(output.toStdString());
-}
-
-void ExportDialog::map_added(MapHandlerGen* mhg)
-{
-	if (mhg)
-		this->comboBoxMapSelection->addItem(mhg->get_name());
-}
-
-void ExportDialog::map_removed(MapHandlerGen* mhg)
-{
-	if (mhg)
-		this->comboBoxMapSelection->removeItem(this->comboBoxMapSelection->findText(mhg->get_name()));
-}
-
 void ExportDialog::choose_file()
 {
-		QString filename = QFileDialog::getSaveFileName(nullptr, "file name", schnapps_->get_app_path(), "Surface Mesh Files (*.ply *.off *.stl *.vtk *.vtp *.obj);; Volume Mesh Files (*.vtk *.vtu *.tet *.nas)");
-		if (!filename.isEmpty())
-		{
-			this->lineEditOutput->setText(filename);
-			plugin_->export_params_->filename(filename.toStdString());
-		} else
-			this->lineEditOutput->setText("-select output-");
-}
+	if (!selected_map_)
+	{
+		cgogn_log_warning("plugin_export") << "Unable to chose a filename when no map is selected";
+		return;
+	}
 
-void ExportDialog::binary_option_changed(bool b)
-{
-	plugin_->export_params_->binary(b);
-}
+	QString extensions;
+	if (dynamic_cast<plugin_cmap_provider::CMap0Handler*>(selected_map_))
+		extensions = "Point set mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::point_set_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::CMap1Handler*>(selected_map_))
+		extensions = "Polyline mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::polyline_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::CMap2Handler*>(selected_map_))
+		extensions = "Surface mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::surface_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::CMap3Handler*>(selected_map_))
+		extensions = "Volume mesh Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::volume_file_type_map, " ")) +")";
+	if (dynamic_cast<plugin_cmap_provider::UndirectedGraphHandler*>(selected_map_))
+		extensions = "Graph Files ("+ QString::fromStdString(cgogn::io::file_type_filter(cgogn::io::graph_file_type_map, " ")) +")";
 
-void ExportDialog::compress_option_changed(bool b)
-{
-	plugin_->export_params_->compress(b);
-}
-
-void ExportDialog::reinit()
-{
-	delete plugin_->export_params_;
-	plugin_->export_params_ = new cgogn::io::ExportOptions(cgogn::io::ExportOptions::create());
-	plugin_->map_name_.clear();
-	auto* p = plugin_->export_params_;
-	this->checkBoxBinary->setChecked(p->binary_);
-	this->checkBoxCompress->setChecked(p->compress_);
-	this->comboBoxMapSelection->setCurrentIndex(0);
-	this->comboBoxPositionSelection->clear();
-	this->comboBoxPositionSelection->addItem("-select attribute-");
-	this->lineEditOutput->setText("-select output-");
+	QString filename = QFileDialog::getSaveFileName(nullptr, "Filename", schnapps_->app_path(), extensions);
+	if (!filename.isEmpty())
+		lineEdit_output->setText(filename);
+	else
+		lineEdit_output->setText("- select output -");
 }
 
 void ExportDialog::export_validated()
 {
-	plugin_->export_mesh();
-	reinit();
-}
-
-void ExportDialog::vertex_attribute_changed(QListWidgetItem* item)
-{
-	const MapHandlerGen* mhg = schnapps_->get_map(plugin_->map_name_);
-	if (!mhg)
-		return;
-	auto& attributes = plugin_->export_params_->attributes_to_export_;
-	auto pair = std::make_pair(mhg->orbit(CellType::Vertex_Cell), item->text().toStdString());
-
-	auto it = std::find(attributes.begin(), attributes.end(), pair);
-	if (item->checkState() == Qt::Checked)
+	if (selected_map_)
 	{
-		if (it == attributes.end())
-			attributes.push_back(std::move(pair));
-	} else {
-		if (it != attributes.end())
-			attributes.erase(it);
+		cgogn_log_info("plugin_export") << "Exporting to \"" << lineEdit_output->text().toStdString() << "\".";
+
+		cgogn::io::ExportOptions export_params = cgogn::io::ExportOptions::create()
+			.filename(lineEdit_output->text().toStdString())
+			.binary(check_binary->isChecked())
+			.compress(check_compress->isChecked());
+
+		if (auto m0 = dynamic_cast<plugin_cmap_provider::CMap0Handler*>(selected_map_))
+			export_map(m0, export_params);
+		if (auto m2 = dynamic_cast<plugin_cmap_provider::CMap2Handler*>(selected_map_))
+			export_map(m2, export_params);
+		if (auto m3 = dynamic_cast<plugin_cmap_provider::CMap3Handler*>(selected_map_))
+			export_map(m3, export_params);
 	}
 }
 
-void ExportDialog::cell_attribute_changed(QListWidgetItem* item)
+void ExportDialog::export_map(plugin_cmap_provider::CMap0Handler* h, cgogn::io::ExportOptions& opt)
 {
-	const MapHandlerGen* mhg = schnapps_->get_map(plugin_->map_name_);
-	if (!mhg)
+	if (!h)
 		return;
-	auto& attributes = plugin_->export_params_->attributes_to_export_;
-	const CellType cell_type = mhg->dimension() == 2u ? CellType::Face_Cell : CellType::Volume_Cell;
-	auto pair = std::make_pair(mhg->orbit(cell_type), item->text().toStdString());
 
-	auto it = std::find(attributes.begin(), attributes.end(), pair);
-
-	if (item->checkState() == Qt::Checked)
+	opt.position_attribute(CMap0::Vertex::ORBIT, combo_positionSelection->currentText().toStdString());
+	for (int32 i = 0; i < list_vertexAttributes->count(); ++i)
 	{
-		if (it == attributes.end())
-			attributes.push_back(std::move(pair));
-	} else {
-		if (it != attributes.end())
-			attributes.erase(it);
+		QListWidgetItem* item = list_vertexAttributes->item(i);
+		if (item->flags() & Qt::ItemIsEnabled)
+			opt.add_attribute(CMap0::Vertex::ORBIT, item->text().toStdString());
+	}
+
+	plugin_->export_mesh(h, opt);
+}
+
+void ExportDialog::export_map(plugin_cmap_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt)
+{
+	if (!h)
+		return;
+
+	opt.position_attribute(CMap2::Vertex::ORBIT, combo_positionSelection->currentText().toStdString());
+	for (int32 i = 0; i < list_vertexAttributes->count(); ++i)
+	{
+		QListWidgetItem* item = list_vertexAttributes->item(i);
+		if (item->flags() & Qt::ItemIsEnabled)
+			opt.add_attribute(CMap2::Vertex::ORBIT, item->text().toStdString());
+	}
+
+	for (int32 i = 0; i < list_cellAttributes->count(); ++i)
+	{
+		QListWidgetItem* item = list_cellAttributes->item(i);
+		opt.add_attribute(CMap2::Face::ORBIT, item->text().toStdString());
+	}
+	plugin_->export_mesh(h, opt);
+}
+
+void ExportDialog::export_map(plugin_cmap_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt)
+{
+	if (!h)
+		return;
+
+	opt.position_attribute(CMap3::Vertex::ORBIT, combo_positionSelection->currentText().toStdString());
+	for (int32 i = 0; i < list_vertexAttributes->count(); ++i)
+	{
+		QListWidgetItem* item = list_vertexAttributes->item(i);
+		if (item->flags() & Qt::ItemIsEnabled)
+			opt.add_attribute(CMap3::Vertex::ORBIT, item->text().toStdString());
+	}
+
+	for (int32 i = 0; i < list_cellAttributes->count(); ++i)
+	{
+		QListWidgetItem* item = list_cellAttributes->item(i);
+		opt.add_attribute(CMap3::Volume::ORBIT, item->text().toStdString());
+	}
+	plugin_->export_mesh(h, opt);
+}
+
+/*****************************************************************************/
+// slots called from SCHNApps signals
+/*****************************************************************************/
+
+void ExportDialog::map_added(Object* mhg)
+{
+	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap0Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
+		combo_mapSelection->addItem(mhg->name());
+}
+
+void ExportDialog::map_removed(Object* mhg)
+{
+	if (mhg && (dynamic_cast<plugin_cmap_provider::CMap0Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg) || dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg)))
+	{
+		if (mhg == selected_map_)
+			selected_map_ = nullptr;
+		combo_mapSelection->removeItem(combo_mapSelection->findText(mhg->name()));
 	}
 }
 
 } // namespace plugin_export
+
 } // namespace schnapps

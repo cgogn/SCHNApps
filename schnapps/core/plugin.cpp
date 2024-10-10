@@ -27,14 +27,14 @@
 namespace schnapps
 {
 
-const QVariant Plugin::get_setting(const QString& name) const
+const QVariant Plugin::setting(const QString& name) const
 {
-	return schnapps_->get_setting(this->get_name(), name);
+	return schnapps_->setting(this->name(), name);
 }
 
 QVariant Plugin::add_setting(const QString& name, const QVariant& default_value)
 {
-	return schnapps_->add_setting(this->get_name(), name, default_value);
+	return schnapps_->add_setting(this->name(), name, default_value);
 }
 
 Plugin::~Plugin()

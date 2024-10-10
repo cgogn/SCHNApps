@@ -22,7 +22,8 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <tetgen_structure_io.h>
+#include <schnapps/plugins/meshgen/tetgen_structure_io.h>
+
 #include <tetgen/tetgen.h>
 
 namespace schnapps

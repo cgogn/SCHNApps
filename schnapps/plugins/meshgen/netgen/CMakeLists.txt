@@ -98,6 +98,8 @@ else(NOT MSVC)
 	target_compile_options(${PROJECT_NAME} PUBLIC "/W0") # it is not our code !
 endif(NOT MSVC)
 
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER "plugins/meshgen")
+
 set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(${PROJECT_NAME})
 target_compile_definitions(${PROJECT_NAME} PRIVATE "-DNGINTERFACE_EXPORTS")

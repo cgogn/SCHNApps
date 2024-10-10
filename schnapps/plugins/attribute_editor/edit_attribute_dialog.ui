@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API</exportmacro>
+ <exportmacro>PLUGIN_ATTRIBUTE_EDITOR_EXPORT</exportmacro>
  <class>EditAttribute</class>
  <widget class="QDialog" name="EditAttribute">
   <property name="geometry">
@@ -74,27 +74,47 @@
        </property>
        <item>
         <property name="text">
-         <string>Dart</string>
+         <string>DART</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Vertex</string>
+         <string>PHI1</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Edge</string>
+         <string>PHI2</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Face</string>
+         <string>PHI21</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Volume</string>
+         <string>PHI1_PHI2</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PHI1_PHI3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PHI2_PHI3</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PHI21_PHI31</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>PHI1_PHI2_PHI3</string>
         </property>
        </item>
       </widget>
@@ -231,15 +251,6 @@
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="layoutDirection">
-      <enum>Qt::RightToLeft</enum>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
      <property name="standardButtons">
       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
      </property>
@@ -251,38 +262,5 @@
   </layout>
  </widget>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>EditAttribute</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>EditAttribute</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

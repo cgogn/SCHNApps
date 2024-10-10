@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_SCHNAPPS_WINDOW_H_
 #define SCHNAPPS_CORE_SCHNAPPS_WINDOW_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 
 #include <ui_schnapps.h>
 
@@ -41,8 +42,9 @@ namespace schnapps
 {
 
 class SCHNApps;
+class SettingsWidget;
 
-class SCHNAPPS_CORE_API SCHNAppsWindow : public QMainWindow, public Ui::SCHNAppsWindow
+class SCHNAPPS_CORE_EXPORT SCHNAppsWindow : public QMainWindow, public Ui::SCHNAppsWindow
 {
 	Q_OBJECT
 
@@ -50,31 +52,16 @@ class SCHNAPPS_CORE_API SCHNAppsWindow : public QMainWindow, public Ui::SCHNApps
 
 public:
 
-	SCHNAppsWindow(const QString& app_path, const QString& settings_path);
+	SCHNAppsWindow(const QString& app_path, const QString& settings_path, const QString& init_plugin_name);
 	~SCHNAppsWindow();
 
 private slots:
 
-	void about_SCHNApps()
-	{
-		QString str("SCHNApps:\nS... CGoGN Holder for Nice Applications\n"
-					"Web site: http://cgogn.unistra.fr \n"
-					"Contact information: cgogn@unistra.fr");
-		QMessageBox::about(this, "About SCHNApps", str);
-	}
+	void about_SCHNApps();
+	void about_CGoGN();
 
-	void about_CGoGN()
-	{
-		QString str("CGoGN:\nCombinatorial and Geometric modeling\n"
-					"with Generic N-dimensional Maps\n"
-					"Web site: http://cgogn.unistra.fr \n"
-					"Contact information: cgogn@unistra.fr");
-		QMessageBox::about(this, "About CGoGN", str);
-	}
-
-	void toggle_control_dock() { control_dock_->setVisible(control_dock_->isHidden()); }
-
-	void toggle_plugin_dock() { plugin_dock_->setVisible(plugin_dock_->isHidden()); }
+	void toggle_control_dock();
+	void toggle_plugin_dock();
 
 	/*********************************************************
 	 * MANAGE MENU ACTIONS
@@ -107,7 +94,7 @@ protected:
 	QDockWidget* plugin_dock_;
 	QTabWidget* plugin_dock_tab_widget_;
 
-	std::unique_ptr<QWidget> settings_widget_;
+	std::unique_ptr<SettingsWidget> settings_widget_;
 
 	QVBoxLayout* central_layout_;
 };

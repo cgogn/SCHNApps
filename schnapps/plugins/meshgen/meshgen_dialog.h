@@ -25,19 +25,26 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_
 #define SCHNAPPS_PLUGIN_MESHGEN_DIALOG_H_
 
-#include "dll.h"
+#include <schnapps/plugins/meshgen/dll.h>
 #include <schnapps/core/types.h>
+
 #include <ui_cgal_export.h>
 #include <ui_tetgen_export.h>
 #include <ui_netgen_export.h>
 #include <ui_export_dialog.h>
+
 #include <memory>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
+class Object;
+
+namespace plugin_cmap_provider
+{
+class CMap2Handler;
+} // namespace plugin_cmap_provider
 
 namespace plugin_meshgen
 {
@@ -64,6 +71,8 @@ class SCHNAPPS_PLUGIN_MESHGEN_API VolumeMeshFromSurfaceDialog : QObject
 	friend class Plugin_VolumeMeshFromSurface;
 
 public:
+
+	using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 	VolumeMeshFromSurfaceDialog(SCHNApps* s, Plugin_VolumeMeshFromSurface* p);
 
@@ -105,11 +114,11 @@ private slots:
 	void exuder_changed(bool b);
 	void exuder_sliver_changed(double sb);
 
-	void map_added(MapHandlerGen* mhg);
-	void map_removed(MapHandlerGen* mhg);
+	void map_added(Object* mhg);
+	void map_removed(Object* mhg);
 
-	void image_added(QString im_path);
-	void image_removed(QString im_path);
+	void image_added(Object* im);
+	void image_removed(Object* im);
 	void tetgen_args_updated(QString str);
 
 	void netgen_uselocalh_toggled(bool b);

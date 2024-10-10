@@ -24,7 +24,7 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_MAP_PARAMETERS__H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_MAP_PARAMETERS__H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render/plugin_surface_render_export.h>
 
 #include <schnapps/core/types.h>
 
@@ -45,7 +45,7 @@ namespace plugin_surface_render
 
 class Plugin_SurfaceRender;
 
-struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
+struct PLUGIN_SURFACE_RENDER_EXPORT MapParameters
 {
 	friend class Plugin_SurfaceRender;
 
@@ -70,51 +70,51 @@ struct SCHNAPPS_PLUGIN_SURFACE_RENDER_API MapParameters
 		position_vbo_(nullptr),
 		normal_vbo_(nullptr),
 		color_vbo_(nullptr),
+		render_vertices_(false),
+		render_edges_(false),
+		render_faces_(true),
+		render_backfaces_(true),
+		face_style_(FLAT),
+		render_boundary_(false),
 		vertex_color_(190, 85, 168),
 		edge_color_(0, 0, 0),
 		front_color_(85, 168, 190, 127),
 		back_color_(85, 168, 190, 127),
-		render_backfaces_(true),
 		vertex_scale_factor_(1.0f),
 		vertex_base_size_(1.0f),
-		transparency_factor_(127),
-		render_vertices_(false),
-		render_edges_(false),
-		render_faces_(true),
-		render_boundary_(false),
 		use_transparency_(false),
-		face_style_(FLAT)
+		transparency_factor_(127)
 	{
 		initialize_gl();
 	}
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	inline cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	inline cgogn::rendering::VBO* get_normal_vbo() const { return normal_vbo_; }
-	inline cgogn::rendering::VBO* get_color_vbo() const { return color_vbo_; }
-	inline bool get_render_vertices() const { return render_vertices_; }
-	inline bool get_render_edges() const { return render_edges_; }
-	inline bool get_render_faces() const { return render_faces_; }
-	inline bool get_render_backfaces() const { return render_backfaces_; }
-	inline FaceShadingStyle get_face_style() const { return face_style_; }
-	inline bool get_render_boundary() const { return render_boundary_; }
-	inline const QColor& get_vertex_color() const { return vertex_color_; }
-	inline const QColor& get_edge_color() const { return edge_color_; }
-	inline const QColor& get_front_color() const { return front_color_; }
-	inline const QColor& get_back_color() const { return back_color_; }
-	inline float32 get_vertex_base_size() const { return vertex_base_size_; }
-	inline float32 get_vertex_scale_factor() const { return vertex_scale_factor_; }
-	inline bool get_transparency_enabled() const { return use_transparency_; }
-	inline int32 get_transparency_factor() const { return transparency_factor_; }
+	inline cgogn::rendering::VBO* position_vbo() const { return position_vbo_; }
+	inline cgogn::rendering::VBO* normal_vbo() const { return normal_vbo_; }
+	inline cgogn::rendering::VBO* color_vbo() const { return color_vbo_; }
+	inline bool render_vertices() const { return render_vertices_; }
+	inline bool render_edges() const { return render_edges_; }
+	inline bool render_faces() const { return render_faces_; }
+	inline bool render_backfaces() const { return render_backfaces_; }
+	inline FaceShadingStyle face_style() const { return face_style_; }
+	inline bool render_boundary() const { return render_boundary_; }
+	inline const QColor& vertex_color() const { return vertex_color_; }
+	inline const QColor& edge_color() const { return edge_color_; }
+	inline const QColor& front_color() const { return front_color_; }
+	inline const QColor& back_color() const { return back_color_; }
+	inline float32 vertex_base_size() const { return vertex_base_size_; }
+	inline float32 vertex_scale_factor() const { return vertex_scale_factor_; }
+	inline bool transparency_enabled() const { return use_transparency_; }
+	inline int32 transparency_factor() const { return transparency_factor_; }
 
 #ifdef USE_TRANSPARENCY
-	inline cgogn::rendering::ShaderFlatTransp::Param* get_transp_flat_param() const
+	inline cgogn::rendering::ShaderFlatTransp::Param* transp_flat_param() const
 	{
 		return shader_transp_flat_param_.get();
 	}
 
-	inline cgogn::rendering::ShaderPhongTransp::Param* get_transp_phong_param() const
+	inline cgogn::rendering::ShaderPhongTransp::Param* transp_phong_param() const
 	{
 		return shader_transp_phong_param_.get();
 	}

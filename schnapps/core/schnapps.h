@@ -24,9 +24,11 @@
 #ifndef SCHNAPPS_CORE_SCHNAPPS_H_
 #define SCHNAPPS_CORE_SCHNAPPS_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <schnapps/core/settings.h>
 #include <schnapps/core/status_bar_output.h>
+#include <schnapps/core/plugin_provider.h>
 
 #include <cgogn/core/utils/type_traits.h>
 
@@ -41,35 +43,30 @@ namespace schnapps
 
 class Camera;
 class View;
-class Plugin;
-class PluginInteraction;
-class MapHandlerGen;
+class Object;
 
 class SCHNAppsWindow;
 
 class ControlDock_CameraTab;
-class ControlDock_MapTab;
 class ControlDock_PluginTab;
 
 /**
  * @brief The SCHNApps central object application
  */
-class SCHNAPPS_CORE_API SCHNApps : public QObject
+class SCHNAPPS_CORE_EXPORT SCHNApps : public QObject
 {
 	Q_OBJECT
 
 public:
 
-	SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window);
+	SCHNApps(const QString& app_path, const QString& init_plugin_name, SCHNAppsWindow* window);
 	~SCHNApps();
-
-public slots:
 
 	/**
 	 * @brief get the file path where application has been launched
 	 * @return the path
 	 */
-	inline const QString& get_app_path() { return app_path_; }
+	inline const QString& app_path() { return app_path_; }
 
 	/*********************************************************
 	 * MANAGE CAMERAS
@@ -99,8 +96,6 @@ public slots:
 	*/
 	Camera* get_camera(const QString& name) const;
 
-public:
-
 	template <typename FUNC>
 	void foreach_camera(const FUNC& f) const
 	{
@@ -108,138 +103,6 @@ public:
 		for (const auto& camera_it : cameras_)
 			f(camera_it.second.get());
 	}
-
-	/*********************************************************
-	 * MANAGE PLUGINS
-	 *********************************************************/
-
-public slots:
-
-	/**
-	* @brief Add a directory for searching available plugins
-	* @param path path to directory
-	*/
-	void register_plugins_directory(const QString& path);
-
-	/**
-	* @brief Load and enable a plugin
-	* @param plugin_name plugin name
-	*/
-	Plugin* enable_plugin(const QString& plugin_name);
-
-	/**
-	* @brief Disable and unload a plugin
-	* @param plugin_name plugin name
-	*/
-	void disable_plugin(const QString& plugin_name);
-
-	/**
-	* @brief Get plugin object from name
-	* @param name name of plugin
-	*/
-	Plugin* get_plugin(const QString& name) const;
-
-	// get a set of available plugins
-	inline const std::map<QString, QString>& get_available_plugins() const { return available_plugins_; }
-
-public:
-
-	template <typename FUNC>
-	void foreach_plugin(const FUNC& f) const
-	{
-		static_assert(cgogn::is_func_parameter_same<FUNC, Plugin*>::value, "Wrong function parameter type");
-		for (const auto& plugin_it : plugins_)
-			f(plugin_it.second.get());
-	}
-
-	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
-
-	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
-
-public slots:
-
-	void enable_plugin_tab_widgets(Plugin* plugin);
-
-	void disable_plugin_tab_widgets(Plugin* plugin);
-
-	/*********************************************************
-	 * MANAGE MAPS
-	 *********************************************************/
-
-	/**
-	* @brief add a new empty map
-	* @param name name given to the map
-	* @param dimension dimension of the map
-	*/
-	MapHandlerGen* add_map(const QString& name, unsigned int dimension);
-
-	/**
-	* @brief Remove a map
-	* @param name name of map
-	*/
-	void remove_map(const QString& name);
-
-	/**
-	* @brief Duplicate (copy) a map
-	* @param name of map to copy
-	*/
-	MapHandlerGen* duplicate_map(const QString& name);
-
-	/**
-	* @brief Get a map object from its name
-	* @param name name of map
-	*/
-	MapHandlerGen* get_map(const QString& name) const;
-
-public:
-
-	template <typename FUNC>
-	void foreach_map(const FUNC& f) const
-	{
-		static_assert(cgogn::is_func_parameter_same<FUNC, MapHandlerGen*>::value, "Wrong function parameter type");
-		for (const auto& map_it : maps_)
-			f(map_it.second.get());
-	}
-
-public slots:
-
-	/**
-	* @brief Get the current selected map
-	* @return the selected map
-	*/
-	MapHandlerGen* get_selected_map() const;
-
-	/**
-	* @brief Set the current selected map
-	* @param name name of the map to be selected
-	*/
-	void set_selected_map(const QString& name);
-
-	// notify that current selected map has changed
-	inline void notify_selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur) { emit(selected_map_changed(old, cur)); }
-
-//	/**
-//	* @brief Get the current selected tab orbit in control dock map tab interface
-//	* @return 0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume
-//	*/
-//	unsigned int get_current_orbit() const;
-
-//	/**
-//	* @brief Get cell selector
-//	* @param orbit Orbit (0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume)
-//	*/
-//	CellSelectorGen* get_selected_selector(unsigned int orbit) const;
-
-//	/**
-//	* @brief Set the selector of the current map (warning change the current orbit)
-//	* @param orbit the orbit (0:Dart / 1:Vertex / 2:Edge / 3:Face / 4:Volume)
-//	* @param name name of selector (must exist)
-//	*/
-//	void set_selected_selector_current_map(unsigned int orbit, const QString& name);
-
-//	// notify that current selected cell-selection has changed
-//	void notify_selected_cell_selector_changed(CellSelectorGen* cs) { emit(selected_cell_selector_changed(cs)); }
-
 
 	/*********************************************************
 	 * MANAGE VIEWS
@@ -266,9 +129,7 @@ public slots:
 	* @brief get view object
 	* @param name the name of view
 	*/
-	View* get_view(const QString& name) const;
-
-public:
+	View* view(const QString& name) const;
 
 	template <typename FUNC>
 	void foreach_view(const FUNC& f) const
@@ -278,17 +139,15 @@ public:
 			f(view_it.second.get());
 	}
 
-public slots:
-
 	/**
-	* @brief selected view cycle thru the views 
+	* @brief selected view cycle thru the views
 	*/
 	void cycle_selected_view();
 
 	/**
 	* @brief get the selected view
 	*/
-	inline View* get_selected_view() const { return selected_view_; }
+	inline View* selected_view() const { return selected_view_; }
 
 	/**
 	* @brief set the selected view
@@ -320,6 +179,77 @@ public slots:
 	* the split's sequence must be the same than when saving
 	*/
 	void set_split_view_positions(QString positions);
+
+	/*********************************************************
+	 * MANAGE PLUGINS
+	 *********************************************************/
+
+	/**
+	* @brief Add a directory for searching available plugins
+	* @param path path to directory
+	*/
+	void register_plugins_directory(const QString& path);
+
+	/**
+	* @brief Load and enable a plugin
+	* @param plugin_name plugin name
+	*/
+	Plugin* enable_plugin(const QString& plugin_name);
+
+	/**
+	* @brief Disable and unload a plugin
+	* @param plugin_name plugin name
+	*/
+	void disable_plugin(const QString& plugin_name);
+
+	/**
+	* @brief Get plugin object from name
+	* @param name name of plugin
+	*/
+	Plugin* plugin(const QString& name) const;
+
+	// get a set of available plugins
+	inline const std::map<QString, QString>& available_plugins() const { return available_plugins_; }
+
+	template <typename FUNC>
+	void foreach_plugin(const FUNC& f) const
+	{
+		static_assert(cgogn::is_func_parameter_same<FUNC, Plugin*>::value, "Wrong function parameter type");
+		for (const auto& plugin_it : plugins_)
+			f(plugin_it.second.get());
+	}
+
+	void add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
+
+	void remove_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget);
+
+	void add_control_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text);
+
+	void remove_control_dock_tab(Plugin* plugin, QWidget* tab_widget);
+
+	void enable_plugin_tab_widgets(Plugin* plugin);
+
+	void disable_plugin_tab_widgets(Plugin* plugin);
+
+	/*********************************************************
+	 * MANAGE OBJECTS
+	 *********************************************************/
+
+	void notify_object_added(Object* o) { emit(object_added(o)); }
+
+	void notify_object_removed(Object* o) { emit(object_removed(o)); }
+
+	template <typename FUNC>
+	void foreach_object(const FUNC& f) const
+	{
+		static_assert(cgogn::is_func_parameter_same<FUNC, Object*>::value, "Wrong function parameter type");
+		foreach_plugin([f] (Plugin* p)
+		{
+			PluginProvider* pp = qobject_cast<PluginProvider*>(p);
+			if (pp)
+				pp->foreach_object(f);
+		});
+	}
 
 	/*********************************************************
 	 * MANAGE MENU ACTIONS
@@ -360,35 +290,30 @@ public slots:
 	void schnapps_window_closing();
 	SCHNAppsWindow* get_window() { return window_; }
 
-
-public slots:
-	void export_settings();
-
 signals:
 
 	void camera_added(Camera*);
 	void camera_removed(Camera*);
-
-	void plugin_available_added(QString name);
-	void plugin_enabled(Plugin* plugin);
-	void plugin_disabled(Plugin* plugin);
-
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
-	void selected_map_changed(MapHandlerGen*, MapHandlerGen*);
 
 	void view_added(View*);
 	void view_removed(View*);
 	void selected_view_changed(View*, View*);
 	void view_split(View*);
 
+	void plugin_available_added(QString name);
+	void plugin_enabled(Plugin* plugin);
+	void plugin_disabled(Plugin* plugin);
+
+	void object_added(Object*);
+	void object_removed(Object*);
+
 	void schnapps_closing();
 
 public:
 
-	inline const QVariant get_setting(const QString& module_name, const QString& name) const
+	inline const QVariant setting(const QString& module_name, const QString& name) const
 	{
-		return settings_->get_setting(module_name, name);
+		return settings_->setting(module_name, name);
 	}
 
 	inline QVariant add_setting(const QString& module_name, const QString& name, const QVariant& val)
@@ -396,37 +321,34 @@ public:
 		return settings_->add_setting(module_name,name,val);
 	}
 
-	inline const QVariant get_core_setting(const QString& name) const
+	inline const QVariant core_setting(const QString& name) const
 	{
-		return settings_->get_setting("core", name);
+		return settings_->setting("core", name);
 	}
 
 protected:
 
 	QString app_path_;
-	QString settings_path_;
 
 	std::unique_ptr<Settings> settings_;
 	std::unique_ptr<StatusBarOutput> status_bar_output_;
 
 	std::map<QString, std::unique_ptr<Camera>> cameras_;
 
-	std::map<QString, std::unique_ptr<Plugin>> plugins_;
-	std::map<QString, QString> available_plugins_;
-	std::map<Plugin*, std::list<QAction*> > plugin_menu_actions_;
-	std::map<Plugin*, std::list<QWidget*> > plugin_dock_tabs_;
-
-	std::map<QString, std::unique_ptr<MapHandlerGen>> maps_;
-
 	std::map<QString, std::unique_ptr<View>> views_;
 	View* first_view_;
 	View* selected_view_;
 
-	SCHNAppsWindow* window_;
+	std::map<QString, std::unique_ptr<Plugin>> plugins_;
+	std::map<QString, QString> available_plugins_;
+	std::map<Plugin*, std::list<QAction*>> plugin_menu_actions_;
 
+	std::map<Plugin*, std::list<QWidget*>> plugin_dock_tabs_;
+	std::map<Plugin*, std::list<QWidget*>> control_dock_tabs_;
 	ControlDock_CameraTab* control_camera_tab_;
 	ControlDock_PluginTab* control_plugin_tab_;
-	ControlDock_MapTab* control_map_tab_;
+
+	SCHNAppsWindow* window_;
 
 	QSplitter* root_splitter_;
 	bool root_splitter_initialized_;

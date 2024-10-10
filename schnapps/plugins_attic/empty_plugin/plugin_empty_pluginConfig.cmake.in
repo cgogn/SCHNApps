@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(schnapps_core REQUIRED)
+
+if(NOT TARGET schnapps::empty_plugin)
+	include("${CMAKE_CURRENT_LIST_DIR}/plugin_empty_pluginTargets.cmake")
+endif()

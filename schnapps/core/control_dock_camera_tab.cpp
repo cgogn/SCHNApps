@@ -54,6 +54,11 @@ ControlDock_CameraTab::ControlDock_CameraTab(SCHNApps* s) :
 	check_drawCameraPath->setDisabled(true);
 }
 
+void ControlDock_CameraTab::display_camera_widget()
+{
+	show();
+}
+
 void ControlDock_CameraTab::add_camera_button_clicked()
 {
 	if (!updating_ui_)
@@ -93,7 +98,7 @@ void ControlDock_CameraTab::selected_camera_changed()
 	}
 }
 
-void ControlDock_CameraTab::camera_projection_changed(QAbstractButton* b)
+void ControlDock_CameraTab::camera_projection_changed(QAbstractButton*)
 {
 	if (!updating_ui_ && selected_camera_)
 	{
@@ -123,13 +128,13 @@ void ControlDock_CameraTab::camera_draw_path_clicked(bool b)
 void ControlDock_CameraTab::camera_added(Camera* c)
 {
 	updating_ui_ = true;
-	list_cameras->addItem(c->get_name());
+	list_cameras->addItem(c->name());
 	updating_ui_ = false;
 }
 
 void ControlDock_CameraTab::camera_removed(Camera* c)
 {
-	QList<QListWidgetItem*> items = list_cameras->findItems(c->get_name(), Qt::MatchExactly);
+	QList<QListWidgetItem*> items = list_cameras->findItems(c->name(), Qt::MatchExactly);
 	if (!items.empty())
 	{
 		updating_ui_ = true;
@@ -184,14 +189,14 @@ void ControlDock_CameraTab::update_selected_camera_info()
 
 	updating_ui_ = true;
 
-	if (selected_camera_->get_projection_type() == qoglviewer::Camera::PERSPECTIVE)
+	if (selected_camera_->projection_type() == qoglviewer::Camera::PERSPECTIVE)
 		radio_perspectiveProjection->setChecked(true);
-	else if (selected_camera_->get_projection_type() == qoglviewer::Camera::ORTHOGRAPHIC)
+	else if (selected_camera_->projection_type() == qoglviewer::Camera::ORTHOGRAPHIC)
 		radio_orthographicProjection->setChecked(true);
 
-	check_drawCamera->setChecked(selected_camera_->get_draw());
+	check_drawCamera->setChecked(selected_camera_->draw());
 
-	check_drawCameraPath->setChecked(selected_camera_->get_draw_path());
+	check_drawCameraPath->setChecked(selected_camera_->draw_path());
 
 	updating_ui_ = false;
 }

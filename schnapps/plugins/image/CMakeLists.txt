@@ -2,16 +2,25 @@ project(plugin_image
 	LANGUAGES CXX
 )
 
-find_package(cgogn_core REQUIRED)
 find_package(cgogn_io REQUIRED)
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(QOGLViewer REQUIRED)
+find_package(schnapps_core REQUIRED)
+find_package(plugin_cmap_provider REQUIRED)
+find_package(CGAL QUIET COMPONENTS Core ImageIO)
+
+if(NOT CGAL_FOUND)
+	list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
+endif()
+
 if(MSVC)
 	find_package(Boost COMPONENTS system iostreams zlib)
 else()
 	find_package(Boost COMPONENTS system iostreams)
 endif()
+
 find_package(CGAL COMPONENTS Core ImageIO)
+
+add_library(${PROJECT_NAME} SHARED "")
+add_library(schnapps::image ALIAS plugin_image)
 
 if(CGAL_FOUND)
 	include( ${CGAL_USE_FILE})
@@ -24,85 +33,88 @@ if(CGAL_FOUND)
 	find_package(GMP REQUIRED)
 endif()
 
-set(HEADER_FILES
-	dll.h
-	image.h
-	image_dock_tab.h
+
+target_sources(${PROJECT_NAME}
+	PRIVATE
+		"${CMAKE_CURRENT_LIST_DIR}/image.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/image_dock_tab.cpp"
+		"${CMAKE_CURRENT_LIST_DIR}/image.ui"
+		"${CMAKE_CURRENT_LIST_DIR}/image.h"
 )
-
-set(SOURCE_FILES
-	image.cpp
-	image_dock_tab.cpp
-)
-
-if(CGAL_FOUND)
-	set(HEADER_FILES
-		${HEADER_FILES}
-		cgal/cgal_image.h
-		)
-	set(SOURCE_FILES
-		${SOURCE_FILES}
-		cgal/cgal_image.cpp
-		)
-endif(CGAL_FOUND)
-
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-
-add_library(${PROJECT_NAME} SHARED ${HEADER_FILES} ${SOURCE_FILES})
-
-
-if(Boost_IOSTREAMS_FOUND)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM=1")
+if (CGAL_FOUND)
+	target_sources(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_LIST_DIR}/cgal/cgal_image.cpp")
 endif()
 
-set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d")
-target_compile_definitions(${PROJECT_NAME} PRIVATE "-DSCHNAPPS_PLUGIN_IMAGE_DLL_EXPORT")
-if(CGAL_FOUND)
-	target_compile_definitions(${PROJECT_NAME} PUBLIC "-DPLUGIN_IMAGE_WITH_CGAL")
-	if(WIN32)
-		link_directories(${CGAL_LIBRARIES_DIR})
-	endif()
+set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "_d" EXPORT_NAME image)
+
+
+if (CGAL_FOUND)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE PLUGIN_IMAGE_WITH_CGAL)
+endif()
+if (Boost_IOSTREAMS_FOUND)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE SCHNAPPS_PLUGIN_IMAGE_WITH_BOOST_IOSTREAM=1)
+endif()
+
+
+if(CGAL_FOUND AND WIN32)
+	link_directories(${CGAL_LIBRARIES_DIR})
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
 	$<BUILD_INTERFACE:${SCHNAPPS_SOURCE_DIR}>
-	$<BUILD_INTERFACE:${cgogn_core_INCLUDE_DIRS}>
-	${CMAKE_CURRENT_SOURCE_DIR}
-	${CMAKE_CURRENT_BINARY_DIR}
 )
 
-#target_compile_definitions(${PROJECT_NAME} PUBLIC "-Dcimg_display=0")
+if (CGAL_FOUND)
+	target_include_directories(${PROJECT_NAME}  PUBLIC ${CGAL_INCLUDE_DIRS})
+endif()
+
+generate_export_header(plugin_image)
 
 target_link_libraries(${PROJECT_NAME}
-	schnapps_core
-	${cgogn_core_LIBRARIES}
-	${cgogn_io_LIBRARIES}
-	${Qt5Widgets_LIBRARIES}
-	${QOGLViewer_LIBRARIES}
+	schnapps::core
+	schnapps::cmap_provider
+	cgogn::io
+	${CGAL_LIBRARIES}
 )
 
-if(CGAL_FOUND)
-	target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${CGAL_INCLUDE_DIRS}>)
-	target_link_libraries(${PROJECT_NAME} ${CGAL_LIBRARIES})
+if (CGAL_FOUND)
+	target_link_libraries(${PROJECT_NAME} Boost::system Boost::thread)
+endif()
+if (Boost_IOSTREAMS_FOUND)
+	target_link_libraries(${PROJECT_NAME} Boost::iostreams)
+	if (WIN32)
+		target_link_libraries(${PROJECT_NAME} Boost::zlib)
+	endif()
 endif()
 
-if(Boost_FOUND)
-	target_include_directories(${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>)
-	target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
-endif()
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/image
+	FILES_MATCHING PATTERN "*.h"
+)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/plugin_image_export.h
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/schnapps/plugins/image
+	COMPONENT schnapps_plugins_headers
+)
 
+schnapps_create_package("${CMAKE_CURRENT_SOURCE_DIR}")
+
+set_target_properties (${PROJECT_NAME} PROPERTIES FOLDER plugins)
 
 #In this section we copy boost's and CGAL's DLLs in schnapp's directory
 if(WIN32)
 	if(CGAL_FOUND)
-		file(GLOB CGAL_DLLS "${CGAL_INSTALL_PREFIX}/bin/*.dll")
-		file(GLOB CGAL_AUX_DLLS "${GMP_INCLUDE_DIR}/../lib/*.dll")
-		# # We suppose that the auxiliary DLLS for CGAL are always used from the CGAL package
 		# ## Copy DLLs to the build tree
 		foreach(CONFIG ${CMAKE_CONFIGURATION_TYPES})
-			file(COPY ${CGAL_DLLS} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
-			file(COPY ${CGAL_AUX_DLLS} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+			foreach(CGAL_LIB ${CGAL_LIBRARIES})
+				get_target_property(LIB_DEBUG ${CGAL_LIB} IMPORTED_LOCATION_DEBUG)
+				if (LIB_DEBUG AND EXISTS ${LIB_DEBUG})
+					file(COPY ${LIB_DEBUG} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+				endif()
+				get_target_property(LIB_RELEASE ${CGAL_LIB} IMPORTED_LOCATION_RELEASE)
+				if (LIB_RELEASE AND EXISTS ${LIB_RELEASE})
+					file(COPY ${LIB_RELEASE} DESTINATION "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${CONFIG}")
+				endif()
+			endforeach()
 		endforeach()
 	endif()
 	if(Boost_FOUND)
@@ -116,3 +128,5 @@ if(WIN32)
 		endforeach()
 	endif()
 endif(WIN32)
+
+

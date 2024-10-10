@@ -22,10 +22,14 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <extract_surface.h>
-#include <extract_dialog.h>
+#include <schnapps/plugins/extract_surface/extract_surface.h>
+#include <schnapps/plugins/extract_surface/extract_dialog.h>
+
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
+
 #include <cgogn/io/surface_import.h>
 
 namespace schnapps
@@ -34,30 +38,41 @@ namespace schnapps
 namespace plugin_extract_surface
 {
 
-Plugin_ExtractSurface::Plugin_ExtractSurface() :
-	extract_surface_action_(nullptr)
-	,extract_dialog_(nullptr)
-{}
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-Plugin_ExtractSurface::~Plugin_ExtractSurface()
+Plugin_ExtractSurface::Plugin_ExtractSurface() :
+	extract_surface_action_(nullptr),
+	extract_dialog_(nullptr)
 {
-	delete extract_dialog_;
+	this->name_ = SCHNAPPS_PLUGIN_NAME;
+}
+
+QString Plugin_ExtractSurface::plugin_name()
+{
+	return SCHNAPPS_PLUGIN_NAME;
 }
 
 bool Plugin_ExtractSurface::enable()
 {
+	extract_dialog_ = new ExtractDialog(schnapps_, this);
+	plugin_cmap_provider_ = reinterpret_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
+	if (!plugin_cmap_provider_)
+		return false;
+
 	extract_surface_action_ = schnapps_->add_menu_action("Export;Extract Surface", "extract surface");
 	connect(extract_surface_action_, SIGNAL(triggered()), this, SLOT(extract_surface_dialog()));
-
-	if (!extract_dialog_)
-		extract_dialog_ = new ExtractDialog(schnapps_, this);
 
 	return true;
 }
 
 void Plugin_ExtractSurface::disable()
 {
+	disconnect(extract_surface_action_, SIGNAL(triggered()), this, SLOT(extract_surface_dialog()));
+
 	schnapps_->remove_menu_action(extract_surface_action_);
+
+	delete extract_dialog_;
 }
 
 void Plugin_ExtractSurface::extract_surface_dialog()
@@ -65,20 +80,17 @@ void Plugin_ExtractSurface::extract_surface_dialog()
 	extract_dialog_->show();
 }
 
-void Plugin_ExtractSurface::extract_surface(MapHandlerGen* in_map3, MapHandlerGen* out_map2, const QString& pos_att_name)
+void Plugin_ExtractSurface::extract_surface(CMap3Handler* mh3_in, CMap2Handler* mh2_out, const QString& pos_att_name)
 {
-	CMap3Handler* mh3_in  = dynamic_cast<CMap3Handler*>(in_map3);
-	CMap2Handler* mh2_out = dynamic_cast<CMap2Handler*>(out_map2);
-
 	if (!mh3_in || !mh2_out || pos_att_name.isEmpty())
 		return;
 
-	CMap3& map3 = *mh3_in->get_map();
-	CMap2& map2 = *mh2_out->get_map();
+	CMap3& map3 = *mh3_in->map();
+	CMap2& map2 = *mh2_out->map();
 
 	cgogn::io::SurfaceImport<CMap2> si(map2);
 	std::map<uint32, uint32> old_new_id_map;
-	auto in_pos_att = mh3_in->get_attribute<VEC3, CMap3::Vertex::ORBIT>(pos_att_name);
+	auto in_pos_att = map3.get_attribute<VEC3, CMap3::Vertex::ORBIT>(pos_att_name.toStdString());
 	auto* out_pos_att = si.add_vertex_attribute<VEC3>("position");
 
 	map3.foreach_cell([&](CMap3::Vertex v)
@@ -108,7 +120,7 @@ void Plugin_ExtractSurface::extract_surface(MapHandlerGen* in_map3, MapHandlerGe
 	si.create_map();
 	mh2_out->attribute_added(CMap2::Vertex::ORBIT, "position");
 	mh2_out->set_bb_vertex_attribute("position");
-	out_map2->create_vbo("position");
+	mh2_out->create_vbo("position");
 }
 
 } // namespace plugin_extract_surface

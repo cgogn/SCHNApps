@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_CORE_API</exportmacro>
+ <exportmacro>SCHNAPPS_CORE_EXPORT</exportmacro>
  <class>SettingsWidget</class>
  <widget class="QWidget" name="SettingsWidget">
   <property name="geometry">
@@ -14,11 +14,36 @@
   <property name="windowTitle">
    <string>Settings</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_2">
-   <item>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="pb_export">
+       <property name="text">
+        <string>Export to file</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pb_close">
+       <property name="text">
+        <string>Close</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="0" colspan="2">
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
       <number>-1</number>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <widget class="QCheckBox" name="cb_save_at_exit">
+     <property name="text">
+      <string>Save automatically the settings at exit</string>
      </property>
     </widget>
    </item>

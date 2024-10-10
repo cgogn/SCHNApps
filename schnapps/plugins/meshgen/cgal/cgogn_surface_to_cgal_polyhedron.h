@@ -27,7 +27,7 @@
 
 #include "dll.h"
 #include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
 
@@ -46,6 +46,7 @@ public:
 	using HalfedgeDS = Polyhedron::HalfedgeDS;
 	using Vertex = HalfedgeDS::Vertex;
 	using Point = Vertex::Point ;
+	using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 	PolyhedronBuilder(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 	void operator()(HalfedgeDS& hds);
@@ -56,7 +57,7 @@ private:
 	const CMap2::VertexAttribute<VEC3> position_attribute_;
 };
 
-SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
+SCHNAPPS_PLUGIN_MESHGEN_API std::unique_ptr<CGAL::Polyhedron_3<CGAL::Exact_predicates_inexact_constructions_kernel>> build_polyhedron(plugin_cmap_provider::CMap2Handler* mh, const CMap2::VertexAttribute<VEC3>& position_attribute);
 
 } // namespace plugin_meshgen
 

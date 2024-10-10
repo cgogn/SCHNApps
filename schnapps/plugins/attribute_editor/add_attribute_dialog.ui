@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <exportmacro>SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API</exportmacro>
+ <exportmacro>PLUGIN_ATTRIBUTE_EDITOR_EXPORT</exportmacro>
  <class>AddAttribute</class>
  <widget class="QDialog" name="AddAttribute">
   <property name="geometry">
@@ -75,27 +75,42 @@
         <widget class="QComboBox" name="orbit_combobox">
          <item>
           <property name="text">
-           <string>Dart</string>
+           <string>DART</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Vertex</string>
+           <string>PHI1</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Edge</string>
+           <string>PHI2</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Face</string>
+           <string>PHI21</string>
           </property>
          </item>
          <item>
           <property name="text">
-           <string>Volume</string>
+           <string>PHI1_PHI2</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PHI1_PHI3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PHI2_PHI3</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>PHI1_PHI2_PHI3</string>
           </property>
          </item>
         </widget>
@@ -266,6 +281,11 @@
            </attribute>
            <row/>
            <column/>
+           <item row="0" column="0">
+            <property name="text">
+             <string/>
+            </property>
+           </item>
           </widget>
          </item>
          <item>

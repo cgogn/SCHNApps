@@ -1,8 +1,7 @@
 /*******************************************************************************
 * SCHNApps                                                                     *
 * Copyright (C) 2015, IGG Group, ICube, University of Strasbourg, France       *
-* Plugin Export                                                                *
-* Author Etienne Schmitt (etienne.schmitt@inria.fr) Inria/Mimesis              *
+*                                                                              *
 * This library is free software; you can redistribute it and/or modify it      *
 * under the terms of the GNU Lesser General Public License as published by the *
 * Free Software Foundation; either version 2.1 of the License, or (at your     *
@@ -25,49 +24,82 @@
 #ifndef SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 #define SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_
 
-#include "dll.h"
+#include <schnapps/plugins/export/plugin_export_export.h>
 #include <ui_export_dialog.h>
+
+namespace cgogn
+{
+namespace io
+{
+class ExportOptions;
+}
+}
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
+class Object;
+
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap0Handler;
+}
+
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap2Handler;
+}
+
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap3Handler;
+}
 
 namespace plugin_export
 {
 
 class Plugin_Export;
 
-class SCHNAPPS_PLUGIN_EXPORT_API ExportDialog : public QDialog, public Ui::MapExport
+class PLUGIN_EXPORT_EXPORT ExportDialog : public QDialog, public Ui::ExportDialog
 {
 	Q_OBJECT
-	friend class Plugin_Export;
 
 public:
+
 	ExportDialog(SCHNApps* s, Plugin_Export* p);
 
 private slots:
-	void selected_map_changed(QString map_name);
-	void position_att_changed(QString pos_name);
-	void output_file_changed(QString output);
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
+
+	// slots called from UI signals
+	void selected_map_changed(const QString& map_name);
+	void position_attribute_changed(const QString& pos_name);
 	void choose_file();
-	void binary_option_changed(bool b);
-	void compress_option_changed(bool b);
-	void reinit();
 	void export_validated();
-	void vertex_attribute_changed(QListWidgetItem* item);
-	void cell_attribute_changed(QListWidgetItem* item);
+
+	// slots called from SCHNApps signals
+	void map_added(Object*);
+	void map_removed(Object*);
 
 private:
+	void selected_map_changed(const plugin_cmap_provider::CMap0Handler* h);
+	void selected_map_changed(const plugin_cmap_provider::CMap2Handler* h);
+	void selected_map_changed(const plugin_cmap_provider::CMap3Handler* h);
+	void export_map(plugin_cmap_provider::CMap0Handler* h, cgogn::io::ExportOptions& opt);
+	void export_map(plugin_cmap_provider::CMap2Handler* h, cgogn::io::ExportOptions& opt);
+	void export_map(plugin_cmap_provider::CMap3Handler* h, cgogn::io::ExportOptions& opt);
+
 	SCHNApps* schnapps_;
 	Plugin_Export* plugin_;
-	bool updating_ui_;
+
+	Object* selected_map_;
 };
 
 } // namespace plugin_export
+
 } // namespace schnapps
 
 #endif // SCHNAPPS_PLUGIN_EXPORT_DIALOG_H_

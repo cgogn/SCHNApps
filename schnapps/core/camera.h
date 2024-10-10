@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_CORE_CAMERA_H_
 #define SCHNAPPS_CORE_CAMERA_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
 #include <schnapps/core/types.h>
 
 #include <QOGLViewer/camera.h>
@@ -41,7 +42,7 @@ class View;
 * A camera object is generated with each new view
 * Cameras can be shared among views.
 */
-class SCHNAPPS_CORE_API Camera : public qoglviewer::Camera
+class SCHNAPPS_CORE_EXPORT Camera : public qoglviewer::Camera
 {
 	Q_OBJECT
 
@@ -65,7 +66,7 @@ public:
 	 * @brief get the name of Camera object
 	 * @return const ref on name
 	 */
-	inline const QString& get_name() const { return name_; }
+	inline const QString& name() const { return name_; }
 
 public slots:
 
@@ -73,13 +74,13 @@ public slots:
 	 * @brief get the name of Camera object
 	 * @return name
 	 */
-	inline QString get_name() { return name_; }
+	inline QString name() { return name_; }
 
 	/**
 	 * @brief get the schnapps objet ptr
 	 * @return the ptr
 	 */
-	inline SCHNApps* get_schnapps() const { return schnapps_; }
+	inline SCHNApps* schnapps() const { return schnapps_; }
 
 	/**
 	 * @brief test if camera is used by one view
@@ -97,19 +98,19 @@ public slots:
 	 * @brief get the projection type
 	 * @return PERSPECTIVE or ORTHOGRAPHIC
 	 */
-	inline qoglviewer::Camera::Type get_projection_type() const { return this->type(); }
+	inline qoglviewer::Camera::Type projection_type() const { return this->type(); }
 
 	// is camera drawn ?
-	inline bool get_draw() const { return draw_; }
+	inline bool draw() const { return draw_; }
 
 	// is camera path drawn ?
-	inline bool get_draw_path() const { return draw_path_; }
+	inline bool draw_path() const { return draw_path_; }
 
 	/**
 	 * @brief get the list of views linked with the camera
 	 * @return the list
 	 */
-	inline const std::list<View*>& get_linked_views() const { return views_; }
+	inline const std::list<View*>& linked_views() const { return views_; }
 
 	/**
 	 * @brief is the camera linked to the given view

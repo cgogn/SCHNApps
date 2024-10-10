@@ -24,7 +24,8 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_DOCK_TAB_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_render_vector/plugin_surface_render_vector_export.h>
+
 #include <ui_surface_render_vector.h>
 
 namespace cgogn { namespace rendering { class VBO; } }
@@ -32,18 +33,23 @@ namespace cgogn { namespace rendering { class VBO; } }
 namespace schnapps
 {
 
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap2Handler;
+}
+
 class SCHNApps;
 class View;
-class MapHandlerGen;
+class Object;
 
 namespace plugin_surface_render_vector
 {
 
 class Plugin_SurfaceRenderVector;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-struct MapParameters;
-
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
+class PLUGIN_SURFACE_RENDER_VECTOR_EXPORT SurfaceRenderVector_DockTab : public QWidget, public Ui::SurfaceRenderVector_TabWidget
 {
 	Q_OBJECT
 
@@ -57,12 +63,17 @@ private:
 	SCHNApps* schnapps_;
 	Plugin_SurfaceRenderVector* plugin_;
 
-	MapHandlerGen* selected_map_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
+
+	CMap2Handler* selected_map_;
+
 	bool updating_ui_;
 
 private slots:
 
 	// slots called from UI signals
+	void selected_map_changed();
+
 	void position_vbo_changed(int index);
 	void selected_vector_vbo_changed(QListWidgetItem* item, QListWidgetItem* old);
 	void vector_vbo_checked(QListWidgetItem* item);
@@ -71,11 +82,19 @@ private slots:
 
 	// slots called from SCHNApps signals
 	void selected_view_changed(View* old, View* cur);
-	void selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur);
 
-	// slots called from MapHandlerGen signals
+	// slots called from View signals
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
+
+	// slots called from CMap2Handler signals
 	void selected_map_vbo_added(cgogn::rendering::VBO* vbo);
 	void selected_map_vbo_removed(cgogn::rendering::VBO* vbo);
+
+private:
+
+	void map_linked(CMap2Handler* mh);
+	void map_unlinked(CMap2Handler* mh);
 
 public:
 
@@ -86,6 +105,7 @@ public:
 	void set_vector_size(cgogn::rendering::VBO* vbo, double d);
 	void set_vector_color(cgogn::rendering::VBO* vbo, QColor c);
 
+	CMap2Handler* selected_map() { return selected_map_; }
 	void refresh_ui();
 
 private:

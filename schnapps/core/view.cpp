@@ -24,8 +24,9 @@
 #include <schnapps/core/view.h>
 #include <schnapps/core/schnapps.h>
 #include <schnapps/core/camera.h>
+#include <schnapps/core/object.h>
 #include <schnapps/core/plugin_interaction.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/core/plugin_provider.h>
 
 #include <QMatrix4x4>
 #include <QKeyEvent>
@@ -51,15 +52,16 @@ View::View(const QString& name, SCHNApps* s) :
 	Vsplit_button_(nullptr),
 	Hsplit_button_(nullptr),
 	button_area_left_(nullptr),
-	maps_button_(nullptr),
+	objects_button_(nullptr),
 	plugins_button_(nullptr),
 	cameras_button_(nullptr),
-	dialog_maps_(nullptr),
+	dialog_objects_(nullptr),
 	dialog_plugins_(nullptr),
 	dialog_cameras_(nullptr),
 	frame_drawer_(nullptr),
 	frame_drawer_renderer_(nullptr),
 	save_snapshots_(false),
+	show_bbs_(true),
 	updating_ui_(false)
 {
 	++view_count_;
@@ -70,17 +72,15 @@ View::View(const QString& name, SCHNApps* s) :
 	this->setSnapshotFileName(name_);
 	this->setSnapshotQuality(100);
 
-	dialog_maps_ = new ViewDialogList("Linked Maps");
+	dialog_objects_ = new ViewDialogList("Linked Objects");
 	dialog_plugins_ = new ViewDialogList("Linked Plugins");
 	dialog_cameras_ = new ViewDialogList("Cameras");
 
-	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*,MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(object_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(object_removed(Object*)));
+	connect(dialog_objects_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(object_check_state_changed(QListWidgetItem*)));
 
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
-	connect(dialog_maps_->list(), SIGNAL(itemChanged(QListWidgetItem*)), this, SLOT(map_check_state_changed(QListWidgetItem*)));
-
-	schnapps_->foreach_map([this] (MapHandlerGen* map) { map_added(map); });
+	schnapps_->foreach_object([this] (Object* o) { object_added(o); });
 
 	connect(schnapps_, SIGNAL(plugin_enabled(Plugin*)), this, SLOT(plugin_enabled(Plugin*)));
 	connect(schnapps_, SIGNAL(plugin_disabled(Plugin*)), this, SLOT(plugin_disabled(Plugin*)));
@@ -96,7 +96,7 @@ View::View(const QString& name, SCHNApps* s) :
 
 	current_camera_ = schnapps_->add_camera();
 	current_camera_->link_view(this);
-	dialog_cameras_->check(current_camera_->get_name(), Qt::Checked);
+	dialog_cameras_->check(current_camera_->name(), Qt::Checked);
 
 	connect(schnapps_, SIGNAL(schnapps_closing()), this, SLOT(close_dialogs()));
 
@@ -113,20 +113,20 @@ View::~View()
 	while(!plugins_.empty())
 		unlink_plugin(*plugins_.begin());
 
-	while(!maps_.empty())
-		unlink_map(*maps_.begin());
+	while(!objects_.empty())
+		unlink_object(*objects_.begin());
 
 	delete button_area_;
 	delete button_area_left_;
 
-	delete dialog_maps_;
+	delete dialog_objects_;
 	delete dialog_plugins_;
 	delete dialog_cameras_;
 }
 
 bool View::is_selected_view() const
 {
-	return schnapps_->get_selected_view() == this;
+	return schnapps_->selected_view() == this;
 }
 
 /*********************************************************
@@ -149,7 +149,7 @@ void View::set_current_camera(Camera* c)
 
 		if (prev)
 		{
-			QListWidgetItem* prev_item = dialog_cameras_->find_item(prev->get_name());
+			QListWidgetItem* prev_item = dialog_cameras_->find_item(prev->name());
 			if (prev_item)
 			{
 				updating_ui_ = true;
@@ -160,7 +160,7 @@ void View::set_current_camera(Camera* c)
 
 		if (current_camera_)
 		{
-			QListWidgetItem* cur_item = dialog_cameras_->find_item(current_camera_->get_name());
+			QListWidgetItem* cur_item = dialog_cameras_->find_item(current_camera_->name());
 			if (cur_item)
 			{
 				updating_ui_ = true;
@@ -190,7 +190,7 @@ bool View::uses_camera(const QString& name) const
  * MANAGE LINKED PLUGINS
  *********************************************************/
 
-void View::link_plugin(PluginInteraction* plugin)
+void View::link_plugin(PluginInteraction* plugin, bool update_dialog_list)
 {
 	if (plugin && !is_linked_to_plugin(plugin))
 	{
@@ -199,23 +199,26 @@ void View::link_plugin(PluginInteraction* plugin)
 
 		emit(plugin_linked(plugin));
 
-		updating_ui_ = true;
-		if (!plugin->auto_activate())
-			dialog_plugins_->check(plugin->get_name(), Qt::Checked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			if (!plugin->auto_activate())
+				dialog_plugins_->check(plugin->name(), Qt::Checked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::link_plugin(const QString& name)
+void View::link_plugin(const QString& name, bool update_dialog_list)
 {
-	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
+	PluginInteraction* p = qobject_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
-		link_plugin(p);
+		link_plugin(p, update_dialog_list);
 }
 
-void View::unlink_plugin(PluginInteraction* plugin)
+void View::unlink_plugin(PluginInteraction* plugin, bool update_dialog_list)
 {
 	if (is_linked_to_plugin(plugin))
 	{
@@ -224,98 +227,111 @@ void View::unlink_plugin(PluginInteraction* plugin)
 
 		emit(plugin_unlinked(plugin));
 
-		updating_ui_ = true;
-		if (!plugin->auto_activate())
-			dialog_plugins_->check(plugin->get_name(), Qt::Unchecked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			if (!plugin->auto_activate())
+				dialog_plugins_->check(plugin->name(), Qt::Unchecked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::unlink_plugin(const QString& name)
+void View::unlink_plugin(const QString& name, bool update_dialog_list)
 {
-	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
+	PluginInteraction* p = qobject_cast<PluginInteraction*>(schnapps_->plugin(name));
 	if (p)
-		unlink_plugin(p);
+		unlink_plugin(p, update_dialog_list);
 }
 
 bool View::is_linked_to_plugin(const QString& name) const
 {
-	PluginInteraction* p = dynamic_cast<PluginInteraction*>(schnapps_->get_plugin(name));
+	PluginInteraction* p = qobject_cast<PluginInteraction*>(schnapps_->plugin(name));
 	return is_linked_to_plugin(p);
 }
 
 /*********************************************************
- * MANAGE LINKED MAPS
+ * MANAGE LINKED OBJECTS
  *********************************************************/
 
-void View::link_map(MapHandlerGen* map)
+void View::link_object(Object* o, bool update_dialog_list)
 {
-	if (map && !is_linked_to_map(map))
+	if (o && !is_linked_to_object(o))
 	{
-		maps_.push_back(map);
-		map->link_view(this);
+		objects_.push_back(o);
+		o->link_view(this);
 
-		emit(map_linked(map));
+		emit(object_linked(o));
 
-		connect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
+		connect(o, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-		if (map->is_selected_map())
-			this->setManipulatedFrame(&map->get_frame());
+//		if (map->is_selected_map())
+//			this->setManipulatedFrame(&map->get_frame());
 
 		update_bb();
 
-		updating_ui_ = true;
-		dialog_maps_->check(map->get_name(), Qt::Checked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			dialog_objects_->check(o->provider()->name() + "/" + o->name(), Qt::Checked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::link_map(const QString& name)
+void View::link_object(const QString& name, bool update_dialog_list)
 {
-	MapHandlerGen* m = schnapps_->get_map(name);
-	if (m)
-		link_map(m);
+	QStringList names = name.split('/');
+	PluginProvider* provider = qobject_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
+	if (provider)
+	{
+		Object* o = provider->object(names.at(1));
+		if (o)
+			link_object(o, update_dialog_list);
+	}
 }
 
-void View::unlink_map(MapHandlerGen* map)
+void View::unlink_object(Object* o, bool update_dialog_list)
 {
-	if (is_linked_to_map(map))
+	if (is_linked_to_object(o))
 	{
-		maps_.remove(map);
-		map->unlink_view(this);
+		objects_.remove(o);
+		o->unlink_view(this);
 
-		emit(map_unlinked(map));
+		emit(object_unlinked(o));
 
-		disconnect(map, SIGNAL(bb_changed()), this, SLOT(update_bb()));
+		disconnect(o, SIGNAL(bb_changed()), this, SLOT(update_bb()));
 
-		if (map->is_selected_map())
-			this->setManipulatedFrame(nullptr);
+//		if (map->is_selected_map())
+//			this->setManipulatedFrame(nullptr);
 
 		update_bb();
 
-		updating_ui_ = true;
-		dialog_maps_->check(map->get_name(), Qt::Unchecked);
-		updating_ui_ = false;
+		if (update_dialog_list)
+		{
+			updating_ui_ = true;
+			dialog_objects_->check(o->provider()->name() + "/" + o->name(), Qt::Unchecked);
+			updating_ui_ = false;
+		}
 
 		this->update();
 	}
 }
 
-void View::unlink_map(const QString& name)
+void View::unlink_object(const QString& name, bool update_dialog_list)
 {
-	MapHandlerGen* m = schnapps_->get_map(name);
-	if (m)
-		unlink_map(m);
-}
-
-bool View::is_linked_to_map(const QString& name) const
-{
-	MapHandlerGen* m = schnapps_->get_map(name);
-	return is_linked_to_map(m);
+	QStringList names = name.split('/');
+	PluginProvider* provider = qobject_cast<PluginProvider*>(schnapps_->plugin(names.at(0)));
+	if (provider)
+	{
+		Object* o = provider->object(names.at(1));
+		if (o)
+			unlink_object(o, update_dialog_list);
+	}
 }
 
 
@@ -326,7 +342,7 @@ void View::init()
 {
 	this->makeCurrent();
 
-	qoglviewer::Camera* c = this->camera();
+//	qoglviewer::Camera* c = this->camera();
 	this->setCamera(current_camera_);
 //	delete c;
 
@@ -366,9 +382,9 @@ void View::init()
 	button_area_left_ = new ViewButtonArea(this);
 	button_area_left_->set_top_left_position(0, 0);
 
-	maps_button_ = new ViewButton(":icons/icons/maps.png", this);
-	button_area_left_->add_button(maps_button_);
-	connect(maps_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_maps_list_view(int, int, int, int)));
+	objects_button_ = new ViewButton(":icons/icons/maps.png", this);
+	button_area_left_->add_button(objects_button_);
+	connect(objects_button_, SIGNAL(clicked(int, int, int, int)), this, SLOT(ui_objects_list_view(int, int, int, int)));
 
 	plugins_button_ = new ViewButton(":icons/icons/plugins.png", this);
 	button_area_left_->add_button(plugins_button_);
@@ -412,21 +428,27 @@ void View::draw()
 	QMatrix4x4 mm;
 	current_camera_->getModelViewMatrix(mm);
 
-	MapHandlerGen* selected_map = schnapps_->get_selected_map();
-
-	for (MapHandlerGen* map : maps_)
+	for (Object* o : objects_)
 	{
-		QMatrix4x4 map_mm = mm * map->get_frame_matrix() * map->get_transformation_matrix();
+		QMatrix4x4 o_mm = mm * o->frame_matrix() * o->transformation_matrix();
 
-		if (map == selected_map && map->get_show_bb())
-			map->draw_bb(this, pm, map_mm);
+//		if (o->show_bb())
+		if(show_bbs_)
+			o->draw_bb(this, pm, o_mm);
 
 		for (PluginInteraction* plugin : plugins_)
-			plugin->draw_map(this, map, pm, map_mm);
+			plugin->draw_object(this, o, pm, o_mm);
 	}
 
+	PluginInteraction* tr_charged = nullptr;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->draw(this, pm, mm);
+		if(plugin->name() != QString("render_transparency"))
+			plugin->draw(this, pm, mm);
+		else
+			tr_charged = plugin;
+
+	if(tr_charged != nullptr)
+		tr_charged->draw(this, pm, mm);
 }
 
 void View::postDraw()
@@ -462,7 +484,7 @@ void View::draw_frame()
 {
 	glDisable(GL_DEPTH_TEST);
 	QMatrix4x4 pm, mm;
-	frame_drawer_renderer_->draw(pm, mm, this);
+	frame_drawer_renderer_->draw(pm, mm);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -478,10 +500,12 @@ void View::keyPressEvent(QKeyEvent* event)
 			schnapps_->cycle_selected_view();
 			break;
 
-		case Qt::Key_S:
-		{
-			save_snapshots_ = !save_snapshots_;
+		case Qt::Key_B:
+			show_bbs_ = !show_bbs_;
+			break;
 
+		case Qt::Key_F: {
+			save_snapshots_ = !save_snapshots_;
 			if (save_snapshots_)
 			{
 				QMessageBox msg_box;
@@ -504,24 +528,30 @@ void View::keyPressEvent(QKeyEvent* event)
 				disconnect(this, SIGNAL(drawFinished(bool)), this, SLOT(saveSnapshot(bool)));
 				cgogn_log_info("View::keyPressEvent") <<"Stop frame snapshot.";
 			}
+			break;
 		}
-		break;
+
+		case Qt::Key_Escape: {
+			QMessageBox msg_box;
+			msg_box.setText("Really quit SCHNApps ?");
+			msg_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+			msg_box.setDefaultButton(QMessageBox::Ok);
+			if (msg_box.exec() == QMessageBox::Ok)
+				schnapps_->close_window();
+			break;
+		}
+
+		case Qt::Key_C: {
+			std::cout << current_camera()->to_string().toStdString() << std::endl;
+		}
 
 		default:
 		{
+			bool forward_event = true;
 			for (PluginInteraction* plugin : plugins_)
-				plugin->keyPress(this, event);
+				forward_event &= plugin->keyPress(this, event);
 
-			if (event->key() == Qt::Key_Escape)
-			{
-				QMessageBox msg_box;
-				msg_box.setText("Really quit SCHNApps ?");
-				msg_box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-				msg_box.setDefaultButton(QMessageBox::Ok);
-				if (msg_box.exec() == QMessageBox::Ok)
-					schnapps_->close_window();
-			}
-			else
+			if (forward_event)
 				QOGLViewer::keyPressEvent(event);
 		}
 	}
@@ -529,10 +559,12 @@ void View::keyPressEvent(QKeyEvent* event)
 
 void View::keyReleaseEvent(QKeyEvent *event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->keyRelease(this, event);
+		forward_event &= plugin->keyRelease(this, event);
 
-	QOGLViewer::keyReleaseEvent(event);
+	if (forward_event)
+		QOGLViewer::keyReleaseEvent(event);
 }
 
 void View::mousePressEvent(QMouseEvent* event)
@@ -540,10 +572,10 @@ void View::mousePressEvent(QMouseEvent* event)
 	if (!is_selected_view())
 	{
 		schnapps_->set_selected_view(this);
-		cgogn_log_info("View::mousePressEvent") << "Selecting view \"" << this->get_name().toStdString() << "\".";
+		cgogn_log_info("View::mousePressEvent") << "Selecting view \"" << this->name().toStdString() << "\".";
 	}
 	else if (event->y() < 20)
-		cgogn_log_info("View::mousePressEvent") << this->get_name().toStdString() << ".";
+		cgogn_log_info("View::mousePressEvent") << this->name().toStdString() << ".";
 
 	if (button_area_left_->is_clicked(event->x(), event->y()))
 		button_area_left_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
@@ -554,42 +586,50 @@ void View::mousePressEvent(QMouseEvent* event)
 			button_area_->click_button(event->x(), event->y(), event->globalX(), event->globalY());
 		else
 		{
+			bool forward_event = true;
 			for (PluginInteraction* plugin : plugins_)
-				plugin->mousePress(this, event);
+				forward_event &= plugin->mousePress(this, event);
 
-			QOGLViewer::mousePressEvent(event);
+			if (forward_event)
+				QOGLViewer::mousePressEvent(event);
 		}
 	}
 }
 
 void View::mouseReleaseEvent(QMouseEvent* event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->mouseRelease(this, event);
+		forward_event &= plugin->mouseRelease(this, event);
 
-	QOGLViewer::mouseReleaseEvent(event);
+	if (forward_event)
+		QOGLViewer::mouseReleaseEvent(event);
 }
 
 void View::mouseMoveEvent(QMouseEvent* event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->mouseMove(this, event);
+		forward_event &= plugin->mouseMove(this, event);
 
-	QOGLViewer::mouseMoveEvent(event);
+	if (forward_event)
+		QOGLViewer::mouseMoveEvent(event);
 }
 
 void View::wheelEvent(QWheelEvent* event)
 {
+	bool forward_event = true;
 	for (PluginInteraction* plugin : plugins_)
-		plugin->wheelEvent(this, event);
+		forward_event &= plugin->wheelEvent(this, event);
 
-	QOGLViewer::wheelEvent(event);
+	if (forward_event)
+		QOGLViewer::wheelEvent(event);
 }
 
 void View::hide_dialogs()
 {
-	if (dialog_maps_->isVisible())
-		dialog_maps_->hide();
+	if (dialog_objects_->isVisible())
+		dialog_objects_->hide();
 	if (dialog_plugins_->isVisible())
 		dialog_plugins_->hide();
 	if (dialog_cameras_->isVisible())
@@ -598,61 +638,58 @@ void View::hide_dialogs()
 
 void View::close_dialogs()
 {
-	dialog_maps_->close();
+	dialog_objects_->close();
 	dialog_plugins_->close();
 	dialog_cameras_->close();
 }
 
-void View::selected_map_changed(MapHandlerGen* prev, MapHandlerGen* cur)
-{
-	if (cur && is_linked_to_map(cur))
-		this->setManipulatedFrame(&cur->get_frame());
-	this->update();
-}
+//void View::selected_object_changed(Object* prev, Object* cur)
+//{
+//	if (cur && is_linked_to_object(cur))
+//		this->setManipulatedFrame(&cur->get_frame());
+//	this->update();
+//}
 
-void View::map_added(MapHandlerGen* mh)
+void View::object_added(Object* o)
 {
-	if (mh)
+	if (o)
 	{
-		dialog_maps_->add_item(mh->get_name());
-		if (schnapps_->get_core_setting("Add map to selected view").toBool() && is_selected_view())
-		{
-			link_map(mh);
-
-			updating_ui_ = true;
-			dialog_maps_->check(mh->get_name(), Qt::Checked);
-			updating_ui_ = false;
-		}
+		dialog_objects_->add_item(o->provider()->name() + "/" + o->name());
+		if (schnapps_->core_setting("Link new object to selected view").toBool() && is_selected_view())
+			link_object(o);
 	}
 }
 
-void View::map_removed(MapHandlerGen* mh)
+void View::object_removed(Object* o)
 {
-	if (mh)
-		dialog_maps_->remove_item(mh->get_name());
+	if (o)
+	{
+		dialog_objects_->remove_item(o->provider()->name() + "/" + o->name());
+		unlink_object(o);
+	}
 }
 
-void View::map_check_state_changed(QListWidgetItem* item)
+void View::object_check_state_changed(QListWidgetItem* item)
 {
 	if (!updating_ui_)
 	{
 		if (item->checkState() == Qt::Checked)
-			link_map(item->text());
+			link_object(item->text(), false);
 		else
-			unlink_map(item->text());
+			unlink_object(item->text(), false);
 	}
 }
 
 void View::plugin_enabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
-		dialog_plugins_->add_item(plugin->get_name());
+	if (qobject_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
+		dialog_plugins_->add_item(plugin->name());
 }
 
 void View::plugin_disabled(Plugin *plugin)
 {
-	if (dynamic_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
-		dialog_plugins_->remove_item(plugin->get_name());
+	if (qobject_cast<PluginInteraction*>(plugin) && (!plugin->auto_activate()))
+		dialog_plugins_->remove_item(plugin->name());
 }
 
 void View::plugin_check_state_changed(QListWidgetItem* item)
@@ -660,22 +697,22 @@ void View::plugin_check_state_changed(QListWidgetItem* item)
 	if (!updating_ui_)
 	{
 		if (item->checkState() == Qt::Checked)
-			link_plugin(item->text());
+			link_plugin(item->text(), false);
 		else
-			unlink_plugin(item->text());
+			unlink_plugin(item->text(), false);
 	}
 }
 
 void View::camera_added(Camera* camera)
 {
 	if (camera)
-		dialog_cameras_->add_item(camera->get_name());
+		dialog_cameras_->add_item(camera->name());
 }
 
 void View::camera_removed(Camera* camera)
 {
 	if (camera)
-		dialog_cameras_->remove_item(camera->get_name());
+		dialog_cameras_->remove_item(camera->name());
 }
 
 void View::camera_check_state_changed(QListWidgetItem* item)
@@ -689,15 +726,15 @@ void View::camera_check_state_changed(QListWidgetItem* item)
 
 void View::update_bb()
 {
-	if (!maps_.empty())
+	if (!objects_.empty())
 	{
 		bool initialized = false;
 
-		for (MapHandlerGen* mhg : maps_)
+		for (Object* o : objects_)
 		{
 			qoglviewer::Vec minbb;
 			qoglviewer::Vec maxbb;
-			if (mhg->get_transformed_bb(minbb, maxbb))
+			if (o->transformed_bb(minbb, maxbb))
 			{
 				if (initialized)
 				{
@@ -765,17 +802,17 @@ void View::ui_color_view(int, int, int, int)
 	color_dial_->setCurrentColor(background_color_);
 }
 
-void View::ui_maps_list_view(int, int, int globalX, int globalY)
+void View::ui_objects_list_view(int, int, int globalX, int globalY)
 {
-	if (dialog_maps_->isHidden())
+	if (dialog_objects_->isHidden())
 	{
-		dialog_maps_->show();
-		dialog_maps_->move(QPoint(globalX, globalY + 8));
+		dialog_objects_->show();
+		dialog_objects_->move(QPoint(globalX, globalY + 8));
 		dialog_cameras_->hide();
 		dialog_plugins_->hide();
 	}
 	else
-		dialog_maps_->hide();
+		dialog_objects_->hide();
 }
 
 void View::ui_plugins_list_view(int, int, int globalX, int globalY)
@@ -784,7 +821,7 @@ void View::ui_plugins_list_view(int, int, int globalX, int globalY)
 	{
 		dialog_plugins_->show();
 		dialog_plugins_->move(QPoint(globalX, globalY + 8));
-		dialog_maps_->hide();
+		dialog_objects_->hide();
 		dialog_cameras_->hide();
 	}
 	else
@@ -798,7 +835,7 @@ void View::ui_cameras_list_view(int, int, int globalX, int globalY)
 		dialog_cameras_->show();
 		dialog_cameras_->move(QPoint(globalX, globalY + 8));
 		dialog_plugins_->hide();
-		dialog_maps_->hide();
+		dialog_objects_->hide();
 	}
 	else
 		dialog_cameras_->hide();

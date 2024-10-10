@@ -25,8 +25,8 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
 #define SCHNAPPS_PLUGIN_MESHGEN_TETGEN_STRUCTURE_IO_H
 
-#include "dll.h"
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/meshgen/dll.h>
+#include <schnapps/core/types.h>
 #include <cgogn/io/volume_import.h>
 #include <cgogn/geometry/types/geometry_traits.h>
 

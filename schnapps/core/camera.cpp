@@ -132,13 +132,13 @@ void Camera::fit_to_views_bb()
 
 		if (!views_.empty())
 		{
-			views_.front()->get_bb(bb_min, bb_max);
+			views_.front()->bb(bb_min, bb_max);
 
 			for (View* v : views_)
 			{
 				qoglviewer::Vec minbb;
 				qoglviewer::Vec maxbb;
-				v->get_bb(minbb, maxbb);
+				v->bb(minbb, maxbb);
 				for (uint32 dim = 0; dim < 3; ++dim)
 				{
 					if (minbb[dim] < bb_min[dim])

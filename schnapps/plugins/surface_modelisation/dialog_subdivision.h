@@ -24,46 +24,76 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_DIALOG_SUBDIVISION_H_
 
-#include "dll.h"
+#include <schnapps/plugins/surface_modelisation/plugin_surface_modelisation_export.h>
+
+#include <schnapps/core/types.h>
+
 #include <ui_dialog_subdivision.h>
 
-#include <schnapps/core/map_handler.h>
+namespace cgogn { enum Orbit: numerics::uint32; }
 
 namespace schnapps
 {
 
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap2Handler;
+}
+
 class SCHNApps;
+class Object;
 
 namespace plugin_surface_modelisation
 {
 
 class Plugin_SurfaceModelisation;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Subdivision_Dialog : public QDialog, public Ui::Subdivision_Dialog
+class PLUGIN_SURFACE_MODELISATION_EXPORT Subdivision_Dialog : public QDialog, public Ui::Subdivision_Dialog
 {
 	Q_OBJECT
 
 public:
 
 	Subdivision_Dialog(SCHNApps* s, Plugin_SurfaceModelisation* p);
+	~Subdivision_Dialog() override;
 
 private:
 
 	SCHNApps* schnapps_;
 	Plugin_SurfaceModelisation* plugin_;
 
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
+
 	CMap2Handler* selected_map_;
+
+	bool updating_ui_;
 
 	QString setting_auto_load_position_attribute_;
 
 private slots:
 
+	// slots called from UI signals
+	void selected_map_changed();
 	void subdivide_loop();
 	void subdivide_catmull_clark();
-	void selected_map_changed();
-	void map_added(MapHandlerGen* map);
-	void map_removed(MapHandlerGen* map);
+	void subdivide_lsm();
+
+	// slots called from SCHNApps signals
+	void object_added(Object* o);
+	void object_removed(Object* o);
+
+	// slots called from MapHandlerGen signals
 	void selected_map_attribute_added(cgogn::Orbit orbit, const QString& attribute_name);
+	void selected_map_attribute_removed(cgogn::Orbit orbit, const QString& attribute_name);
+
+private:
+
+	void refresh_ui();
+
+	void map_added(CMap2Handler* mh);
+	void map_removed(CMap2Handler* mh);
 };
 
 } // namespace plugin_surface_modelisation

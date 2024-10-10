@@ -24,26 +24,36 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
 #define SCHNAPPS_PLUGIN_SURFACE_MODELISATION_H_
 
+#include <schnapps/plugins/surface_modelisation/plugin_surface_modelisation_export.h>
+#include <schnapps/plugins/surface_modelisation/dialog_decimation.h>
+#include <schnapps/plugins/surface_modelisation/dialog_subdivision.h>
+#include <schnapps/plugins/surface_modelisation/dialog_remeshing.h>
+#include <schnapps/plugins/surface_modelisation/dialog_filtering.h>
+
 #include <schnapps/core/plugin_processing.h>
 
-#include "dll.h"
-#include <dialog_decimation.h>
-#include <dialog_subdivision.h>
-
 #include <QAction>
+
+namespace cgogn { enum Orbit: numerics::uint32; }
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap2Handler;
+}
 
 namespace plugin_surface_modelisation
 {
 
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
+
 /**
  * @brief Plugin that exposes some surface modelisation algorithms
  */
-class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Plugin_SurfaceModelisation : public PluginProcessing
+class PLUGIN_SURFACE_MODELISATION_EXPORT Plugin_SurfaceModelisation : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -51,9 +61,9 @@ class SCHNAPPS_PLUGIN_SURFACE_MODELISATION_API Plugin_SurfaceModelisation : publ
 
 public:
 
-	Plugin_SurfaceModelisation() {}
-
-	~Plugin_SurfaceModelisation() {}
+	Plugin_SurfaceModelisation();
+	inline ~Plugin_SurfaceModelisation() {}
+	static QString plugin_name();
 
 private:
 
@@ -68,6 +78,8 @@ private slots:
 	// slots called from action signals
 	void open_decimation_dialog();
 	void open_subdivision_dialog();
+	void open_remeshing_dialog();
+	void open_filtering_dialog();
 
 public slots:
 
@@ -93,13 +105,50 @@ public slots:
 		const QString& position_attribute_name
 	);
 
+	void subdivide_lsm(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
+	void remesh(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
+	void filter_average(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
+	void filter_bilateral(
+		const QString& map_name,
+		const QString& position_attribute_name,
+		const QString& normal_attribute_name
+	);
+
+	void filter_taubin(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
+	void filter_laplacian(
+		const QString& map_name,
+		const QString& position_attribute_name
+	);
+
 private:
 
 	Decimation_Dialog* decimation_dialog_;
 	Subdivision_Dialog* subdivision_dialog_;
+	Remeshing_Dialog* remeshing_dialog_;
+	Filtering_Dialog* filtering_dialog_;
 
 	QAction* decimation_action_;
 	QAction* subdivision_action_;
+	QAction* remeshing_action_;
+	QAction* filtering_action_;
+
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 };
 
 } // namespace plugin_surface_modelisation

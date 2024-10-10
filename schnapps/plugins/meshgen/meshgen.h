@@ -25,17 +25,15 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_H_
 #define SCHNAPPS_PLUGIN_MESHGEN_H_
 
-#include "dll.h"
-#include <meshgen_dialog.h>
+#include <schnapps/plugins/meshgen/dll.h>
 #include <schnapps/core/plugin_processing.h>
+#include <schnapps/core/types.h>
 #include <cgogn/core/cmap/cmap2.h>
+#include <QAction>
+#include <QMenu>
 
 namespace schnapps
 {
-
-class MapHandlerGen;
-template<typename>
-class MapHandler;
 
 namespace plugin_image
 {
@@ -43,9 +41,22 @@ class Plugin_Image;
 class Image3D;
 } // namespace plugin_image
 
+namespace plugin_cmap_provider
+{
+class CMap2Handler;
+class Plugin_CMapProvider;
+} // namespace plugin_cmap_provider
+
+namespace plugin_cmap_provider
+{
+class CMap3Handler;
+class Plugin_CMapProvider;
+} // namespace plugin_cmap_provider
+
 namespace plugin_meshgen
 {
 
+class VolumeMeshFromSurfaceDialog;
 class Plugin_VolumeMeshFromSurface;
 
 struct SCHNAPPS_PLUGIN_MESHGEN_API TetgenParameters
@@ -143,14 +154,17 @@ public:
 
 	using Map2 = schnapps::CMap2;
 	using Map3 = schnapps::CMap3;
-	using MapHandler2 = schnapps::MapHandler<Map2>;
-	using MapHandler3 = schnapps::MapHandler<Map3>;
+	using MapHandler2 = plugin_cmap_provider::CMap2Handler;
+	using MapHandler3 = plugin_cmap_provider::CMap3Handler;
 
 	Plugin_VolumeMeshFromSurface();
+	~Plugin_VolumeMeshFromSurface() override;
+	static QString plugin_name();
 
 	MapHandler3* generate_netgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const NetgenParameters& params);
 	MapHandler3* generate_tetgen(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const std::string& tetgen_args);
 	MapHandler3* generate_cgal(MapHandler2* mh2, CMap2::VertexAttribute<VEC3> position_att, const CGALParameters& params);
+	void generate_from_image(const QString& im_name);
 	MapHandler3* generate_cgal(plugin_image::Image3D const * im, const CGALParameters& params);
 
 private:
@@ -160,6 +174,7 @@ private:
 
 	QAction* gen_mesh_action_;
 	plugin_image::Plugin_Image* plugin_image_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 	MeshGeneratorParameters generation_parameters_;
 	std::unique_ptr<VolumeMeshFromSurfaceDialog> dialog_;
 
@@ -167,8 +182,9 @@ public slots:
 	void generate_button_netgen_pressed();
 	void generate_button_tetgen_pressed();
 	void generate_button_cgal_pressed();
-	void plugin_enabled(Plugin*);
-	void plugin_disabled(Plugin*);
+
+private slots:
+	void image_context_menu_created(QMenu* menu, const QString& im_name);
 };
 
 } // namespace plugin_meshgen

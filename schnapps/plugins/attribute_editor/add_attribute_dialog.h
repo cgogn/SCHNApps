@@ -25,21 +25,21 @@
 #ifndef SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
 #define SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_ADD_ATTRIBUTE_DIALOG_H
 
-#include <dll.h>
+#include <schnapps/plugins/attribute_editor/plugin_attribute_editor_export.h>
 #include <ui_add_attribute_dialog.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
+class Object;
 
 namespace plugin_attribute_editor
 {
 
 class AttributeEditorPlugin;
 
-class SCHNAPPS_PLUGIN_ATTRIBUTE_EDITOR_API AddAttributeDialog : public QDialog, public Ui::AddAttribute
+class PLUGIN_ATTRIBUTE_EDITOR_EXPORT AddAttributeDialog : public QDialog, public Ui::AddAttribute
 {
 	Q_OBJECT
 	friend class AttributeEditorPlugin;
@@ -50,9 +50,9 @@ public:
 
 private slots:
 
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
-//	void selected_map_changed(const QString&);
+	void map_added(Object*);
+	void map_removed(Object*);
+	void selected_map_changed(const QString&);
 	void add_attribute_validated();
 	void data_type_changed(const QString& data_type);
 

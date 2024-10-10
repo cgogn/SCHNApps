@@ -25,10 +25,12 @@
 #ifndef SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
 #define SCHNAPPS_PLUGIN_MESHGEN_NETGEN_STRUCTURE_IO_H
 
-#include <functional>
-#include <dll.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/meshgen/dll.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
+
 #include <cgogn/io/volume_import.h>
+
+#include <functional>
 
 namespace nglib
 {

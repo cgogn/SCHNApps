@@ -24,7 +24,9 @@
 #ifndef SCHNAPPS_CORE_SETTINGS_H_
 #define SCHNAPPS_CORE_SETTINGS_H_
 
-#include <schnapps/core/dll.h>
+#include <schnapps/core/schnapps_core_export.h>
+
+
 #include <QVariantMap>
 #include <QStringList>
 #include <memory>
@@ -37,7 +39,7 @@ namespace schnapps
 
 class SettingsWidget;
 
-class SCHNAPPS_CORE_API Settings : public QObject
+class SCHNAPPS_CORE_EXPORT Settings : public QObject
 {
 	Q_OBJECT
 
@@ -60,12 +62,12 @@ public:
 	 * @return the setting value
 	 */
 	QVariant add_setting(const QString& module_name, const QString& setting_name, const QVariant& value);
-	const QVariant get_setting(const QString& module_name, const QString& setting_name) const;
+	const QVariant setting(const QString& module_name, const QString& setting_name) const;
 
 	void to_file(const QString& filename);
 	static std::unique_ptr<Settings> from_file(const QString& setting_filename);
 
-	void set_widget(QWidget* widget);
+	void set_widget(SettingsWidget* widget);
 
 private slots:
 

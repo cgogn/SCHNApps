@@ -22,39 +22,57 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
-#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
+#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H_
+#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H_
 
-#include "dll.h"
+#include <schnapps/plugins/extract_surface/plugin_extract_surface_export.h>
 #include <schnapps/core/plugin_processing.h>
+
 #include <QAction>
 
 namespace schnapps
 {
 
-class MapHandlerGen;
+class Object;
+
+namespace plugin_cmap_provider
+{
+class Plugin_CMapProvider;
+class CMap2Handler;
+class CMap3Handler;
+} // namespace plugin_cmap_provider
+
+
 
 namespace plugin_extract_surface
 {
 
 class ExtractDialog;
 
-class SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API Plugin_ExtractSurface : public PluginProcessing
+class PLUGIN_EXTRACT_SURFACE_EXPORT Plugin_ExtractSurface : public PluginProcessing
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
 	Q_INTERFACES(schnapps::Plugin)
 
 public:
+
 	Plugin_ExtractSurface();
-	~Plugin_ExtractSurface() override;
-	void extract_surface(MapHandlerGen* in_map3, MapHandlerGen* out_map2, const QString& pos_att_name);
+	inline ~Plugin_ExtractSurface() override {}
+	static QString plugin_name();
+
+	inline plugin_cmap_provider::Plugin_CMapProvider* map_provider() { return plugin_cmap_provider_; }
+
+	void extract_surface(plugin_cmap_provider::CMap3Handler* in_map3, plugin_cmap_provider::CMap2Handler* out_map2, const QString& pos_att_name);
 
 private:
+
 	bool enable() override;
 	void disable() override;
+
 	QAction* extract_surface_action_;
 	ExtractDialog* extract_dialog_;
+	plugin_cmap_provider::Plugin_CMapProvider* plugin_cmap_provider_;
 
 	public slots:
 	private slots:
@@ -62,6 +80,7 @@ private:
 };
 
 } // namespace plugin_extract_surface
+
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H
+#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_SURFACE_H_

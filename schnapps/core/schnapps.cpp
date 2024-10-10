@@ -27,11 +27,10 @@
 #include <schnapps/core/view.h>
 #include <schnapps/core/plugin.h>
 #include <schnapps/core/plugin_interaction.h>
-#include <schnapps/core/map_handler.h>
 
 #include <schnapps/core/control_dock_camera_tab.h>
 #include <schnapps/core/control_dock_plugin_tab.h>
-#include <schnapps/core/control_dock_map_tab.h>
+#include <schnapps/core/settings_widget.h>
 
 #include <QVBoxLayout>
 #include <QSplitter>
@@ -50,13 +49,14 @@
 #include <QAction>
 #include <list>
 
-
 namespace schnapps
 {
 
-SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAppsWindow* window) :
+SCHNApps::SCHNApps(const QString& app_path,
+	const QString& init_plugin_name,
+	SCHNAppsWindow* window
+) :
 	app_path_(app_path),
-	settings_path_(settings_path),
 	first_view_(nullptr),
 	selected_view_(nullptr),
 	window_(window)
@@ -66,13 +66,9 @@ SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAp
 
 	// create & setup control dock
 	control_camera_tab_ = new ControlDock_CameraTab(this);
-	window_->control_dock_tab_widget_->addTab(control_camera_tab_, control_camera_tab_->title());
+	connect(window_->action_Camera, SIGNAL(triggered()), control_camera_tab_, SLOT(display_camera_widget()));
 	control_plugin_tab_ = new ControlDock_PluginTab(this);
-	window_->control_dock_tab_widget_->addTab(control_plugin_tab_, control_plugin_tab_->title());
-	control_map_tab_ = new ControlDock_MapTab(this);
-	window_->control_dock_tab_widget_->addTab(control_map_tab_, control_map_tab_->title());
-
-	window_->control_dock_tab_widget_->setCurrentIndex(window_->control_dock_tab_widget_->indexOf(control_map_tab_));
+	connect(window_->action_Plugins, SIGNAL(triggered()), control_plugin_tab_, SLOT(display_plugins_widget()));
 
 	// create & setup central widget (views)
 
@@ -92,25 +88,38 @@ SCHNApps::SCHNApps(const QString& app_path, const QString& settings_path, SCHNAp
 	register_plugins_directory(app_path_ + QString("/../lib"));
 #endif
 
-	settings_ = Settings::from_file(settings_path_);
-	settings_->set_widget(window->settings_widget_.get());
-	for (const QVariant& plugin_dir_v : get_core_setting("Plugins paths").toList())
-		this->register_plugins_directory(plugin_dir_v.toString());
-	for (const QVariant& plugin_v : get_core_setting("Load modules").toList())
-		this->enable_plugin(plugin_v.toString());
+	settings_ = Settings::from_file(window_->settings_widget_->settings_export_path());
+	settings_->set_widget(window_->settings_widget_.get());
+	for (const QVariant& plugin_dir_v : core_setting("Plugins paths").toList())
+		register_plugins_directory(plugin_dir_v.toString());
+	for (const QVariant& plugin_v : core_setting("Load modules").toList())
+		enable_plugin(plugin_v.toString());
+
+	connect(first_view_, &View::viewerInitialized, [this, &init_plugin_name] ()
+	{
+		if (init_plugin_name.isEmpty())
+			return;
+		if (enable_plugin("init_" + init_plugin_name))
+			cgogn_log_info("SCHNApps") << "Init Plugin \"" <<  init_plugin_name.toStdString() << "\" successfully loaded.";
+		else
+			cgogn_log_info("SCHNApps") << "Init Plugin \"" <<  init_plugin_name.toStdString() << "\" could not be loaded.";
+	});
 }
 
 SCHNApps::~SCHNApps()
 {
 	// make a copy of overwrite settings
-	QFile old(settings_path_);
-	QString copy_name = settings_path_.left(settings_path_.length()-5) + ".back.json";
-	old.copy(copy_name);
+	if(window_->settings_widget_->export_at_exit())
+	{
+		QString settings_path = window_->settings_widget_->settings_export_path();
+		QFile old(settings_path);
+		QString copy_name = settings_path.left(settings_path.length()-5) + ".back.json";
+		old.copy(copy_name);
 
-	settings_->to_file(settings_path_);
+		settings_->to_file(settings_path);
+	}
 
 	// first safely unload every plugins (this has to be done before the views get deleted)
-
 	std::list<QString> plugins_ordered;
 	for (auto& pp : plugins_)
 	{
@@ -119,7 +128,6 @@ SCHNApps::~SCHNApps()
 		else
 			plugins_ordered.push_front(pp.first);
 	}
-
 	for (const auto& p : plugins_ordered)
 		this->disable_plugin(p);
 }
@@ -166,270 +174,6 @@ Camera* SCHNApps::get_camera(const QString& name) const
 }
 
 /*********************************************************
- * MANAGE PLUGINS
- *********************************************************/
-
-void SCHNApps::register_plugins_directory(const QString& path)
-{
-	QDir directory(QDir::cleanPath(path));
-	if (directory.exists())
-	{
-		QStringList filters;
-		filters << "lib*plugin*.so";
-		filters << "lib*plugin*.dylib";
-		filters << "*plugin*.dll";
-
-		QStringList plugin_files = directory.entryList(filters, QDir::Files);
-
-		for (const QString& plugin_file : plugin_files)
-		{
-			QFileInfo pfi(plugin_file);
-#ifdef WIN32
-			QString plugin_name = pfi.baseName();
-#else
-			QString plugin_name = pfi.baseName().remove(0, 3);
-#endif
-			if (plugin_name.endsWith("_d"))
-				plugin_name = plugin_name.left(plugin_name.size() -2);
-			if(plugin_name.startsWith("plugin_",  Qt::CaseInsensitive))
-				plugin_name = plugin_name.right(plugin_name.size() - 7);
-
-			QString plugin_file_path = directory.absoluteFilePath(plugin_file);
-
-			if (available_plugins_.count(plugin_name) == 0ul)
-			{
-				available_plugins_.insert(std::make_pair(plugin_name, plugin_file_path));
-				emit(plugin_available_added(plugin_name));
-			}
-			else
-			{
-				cgogn_log_info("SCHNApps::register_plugins_directory") << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded.";
-			}
-		}
-	}
-}
-
-Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
-{
-	if (plugins_.count(plugin_name) > 0ul)
-		return plugins_.at(plugin_name).get();
-
-	if (available_plugins_.count(plugin_name) > 0ul)
-	{
-		QString plugin_file_path = available_plugins_[plugin_name];
-		QPluginLoader loader(plugin_file_path);
-
-		// if the loader loads a plugin instance
-		if (QObject* plugin_object = loader.instance())
-		{
-			Plugin* plugin = qobject_cast<Plugin*>(plugin_object);
-
-			// set the plugin with correct parameters (name, filepath, SCHNApps)
-			plugin->set_name(plugin_name);
-			plugin->set_file_path(plugin_file_path);
-			plugin->set_schnapps(this);
-
-			// then we call its enable() methods
-			if (plugin->enable())
-			{
-				// if it succeeded we reference this plugin
-				plugins_.insert(std::make_pair(plugin_name, std::unique_ptr<Plugin>(plugin)));
-
-				cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" successfully loaded.")).toStdString();
-				emit(plugin_enabled(plugin));
-//				menubar->repaint();
-				return plugin;
-			}
-			else
-			{
-				delete plugin;
-				return nullptr;
-			}
-		} else { // if loading fails
-			cgogn_log_warning("SCHNApps::enable_plugin") << "Loader.instance() failed with error \"" << loader.errorString().toStdString() << "\".";
-			return nullptr;
-		}
-	}
-	else
-		return nullptr;
-}
-
-void SCHNApps::disable_plugin(const QString& plugin_name)
-{
-	if (plugins_.count(plugin_name) > 0ul)
-	{
-		auto plugin = std::move(plugins_.at(plugin_name));
-
-		// unlink linked views (for interaction plugins)
-		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin.get());
-		if (pi)
-		{
-			while(!pi->get_linked_views().empty()) // Safe way to iterate over a container that is currently being modified
-				(*pi->get_linked_views().begin())->unlink_plugin(pi);
-		}
-
-		// because plugin_name no more valid after unloading
-		std::string destroyed_name = plugin_name.toStdString();
-
-		// call disable() method and dereference plugin
-		plugin->disable();
-		plugins_.erase(plugin_name);
-
-		QPluginLoader loader(plugin->get_file_path());
-		loader.unload();
-
-		cgogn_log_info("SCHNApps::disable_plugin") << destroyed_name << " successfully unloaded.";
-		emit(plugin_disabled(plugin.get()));
-	}
-}
-
-Plugin* SCHNApps::get_plugin(const QString& name) const
-{
-	if (plugins_.count(name) > 0ul)
-		return plugins_.at(name).get();
-	else
-		return nullptr;
-}
-
-void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text)
-{
-	std::list<QWidget*>& widget_list = plugin_dock_tabs_[plugin];
-	if (plugin && tab_widget && std::find(widget_list.begin(), widget_list.end(), tab_widget) == widget_list.end())
-	{
-		int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
-
-		int idx = window_->plugin_dock_tab_widget_->addTab(tab_widget, tab_text);
-		window_->plugin_dock_->setVisible(true);
-
-		PluginInteraction* pi = dynamic_cast<PluginInteraction*>(plugin);
-		if (pi)
-		{
-			if (pi->is_linked_to_view(selected_view_))
-				window_->plugin_dock_tab_widget_->setTabEnabled(idx, true);
-			else
-				window_->plugin_dock_tab_widget_->setTabEnabled(idx, false);
-		}
-
-		if (current_tab != -1)
-			window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
-
-		widget_list.push_back(tab_widget);
-	}
-}
-
-void SCHNApps::remove_plugin_dock_tab(Plugin* plugin, QWidget *tab_widget)
-{
-	std::list<QWidget*>& widget_list = plugin_dock_tabs_[plugin];
-	auto widget_it = std::find(widget_list.begin(), widget_list.end(), tab_widget);
-	if (plugin && tab_widget && widget_it != widget_list.end())
-	{
-		window_->plugin_dock_tab_widget_->removeTab(window_->plugin_dock_tab_widget_->indexOf(tab_widget));
-		widget_list.erase(widget_it);
-	}
-}
-
-void SCHNApps::enable_plugin_tab_widgets(Plugin* plugin)
-{
-	if (plugin_dock_tabs_.count(plugin) > 0ul)
-	{
-		for (const auto& widget : plugin_dock_tabs_.at(plugin))
-			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(widget), true);
-	}
-}
-
-void SCHNApps::disable_plugin_tab_widgets(Plugin* plugin)
-{
-	if (plugin_dock_tabs_.count(plugin) > 0ul)
-	{
-		for (const auto& widget : plugin_dock_tabs_.at(plugin))
-			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(widget), false);
-	}
-}
-
-/*********************************************************
- * MANAGE MAPS
- *********************************************************/
-
-MapHandlerGen* SCHNApps::add_map(const QString &name, unsigned int dimension)
-{
-	QString final_name = name;
-	if (maps_.count(name) > 0ul)
-	{
-		int i = 1;
-		do
-		{
-			final_name = name + QString("_") + QString::number(i);
-			++i;
-		} while (maps_.count(final_name) > 0ul);
-	}
-
-	switch(dimension)
-	{
-		case 2 : {
-			maps_.insert(std::make_pair(final_name, cgogn::make_unique<CMap2Handler>(final_name, this)));
-			break;
-		}
-		case 3 : {
-			maps_.insert(std::make_pair(final_name, cgogn::make_unique<CMap3Handler>(final_name, this)));
-			break;
-		}
-	}
-
-	MapHandlerGen* mhg = maps_.at(final_name).get();
-	emit(map_added(mhg));
-
-	return mhg;
-}
-
-void SCHNApps::remove_map(const QString &name)
-{
-	if (maps_.count(name) > 0ul)
-	{
-		auto& map = maps_.at(name);
-		auto views = map->get_linked_views(); // do NOT use a ref-to-const here because the referenced list is modified in the following loop
-		for (View* view : views)
-		{
-			view->unlink_map(map.get());
-		}
-		emit(map_removed(map.get()));
-		maps_.erase(name);
-	}
-}
-
-MapHandlerGen* SCHNApps::duplicate_map(const QString& name)
-{
-	if (maps_.count(name) > 0ul)
-	{
-		auto& map = maps_.at(name);
-		MapHandlerGen* duplicate = this->add_map(QString("copy_") + map->get_name(), map->dimension());
-		duplicate->merge(map.get());
-		return duplicate;
-	} else {
-		return nullptr;
-	}
-}
-
-
-
-MapHandlerGen* SCHNApps::get_map(const QString& name) const
-{
-	if (maps_.count(name) > 0ul)
-		return maps_.at(name).get();
-	else
-		return nullptr;
-}
-
-MapHandlerGen* SCHNApps::get_selected_map() const
-{
-	return control_map_tab_->get_selected_map();
-}
-
-void SCHNApps::set_selected_map(const QString& name)
-{
-	control_map_tab_->set_selected_map(name);
-}
-
-/*********************************************************
  * MANAGE VIEWS
  *********************************************************/
 
@@ -468,7 +212,7 @@ void SCHNApps::remove_view(const QString& name)
 	}
 }
 
-View* SCHNApps::get_view(const QString& name) const
+View* SCHNApps::view(const QString& name) const
 {
 	if (views_.count(name) > 0ul)
 		return views_.at(name).get();
@@ -480,23 +224,10 @@ void SCHNApps::set_selected_view(View* view)
 {
 	int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
 
-//	if (selected_view_)
-//	{
-//		for (PluginInteraction* p : selected_view_->get_linked_plugins())
-//			disable_plugin_tab_widgets(p);
-//		disconnect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-//		disconnect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
-//	}
-
 	View* old_selected = selected_view_;
 	selected_view_ = view;
 	if (old_selected)
 		old_selected->hide_dialogs();
-
-//	for (PluginInteraction* p : selected_view_->get_linked_plugins())
-//		enable_plugin_tab_widgets(p);
-//	connect(selected_view_, SIGNAL(plugin_linked(PluginInteraction*)), this, SLOT(enable_plugin_tab_widgets(PluginInteraction*)));
-//	connect(selected_view_, SIGNAL(plugin_unlinked(PluginInteraction*)), this, SLOT(disable_plugin_tab_widgets(PluginInteraction*)));
 
 	window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
 
@@ -509,15 +240,14 @@ void SCHNApps::set_selected_view(View* view)
 
 void SCHNApps::set_selected_view(const QString& name)
 {
-	View* v = this->get_view(name);
+	View* v = this->view(name);
 	if (v)
 		set_selected_view(v);
 }
 
-
 void SCHNApps::cycle_selected_view()
 {
-	auto it = views_.find(selected_view_->get_name());
+	auto it = views_.find(selected_view_->name());
 	it++;
 	if (it == views_.end())
 		it = views_.begin();
@@ -585,7 +315,7 @@ QString SCHNApps::get_split_view_positions()
 		for (int i = 0; i < spl->count(); ++i)
 		{
 			QWidget* w = spl->widget(i);
-			QSplitter* qw = dynamic_cast<QSplitter*>(w);
+			QSplitter* qw = qobject_cast<QSplitter*>(w);
 			if (qw != nullptr)
 				liste.push_back(qw);
 		}
@@ -610,7 +340,7 @@ void SCHNApps::set_split_view_positions(QString positions)
 		for (int i = 0; i < spl->count(); ++i)
 		{
 			QWidget *w = spl->widget(i);
-			QSplitter* qw = dynamic_cast<QSplitter*>(w);
+			QSplitter* qw = qobject_cast<QSplitter*>(w);
 			if (qw != nullptr)
 				liste.push_back(qw);
 		}
@@ -635,8 +365,231 @@ void SCHNApps::set_split_view_positions(QString positions)
 }
 
 /*********************************************************
+ * MANAGE PLUGINS
+ *********************************************************/
+
+void SCHNApps::register_plugins_directory(const QString& path)
+{
+	QDir directory(QDir::cleanPath(path));
+	if (directory.exists())
+	{
+		QStringList plugin_files = directory.entryList(
+			{ "lib*plugin*.so", "lib*plugin*.dylib", "*plugin*.dll" },
+			QDir::Files
+		);
+
+		for (const QString& plugin_file : plugin_files)
+		{
+			QFileInfo pfi(plugin_file);
+#ifdef WIN32
+			QString plugin_name = pfi.baseName();
+#else
+			QString plugin_name = pfi.baseName().remove(0, 3);
+#endif
+			if (plugin_name.endsWith("_d"))
+				plugin_name = plugin_name.left(plugin_name.size() - 2);
+			if (plugin_name.startsWith("plugin_",  Qt::CaseInsensitive))
+				plugin_name = plugin_name.right(plugin_name.size() - 7);
+
+			QString plugin_file_path = directory.absoluteFilePath(plugin_file);
+
+			if (available_plugins_.count(plugin_name) == 0ul)
+			{
+				available_plugins_.insert(std::make_pair(plugin_name, plugin_file_path));
+				emit(plugin_available_added(plugin_name));
+			}
+			else
+				cgogn_log_info("SCHNApps::register_plugins_directory") << "Plugin \"" <<  plugin_name.toStdString() << "\" already loaded.";
+		}
+	}
+}
+
+Plugin* SCHNApps::enable_plugin(const QString& plugin_name)
+{
+	if (plugins_.count(plugin_name) > 0ul)
+	{
+		cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" already loaded.")).toStdString();
+		return plugins_.at(plugin_name).get();
+	}
+
+	if (available_plugins_.count(plugin_name) > 0ul)
+	{
+		QString plugin_file_path = available_plugins_[plugin_name];
+		QPluginLoader loader(plugin_file_path);
+
+		// if the loader loads a plugin instance
+		if (QObject* plugin_object = loader.instance())
+		{
+			Plugin* plugin = qobject_cast<Plugin*>(plugin_object);
+
+			if (plugin_name != plugin->name())
+				cgogn_log_warning("SCHNApps::enable_plugin") << "plugin name incompatibility: " << plugin_name.toStdString() << " != " << plugin->name().toStdString();
+
+			// set the plugin with correct parameters (filepath, SCHNApps)
+			plugin->set_file_path(plugin_file_path);
+			plugin->set_schnapps(this);
+
+			// then we call its enable() methods
+			if (plugin->enable())
+			{
+				// if it succeeded we reference this plugin
+				plugins_.insert(std::make_pair(plugin_name, std::unique_ptr<Plugin>(plugin)));
+
+				cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" successfully loaded.")).toStdString();
+				emit(plugin_enabled(plugin));
+//				menubar->repaint();
+				return plugin;
+			}
+			else
+			{
+				cgogn_log_info("SCHNApps::enable_plugin") << (plugin_name + QString(" loading failed.")).toStdString();
+				delete plugin;
+				return nullptr;
+			}
+		}
+		else // if loading fails
+		{
+			cgogn_log_warning("SCHNApps::enable_plugin") << "Loader.instance() failed with error \"" << loader.errorString().toStdString() << "\".";
+			return nullptr;
+		}
+	}
+	else
+	{
+		cgogn_log_warning("SCHNApps::enable_plugin") << (plugin_name + QString(" plugin is not available.")).toStdString();
+		return nullptr;
+	}
+}
+
+void SCHNApps::disable_plugin(const QString& plugin_name)
+{
+	if (plugins_.count(plugin_name) > 0ul)
+	{
+		auto plugin = std::move(plugins_.at(plugin_name));
+
+		// unlink linked views (for interaction plugins)
+		PluginInteraction* pi = qobject_cast<PluginInteraction*>(plugin.get());
+		if (pi)
+		{
+			while (!pi->get_linked_views().empty()) // Safe way to iterate over a container that is currently being modified
+				(*pi->get_linked_views().begin())->unlink_plugin(pi);
+		}
+
+		// because plugin_name no more valid after unloading
+		std::string destroyed_name = plugin_name.toStdString();
+
+		// call disable() method and dereference plugin
+		plugin->disable();
+		plugins_.erase(plugin_name);
+
+		QPluginLoader loader(plugin->file_path());
+		loader.unload();
+
+		cgogn_log_info("SCHNApps::disable_plugin") << destroyed_name << " successfully unloaded.";
+		emit(plugin_disabled(plugin.get()));
+	}
+}
+
+Plugin* SCHNApps::plugin(const QString& name) const
+{
+	if (plugins_.count(name) > 0ul)
+		return plugins_.at(name).get();
+	else
+		return nullptr;
+}
+
+void SCHNApps::add_plugin_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text)
+{
+	std::list<QWidget*>& widget_list = plugin_dock_tabs_[plugin];
+	if (plugin && tab_widget && std::find(widget_list.begin(), widget_list.end(), tab_widget) == widget_list.end())
+	{
+		int current_tab = window_->plugin_dock_tab_widget_->currentIndex();
+
+		int idx = window_->plugin_dock_tab_widget_->addTab(tab_widget, tab_text);
+		window_->plugin_dock_->setVisible(true);
+
+		PluginInteraction* pi = qobject_cast<PluginInteraction*>(plugin);
+		if (pi)
+		{
+			if (pi->is_linked_to_view(selected_view_))
+				window_->plugin_dock_tab_widget_->setTabEnabled(idx, true);
+			else
+				window_->plugin_dock_tab_widget_->setTabEnabled(idx, false);
+		}
+
+		if (current_tab != -1)
+			window_->plugin_dock_tab_widget_->setCurrentIndex(current_tab);
+
+		widget_list.push_back(tab_widget);
+	}
+}
+
+void SCHNApps::remove_plugin_dock_tab(Plugin* plugin, QWidget *tab_widget)
+{
+	std::list<QWidget*>& widget_list = plugin_dock_tabs_[plugin];
+	auto widget_it = std::find(widget_list.begin(), widget_list.end(), tab_widget);
+	if (plugin && tab_widget && widget_it != widget_list.end())
+	{
+		window_->plugin_dock_tab_widget_->removeTab(window_->plugin_dock_tab_widget_->indexOf(tab_widget));
+		widget_list.erase(widget_it);
+	}
+}
+
+void SCHNApps::add_control_dock_tab(Plugin* plugin, QWidget* tab_widget, const QString& tab_text)
+{
+	std::list<QWidget*>& widget_list = control_dock_tabs_[plugin];
+	if (plugin && tab_widget && std::find(widget_list.begin(), widget_list.end(), tab_widget) == widget_list.end())
+	{
+		int current_tab = window_->control_dock_tab_widget_->currentIndex();
+
+		window_->control_dock_tab_widget_->addTab(tab_widget, tab_text);
+		window_->control_dock_->setVisible(true);
+
+		if (current_tab != -1)
+			window_->control_dock_tab_widget_->setCurrentIndex(current_tab);
+
+		widget_list.push_back(tab_widget);
+	}
+}
+
+void SCHNApps::remove_control_dock_tab(Plugin* plugin, QWidget* tab_widget)
+{
+	std::list<QWidget*>& widget_list = control_dock_tabs_[plugin];
+	auto widget_it = std::find(widget_list.begin(), widget_list.end(), tab_widget);
+	if (plugin && tab_widget && widget_it != widget_list.end())
+	{
+		window_->control_dock_tab_widget_->removeTab(window_->control_dock_tab_widget_->indexOf(tab_widget));
+		widget_list.erase(widget_it);
+	}
+}
+
+void SCHNApps::enable_plugin_tab_widgets(Plugin* plugin)
+{
+	if (plugin_dock_tabs_.count(plugin) > 0ul)
+	{
+		for (const auto& widget : plugin_dock_tabs_.at(plugin))
+			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(widget), true);
+	}
+}
+
+void SCHNApps::disable_plugin_tab_widgets(Plugin* plugin)
+{
+	if (plugin_dock_tabs_.count(plugin) > 0ul)
+	{
+		for (const auto& widget : plugin_dock_tabs_.at(plugin))
+			window_->plugin_dock_tab_widget_->setTabEnabled(window_->plugin_dock_tab_widget_->indexOf(widget), false);
+	}
+}
+
+/*********************************************************
+ * MANAGE OBJECTS
+ *********************************************************/
+
+
+
+/*********************************************************
  * MANAGE MENU ACTIONS
  *********************************************************/
+
 QAction* SCHNApps::add_menu_action(const QString& menu_path, const QString& action_text)
 {
 	return window_->add_menu_action(menu_path, action_text);
@@ -669,19 +622,6 @@ void SCHNApps::status_bar_message(const QString& msg, int msec)
 void SCHNApps::set_window_size(int w, int h)
 {
 	window_->resize(w, h);
-}
-
-
-/*********************************************************
- * EXPORT SETTINGS
- *********************************************************/
-
-void SCHNApps::export_settings()
-{
-	QString filename = QFileDialog::getSaveFileName(nullptr, "Export", settings_path_, "Settings Files (*.json)");
-	if (! filename.isEmpty())
-		settings_->to_file(filename);
-
 }
 
 } // namespace schnapps

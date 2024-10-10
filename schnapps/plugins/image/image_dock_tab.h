@@ -25,7 +25,7 @@
 #ifndef SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 #define SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_
 
-#include "dll.h"
+#include <schnapps/plugins/image/plugin_image_export.h>
 #include <ui_image.h>
 
 namespace schnapps
@@ -38,7 +38,7 @@ namespace plugin_image
 
 class Plugin_Image;
 
-class Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
+class PLUGIN_IMAGE_EXPORT Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
 {
 	Q_OBJECT
 
@@ -47,6 +47,8 @@ class Image_DockTab : public QWidget, public Ui::ImagePlugin_TabWidget
 public:
 	Image_DockTab(SCHNApps* s, Plugin_Image* p);
 
+private slots:
+	void showContextMenu(const QPoint& point);
 private:
 	SCHNApps* schnapps_;
 	Plugin_Image* plugin_;
@@ -54,6 +56,7 @@ private:
 };
 
 } // namespace schnapps
+
 } // namespace plugin_image
 
 #endif // SCHNAPPS_PLUGIN_IMAGE_IMAGE_DOCK_TAB_H_

@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+find_dependency(schnapps_core REQUIRED)
+
+if(NOT TARGET schnapps::attribute_editor)
+	include("${CMAKE_CURRENT_LIST_DIR}/plugin_attribute_editorTargets.cmake")
+endif()

@@ -24,30 +24,28 @@
 #ifndef SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 #define SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_H_
 
-#include "dll.h"
-#include <schnapps/core/plugin_interaction.h>
+#include <schnapps/plugins/surface_render_vector/plugin_surface_render_vector_export.h>
+#include <schnapps/plugins/surface_render_vector/map_parameters.h>
+
 #include <schnapps/core/types.h>
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-
-#include <surface_render_vector_dock_tab.h>
-
-#include <map_parameters.h>
-
-#include <cgogn/rendering/shaders/shader_vector_per_vertex.h>
-
-#include <QAction>
+#include <schnapps/core/plugin_interaction.h>
 
 namespace schnapps
 {
 
+class View;
+namespace plugin_cmap_provider { class CMap2Handler; }
+
 namespace plugin_surface_render_vector
 {
+
+class SurfaceRenderVector_DockTab;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 /**
 * @brief Plugin that renders vectors on surface vertices
 */
-class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API Plugin_SurfaceRenderVector : public PluginInteraction
+class PLUGIN_SURFACE_RENDER_VECTOR_EXPORT Plugin_SurfaceRenderVector : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -55,11 +53,11 @@ class SCHNAPPS_PLUGIN_SURFACE_RENDER_VECTOR_API Plugin_SurfaceRenderVector : pub
 
 public:
 
-	inline Plugin_SurfaceRenderVector() {}
+	Plugin_SurfaceRenderVector();
+	inline ~Plugin_SurfaceRenderVector() override {}
+	static QString plugin_name();
 
-	~Plugin_SurfaceRenderVector() override {}
-
-	MapParameters& get_parameters(View* view, MapHandlerGen* map);
+	MapParameters& parameters(View* view, CMap2Handler* mh);
 	bool check_docktab_activation();
 
 private:
@@ -67,16 +65,17 @@ private:
 	bool enable() override;
 	void disable() override;
 
-	void draw(View*, const QMatrix4x4& proj, const QMatrix4x4& mv) override {}
-	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
+	inline void draw(View*, const QMatrix4x4&, const QMatrix4x4&) override {}
+	void draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
-	void keyPress(View*, QKeyEvent*) override {}
-	void keyRelease(View*, QKeyEvent*) override {}
-	void mousePress(View*, QMouseEvent*) override {}
-	void mouseRelease(View*, QMouseEvent*) override {}
-	void mouseMove(View*, QMouseEvent*) override {}
-	void wheelEvent(View*, QWheelEvent*) override {}
-	void resizeGL(View*, int, int) override {}
+	inline bool keyPress(View*, QKeyEvent*) override { return true; }
+	inline bool keyRelease(View*, QKeyEvent*) override { return true; }
+	inline bool mousePress(View*, QMouseEvent*) override { return true; }
+	inline bool mouseRelease(View*, QMouseEvent*) override { return true; }
+	inline bool mouseMove(View*, QMouseEvent*) override { return true; }
+	inline bool wheelEvent(View*, QWheelEvent*) override { return true; }
+
+	inline void resizeGL(View*, int, int) override {}
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
@@ -84,13 +83,13 @@ private:
 private slots:
 
 	// slots called from View signals
-	void map_linked(MapHandlerGen* map);
-	void map_unlinked(MapHandlerGen* map);
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
 
 private:
 
-	void add_linked_map(View* view, MapHandlerGen* map);
-	void remove_linked_map(View* view, MapHandlerGen* map);
+	void add_linked_map(View* view, CMap2Handler* mh);
+	void remove_linked_map(View* view, CMap2Handler* mh);
 
 private slots:
 
@@ -101,18 +100,18 @@ private slots:
 
 	void viewer_initialized();
 
-public slots:
+public:
 
-	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void add_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void remove_vector_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_vector_scale_factor(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, float32 sf, bool update_dock_tab);
-	void set_vector_color(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, const QColor& color, bool update_dock_tab);
+	void set_position_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void add_vector_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void remove_vector_vbo(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_vector_scale_factor(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, float32 sf, bool update_dock_tab);
+	void set_vector_color(View* view, CMap2Handler* mh, cgogn::rendering::VBO* vbo, const QColor& color, bool update_dock_tab);
 
 private:
 
 	SurfaceRenderVector_DockTab* dock_tab_;
-	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
+	std::map<View*, std::map<CMap2Handler*, MapParameters>> parameter_set_;
 
 	QString setting_auto_load_position_attribute_;
 };

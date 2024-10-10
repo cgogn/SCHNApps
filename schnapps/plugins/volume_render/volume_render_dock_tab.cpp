@@ -21,15 +21,12 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <volume_render_dock_tab.h>
-#include <volume_render.h>
+#include <schnapps/plugins/volume_render/volume_render_dock_tab.h>
+#include <schnapps/plugins/volume_render/volume_render.h>
 
-#ifdef USE_TRANSPARENCY
-#include <schnapps/plugins/surface_render_transp/surface_render_transp_extern.h>
-#endif
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
 #include <schnapps/core/view.h>
 
 namespace schnapps
@@ -41,10 +38,15 @@ namespace plugin_volume_render
 VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) :
 	schnapps_(s),
 	plugin_(p),
-	current_color_dial_(0),
-	updating_ui_(false)
+	plugin_cmap_provider_(nullptr),
+	selected_map_(nullptr),
+	updating_ui_(false),
+	color_dial_(nullptr),
+	current_color_dial_(0)
 {
 	setupUi(this);
+
+	connect(list_maps, SIGNAL(itemSelectionChanged()), this, SLOT(selected_map_changed()));
 
 	connect(combo_positionVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(position_vbo_changed(int)));
 	connect(check_renderVertices, SIGNAL(toggled(bool)), this, SLOT(render_vertices_changed(bool)));
@@ -52,14 +54,25 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(render_faces_changed(bool)));
 	connect(check_renderTopology, SIGNAL(toggled(bool)), this, SLOT(render_topology_changed(bool)));
 	connect(check_clippingPlane, SIGNAL(toggled(bool)), this, SLOT(apply_clipping_plane_changed(bool)));
+	connect(check_gridClippingPlane, SIGNAL(toggled(bool)), this, SLOT(apply_grid_clipping_plane_changed(bool)));
 	connect(slider_vertexScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(vertex_scale_factor_changed(int)));
 	connect(slider_volumeExplodeFactor, SIGNAL(valueChanged(int)), this, SLOT(volume_explode_factor_changed(int)));
 
+	connect(list_scalarAttribute, SIGNAL(itemSelectionChanged()), this, SLOT(selected_volume_scalar_changed()));
+	connect(combo_colorMap, SIGNAL(currentIndexChanged(int)), this, SLOT(color_map_changed(int)));
 	color_dial_ = new QColorDialog(face_color_, nullptr);
 	connect(vertexColorButton, SIGNAL(clicked()), this, SLOT(vertex_color_clicked()));
 	connect(edgeColorButton, SIGNAL(clicked()), this, SLOT(edge_color_clicked()));
 	connect(faceColorButton, SIGNAL(clicked()), this, SLOT(face_color_clicked()));
 	connect(color_dial_, SIGNAL(accepted()), this, SLOT(color_selected()));
+
+	connect(slider_clippingPlaneI, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_i_changed(int)));
+	connect(slider_clippingPlaneJ, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_j_changed(int)));
+	connect(slider_clippingPlaneK, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_k_changed(int)));
+
+	connect(slider_clippingPlaneI_2, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_i_changed_2(int)));
+	connect(slider_clippingPlaneJ_2, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_j_changed_2(int)));
+	connect(slider_clippingPlaneK_2, SIGNAL(valueChanged(int)), this, SLOT(clipping_plane_k_changed_2(int)));
 
 	check_useTransparency->setChecked(false);
 	slider_transparency->setDisabled(true);
@@ -70,85 +83,125 @@ VolumeRender_DockTab::VolumeRender_DockTab(SCHNApps* s, Plugin_VolumeRender* p) 
 	check_useTransparency->setDisabled(true);
 #endif
 
-	selected_map_ = schnapps_->get_selected_map();
-	if (selected_map_)
-	{
-		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
-		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
-	}
-
 	connect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
-	connect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(selected_map_changed(MapHandlerGen*, MapHandlerGen*)));
+
+	View* v = schnapps_->selected_view();
+	connect(v, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+	connect(v, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	for (Object* o : v->linked_objects())
+		object_linked(o);
+
+	plugin_cmap_provider_ = static_cast<plugin_cmap_provider::Plugin_CMapProvider*>(schnapps_->enable_plugin(plugin_cmap_provider::Plugin_CMapProvider::plugin_name()));
 }
 
 VolumeRender_DockTab::~VolumeRender_DockTab()
 {
-	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(update_ui()));
-	disconnect(schnapps_, SIGNAL(selected_map_changed(MapHandlerGen*, MapHandlerGen*)), this, SLOT(update_ui()));
+	disconnect(schnapps_, SIGNAL(selected_view_changed(View*, View*)), this, SLOT(selected_view_changed(View*, View*)));
 }
 
 /*****************************************************************************/
 // slots called from UI signals
 /*****************************************************************************/
 
-void VolumeRender_DockTab::position_vbo_changed(int index)
+void VolumeRender_DockTab::selected_map_changed()
 {
-	if (!updating_ui_)
+	if (selected_map_)
 	{
-		MapHandlerGen* map = schnapps_->get_selected_map();
-		if (map)
-			plugin_->set_position_vbo(schnapps_->get_selected_view(), map, map->get_vbo(combo_positionVBO->currentText()), false);
+		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
+		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
+
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 	}
+
+	selected_map_ = nullptr;
+
+	QList<QListWidgetItem*> currentItems = list_maps->selectedItems();
+	if (!currentItems.empty())
+	{
+		const QString& map_name = currentItems[0]->text();
+		selected_map_ = plugin_cmap_provider_->cmap3(map_name);
+	}
+
+	if (selected_map_)
+	{
+		connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+
+		connect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)), Qt::UniqueConnection);
+		connect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)), Qt::UniqueConnection);
+	}
+
+	if (plugin_->check_docktab_activation())
+		refresh_ui();
+}
+
+void VolumeRender_DockTab::position_vbo_changed(int)
+{
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_position_vbo(schnapps_->selected_view(), selected_map_, selected_map_->vbo(combo_positionVBO->currentText()), false);
+}
+
+void VolumeRender_DockTab::color_map_changed(int)
+{
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_color_map(schnapps_->selected_view(), selected_map_, combo_colorMap->currentText(), false);
 }
 
 void VolumeRender_DockTab::render_vertices_changed(bool b)
 {
-	if (!updating_ui_)
-		plugin_->set_render_vertices(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_render_vertices(schnapps_->selected_view(), selected_map_, b, false);
 }
 
 void VolumeRender_DockTab::render_edges_changed(bool b)
 {
-	if (!updating_ui_)
-		plugin_->set_render_edges(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_render_edges(schnapps_->selected_view(), selected_map_, b, false);
 }
 
 void VolumeRender_DockTab::render_faces_changed(bool b)
 {
-	if (!updating_ui_)
-		plugin_->set_render_faces(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_render_faces(schnapps_->selected_view(), selected_map_, b, false);
 }
 
 void VolumeRender_DockTab::render_topology_changed(bool b)
 {
-	if (!updating_ui_)
-		plugin_->set_render_topology(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_render_topology(schnapps_->selected_view(), selected_map_, b, false);
 }
 
 void VolumeRender_DockTab::apply_clipping_plane_changed(bool b)
 {
-	if (!updating_ui_)
-		plugin_->set_apply_clipping_plane(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_apply_clipping_plane(schnapps_->selected_view(), selected_map_, b, false);
+}
+
+void VolumeRender_DockTab::apply_grid_clipping_plane_changed(bool b)
+{
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_apply_grid_clipping_plane(schnapps_->selected_view(), selected_map_, b, false);
 }
 
 void VolumeRender_DockTab::vertex_scale_factor_changed(int i)
 {
 	if (!updating_ui_)
-		plugin_->set_vertex_scale_factor(schnapps_->get_selected_view(), schnapps_->get_selected_map(), i / 50.0, false);
+		plugin_->set_vertex_scale_factor(schnapps_->selected_view(), selected_map_, i / 50.0, false);
 }
 
 void VolumeRender_DockTab::volume_explode_factor_changed(int i)
 {
-	if (!updating_ui_)
-		plugin_->set_volume_explode_factor(schnapps_->get_selected_view(), schnapps_->get_selected_map(), i / 100.0, false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_volume_explode_factor(schnapps_->selected_view(), selected_map_, i / 100.0, false);
 }
 
 void VolumeRender_DockTab::transparency_enabled_changed(bool b)
 {
 #ifdef USE_TRANSPARENCY
-	if (!updating_ui_)
+	if (!updating_ui_ && selected_map_)
 	{
-		plugin_->set_transparency_enabled(schnapps_->get_selected_view(), schnapps_->get_selected_map(), b, false);
+		plugin_->set_transparency_enabled(schnapps_->selected_view(), selected_map_, b, false);
 		update_after_use_transparency_changed();
 	}
 #endif
@@ -157,9 +210,101 @@ void VolumeRender_DockTab::transparency_enabled_changed(bool b)
 void VolumeRender_DockTab::transparency_factor_changed(int n)
 {
 #ifdef USE_TRANSPARENCY
-	if (!updating_ui_)
-		plugin_->set_transparency_factor(schnapps_->get_selected_view(), schnapps_->get_selected_map(), n, false);
+	if (!updating_ui_ && selected_map_)
+		plugin_->set_transparency_factor(schnapps_->selected_view(), selected_map_, n, false);
 #endif
+}
+
+void VolumeRender_DockTab::clipping_plane_i_changed(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
+										 i,
+										 slider_clippingPlaneJ->value(),
+										 slider_clippingPlaneK->value(), false);
+		label_clippingPlaneI->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_j_changed(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
+										 slider_clippingPlaneI->value(),
+										 i,
+										 slider_clippingPlaneK->value(), false);
+		label_clippingPlaneJ->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_k_changed(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane(schnapps_->selected_view(), selected_map_,
+										 slider_clippingPlaneI->value(),
+										 slider_clippingPlaneJ->value(),
+										 i, false);
+		label_clippingPlaneK->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_i_changed_2(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
+										  i,
+										  slider_clippingPlaneJ_2->value(),
+										  slider_clippingPlaneK_2->value(), false);
+		label_clippingPlaneI_2->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_j_changed_2(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
+										  slider_clippingPlaneI_2->value(),
+										  i,
+										  slider_clippingPlaneK_2->value(), false);
+		label_clippingPlaneJ_2->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::clipping_plane_k_changed_2(int i)
+{
+	if (!updating_ui_)
+	{
+		plugin_->set_grid_clipping_plane2(schnapps_->selected_view(), selected_map_,
+										  slider_clippingPlaneI_2->value(),
+										  slider_clippingPlaneJ_2->value(),
+										  i, false);
+		label_clippingPlaneK_2->setText(QString::number(i));
+	}
+}
+
+void VolumeRender_DockTab::selected_volume_scalar_changed()
+{
+	QList<QListWidgetItem*> currentItems = list_scalarAttribute->selectedItems();
+	if (currentItems.empty() || currentItems[0]->text() == previousSelection_)
+	{
+		//        if ( item->text().operator==( previousSelection->text() ) ) {
+		//            previousSelection = NULL;
+		list_scalarAttribute->clearSelection();
+		list_scalarAttribute->clearFocus();
+		previousSelection_.clear();
+		plugin_->set_color_per_volume(schnapps_->selected_view(), selected_map_, false, false);
+		//        }
+	}
+	else if (!currentItems.empty())
+	{
+		previousSelection_ = currentItems[0]->text();
+		plugin_->set_volume_attribute(schnapps_->selected_view(), selected_map_, previousSelection_, false);
+	}
 }
 
 void VolumeRender_DockTab::vertex_color_clicked()
@@ -183,33 +328,33 @@ void VolumeRender_DockTab::face_color_clicked()
 	color_dial_->setCurrentColor(face_color_);
 }
 
-
 void VolumeRender_DockTab::color_selected()
 {
 	QColor col = color_dial_->currentColor();
 
-	View* view = schnapps_->get_selected_view();
-	MapHandlerGen* map = schnapps_->get_selected_map();
+	View* view = schnapps_->selected_view();
+	CMap3Handler* mh = selected_map_;
 
 	if (current_color_dial_ == 1)
 	{
 		vertex_color_ = col;
 		vertexColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-		plugin_->set_vertex_color(view, map, vertex_color_, false);
+		plugin_->set_vertex_color(view, mh, vertex_color_, false);
 	}
 
 	if (current_color_dial_ == 2)
 	{
 		edge_color_ = col;
 		edgeColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-		plugin_->set_edge_color(view, map, edge_color_, false);
+		plugin_->set_edge_color(view, mh, edge_color_, false);
 	}
 
 	if (current_color_dial_ == 3)
 	{
 		face_color_ = col;
 		faceColorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
-		plugin_->set_face_color(view, map, edge_color_, false);
+		plugin_->set_face_color(view, mh, face_color_, false);
+		list_scalarAttribute->selectionModel()->clear();
 	}
 }
 
@@ -219,23 +364,73 @@ void VolumeRender_DockTab::color_selected()
 
 void VolumeRender_DockTab::selected_view_changed(View* old, View* cur)
 {
+	updating_ui_ = true;
+	list_maps->clear();
+	updating_ui_ = false;
+
+	if (old)
+	{
+		disconnect(old, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		disconnect(old, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+	}
+	if (cur)
+	{
+		connect(cur, SIGNAL(object_linked(Object*)), this, SLOT(object_linked(Object*)));
+		connect(cur, SIGNAL(object_unlinked(Object*)), this, SLOT(object_unlinked(Object*)));
+		for (Object* o : cur->linked_objects())
+			object_linked(o);
+	}
+
 	if (plugin_->check_docktab_activation())
 		refresh_ui();
 }
 
-void VolumeRender_DockTab::selected_map_changed(MapHandlerGen* old, MapHandlerGen* cur)
+/*****************************************************************************/
+// slots called from View signals
+/*****************************************************************************/
+
+void VolumeRender_DockTab::object_linked(Object* o)
 {
-	if (selected_map_)
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
+	if (mh)
+		map_linked(mh);
+}
+
+void VolumeRender_DockTab::map_linked(CMap3Handler *mh)
+{
+	updating_ui_ = true;
+	list_maps->addItem(mh->name());
+	updating_ui_ = false;
+}
+
+void VolumeRender_DockTab::object_unlinked(Object* o)
+{
+	CMap3Handler* mh = qobject_cast<CMap3Handler*>(o);
+	if (mh)
+		map_unlinked(mh);
+}
+
+void VolumeRender_DockTab::map_unlinked(CMap3Handler *mh)
+{
+	if (selected_map_ == mh)
 	{
 		disconnect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)));
 		disconnect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)));
-	}
-	selected_map_ = cur;
-	connect(selected_map_, SIGNAL(vbo_added(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_added(cgogn::rendering::VBO*)), Qt::UniqueConnection);
-	connect(selected_map_, SIGNAL(vbo_removed(cgogn::rendering::VBO*)), this, SLOT(selected_map_vbo_removed(cgogn::rendering::VBO*)), Qt::UniqueConnection);
+		disconnect(selected_map_, SIGNAL(attribute_added(cgogn::Orbit, QString)), this, SLOT(selected_map_attribute_added(cgogn::Orbit, QString)));
+		disconnect(selected_map_, SIGNAL(attribute_removed(cgogn::Orbit, const QString&)), this, SLOT(selected_map_attribute_removed(cgogn::Orbit, const QString&)));
 
-	if (plugin_->check_docktab_activation())
-		refresh_ui();
+		selected_map_ = nullptr;
+	}
+
+	QList<QListWidgetItem*> items = list_maps->findItems(mh->name(), Qt::MatchExactly);
+	if (!items.empty())
+	{
+		updating_ui_ = true;
+		delete items[0];
+		updating_ui_ = false;
+	}
+
+	list_scalarAttribute->clear();
 }
 
 /*****************************************************************************/
@@ -246,7 +441,11 @@ void VolumeRender_DockTab::selected_map_vbo_added(cgogn::rendering::VBO* vbo)
 {
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
+	{
+		updating_ui_ = true;
 		combo_positionVBO->addItem(vbo_name);
+		updating_ui_ = false;
+	}
 }
 
 void VolumeRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
@@ -254,16 +453,44 @@ void VolumeRender_DockTab::selected_map_vbo_removed(cgogn::rendering::VBO* vbo)
 	const QString vbo_name = QString::fromStdString(vbo->name());
 	if (vbo->vector_dimension() == 3)
 	{
+		updating_ui_ = true;
 		int index = combo_positionVBO->findText(vbo_name);
 		if (index > 0)
 			combo_positionVBO->removeItem(index);
+		updating_ui_ = false;
+	}
+}
+
+void VolumeRender_DockTab::selected_map_attribute_added(cgogn::Orbit o, QString name)
+{
+	updating_ui_ = true;
+	//    if (o == CMap3::Vertex::ORBIT)
+	//           combo_positionAttribute->addItem(name);
+	if (o == CMap3::Volume::ORBIT)
+		list_scalarAttribute->addItem(name);
+	updating_ui_ = false;
+}
+
+void VolumeRender_DockTab::selected_map_attribute_removed(cgogn::Orbit o, const QString& name)
+{
+	/*if (o == CMap2::Vertex::ORBIT)
+	{
+		int index = combo_positionAttribute->findText(name);
+		if (index > 0)
+			combo_positionAttribute->removeItem(index);
+	}
+	else */
+	if (o == CMap3::Volume::ORBIT)
+	{
+		QList<QListWidgetItem*> items = list_scalarAttribute->findItems(name, Qt::MatchExactly);
+		if (!items.empty())
+			delete items[0];
 	}
 }
 
 /*****************************************************************************/
 // methods used to update the UI from the plugin
 /*****************************************************************************/
-
 void VolumeRender_DockTab::set_position_vbo(cgogn::rendering::VBO* vbo)
 {
 	updating_ui_ = true;
@@ -311,6 +538,13 @@ void VolumeRender_DockTab::set_apply_clipping_plane(bool b)
 {
 	updating_ui_ = true;
 	check_clippingPlane->setChecked(b);
+	updating_ui_ = false;
+}
+
+void VolumeRender_DockTab::set_apply_grid_clipping_plane(bool b)
+{
+	updating_ui_ = true;
+	check_gridClippingPlane->setChecked(b);
 	updating_ui_ = false;
 }
 
@@ -367,15 +601,33 @@ void VolumeRender_DockTab::set_transparency_factor(int tf)
 	updating_ui_ = false;
 }
 
+void VolumeRender_DockTab::set_grid_clipping_plane(int x, int y, int z)
+{
+	updating_ui_ = true;
+	slider_clippingPlaneI->setValue(x);
+	slider_clippingPlaneJ->setValue(y);
+	slider_clippingPlaneK->setValue(z);
+	updating_ui_ = false;
+}
+
+void VolumeRender_DockTab::set_grid_clipping_plane2(int x, int y, int z)
+{
+	updating_ui_ = true;
+	slider_clippingPlaneI_2->setValue(x);
+	slider_clippingPlaneJ_2->setValue(y);
+	slider_clippingPlaneK_2->setValue(z);
+	updating_ui_ = false;
+}
+
 void VolumeRender_DockTab::refresh_ui()
 {
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
+	CMap3Handler* mh = selected_map_;
+	View* view = schnapps_->selected_view();
 
-	if (!map || !view)
+	if (!mh || !view)
 		return;
 
-	const MapParameters& p = plugin_->get_parameters(view, map);
+	const MapParameters& p = plugin_->parameters(view, mh);
 
 	updating_ui_ = true;
 
@@ -383,42 +635,92 @@ void VolumeRender_DockTab::refresh_ui()
 	combo_positionVBO->addItem("- select VBO -");
 
 	uint32 i = 1;
-	for (const auto& vbo_it : map->get_vbo_set())
+	mh->foreach_vbo([&] (cgogn::rendering::VBO* vbo)
 	{
-		auto& vbo = vbo_it.second;
 		if (vbo->vector_dimension() == 3)
 		{
 			combo_positionVBO->addItem(QString::fromStdString(vbo->name()));
-			if (vbo.get() == p.get_position_vbo())
+			if (vbo == p.position_vbo())
 				combo_positionVBO->setCurrentIndex(i);
 
 			++i;
 		}
+	});
+
+	list_scalarAttribute->clear();
+	list_scalarAttribute->selectionModel()->clear();
+	uint32 j = 0;
+	const auto& cacF = mh->map()->attribute_container<CMap3::Volume::ORBIT>();
+
+	for (auto* ptr: cacF.chunk_arrays())
+	{
+		if(ptr->nb_components() == 1)
+			list_scalarAttribute->addItem(QString::fromStdString(ptr->name()));
+		++j;
 	}
 
-	check_renderVertices->setChecked(p.get_render_vertices());
-	slider_vertexScaleFactor->setSliderPosition(p.get_vertex_scale_factor() * 50.0);
-	check_renderEdges->setChecked(p.get_render_edges());
-	check_renderFaces->setChecked(p.get_render_faces());
-	slider_volumeExplodeFactor->setValue(std::round(p.get_volume_explode_factor() * 100.0));
-	check_renderTopology->setChecked(p.get_render_topology());
+	combo_colorMap->clear();
+	for(int i=0; i!=cgogn::ColorMapType::NB_COLOR_MAP_TYPES; ++i)
+	{
+		combo_colorMap->addItem(QString::fromStdString(cgogn::color_map_name(cgogn::ColorMapType(i))));
+	}
+	combo_colorMap->setEnabled(true);
 
-	vertex_color_ = p.get_vertex_color();
+	check_renderVertices->setChecked(p.render_vertices());
+	slider_vertexScaleFactor->setSliderPosition(p.vertex_scale_factor() * 50.0);
+	check_renderEdges->setChecked(p.render_edges());
+	check_renderFaces->setChecked(p.render_faces());
+	slider_volumeExplodeFactor->setValue(std::round(p.volume_explode_factor() * 100.0));
+	check_renderTopology->setChecked(p.render_topology());
+
+	vertex_color_ = p.vertex_color();
 	vertexColorButton->setStyleSheet("QPushButton { background-color:" + vertex_color_.name() + " }");
 
-	edge_color_ = p.get_edge_color();
+	edge_color_ = p.edge_color();
 	edgeColorButton->setStyleSheet("QPushButton { background-color:" + edge_color_.name() + " }");
 
-	face_color_ = p.get_face_color();
+	face_color_ = p.face_color();
 	faceColorButton->setStyleSheet("QPushButton { background-color:" + face_color_.name() + " }");
 
 #ifdef USE_TRANSPARENCY
-	check_useTransparency->setChecked(p.get_transparency_enabled());
-	slider_transparency->setValue(p.get_transparency_factor());
-	slider_transparency->setEnabled(p.get_transparency_enabled());
+	check_useTransparency->setChecked(p.transparency_enabled());
+	slider_transparency->setValue(p.transparency_factor());
+	slider_transparency->setEnabled(p.transparency_enabled());
 #endif
 
-	check_clippingPlane->setChecked(p.get_apply_clipping_plane());
+	check_clippingPlane->setChecked(p.apply_clipping_plane());
+	check_gridClippingPlane->setChecked(p.apply_grid_clipping_plane());
+
+
+	slider_clippingPlaneI->setEnabled(true);
+	slider_clippingPlaneI->setRange(0, p.clipping_x_2_);
+	slider_clippingPlaneI->setValue(0);
+	label_clippingPlaneI->setText(QString::number(0));
+
+	slider_clippingPlaneI_2->setEnabled(true);
+	slider_clippingPlaneI_2->setRange(0, p.clipping_x_2_);
+	slider_clippingPlaneI_2->setValue(p.clipping_x_2_);
+	label_clippingPlaneI_2->setText(QString::number(p.clipping_x_2_));
+
+	slider_clippingPlaneJ->setEnabled(true);
+	slider_clippingPlaneJ->setRange(0, p.clipping_y_2_);
+	slider_clippingPlaneJ->setValue(0);
+	label_clippingPlaneJ->setText(QString::number(0));
+
+	slider_clippingPlaneJ_2->setEnabled(true);
+	slider_clippingPlaneJ_2->setRange(0, p.clipping_y_2_);
+	slider_clippingPlaneJ_2->setValue(p.clipping_y_2_);
+	label_clippingPlaneJ_2->setText(QString::number(p.clipping_y_2_));
+
+	slider_clippingPlaneK->setEnabled(true);
+	slider_clippingPlaneK->setRange(0, p.clipping_z_2_);
+	slider_clippingPlaneK->setValue(0);
+	label_clippingPlaneK->setText(QString::number(0));
+
+	slider_clippingPlaneK_2->setEnabled(true);
+	slider_clippingPlaneK_2->setRange(0, p.clipping_z_2_);
+	slider_clippingPlaneK_2->setValue(p.clipping_z_2_);
+	label_clippingPlaneK_2->setText(QString::number(p.clipping_z_2_));
 
 	updating_ui_ = false;
 }
@@ -430,14 +732,14 @@ void VolumeRender_DockTab::refresh_ui()
 void VolumeRender_DockTab::update_after_use_transparency_changed()
 {
 	updating_ui_ = true;
-	MapHandlerGen* map = schnapps_->get_selected_map();
-	View* view = schnapps_->get_selected_view();
+	CMap3Handler* mh = selected_map_;
+	View* view = schnapps_->selected_view();
 
-	const MapParameters& p = plugin_->get_parameters(view, map);
+	const MapParameters& p = plugin_->parameters(view, mh);
 
-	slider_transparency->setEnabled(p.get_transparency_enabled());
-	if (p.get_transparency_enabled())
-		slider_transparency->setValue(p.get_transparency_factor());
+	slider_transparency->setEnabled(p.transparency_enabled());
+	if (p.transparency_enabled())
+		slider_transparency->setValue(p.transparency_factor());
 
 	updating_ui_ = false;
 }

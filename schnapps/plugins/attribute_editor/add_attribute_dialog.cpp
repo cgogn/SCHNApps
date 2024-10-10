@@ -22,12 +22,13 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dll.h>
-#include <add_attribute_dialog.h>
-#include <attribute_editor.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/attribute_editor/add_attribute_dialog.h>
+#include <schnapps/plugins/attribute_editor/attribute_editor.h>
+#include <schnapps/plugins/attribute_editor/attribute_factory.h>
+
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 #include <schnapps/core/schnapps.h>
-#include <attribute_factory.h>
+
 #include <map>
 #include <string>
 
@@ -36,6 +37,8 @@ namespace schnapps
 
 namespace plugin_attribute_editor
 {
+
+using CMapHandlerGen = plugin_cmap_provider::CMapHandlerGen;
 
 AddAttributeDialog::AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p)
 {
@@ -46,15 +49,10 @@ AddAttributeDialog::AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p)
 
 	tableWidget_defaultValue->verticalHeader()->setVisible(false);
 	tableWidget_defaultValue->horizontalHeader()->setVisible(false);
-	schnapps_->foreach_map([&] (MapHandlerGen* mhg)
+	schnapps_->foreach_object([&] (Object* mhg)
 	{
 		map_added(mhg);
 	});
-
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
-	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(add_attribute_validated()));
-	connect(this->type_comboBox,SIGNAL(currentTextChanged(QString)), this, SLOT(data_type_changed(QString)));
 
 // NOTE : not good order.
 //	for (const auto& pair : AttributeFactory<CMap2>::get_instance().get_map())
@@ -86,18 +84,35 @@ AddAttributeDialog::AddAttributeDialog(SCHNApps* s, AttributeEditorPlugin* p)
 	type_comboBox->addItem(QString::fromStdString(cgogn::name_of_type(MAT3D())));
 	type_comboBox->addItem(QString::fromStdString(cgogn::name_of_type(MAT4F())));
 	type_comboBox->addItem(QString::fromStdString(cgogn::name_of_type(MAT4D())));
+
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(map_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(map_removed(Object*)));
+	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(add_attribute_validated()));
+	connect(this->type_comboBox,SIGNAL(currentTextChanged(QString)), this, SLOT(data_type_changed(QString)));
+	connect(this->mapSelectionComboBox, SIGNAL(currentTextChanged(QString)), this, SLOT(selected_map_changed(QString)));
 }
 
-void AddAttributeDialog::map_added(MapHandlerGen* mhg)
+void AddAttributeDialog::map_added(Object* o)
 {
-	if (mhg)
-		mapSelectionComboBox->addItem(mhg->get_name());
+	if (CMapHandlerGen* mhg = dynamic_cast<CMapHandlerGen*>(o))
+		mapSelectionComboBox->addItem(mhg->name());
 }
 
-void AddAttributeDialog::map_removed(MapHandlerGen* mhg)
+void AddAttributeDialog::map_removed(Object* o)
 {
+	if (CMapHandlerGen* mhg = dynamic_cast<CMapHandlerGen*>(o))
+		mapSelectionComboBox->removeItem(this->mapSelectionComboBox->findText(mhg->name()));
+}
+
+void AddAttributeDialog::selected_map_changed(const QString& map)
+{
+	CMapHandlerGen* mhg = plugin_->cmap_provider()->cmap(map);
 	if (mhg)
-		mapSelectionComboBox->removeItem(this->mapSelectionComboBox->findText(mhg->get_name()));
+	{
+		orbit_combobox->clear();
+		for (auto it : available_orbits(mhg))
+			orbit_combobox->addItem(QString::fromStdString(cgogn::orbit_name(it)).split("::").back());
+	}
 }
 
 void AddAttributeDialog::data_type_changed(const QString& data_type)
@@ -131,7 +146,8 @@ void AddAttributeDialog::data_type_changed(const QString& data_type)
 		{cgogn::name_of_type(MAT4D()), 16},
 	};
 
-	tableWidget_defaultValue->clear();
+	tableWidget_defaultValue->clearContents();
+	tableWidget_defaultValue->setRowCount(1);
 
 	auto it = nb_components_map.find(data_type.toStdString());
 	if (it != nb_components_map.end())
@@ -140,26 +156,46 @@ void AddAttributeDialog::data_type_changed(const QString& data_type)
 	} else {
 		tableWidget_defaultValue->setColumnCount(1);
 	}
+	for (int c = 0 ; c < tableWidget_defaultValue->columnCount(); ++c)
+		tableWidget_defaultValue->setItem(0, c, new QTableWidgetItem());
 }
 
 void AddAttributeDialog::add_attribute_validated()
 {
-	MapHandlerGen* mhg = schnapps_->get_map(mapSelectionComboBox->currentText());
+	CMapHandlerGen* mhg = plugin_->cmap_provider()->cmap(mapSelectionComboBox->currentText());
 	QStringList defaut_value_components;
 	for (int c = 0 ; c < this->tableWidget_defaultValue->columnCount(); ++c)
 		defaut_value_components.push_back(this->tableWidget_defaultValue->item(0,c)->text());
 	if (mhg)
 	{
-		if (mhg->dimension() == 2u)
-			AttributeFactory<CMap2>::get_instance().create_attribute(dynamic_cast<CMap2Handler*>(mhg),
+		if (mhg->type()== plugin_cmap_provider::CMapType::CMAP0)
+			AttributeFactory<CMap0>::get_instance().create_attribute(dynamic_cast<plugin_cmap_provider::CMap0Handler*>(mhg),
 												type_comboBox->currentText().toStdString(),
-												cell_type(orbit_combobox->currentText().toStdString()),
+												orbit_from_string(orbit_combobox->currentText()),
 												name_lineEdit->text().toStdString(),
 												defaut_value_components);
-		else
-			AttributeFactory<CMap3>::get_instance().create_attribute(dynamic_cast<CMap3Handler*>(mhg),
+		if (mhg->type()== plugin_cmap_provider::CMapType::CMAP1)
+			AttributeFactory<CMap1>::get_instance().create_attribute(dynamic_cast<plugin_cmap_provider::CMap1Handler*>(mhg),
 												type_comboBox->currentText().toStdString(),
-												cell_type(orbit_combobox->currentText().toStdString()),
+												orbit_from_string(orbit_combobox->currentText()),
+												name_lineEdit->text().toStdString(),
+												defaut_value_components);
+		if (mhg->type()== plugin_cmap_provider::CMapType::CMAP2)
+			AttributeFactory<CMap2>::get_instance().create_attribute(dynamic_cast<plugin_cmap_provider::CMap2Handler*>(mhg),
+												type_comboBox->currentText().toStdString(),
+												orbit_from_string(orbit_combobox->currentText()),
+												name_lineEdit->text().toStdString(),
+												defaut_value_components);
+		if (mhg->type()== plugin_cmap_provider::CMapType::CMAP3)
+			AttributeFactory<CMap3>::get_instance().create_attribute(dynamic_cast<plugin_cmap_provider::CMap3Handler*>(mhg),
+												type_comboBox->currentText().toStdString(),
+												orbit_from_string(orbit_combobox->currentText()),
+												name_lineEdit->text().toStdString(),
+												defaut_value_components);
+		if (mhg->type()== plugin_cmap_provider::CMapType::UNDIRECTED_GRAPH)
+			AttributeFactory<UndirectedGraph>::get_instance().create_attribute(dynamic_cast<plugin_cmap_provider::UndirectedGraphHandler*>(mhg),
+												type_comboBox->currentText().toStdString(),
+												orbit_from_string(orbit_combobox->currentText()),
 												name_lineEdit->text().toStdString(),
 												defaut_value_components);
 	}

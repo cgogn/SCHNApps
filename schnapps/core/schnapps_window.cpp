@@ -26,19 +26,28 @@
 #include <schnapps/core/settings_widget.h>
 #include<QKeyEvent>
 
+#include <schnapps/core/control_dock_plugin_tab.h>
 
 namespace schnapps
 {
+
 /**
  * @brief generate a SCHNApps_window (no need of schnapps_window.h !)
  */
-SCHNAPPS_CORE_API std::unique_ptr<QMainWindow> schnapps_window_factory(const QString& app_path, const QString& settings_path)
+SCHNAPPS_CORE_EXPORT std::unique_ptr<QMainWindow> schnapps_window_factory(
+	const QString& app_path,
+	const QString& settings_path,
+	const QString& init_plugin_name
+)
 {
-	return cgogn::make_unique<SCHNAppsWindow>(app_path, settings_path);
+	return cgogn::make_unique<SCHNAppsWindow>(app_path, settings_path, init_plugin_name);
 }
 
-
-SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_path) :
+SCHNAppsWindow::SCHNAppsWindow(
+	const QString& app_path,
+	const QString& settings_path,
+	const QString& init_plugin_name
+) :
 	QMainWindow()
 {
 	this->setupUi(this);
@@ -55,9 +64,10 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_
 	control_dock_tab_widget_->setLayoutDirection(Qt::LeftToRight);
 	control_dock_tab_widget_->setTabPosition(QTabWidget::North);
 	control_dock_tab_widget_->setMovable(true);
+	control_dock_tab_widget_->setUsesScrollButtons(true);
 
 	addDockWidget(Qt::LeftDockWidgetArea, control_dock_);
-	control_dock_->setVisible(true);
+	control_dock_->setVisible(false);
 	control_dock_->setWidget(control_dock_tab_widget_);
 
 	connect(action_ToggleControlDock, SIGNAL(triggered()), this, SLOT(toggle_control_dock()));
@@ -88,16 +98,44 @@ SCHNAppsWindow::SCHNAppsWindow(const QString& app_path, const QString& settings_
 	connect(action_AboutSCHNApps, SIGNAL(triggered()), this, SLOT(about_SCHNApps()));
 	connect(action_AboutCGoGN, SIGNAL(triggered()), this, SLOT(about_CGoGN()));
 
-	settings_widget_ = cgogn::make_unique<SettingsWidget>();
+	settings_widget_ = cgogn::make_unique<SettingsWidget>(settings_path);
 	connect(action_Settings, SIGNAL(triggered()), settings_widget_.get(), SLOT(display_setting_widget()));
 
-	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, settings_path, this);
-
-	connect(action_Export_settings, SIGNAL(triggered()), schnapps_.get(), SLOT(export_settings()));
+	schnapps_ = cgogn::make_unique<SCHNApps>(app_path, init_plugin_name, this);
 }
 
 SCHNAppsWindow::~SCHNAppsWindow()
-{}
+{
+	schnapps_.reset();
+	settings_widget_.reset();
+}
+
+void SCHNAppsWindow::about_SCHNApps()
+{
+	QString str("SCHNApps:\nS... CGoGN Holder for Nice Applications\n"
+				"Web site: http://cgogn.unistra.fr \n"
+				"Contact information: cgogn@unistra.fr");
+	QMessageBox::about(this, "About SCHNApps", str);
+}
+
+void SCHNAppsWindow::about_CGoGN()
+{
+	QString str("CGoGN:\nCombinatorial and Geometric modeling\n"
+				"with Generic N-dimensional Maps\n"
+				"Web site: http://cgogn.unistra.fr \n"
+				"Contact information: cgogn@unistra.fr");
+	QMessageBox::about(this, "About CGoGN", str);
+}
+
+void SCHNAppsWindow::toggle_control_dock()
+{
+	control_dock_->setVisible(control_dock_->isHidden());
+}
+
+void SCHNAppsWindow::toggle_plugin_dock()
+{
+	plugin_dock_->setVisible(plugin_dock_->isHidden());
+}
 
 QAction* SCHNAppsWindow::add_menu_action(const QString& menu_path, const QString& action_text)
 {
@@ -106,8 +144,7 @@ QAction* SCHNAppsWindow::add_menu_action(const QString& menu_path, const QString
 	if (!menu_path.isEmpty())
 	{
 		// extracting all the substring separated by ';'
-		QStringList step_names = menu_path.split(";");
-		step_names.removeAll("");
+		QStringList step_names = menu_path.split(";", QString::SkipEmptyParts);
 		unsigned int nb_steps = step_names.count();
 
 		// if only one substring: error + failure
@@ -177,11 +214,12 @@ void SCHNAppsWindow::remove_menu_action(QAction* action)
 	// which is an instance of QMenu if the action was created
 	// using the add_menu_action() method
 	QObject* parent = action->parent();
+	qobject_cast<QMenu*>(parent)->removeAction(action);
 	delete action;
 
 	while(parent != nullptr)
 	{
-		QMenu* parent_menu = dynamic_cast<QMenu*>(parent);
+		QMenu* parent_menu = qobject_cast<QMenu*>(parent);
 		if (parent_menu && parent_menu->actions().empty())
 		{
 			parent = parent->parent();

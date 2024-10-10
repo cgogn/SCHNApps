@@ -22,24 +22,24 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
-#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
+#ifndef SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H_
+#define SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H_
 
-#include <dll.h>
+#include <schnapps/plugins/extract_surface/plugin_extract_surface_export.h>
 #include <ui_extract_dialog.h>
 
 namespace schnapps
 {
 
 class SCHNApps;
-class MapHandlerGen;
+class Object;
 
 namespace plugin_extract_surface
 {
 
 class Plugin_ExtractSurface;
 
-class SCHNAPPS_PLUGIN_EXTRACT_SURFACE_API ExtractDialog : public QDialog, public Ui::ExtractSurface
+class PLUGIN_EXTRACT_SURFACE_EXPORT ExtractDialog : public QDialog, public Ui::ExtractSurface
 {
 	Q_OBJECT
 	friend class Plugin_ExtractSurface;
@@ -48,17 +48,18 @@ public:
 	ExtractDialog(SCHNApps* s, Plugin_ExtractSurface* p);
 
 private slots:
-	void map_added(MapHandlerGen*);
-	void map_removed(MapHandlerGen*);
+	void map_added(Object*);
+	void map_removed(Object*);
 	void selected_map_changed(const QString&);
 	void extract_validated();
 private:
 	SCHNApps* schnapps_;
 	Plugin_ExtractSurface* plugin_;
+
 	bool updating_ui_;
 };
 
 } // namespace plugin_extract_surface
 } // namespace schnapps
 
-#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H
+#endif // SCHNAPPS_PLUGIN_EXTRACT_SURFACE_EXTRACT_DIALOG_H_

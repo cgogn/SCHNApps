@@ -24,20 +24,24 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_MAP_PARAMETERS_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_MAP_PARAMETERS_H_
 
-#include "dll.h"
+#include <schnapps/plugins/volume_render/plugin_volume_render_export.h>
+
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
 
 #include <schnapps/core/types.h>
-#include <schnapps/core/map_handler.h>
 
 #include <cgogn/rendering/shaders/shader_flat.h>
 #include <cgogn/rendering/shaders/shader_simple_color.h>
 #include <cgogn/rendering/shaders/shader_point_sprite.h>
 #include <cgogn/rendering/volume_drawer.h>
+#include <cgogn/rendering/hexagrid_drawer.h>
 #include <cgogn/rendering/frame_manipulator.h>
 #include <cgogn/rendering/topo_drawer.h>
 #ifdef USE_TRANSPARENCY
 #include <cgogn/rendering/transparency_volume_drawer.h>
 #endif
+
+#include <cgogn/core/utils/color_maps.h>
 
 namespace schnapps
 {
@@ -46,12 +50,14 @@ namespace plugin_volume_render
 {
 
 class Plugin_VolumeRender;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
-struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
+struct PLUGIN_VOLUME_RENDER_EXPORT MapParameters
 {
 	friend class Plugin_VolumeRender;
 
 	MapParameters() :
+		mh_(nullptr),
 	#ifdef USE_TRANSPARENCY
 		volume_transparency_drawer_(nullptr),
 		volume_transparency_drawer_rend_(nullptr),
@@ -61,7 +67,9 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		render_edges_(false),
 		render_faces_(true),
 		render_topology_(false),
+        render_color_per_volumes_(false),
 		apply_clipping_plane_(false),
+		apply_grid_clipping_plane_(false),
 		clipping_plane_initialized_(false),
 		vertex_color_(190, 85, 168),
 		edge_color_(0, 0, 0),
@@ -70,37 +78,83 @@ struct SCHNAPPS_PLUGIN_VOLUME_RENDER_API MapParameters
 		vertex_base_size_(1),
 		volume_explode_factor_(0.8f),
 		use_transparency_(false),
-		transparency_factor_(127)
+        transparency_factor_(127),
+        color_map_(cgogn::ColorMapType::INFERNO)
 	{
 		initialize_gl();
 	}
 
 	CGOGN_NOT_COPYABLE_NOR_MOVABLE(MapParameters);
 
-	inline cgogn::rendering::VBO* get_position_vbo() const { return position_vbo_; }
-	inline bool get_render_vertices() const { return render_vertices_; }
-	inline bool get_render_edges() const { return render_edges_; }
-	inline bool get_render_faces() const { return render_faces_; }
-	inline bool get_render_topology() const { return render_topology_; }
-	inline bool get_apply_clipping_plane() const { return apply_clipping_plane_; }
-	inline const QColor& get_vertex_color() const { return vertex_color_; }
-	inline const QColor& get_edge_color() const { return edge_color_; }
-	inline const QColor& get_face_color() const { return face_color_; }
-	inline float32 get_vertex_base_size() const { return vertex_base_size_; }
-	inline float32 get_vertex_scale_factor() const { return vertex_scale_factor_; }
-	inline float32 get_volume_explode_factor() const { return volume_explode_factor_; }
-	inline bool get_transparency_enabled() const { return use_transparency_; }
-	inline int32 get_transparency_factor() const { return transparency_factor_; }
+	inline cgogn::rendering::VBO* position_vbo() const { return position_vbo_; }
+	inline bool render_vertices() const { return render_vertices_; }
+	inline bool render_edges() const { return render_edges_; }
+	inline bool render_faces() const { return render_faces_; }
+	inline bool render_topology() const { return render_topology_; }
+    inline bool render_color_per_volume() const { return render_color_per_volumes_; }
+	inline bool apply_clipping_plane() const { return apply_clipping_plane_; }
+	inline bool apply_grid_clipping_plane() const { return apply_grid_clipping_plane_; }
+	inline const QColor& vertex_color() const { return vertex_color_; }
+	inline const QColor& edge_color() const { return edge_color_; }
+	inline const QColor& face_color() const { return face_color_; }
+	inline float32 vertex_base_size() const { return vertex_base_size_; }
+	inline float32 vertex_scale_factor() const { return vertex_scale_factor_; }
+	inline float32 volume_explode_factor() const { return volume_explode_factor_; }
+	inline bool transparency_enabled() const { return use_transparency_; }
+	inline int32 transparency_factor() const { return transparency_factor_; }
 
 #ifdef USE_TRANSPARENCY
-	inline cgogn::rendering::VolumeTransparencyDrawer::Renderer* get_transp_drawer_rend()
+	inline cgogn::rendering::VolumeTransparencyDrawer::Renderer* transp_drawer_rend()
 	{
 		return volume_transparency_drawer_rend_.get();
 	}
 #endif
 
-private:
+	void init_topo_clipping()
+	{
+		clipping_x_ = 0;
+		clipping_y_ = 0;
+		clipping_z_ = 0;
 
+		auto i_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("i");
+		auto j_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("j");
+		auto k_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("k");
+
+		uint32 mx;
+
+		if(i_.is_valid())
+		{
+			mx = std::numeric_limits<uint32>::lowest();
+			for(auto el : i_)
+				mx = std::max(mx, el);
+			clipping_x_2_ = mx;
+		}
+		else
+			clipping_x_2_ = 0;
+
+		if(j_.is_valid())
+		{
+			mx = std::numeric_limits<uint32>::lowest();
+			for(auto el : j_)
+				mx = std::max(mx, el);
+			clipping_y_2_ = mx;
+		}
+		else
+			clipping_y_2_ = 0;
+
+		if(k_.is_valid())
+		{
+			mx = std::numeric_limits<uint32>::lowest();
+			for(auto el : k_)
+				mx = std::max(mx, el);
+			clipping_z_2_ = mx;
+
+		}
+		else
+			clipping_z_2_ = 0;
+	}
+
+private:
 	void set_position_vbo(cgogn::rendering::VBO* v)
 	{
 		position_vbo_ = v;
@@ -109,7 +163,11 @@ private:
 			shader_simple_color_param_->set_position_vbo(position_vbo_);
 			shader_point_sprite_param_->set_position_vbo(position_vbo_);
 			update_volume_drawer();
-			update_topo_drawer();
+            if(render_topology_)
+                update_topo_drawer();
+
+			if(apply_grid_clipping_plane_)
+				update_hexa_drawer();
 		}
 		else
 			position_vbo_ = nullptr;
@@ -127,6 +185,11 @@ private:
 		if (render_topology_)
 			update_topo_drawer();
 	}
+
+    void set_render_color_per_volume(bool b)
+    {
+        render_color_per_volumes_ = b;
+    }
 
 	void set_vertex_color(const QColor& c)
 	{
@@ -151,6 +214,18 @@ private:
 #endif
 	}
 
+    void set_color_map(const QString& color_map)
+    {
+        bool recompute = false;
+        if(QString::fromStdString(cgogn::color_map_name(color_map_)) != color_map)
+            recompute = true;
+        color_map_ = cgogn::color_map_type(color_map.toStdString());
+        render_color_per_volumes_ = true;
+
+        if(recompute)
+            update_volume_color_attribute(true);
+    }
+
 	void set_vertex_base_size(float32 bs)
 	{
 		vertex_base_size_ = bs;
@@ -167,12 +242,18 @@ private:
 	{
 		volume_explode_factor_ = vef;
 		volume_drawer_rend_->set_explode_volume(vef);
+        volume_drawer_color_rend_->set_explode_volume(vef);
+
 #ifdef USE_TRANSPARENCY
 		volume_transparency_drawer_rend_->set_explode_volume(vef);
 #endif
 		topo_drawer_->set_explode_volume(vef);
 		if (render_topology_)
 			update_topo_drawer();
+
+		hexa_drawer_rend_->set_explode_volume(volume_explode_factor_);
+		if(apply_grid_clipping_plane_)
+			update_hexa_drawer();
 	}
 
 	void set_transparency_enabled(bool b)
@@ -211,10 +292,12 @@ private:
 		else
 		{
 			volume_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
-			topo_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
+            volume_drawer_color_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
+            topo_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 #ifdef USE_TRANSPARENCY
 			volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 #endif
+			hexa_drawer_rend_->set_clipping_plane(QVector4D(0, 0, 0, 0));
 		}
 	}
 
@@ -223,8 +306,8 @@ private:
 		if (!clipping_plane_initialized_)
 		{
 			clipping_plane_initialized_ = true;
-			frame_manip_->set_size(map_->get_bb_diagonal_size() / 12.0f);
-			frame_manip_->set_position(map_->get_bb().max());
+			frame_manip_->set_size(mh_->bb_diagonal_size() / 12.0f);
+			frame_manip_->set_position(mh_->bb().max());
 			frame_manip_->z_plane_param(QColor(200, 200, 200), 0.0f, 0.0f, 3.0f);
 		}
 
@@ -235,17 +318,44 @@ private:
 		float32 d = -(position.dot(z_axis));
 
 		volume_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
-		topo_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
+        volume_drawer_color_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
+        topo_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
 #ifdef USE_TRANSPARENCY
 		volume_transparency_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
 #endif
+		hexa_drawer_rend_->set_clipping_plane(QVector4D(z_axis[0], z_axis[1], z_axis[2], d));
 	}
 
-	void update_topo_drawer()
+	void set_apply_grid_clipping_plane(bool b)
+	{
+		apply_grid_clipping_plane_ = b;
+		if(apply_grid_clipping_plane_)
+			update_hexa_drawer();
+	}
+
+	void set_clipping_plane(int x, int y, int z)
+	{
+		clipping_x_ = x;
+		clipping_y_ = y;
+		clipping_z_ = z;
+
+		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_, clipping_y_, clipping_z_));
+	}
+
+	void set_clipping_plane2(int x, int y, int z)
+	{
+		clipping_x_2_ = x;
+		clipping_y_2_ = y;
+		clipping_z_2_ = z;
+
+		hexa_drawer_rend_->set_clipping_plane_topo2(QVector3D(clipping_x_2_, clipping_y_2_, clipping_z_2_));
+	}
+
+	void update_hexa_drawer()
 	{
 		if (position_vbo_)
 		{
-			const CMap3::VertexAttribute<VEC3>& pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
 			if (!pos_attr.is_valid())
 			{
 				cgogn_log_warning("plugin_volume_render|MapParameters::update_topo_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
@@ -253,7 +363,41 @@ private:
 				return;
 			}
 
-			topo_drawer_->update<VEC3>(*map_->get_map(), pos_attr);
+			auto i_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("i");
+			auto j_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("j");
+			auto k_ = mh_->map()->get_attribute<uint32, CMap3::Volume>("k");
+
+			if(volume_attribute_.isEmpty())
+			{
+				qreal r, g, b;
+				face_color_.getRgbF(&r, &g, &b);
+				cgogn::rendering::FakeAttribute<CMap3::Volume::ORBIT, VEC3> fake_color(VEC3(r, g, b));
+				hexa_drawer_->update_face(*mh_->map(),pos_attr, fake_color, i_, j_, k_);
+				hexa_drawer_->update_edge(*mh_->map(),pos_attr,i_, j_, k_);
+			}
+			else
+			{
+				QString color_attribute = volume_attribute_ + "_color";
+				const CMap3::VolumeAttribute<VEC3>& color_attr = mh_->map()->get_attribute<VEC3, CMap3::Volume::ORBIT>(color_attribute.toStdString());
+				hexa_drawer_->update_face(*mh_->map(), pos_attr, color_attr, i_, j_, k_);
+				hexa_drawer_->update_edge(*mh_->map(), pos_attr, i_, j_, k_);
+			}
+		}
+	}
+
+	void update_topo_drawer()
+	{
+		if (position_vbo_)
+		{
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
+			if (!pos_attr.is_valid())
+			{
+				cgogn_log_warning("plugin_volume_render|MapParameters::update_topo_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
+				position_vbo_ = nullptr;
+				return;
+			}
+
+			topo_drawer_->update(*mh_->map(), pos_attr);
 		}
 	}
 
@@ -261,20 +405,345 @@ private:
 	{
 		if (position_vbo_)
 		{
-			const CMap3::VertexAttribute<VEC3>& pos_attr = map_->get_attribute<VEC3, CMap3::Vertex::ORBIT>(QString::fromStdString(position_vbo_->name()));
+			const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
 			if (!pos_attr.is_valid())
 			{
 				cgogn_log_warning("plugin_volume_render|MapParameters::update_volume_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
 				position_vbo_ = nullptr;
 				return;
 			}
-			volume_drawer_->update_edge<VEC3>(*map_->get_map(), pos_attr);
-			volume_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
+
+            if(mh_->filtered())
+            {
+                volume_drawer_->update_edge(*mh_->map(), *mh_->filter(), pos_attr);
+                volume_drawer_->update_face(*mh_->map(), *mh_->filter(), pos_attr);
+            }
+            else
+            {
+				volume_drawer_->update_edge(*mh_->map(), pos_attr);
+				volume_drawer_->update_face(*mh_->map(), pos_attr);
+            }
+
 #ifdef USE_TRANSPARENCY
-			volume_transparency_drawer_->update_face<VEC3>(*map_->get_map(), pos_attr);
+			volume_transparency_drawer_->update_face(*mh_->map(), pos_attr);
 #endif
 		}
 	}
+
+    void update_volume_color_drawer()
+    {
+        if(position_vbo_ && !volume_attribute_.isEmpty())
+        {
+            QString color_attribute = volume_attribute_ + "_color";
+
+            const CMap3::VertexAttribute<VEC3>& pos_attr = mh_->map()->get_attribute<VEC3, CMap3::Vertex::ORBIT>(position_vbo_->name());
+            const CMap3::VolumeAttribute<VEC3>& color_attr = mh_->map()->get_attribute<VEC3, CMap3::Volume::ORBIT>(color_attribute.toStdString());
+
+            if (!pos_attr.is_valid())
+            {
+                cgogn_log_warning("plugin_volume_render|MapParameters::update_volume_drawer") << "The attribute \"" << position_vbo_->name() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
+                position_vbo_ = nullptr;
+                return;
+            }
+
+            if (!color_attr.is_valid())
+            {
+                cgogn_log_warning("plugin_volume_render|MapParameters::update_volume_drawer") << "The attribute \"" << color_attribute.toStdString() << "\" is not valid. Its data should be of type " << cgogn::name_of_type(VEC3()) << ".";
+                position_vbo_ = nullptr;
+                return;
+            }
+
+
+			if(apply_grid_clipping_plane_)
+			{
+				update_hexa_drawer();
+			}
+			else
+			{
+				if(mh_->filtered())
+				{
+					//volume_drawer_color_->update_edge(*mh_->map(), *mh_->filter(), pos_attr);
+					volume_drawer_color_->update_face(*mh_->map(), *mh_->filter(), pos_attr, color_attr);
+				}
+				else
+				{
+					//volume_drawer_color_->update_edge(*mh_->map(), pos_attr);
+					volume_drawer_color_->update_face(*mh_->map(), pos_attr, color_attr);
+				}
+			}
+        }
+    }
+
+    void set_volume_attribute(const QString& attribute)
+    {
+        bool recompute = false;
+        if(volume_attribute_ != attribute)
+            recompute = true;
+
+        volume_attribute_ = attribute;
+        render_color_per_volumes_ = true;
+
+        if(recompute)
+            update_volume_color_attribute(true);
+    }
+
+    void update_volume_color_attribute(bool normalize)
+    {
+        QString color_attribute = volume_attribute_ + "_color";
+
+        auto color_attr = mh_->map()->get_attribute<VEC3, CMap3::Volume::ORBIT>(color_attribute.toStdString());
+
+        if(!color_attr.is_valid())
+            color_attr = mh_->map()->add_attribute<VEC3, CMap3::Volume::ORBIT>(color_attribute.toStdString());
+
+        //auto is_enabled = mh_->map()->get_attribute<bool, CMap3::Volume::ORBIT>("enabled");
+
+        const auto vaf32 = mh_->map()->get_attribute<float32, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
+        if(vaf32.is_valid())
+        {
+            float32 min_z = std::numeric_limits<float32>::max();
+            float32 max_z = std::numeric_limits<float32>::lowest();
+
+            if(normalize)
+                for(uint32 i = 0 ; i < vaf32.size() ; ++i)
+                {
+                    //if(is_enabled[i])
+                        if(vaf32[i] < min_z)
+                            min_z = vaf32[i];
+                        if(vaf32[i] > max_z)
+                            max_z = vaf32[i];
+                }
+            else
+            {
+                min_z = 0;
+                max_z = -1;
+            }
+
+            float32 denom = (max_z - min_z);
+            denom = (denom == 0.f) ? 1 : denom;
+
+            for(uint32 i = 0 ; i < vaf32.size() ; ++i)
+            {
+                //if(is_enabled[i])
+                {
+                    float32 val = vaf32[i];
+
+                    float32 r, g, b;
+                    if(std::isnan(val))
+                        cgogn::color_map(color_map_, 0.f, r, g, b);
+                    else
+                        cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
+
+                    color_attr[i] = VEC3(r, g, b);
+                }
+            }
+
+            update_volume_color_drawer();
+        }
+
+        const auto vaf64 = mh_->map()->get_attribute<float64, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
+        if(vaf64.is_valid())
+        {
+            float64 min_z = std::numeric_limits<float64>::max();
+            float64 max_z = std::numeric_limits<float64>::lowest();
+
+            if(normalize)
+                for(uint32 i = 0 ; i < vaf64.size() ; ++i)
+                {
+                    if(vaf64[i] < min_z)
+                        min_z = vaf64[i];
+                    if(vaf64[i] > max_z)
+                        max_z = vaf64[i];
+                }
+            else
+            {
+                min_z = 0;
+                max_z = -1;
+            }
+
+            float64 denom = (max_z - min_z);
+            denom = (denom <= 0.) ? 1 : denom;
+
+            for(uint32 i = 0 ; i < vaf64.size() ; ++i)
+            {
+                float64 val = vaf64[i];
+
+                float64 r, g, b;
+                if(std::isnan(val))
+                    cgogn::color_map(color_map_, 0., r, g, b);
+                else
+                    cgogn::color_map(color_map_, float64((-min_z + val) / denom), r, g, b);
+
+                color_attr[i] = VEC3(r, g, b);
+            }
+
+            update_volume_color_drawer();
+        }
+
+        const auto vai32 = mh_->map()->get_attribute<int32, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
+        if(vai32.is_valid())
+        {
+            int32 min_z = std::numeric_limits<int32>::max();
+            int32 max_z = std::numeric_limits<int32>::lowest();
+
+            if(normalize)
+                for(uint32 i = 0 ; i < vai32.size() ; ++i)
+                {
+                    //if(is_enabled[i])
+                    {
+                        if(vai32[i] < min_z)
+                            min_z = vai32[i];
+                        if(vai32[i] > max_z)
+                            max_z = vai32[i];
+                    }
+                }
+            else
+            {
+                min_z = 0;
+                max_z = -1;
+            }
+
+            float32 denom = (max_z - min_z);
+            denom = (denom == 0.f) ? 1 : denom;
+
+            for(uint32 i = 0 ; i < vai32.size() ; ++i)
+            {
+                //if(is_enabled[i])
+                {
+                    float32 val = vai32[i];
+
+                    float32 r, g, b;
+                    if(std::isnan(val))
+                        cgogn::color_map(color_map_, 0.f, r, g, b);
+                    else
+                        cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
+
+                    color_attr[i] = VEC3(r, g, b);
+                }
+            }
+
+            update_volume_color_drawer();
+        }
+
+        const auto vaui32 = mh_->map()->get_attribute<uint32, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
+        if(vaui32.is_valid())
+        {
+            float32 min_z = std::numeric_limits<float32>::max();
+            float32 max_z = std::numeric_limits<float32>::lowest();
+
+            if(normalize)
+                for(uint32 i = 0 ; i < vaui32.size() ; ++i)
+                {
+                    //if(is_enabled[i])
+                    {
+                        if(vaui32[i] < min_z)
+                            min_z = vaui32[i];
+                        if(vaui32[i] > max_z)
+                            max_z = vaui32[i];
+                    }
+                }
+            else
+            {
+                min_z = 0;
+                max_z = -1;
+            }
+
+            float32 denom = (max_z - min_z);
+            denom = (denom == 0.f) ? 1 : denom;
+
+            for(uint32 i = 0 ; i < vaui32.size() ; ++i)
+            {
+                //if(is_enabled[i])
+                {
+                    float32 val = vaui32[i];
+
+                    float32 r, g, b;
+                    if(std::isnan(val))
+                        cgogn::color_map(color_map_, 0.f, r, g, b);
+                    else
+                        cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
+
+                    //std::cout << vaui64[i] <<  " :(" << r << "," << g << "," << b << ")" << std::endl;
+
+                    color_attr[i] = VEC3(r, g, b);
+                }
+            }
+
+            update_volume_color_drawer();
+        }
+
+        const auto vaui64 = mh_->map()->get_attribute<uint64, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
+        if(vaui64.is_valid())
+        {
+            float32 min_z = std::numeric_limits<float32>::max();
+            float32 max_z = std::numeric_limits<float32>::lowest();
+
+            if(normalize)
+                for(uint32 i = 0 ; i < vaui64.size() ; ++i)
+                {
+                    //if(is_enabled[i])
+                    {
+                        if(vaui64[i] < min_z)
+                            min_z = vaui64[i];
+                        if(vaui64[i] > max_z)
+                            max_z = vaui64[i];
+                    }
+                }
+            else
+            {
+                min_z = 0;
+                max_z = -1;
+            }
+
+            float32 denom = (max_z - min_z);
+            denom = (denom == 0.f) ? 1 : denom;
+
+            for(uint32 i = 0 ; i < vaui64.size() ; ++i)
+            {
+                //if(is_enabled[i])
+                {
+                    float32 val = vaui64[i];
+
+                    float32 r, g, b;
+                    if(std::isnan(val))
+                        cgogn::color_map(color_map_, 0.f, r, g, b);
+                    else
+                        cgogn::color_map(color_map_, float32((-min_z + val) / denom), r, g, b);
+
+                    //std::cout << vaui64[i] <<  " :(" << r << "," << g << "," << b << ")" << std::endl;
+
+                    color_attr[i] = VEC3(r, g, b);
+                }
+            }
+
+            update_volume_color_drawer();
+        }
+
+
+        const auto vabool = mh_->map()->get_attribute<bool, CMap3::Volume::ORBIT>(volume_attribute_.toStdString());
+        if(vabool.is_valid())
+        {
+            for(uint32 i = 0 ; i < vabool.size() ; ++i)
+            {
+//                if(is_enabled[i])
+//                {
+                    float32 val = 0.f;
+                    if(vabool[i])
+                        val=1.f;
+
+                    float32 r, g, b;
+                    if(std::isnan(val))
+                        cgogn::color_map(color_map_, 0.f, r, g, b);
+                    else
+                        cgogn::color_map(color_map_, val, r, g, b);
+
+                    color_attr[i] = VEC3(r, g, b);
+//                }
+            }
+
+            update_volume_color_drawer();
+        }
+    }
 
 	void initialize_gl()
 	{
@@ -288,6 +757,9 @@ private:
 		volume_drawer_ = cgogn::make_unique<cgogn::rendering::VolumeDrawer>();
 		volume_drawer_rend_ = volume_drawer_->generate_renderer();
 
+        volume_drawer_color_ = cgogn::make_unique<cgogn::rendering::VolumeDrawerColor>();
+        volume_drawer_color_rend_ = volume_drawer_color_->generate_renderer();
+
 		topo_drawer_ =  cgogn::make_unique<cgogn::rendering::TopoDrawer>();
 		topo_drawer_rend_ = topo_drawer_->generate_renderer();
 
@@ -300,6 +772,13 @@ private:
 
 		frame_manip_ = cgogn::make_unique<cgogn::rendering::FrameManipulator>();
 
+		hexa_drawer_ = cgogn::make_unique<cgogn::rendering::HexaGridDrawer>();
+		hexa_drawer_rend_ = hexa_drawer_->generate_renderer();
+
+		hexa_drawer_rend_->set_explode_volume(volume_explode_factor_);
+		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_, clipping_y_, clipping_z_));
+		hexa_drawer_rend_->set_clipping_plane_topo(QVector3D(clipping_x_2_, clipping_y_2_, clipping_z_2_));
+
 		set_position_vbo(position_vbo_);
 		set_vertex_color(vertex_color_);
 		set_edge_color(edge_color_);
@@ -310,7 +789,8 @@ private:
 		set_transparency_factor(transparency_factor_);
 	}
 
-	MapHandler<CMap3>* map_;
+public:
+	CMap3Handler* mh_;
 
 	std::unique_ptr<cgogn::rendering::ShaderSimpleColor::Param>	shader_simple_color_param_;
 	std::unique_ptr<cgogn::rendering::ShaderPointSprite::Param>	shader_point_sprite_param_;
@@ -322,17 +802,25 @@ private:
 	std::unique_ptr<cgogn::rendering::VolumeDrawer> volume_drawer_;
 	std::unique_ptr<cgogn::rendering::VolumeDrawer::Renderer> volume_drawer_rend_;
 
-	std::unique_ptr<cgogn::rendering::TopoDrawer> topo_drawer_;
+    std::unique_ptr<cgogn::rendering::TopoDrawer> topo_drawer_;
 	std::unique_ptr<cgogn::rendering::TopoDrawer::Renderer> topo_drawer_rend_;
 
 	std::unique_ptr<cgogn::rendering::FrameManipulator> frame_manip_;
+
+    std::unique_ptr<cgogn::rendering::VolumeDrawerColor> volume_drawer_color_;
+    std::unique_ptr<cgogn::rendering::VolumeDrawerColor::Renderer> volume_drawer_color_rend_;
+
+	std::unique_ptr<cgogn::rendering::HexaGridDrawer> hexa_drawer_;
+	std::unique_ptr<cgogn::rendering::HexaGridDrawer::Renderer> hexa_drawer_rend_;
 
 	cgogn::rendering::VBO* position_vbo_;
 	bool render_vertices_;
 	bool render_edges_;
 	bool render_faces_;
 	bool render_topology_;
+    bool render_color_per_volumes_;
 	bool apply_clipping_plane_;
+	bool apply_grid_clipping_plane_;
 	bool clipping_plane_initialized_;
 	QColor vertex_color_;
 	QColor edge_color_;
@@ -342,6 +830,17 @@ private:
 	float32 volume_explode_factor_;
 	bool use_transparency_;
 	int32 transparency_factor_;
+
+	int32 clipping_x_;
+	int32 clipping_y_;
+	int32 clipping_z_;
+
+	int32 clipping_x_2_;
+	int32 clipping_y_2_;
+	int32 clipping_z_2_;
+
+    QString volume_attribute_;
+    cgogn::ColorMapType color_map_;
 };
 
 } // namespace plugin_volume_render

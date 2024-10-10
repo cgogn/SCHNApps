@@ -24,15 +24,11 @@
 #ifndef SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
 #define SCHNAPPS_PLUGIN_VOLUME_RENDER_H_
 
-#include "dll.h"
-#include <schnapps/core/plugin_interaction.h>
+#include <schnapps/plugins/volume_render/plugin_volume_render_export.h>
+#include <schnapps/plugins/volume_render/map_parameters.h>
+
 #include <schnapps/core/types.h>
-#include <schnapps/core/schnapps.h>
-#include <schnapps/core/map_handler.h>
-
-#include <volume_render_dock_tab.h>
-
-#include <map_parameters.h>
+#include <schnapps/core/plugin_interaction.h>
 
 #include <QAction>
 #include <map>
@@ -40,13 +36,23 @@
 namespace schnapps
 {
 
+class View;
+namespace plugin_cmap_provider { class CMap3Handler; }
+
+#ifdef USE_TRANSPARENCY
+namespace plugin_render_transparency { class Plugin_RenderTransparency; }
+#endif
+
 namespace plugin_volume_render
 {
+
+class VolumeRender_DockTab;
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
 
 /**
 * @brief Plugin for volume rendering
 */
-class SCHNAPPS_PLUGIN_VOLUME_RENDER_API Plugin_VolumeRender : public PluginInteraction
+class PLUGIN_VOLUME_RENDER_EXPORT Plugin_VolumeRender : public PluginInteraction
 {
 	Q_OBJECT
 	Q_PLUGIN_METADATA(IID "SCHNApps.Plugin")
@@ -54,11 +60,11 @@ class SCHNAPPS_PLUGIN_VOLUME_RENDER_API Plugin_VolumeRender : public PluginInter
 
 public:
 
-	inline Plugin_VolumeRender() {}
+	Plugin_VolumeRender();
+	inline ~Plugin_VolumeRender() override {}
+	static QString plugin_name();
 
-	~Plugin_VolumeRender() override {}
-
-	MapParameters& get_parameters(View* view, MapHandlerGen* map);
+	MapParameters& parameters(View* view, CMap3Handler* mh);
 	bool check_docktab_activation();
 
 private:
@@ -67,15 +73,16 @@ private:
 	void disable() override;
 
 	inline void draw(View*, const QMatrix4x4&, const QMatrix4x4&) override {}
-	void draw_map(View* view, MapHandlerGen* map, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
+	void draw_object(View* view, Object* o, const QMatrix4x4& proj, const QMatrix4x4& mv) override;
 
-	inline void keyPress(View*, QKeyEvent*) override {}
-	inline void keyRelease(View*, QKeyEvent*) override {}
-	void mousePress(View*, QMouseEvent*) override;
-	void mouseRelease(View*, QMouseEvent*) override;
-	void mouseMove(View*, QMouseEvent*) override;
-	inline void wheelEvent(View*, QWheelEvent*) override {}
-	void resizeGL(View*, int, int) override {}
+	inline bool keyPress(View*, QKeyEvent*) override { return true; }
+	inline bool keyRelease(View*, QKeyEvent*) override { return true; }
+	bool mousePress(View*, QMouseEvent*) override;
+	bool mouseRelease(View*, QMouseEvent*) override;
+	bool mouseMove(View*, QMouseEvent*) override;
+	inline bool wheelEvent(View*, QWheelEvent*) override { return true; }
+
+	inline void resizeGL(View*, int, int) override {}
 
 	void view_linked(View*) override;
 	void view_unlinked(View*) override;
@@ -83,13 +90,13 @@ private:
 private slots:
 
 	// slots called from View signals
-	void map_linked(MapHandlerGen* map);
-	void map_unlinked(MapHandlerGen* map);
+	void object_linked(Object* o);
+	void object_unlinked(Object* o);
 
 private:
 
-	void add_linked_map(View* view, MapHandlerGen* map);
-	void remove_linked_map(View* view, MapHandlerGen* map);
+	void add_linked_map(View* view, CMap3Handler* mh);
+	void remove_linked_map(View* view, CMap3Handler* mh);
 
 private slots:
 
@@ -106,30 +113,40 @@ private slots:
 
 public slots:
 
-	void set_position_vbo(View* view, MapHandlerGen* map, cgogn::rendering::VBO* vbo, bool update_dock_tab);
-	void set_render_vertices(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_render_edges(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_render_faces(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_render_topology(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_apply_clipping_plane(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_vertex_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab);
-	void set_edge_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab);
-	void set_face_color(View* view, MapHandlerGen* map, const QColor& color, bool update_dock_tab);
-	void set_vertex_scale_factor(View* view, MapHandlerGen* map, float32 sf, bool update_dock_tab);
-	void set_volume_explode_factor(View* view, MapHandlerGen* map, float32 vef, bool update_dock_tab);
-	void set_transparency_enabled(View* view, MapHandlerGen* map, bool b, bool update_dock_tab);
-	void set_transparency_factor(View* view, MapHandlerGen* map, int32 tf, bool update_dock_tab);
+    void set_color_per_volume(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+    void set_volume_attribute(View* view, CMap3Handler* mh, const QString& attrib, bool update_dock_tab);
+    void set_color_map(View* view, CMap3Handler* mh, const QString& color_map, bool update_dock_tab);
+    void set_position_vbo(View* view, CMap3Handler* mh, cgogn::rendering::VBO* vbo, bool update_dock_tab);
+	void set_render_vertices(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_render_edges(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_render_faces(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_render_topology(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_apply_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_apply_grid_clipping_plane(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_vertex_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
+	void set_edge_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
+	void set_face_color(View* view, CMap3Handler* mh, const QColor& color, bool update_dock_tab);
+	void set_vertex_scale_factor(View* view, CMap3Handler* mh, float32 sf, bool update_dock_tab);
+	void set_volume_explode_factor(View* view, CMap3Handler* mh, float32 vef, bool update_dock_tab);
+	void set_transparency_enabled(View* view, CMap3Handler* mh, bool b, bool update_dock_tab);
+	void set_transparency_factor(View* view, CMap3Handler* mh, int32 tf, bool update_dock_tab);
+
+	void set_grid_clipping_plane(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab);
+	void set_grid_clipping_plane2(View* view, CMap3Handler* mh, int32 x, int32 y, int32 z, bool update_dock_tab);
+
+	std::tuple<int, int, int> get_current_grid_clipping_plane(CMap3Handler* map);
+	std::tuple<int, int, int> get_current_grid_clipping_plane2(CMap3Handler* map);
 
 private:
 
 	VolumeRender_DockTab* dock_tab_;
-	std::map<View*, std::map<MapHandlerGen*, MapParameters>> parameter_set_;
+	std::map<View*, std::map<CMap3Handler*, MapParameters>> parameter_set_;
 
 	bool setting_auto_enable_on_selected_view_;
 	QString setting_auto_load_position_attribute_;
 
 #ifdef USE_TRANSPARENCY
-	PluginInteraction* plugin_transparency_;
+	plugin_render_transparency::Plugin_RenderTransparency* plugin_transparency_;
 #endif
 };
 

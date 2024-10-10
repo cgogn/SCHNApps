@@ -22,17 +22,21 @@
 *                                                                              *
 *******************************************************************************/
 
-#include <dll.h>
-#include <extract_dialog.h>
-#include <schnapps/core/map_handler.h>
+#include <schnapps/plugins/extract_surface/extract_surface.h>
+#include <schnapps/plugins/extract_surface/extract_dialog.h>
+#include <schnapps/plugins/cmap_provider/cmap_provider.h>
+#include <schnapps/plugins/cmap_provider/cmap2_handler.h>
+#include <schnapps/plugins/cmap_provider/cmap3_handler.h>
 #include <schnapps/core/schnapps.h>
-#include <extract_surface.h>
 
 namespace schnapps
 {
 
 namespace plugin_extract_surface
 {
+
+using CMap3Handler = plugin_cmap_provider::CMap3Handler;
+using CMap2Handler = plugin_cmap_provider::CMap2Handler;
 
 ExtractDialog::ExtractDialog(SCHNApps* s, Plugin_ExtractSurface* p)
 {
@@ -41,28 +45,28 @@ ExtractDialog::ExtractDialog(SCHNApps* s, Plugin_ExtractSurface* p)
 	updating_ui_ = false;
 	setupUi(this);
 
-	schnapps_->foreach_map([&](MapHandlerGen* mhg)
+	schnapps_->foreach_object([&](Object* mhg)
 	{
 		map_added(mhg);
 	});
 
-	connect(schnapps_, SIGNAL(map_added(MapHandlerGen*)), this, SLOT(map_added(MapHandlerGen*)));
-	connect(schnapps_, SIGNAL(map_removed(MapHandlerGen*)), this, SLOT(map_removed(MapHandlerGen*)));
+	connect(schnapps_, SIGNAL(object_added(Object*)), this, SLOT(map_added(Object*)));
+	connect(schnapps_, SIGNAL(object_removed(Object*)), this, SLOT(map_removed(Object*)));
 	connect(this->comboBoxMapSelection, SIGNAL(currentIndexChanged(QString)), this, SLOT(selected_map_changed(QString)));
 	connect(this->buttonBox,SIGNAL(accepted()), this, SLOT(extract_validated()));
 }
 
-void ExtractDialog::map_added(MapHandlerGen* mhg)
+void ExtractDialog::map_added(Object* mhg)
 {
-	if (mhg && mhg->dimension() == 3u)
-		comboBoxMapSelection->addItem(mhg->get_name());
+	if (dynamic_cast<CMap3Handler*>(mhg))
+		comboBoxMapSelection->addItem(mhg->name());
 }
 
-void ExtractDialog::map_removed(MapHandlerGen* mhg)
+void ExtractDialog::map_removed(Object* mhg)
 {
-	if (mhg && mhg->dimension() == 3u)
-		comboBoxMapSelection->removeItem(this->comboBoxMapSelection->findText(mhg->get_name()));
-	if (mhg->get_name() == comboBoxMapSelection->currentText())
+	if (dynamic_cast<CMap3Handler*>(mhg))
+		comboBoxMapSelection->removeItem(this->comboBoxMapSelection->findText(mhg->name()));
+	if (mhg->name() == comboBoxMapSelection->currentText())
 		comboBoxPositionAttribute->clear();
 }
 
@@ -70,10 +74,10 @@ void ExtractDialog::selected_map_changed(const QString& map_name)
 {
 	comboBoxPositionAttribute->clear();
 
-	if (MapHandlerGen* mhg = schnapps_->get_map(map_name))
+	if (CMap3Handler* mhg = plugin_->map_provider()->cmap3(map_name))
 	{
-		const auto* vert_att_cont = mhg->attribute_container(CellType::Vertex_Cell);
-		for (const auto& att_name : vert_att_cont->names())
+		const auto& vert_att_cont = mhg->map()->attribute_container(CMap3::Vertex::ORBIT);
+		for (const auto& att_name : vert_att_cont.names())
 		{
 			this->comboBoxPositionAttribute->addItem(QString::fromStdString(att_name));
 		}
@@ -82,11 +86,10 @@ void ExtractDialog::selected_map_changed(const QString& map_name)
 
 void ExtractDialog::extract_validated()
 {
-	MapHandlerGen* mhg = schnapps_->get_map(comboBoxMapSelection->currentText());
-	if (mhg)
+	if (CMap3Handler* handler_map3 = plugin_->map_provider()->cmap3(comboBoxMapSelection->currentText()))
 	{
-		MapHandlerGen* handler_map2 = schnapps_->add_map(mhg->get_name() + "_surface", 2);
-		plugin_->extract_surface(mhg, handler_map2, "position");
+		CMap2Handler* handler_map2 = plugin_->map_provider()->add_cmap2(handler_map3->name() + "_surface");
+		plugin_->extract_surface(handler_map3, handler_map2, "position");
 	}
 }
 
